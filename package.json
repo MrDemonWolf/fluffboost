@@ -1,0 +1,42 @@
+{
+  "name": "fluffboost",
+  "version": "1.0.0",
+  "description": "FluffBoost is a heartwarming Discord bot that delivers daily doses of motivation and inspiration wrapped in a furry-friendly package. Brighten your Discord server with adorable furry mascots and uplifting quotes. Let FluffBoost bring smiles and positivity to your community every day!  ",
+  "main": "index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "build": "tsc -p . --outDir dist",
+    "lint": "eslint . --ext .js --fix",
+    "format": "prettier-eslint --write $PWD/'**/*.{js,json}'",
+    "db:push": "prisma db push",
+    "db:pull": "prisma db pull",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio",
+    "test": "cross-env NODE_ENV=test mocha tests --exit"
+  },
+  "author": "MrDemonWolf, Inc",
+  "license": "MIT",
+  "dependencies": {
+    "@prisma/client": "5.3.1",
+    "@upstash/qstash": "^2.1.4",
+    "consola": "^3.2.3",
+    "cors": "^2.8.5",
+    "discord.js": "^14.13.0",
+    "dotenv": "^16.3.1",
+    "nanoid": "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.6.0",
+    "eslint": "^8.26.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "nodemon": "^2.0.20",
+    "prettier-eslint-cli": "^6.0.1",
+    "prisma": "^5.3.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  }
+}
