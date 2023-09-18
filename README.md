@@ -7,43 +7,33 @@ FluffBoost is a heartwarming Discord bot that delivers daily doses of motivation
 ## Features
 
 - Daily motivational quotes delivered to your Discord server.
-- Adorable furry mascots to spread positivity.
-- Customizable message delivery schedule.
 - Easy integration into your Discord server.
 - Open-source and community-driven development.
+- Build by furries, for furries! 🐺🐾
 
 ## Getting Started
 
 To add FluffBoost to your Discord server, follow these simple steps:
 
-1. Invite FluffBoost to your server using [this link](invite-link).
-2. Customize your message delivery schedule in your server settings.
-3. Enjoy daily motivation and inspiration from our furry mascots!
+1. Invite FluffBoost to your server using [this link](https://discord.com/api/oauth2/authorize?client_id=1152416549261561856&permissions=2147551232&scope=bot).
+2. Enjoy daily motivation and inspiration delivered to your server! 🎉
 
 ## Usage
 
 FluffBoost is designed to be user-friendly and straightforward. Here are some basic commands to get you started:
 
-- `!quote`: Get an instant dose of motivation.
-- `!schedule`: Adjust your message delivery schedule.
-- `!help`: View a list of available commands.
-
-For more detailed instructions and customization options, visit our [Documentation](link-to-documentation).
-
-## Contributing
-
-We welcome contributions from the community! If you'd like to contribute to FluffBoost's development, please check out our [Contributing Guidelines](link-to-contributing-guidelines).
+- `/qoute`: Get an instant dose of motivation.
+- `/setup`: View setup instructions. (Server Admins only)
 
 ## License
 
-![GitHub license](https://img.shields.io/github/license/MrDemonWolf/community-bot.svg?style=for-the-badge&logo=github)
+![GitHub license](https://img.shields.io/github/license/MrDemonWolf/fluffboost.svg?style=for-the-badge&logo=github)
 
 ## Contact
 
-If you have any questions, suggestions, or feedback, feel free to reach out to us on Discord or through our [Issue Tracker](link-to-issue-tracker).
+If you have any questions, suggestions, or feedback, feel free to reach out to us on Discord!
 
-- Discord: [Join our server](link-to-discord-server)
-- Email: [your-email@example.com]
+- Discord: [Join our server](https://l.mrdemonwolf.me/discord)
 
 Thank you for choosing FluffBoost to add motivation and positivity to your Discord server!
 
