@@ -15,8 +15,7 @@ import { setActivity } from "./utils/setActivity";
 /**
  * Import worker main function.
  */
-// import worker from "./worker";
-import sendMotivation from "./worker/jobs/sendMotivation";
+import worker from "./worker";
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
@@ -31,8 +30,7 @@ client.on(Events.ClientReady, () => {
   setInterval(() => {
     setActivity(client);
   }, 30 * 60 * 1000); // will set activity every 30 minutes
-  // worker();
-  sendMotivation();
+  worker();
 });
 
 /**
