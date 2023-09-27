@@ -1,4 +1,3 @@
-import consola from "consola";
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { info, success, error } from "../utils/commandLogger";
 
@@ -42,6 +41,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     interaction.reply({
       embeds: [embed],
     });
+    success("about", interaction.user.username, interaction.user.id);
   } catch (err) {
     error("about", interaction.user.username, interaction.user.id);
     console.log(err);

@@ -21,7 +21,7 @@ export async function guildDeleteEvent(guild: Guild): Promise<void> {
     });
   } catch (err) {
     consola.error({
-      message: `Error joining a new guild: ${err}`,
+      message: `Error leaving guild: ${err}`,
       badge: true,
     });
   }

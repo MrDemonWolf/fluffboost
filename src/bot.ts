@@ -25,9 +25,9 @@ const client = new Client({
 /**
  * @description This event will run if the bot starts, and logs in, successfully. Also sets the bot's activity.
  */
-client.on(Events.ClientReady, () => {
+client.on(Events.ClientReady, async () => {
   try {
-    readyEvent(client);
+    await readyEvent(client);
     setActivity(client); // set activity on startup
     setInterval(() => {
       setActivity(client);

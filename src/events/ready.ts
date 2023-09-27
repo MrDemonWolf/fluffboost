@@ -5,8 +5,9 @@ import consola from "consola";
  * Import slash commands from the commands folder.
  */
 import about from "../commands/about";
+import bot from "../commands/bot";
 
-export function readyEvent(client: Client): void {
+export async function readyEvent(client: Client) {
   try {
     /**
      * Show the bot is ready in the console.
@@ -47,7 +48,24 @@ export function readyEvent(client: Client): void {
     /**
      * Register slash commands.
      */
-    client.application?.commands.set([about.slashCommand]);
+    consola.info({
+      message: `Registering slash commands...`,
+      badge: true,
+    });
+
+    await client.application?.commands.set([
+      about.slashCommand,
+      bot.slashCommand,
+    ]);
+
+    const commands = await client.application?.commands.fetch();
+
+    consola.success({
+      message: `Slash commands registered: ${commands?.map(
+        (command) => command.name
+      )}`,
+      badge: true,
+    });
   } catch (err) {
     consola.error({
       message: `Error logging in to discord: ${err}`,
