@@ -5,6 +5,12 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@discordjs/core':
+    specifier: ^1.0.1
+    version: 1.0.1
+  '@discordjs/rest':
+    specifier: ^2.0.1
+    version: 2.0.1
   '@prisma/client':
     specifier: 5.3.1
     version: 5.3.1(prisma@5.3.1)
@@ -92,6 +98,21 @@ packages:
   /@discordjs/collection@1.5.3:
     resolution: {integrity: sha512-SVb428OMd3WO1paV3rm6tSjM4wC+Kecaa1EUGX7vc6/fddvw/6lg90z4QtCqm21zvVe92vMMDt9+DkIvjXImQQ==}
     engines: {node: '>=16.11.0'}
+    dev: false
+
+  /@discordjs/core@1.0.1:
+    resolution: {integrity: sha512-CtzHgQTXgQxs3TgnZtyKa6rnN7WyzGHH8zkZDO+W2nl6Pi7xLg0sPCDVIfD0E0+1F0BMSgq3XrY7C2ZyLinFUA==}
+    engines: {node: '>=16.11.0'}
+    dependencies:
+      '@discordjs/rest': 2.0.1
+      '@discordjs/util': 1.0.1
+      '@discordjs/ws': 1.0.1
+      '@sapphire/snowflake': 3.5.1
+      '@vladfrangu/async_event_emitter': 2.2.2
+      discord-api-types: 0.37.50
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
     dev: false
 
   /@discordjs/formatters@0.3.2:
