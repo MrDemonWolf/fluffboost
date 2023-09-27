@@ -1,6 +1,11 @@
 import { type Client } from "discord.js";
 import consola from "consola";
 
+/**
+ * Import slash commands from the commands folder.
+ */
+import about from "../commands/about";
+
 export function readyEvent(client: Client): void {
   try {
     /**
@@ -38,6 +43,11 @@ export function readyEvent(client: Client): void {
       message: `Current guilds: ${JSON.stringify(guilds)}`,
       badge: true,
     });
+
+    /**
+     * Register slash commands.
+     */
+    client.application?.commands.set([about.slashCommand]);
   } catch (err) {
     consola.error({
       message: `Error logging in to discord: ${err}`,

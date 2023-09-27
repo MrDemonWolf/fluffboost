@@ -6,6 +6,7 @@ import { Client, Events, GatewayIntentBits } from "discord.js";
 import { readyEvent } from "./events/ready";
 import { guildCreateEvent } from "./events/guildCreate";
 import { guildDeleteEvent } from "./events/guildDelete";
+import { interactionCreateEvent } from "./events/interactionCreate";
 
 /**
  * Import functions from the utils folder.
@@ -25,12 +26,17 @@ const client = new Client({
  * @description This event will run if the bot starts, and logs in, successfully. Also sets the bot's activity.
  */
 client.on(Events.ClientReady, () => {
-  readyEvent(client);
-  setActivity(client); // set activity on startup
-  setInterval(() => {
-    setActivity(client);
-  }, 30 * 60 * 1000); // will set activity every 30 minutes
-  worker();
+  try {
+    readyEvent(client);
+    setActivity(client); // set activity on startup
+    setInterval(() => {
+      setActivity(client);
+    }, 30 * 60 * 1000); // will set activity every 30 minutes
+    worker();
+  } catch (err) {
+    console.log(err);
+    process.exit(1);
+  }
 });
 
 /**
@@ -45,6 +51,13 @@ client.on(Events.GuildCreate, (guild) => {
  */
 client.on(Events.GuildDelete, (guild) => {
   guildDeleteEvent(guild);
+});
+
+/**
+ * @description Handle interactionCreate events.
+ */
+client.on(Events.InteractionCreate, (interaction) => {
+  interactionCreateEvent(client, interaction);
 });
 
 client.login(process.env.DISCORD_APPLICATION_BOT_TOKEN);
