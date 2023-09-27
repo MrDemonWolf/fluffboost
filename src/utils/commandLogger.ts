@@ -19,3 +19,9 @@ export function error(command: string, username: string, id: string) {
     badge: true,
   });
 }
+export function warn(command: string, username: string, id: string) {
+  consola.warn({
+    message: `* Warning executing command ${command} from ${username} (${id})`,
+    badge: true,
+  });
+}
