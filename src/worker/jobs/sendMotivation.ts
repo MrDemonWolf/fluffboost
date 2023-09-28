@@ -34,9 +34,9 @@ export default async function sendMotivation() {
     /**
      * Find a random motivation quote from the database.
      */
-    const motivationQouteCount = await prisma.motivationQuote.count();
-    const skip = Math.floor(Math.random() * motivationQouteCount);
-    const motivationQoute = await prisma.motivationQuote.findMany({
+    const motivationQuoteCount = await prisma.motivationQuote.count();
+    const skip = Math.floor(Math.random() * motivationQuoteCount);
+    const motivationQuote = await prisma.motivationQuote.findMany({
       skip,
       take: 1,
     });
@@ -44,14 +44,14 @@ export default async function sendMotivation() {
     /**
      * Create a custom embed for the motivation message.
      */
-    const addedBy = await client.users.fetch(motivationQoute[0].addedBy);
+    const addedBy = await client.users.fetch(motivationQuote[0].addedBy);
     if (!addedBy) return consola.error("No user found");
 
     const motivationEmbed = new EmbedBuilder()
       .setColor(0xfadb7f)
-      .setTitle("Motivation Qoute of the day 📅")
+      .setTitle("Motivation quote of the day 📅")
       .setDescription(
-        `**"${motivationQoute[0].quote}"**\n by ${motivationQoute[0].author}`
+        `**"${motivationQuote[0].quote}"**\n by ${motivationQuote[0].author}`
       )
       .setAuthor({
         name: addedBy.username,
