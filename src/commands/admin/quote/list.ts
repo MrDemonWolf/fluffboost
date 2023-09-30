@@ -8,7 +8,7 @@ export default async function (
   interaction: CommandInteraction
 ) {
   try {
-    info("bot quote list", interaction.user.username, interaction.user.id);
+    info("admin quote list", interaction.user.username, interaction.user.id);
 
     const isAllowed = checkAllowedUser(interaction);
 
@@ -22,7 +22,6 @@ export default async function (
         ephemeral: true,
       });
 
-    // create file txt with all quotes and ids
     let text = "";
     quotes.forEach((quote) => {
       text += `${quote.id} - ${quote.quote}\n`;
@@ -37,9 +36,9 @@ export default async function (
       ],
     });
 
-    success("bot quote add", interaction.user.username, interaction.user.id);
+    success("admin quote add", interaction.user.username, interaction.user.id);
   } catch (err) {
-    error("bot quote add", interaction.user.username, interaction.user.id);
+    error("admin quote add", interaction.user.username, interaction.user.id);
     console.log(err);
   }
 }

@@ -10,7 +10,7 @@ export default async function (
   author: string
 ) {
   try {
-    info("bot quote add", interaction.user.username, interaction.user.id);
+    info("admin quote add", interaction.user.username, interaction.user.id);
 
     const isAllowed = checkAllowedUser(interaction);
 
@@ -18,17 +18,6 @@ export default async function (
 
     if (!quote) return interaction.reply("Please provide a quote");
     if (!author) return interaction.reply("Please provide an author");
-
-    // send 10 times
-    for (let i = 0; i < 10; i++) {
-      await prisma.motivationQuote.create({
-        data: {
-          quote,
-          author,
-          addedBy: interaction.user.id,
-        },
-      });
-    }
 
     const newQuote = await prisma.motivationQuote.create({
       data: {
@@ -50,9 +39,9 @@ export default async function (
       content: `Quote added with id: ${newQuote.id}`,
       ephemeral: true,
     });
-    success("bot quote add", interaction.user.username, interaction.user.id);
+    success("admin quote add", interaction.user.username, interaction.user.id);
   } catch (err) {
-    error("bot quote add", interaction.user.username, interaction.user.id);
+    error("admin quote add", interaction.user.username, interaction.user.id);
     console.log(err);
   }
 }
