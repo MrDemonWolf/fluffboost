@@ -23,7 +23,7 @@ const client = new Client({
 });
 
 /**
- * @description This event will run if the bot starts, and logs in, successfully. Also sets the bot's activity.
+ * This event will run if the bot starts, and logs in, successfully. Also sets the bot's activity.
  */
 client.on(Events.ClientReady, async () => {
   try {
@@ -40,21 +40,21 @@ client.on(Events.ClientReady, async () => {
 });
 
 /**
- * @description This event will run every time the bot joins a guild.
+ * This event will run every time the bot joins a guild.
  */
 client.on(Events.GuildCreate, (guild) => {
   guildCreateEvent(guild);
 });
 
 /**
- * @description This event will run every time the bot leaves a guild.
+ * This event will run every time the bot leaves a guild.
  */
 client.on(Events.GuildDelete, (guild) => {
   guildDeleteEvent(guild);
 });
 
 /**
- * @description Handle interactionCreate events.
+ * Handle interactionCreate events.
  */
 client.on(Events.InteractionCreate, (interaction) => {
   interactionCreateEvent(client, interaction);

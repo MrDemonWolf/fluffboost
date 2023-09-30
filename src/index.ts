@@ -4,7 +4,7 @@ import { PrismaClient } from "@prisma/client";
 import consola from "consola";
 
 /**
- * @description Load environment variables from .env file.
+ * Load environment variables from .env file.
  */
 config();
 
