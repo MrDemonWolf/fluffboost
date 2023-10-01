@@ -9,7 +9,7 @@ FluffBoost is a heartwarming Discord bot that delivers daily doses of motivation
 - Daily motivational quotes delivered to your Discord server.
 - Easy integration into your Discord server.
 - Open-source and community-driven development.
-- Build by furries, for furries! 🐺🐾
+- Built by furries, for furries! 🐺🐾
 
 ## Getting Started
 
