@@ -22,8 +22,11 @@ To add FluffBoost to your Discord server, follow these simple steps:
 
 FluffBoost is designed to be user-friendly and straightforward. Here are some basic commands to get you started:
 
-- `/qoute`: Get an instant dose of motivation.
-- `/setup`: View setup instructions. (Server Admins only)
+- `/quote`: Get an instant dose of motivation.
+- `/about`: Learn more about FluffBoost.
+- `/setup`: Set up FluffBoost for your server.
+- `/invite`: Invite FluffBoost to your server.
+- `/help`: Get help with FluffBoost
 
 ## License
 
@@ -37,6 +40,4 @@ If you have any questions, suggestions, or feedback, feel free to reach out to u
 
 Thank you for choosing FluffBoost to add motivation and positivity to your Discord server!
 
-<p align="center">
-    <img src="mrdemonwolf.png"/>
-</p>
+Made with ❤️ by <a href="https://www.mrdmeonwolf.com"">MrDemonWolf, Inc.</a>
