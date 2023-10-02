@@ -40,4 +40,4 @@ If you have any questions, suggestions, or feedback, feel free to reach out to u
 
 Thank you for choosing FluffBoost to add motivation and positivity to your Discord server!
 
-Made with ❤️ by <a href="https://www.mrdmeonwolf.com">MrDemonWolf, Inc.</a>
+Made with ❤️ by <a href="https://www.mrdemonwolf.com">MrDemonWolf, Inc.</a>
