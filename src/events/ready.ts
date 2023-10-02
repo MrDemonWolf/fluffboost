@@ -1,14 +1,14 @@
 import type { Client } from "discord.js";
 import consola from "consola";
-import { prisma } from "src/database";
+import { prisma } from "../database";
 
 /**
  * Import slash commands from the commands folder.
  */
-import about from "src/commands/about";
-import quote from "src/commands/quote";
-import setup from "src/commands/setup";
-import admin from "src/commands/admin";
+import about from "../commands/about";
+import quote from "../commands/quote";
+import setup from "../commands/setup";
+import admin from "../commands/admin";
 
 export async function readyEvent(client: Client) {
   try {

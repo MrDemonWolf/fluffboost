@@ -10,9 +10,9 @@ import type {
   CommandInteractionOptionResolver,
   TextChannel,
 } from "discord.js";
-import { info, success, error } from "src/utils/commandLogger";
-import { prisma } from "src/database";
-import { guildExists } from "src/utils/guildExists";
+import { info, success, error } from "../../utils/commandLogger";
+import { prisma } from "../../database";
+import { guildExists } from "../../utils/guildExists";
 
 /**
  * Import subcommands

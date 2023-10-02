@@ -1,6 +1,6 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import type { Client, CommandInteraction, User } from "discord.js";
-import { info, success, error } from "src/utils/commandLogger";
+import { info, success, error } from "../utils/commandLogger";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("about")

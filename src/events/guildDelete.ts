@@ -1,6 +1,6 @@
 import type { Guild } from "discord.js";
 import consola from "consola";
-import { prisma } from "src/database";
+import { prisma } from "../database";
 
 export async function guildDeleteEvent(guild: Guild): Promise<void> {
   try {

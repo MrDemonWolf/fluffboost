@@ -1,4 +1,4 @@
-import { prisma } from "src/database";
+import { prisma } from "../database";
 
 export async function guildExists(guildId: string) {
   const guildExists = await prisma.guild.findUnique({
