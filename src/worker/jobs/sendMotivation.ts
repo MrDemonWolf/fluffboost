@@ -1,6 +1,5 @@
-import consola from "consola";
 import { TextChannel, EmbedBuilder } from "discord.js";
-
+import consola from "consola";
 import { prisma } from "../../database";
 import client from "../../bot";
 

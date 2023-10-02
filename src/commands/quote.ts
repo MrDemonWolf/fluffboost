@@ -1,11 +1,8 @@
-import { SlashCommandBuilder } from "discord.js";
-import { EmbedBuilder } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import type { Client, CommandInteraction } from "discord.js";
 import consola from "consola";
-
 import { info, success, error } from "../utils/commandLogger";
 import { prisma } from "../database";
-
-import type { Client, CommandInteraction } from "discord.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("quote")

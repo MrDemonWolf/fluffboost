@@ -1,6 +1,7 @@
-import consola from "consola";
+import { ActivityType } from "discord.js";
+import type { Client } from "discord.js";
 
-import { ActivityType, type Client } from "discord.js";
+import consola from "consola";
 
 export function setActivity(client: Client): void {
   try {
