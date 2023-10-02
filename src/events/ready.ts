@@ -1,13 +1,14 @@
 import type { Client } from "discord.js";
 import consola from "consola";
+import { prisma } from "src/database";
 
 /**
  * Import slash commands from the commands folder.
  */
-import about from "../commands/about";
-import quote from "../commands/quote";
-import setup from "../commands/setup";
-import admin from "../commands/admin";
+import about from "src/commands/about";
+import quote from "src/commands/quote";
+import setup from "src/commands/setup";
+import admin from "src/commands/admin";
 
 export async function readyEvent(client: Client) {
   try {
@@ -33,19 +34,35 @@ export async function readyEvent(client: Client) {
     });
 
     /**
-     * Make array of the guild name and id.
+     * Add any new guilds to the database if they don't already exist. Only in development mode.
      */
-    const guilds = client.guilds.cache.map((guild) => {
-      return {
-        name: guild.name,
-        id: guild.id,
-      };
-    });
+    if (process.env.NODE_ENV === "development") {
+      const guilds = client.guilds.cache.map((guild) => {
+        return {
+          name: guild.name,
+          id: guild.id,
+        };
+      });
+      guilds.map(async (guild) => {
+        const guildExists = await prisma.guild.findUnique({
+          where: {
+            guildId: guild.id,
+          },
+        });
 
-    consola.info({
-      message: `Current guilds: ${JSON.stringify(guilds)}`,
-      badge: true,
-    });
+        if (!guildExists) {
+          await prisma.guild.create({
+            data: {
+              guildId: guild.id,
+            },
+          });
+          consola.success({
+            message: `Added ${guild.name} to the database as it didn't already exist`,
+            badge: true,
+          });
+        }
+      });
+    }
 
     /**
      * Register slash commands.

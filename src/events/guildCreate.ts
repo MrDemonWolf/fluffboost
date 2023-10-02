@@ -1,6 +1,6 @@
 import type { Guild } from "discord.js";
 import consola from "consola";
-import { prisma } from "../database";
+import { prisma } from "src/database";
 
 export async function guildCreateEvent(guild: Guild): Promise<void> {
   try {

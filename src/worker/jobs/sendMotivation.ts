@@ -1,7 +1,7 @@
 import { TextChannel, EmbedBuilder } from "discord.js";
 import consola from "consola";
-import { prisma } from "../../database";
-import client from "../../bot";
+import { prisma } from "src/database";
+import client from "src/bot";
 
 export default async function sendMotivation() {
   /**
