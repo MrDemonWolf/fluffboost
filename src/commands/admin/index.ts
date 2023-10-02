@@ -6,7 +6,7 @@ import type {
   CommandInteraction,
   CommandInteractionOptionResolver,
 } from "discord.js";
-import { info, error } from "src/utils/commandLogger";
+import { info, error } from "../../utils/commandLogger";
 
 /**
  * Import subcommands

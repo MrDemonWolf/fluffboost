@@ -4,10 +4,10 @@ import { info, success, warn } from "../utils/commandLogger";
 /**
  * Import slash commands from the commands folder.
  */
-import about from "src/commands/about";
-import quote from "src/commands/quote";
-import admin from "src/commands/admin";
-import setup from "src/commands/setup";
+import about from "../commands/about";
+import quote from "../commands/quote";
+import admin from "../commands/admin";
+import setup from "../commands/setup";
 
 export async function interactionCreateEvent(
   client: Client,
