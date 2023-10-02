@@ -1,12 +1,13 @@
 import type { Client, Interaction, CommandInteraction } from "discord.js";
-
 import { info, success, warn } from "../utils/commandLogger";
+
 /**
  * Import slash commands from the commands folder.
  */
 import about from "../commands/about";
-import admin from "../commands/admin";
 import quote from "../commands/quote";
+import admin from "../commands/admin";
+import setup from "../commands/setup";
 
 export async function interactionCreateEvent(
   client: Client,
@@ -22,13 +23,6 @@ export async function interactionCreateEvent(
     if (!commandName) return;
 
     switch (commandName) {
-      case "admin":
-        success(
-          "interactionCreate - admin",
-          interaction.user.username,
-          interaction.user.id
-        );
-        return admin.execute(client, interaction as CommandInteraction);
       case "about":
         success(
           "interactionCreate - about",
@@ -43,6 +37,20 @@ export async function interactionCreateEvent(
           interaction.user.id
         );
         return quote.execute(client, interaction as CommandInteraction);
+      case "admin":
+        success(
+          "interactionCreate - admin",
+          interaction.user.username,
+          interaction.user.id
+        );
+        return admin.execute(client, interaction as CommandInteraction);
+      case "setup":
+        success(
+          "interactionCreate - setup",
+          interaction.user.username,
+          interaction.user.id
+        );
+        return setup.execute(client, interaction as CommandInteraction);
       default:
         warn(
           "interactionCreate - Command not found",

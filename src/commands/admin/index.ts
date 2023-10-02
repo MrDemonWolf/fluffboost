@@ -1,13 +1,11 @@
-import {
+import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import type {
   SlashCommandSubcommandGroupBuilder,
   SlashCommandSubcommandBuilder,
   Client,
   CommandInteraction,
-  PermissionFlagsBits,
+  CommandInteractionOptionResolver,
 } from "discord.js";
-
-import { SlashCommandBuilder } from "discord.js";
-
 import { info, error } from "../../utils/commandLogger";
 
 /**
@@ -64,18 +62,20 @@ export async function execute(client: Client, interaction: CommandInteraction) {
 
     info("admin", interaction.user.username, interaction.user.id);
 
+    const options = interaction.options as CommandInteractionOptionResolver;
+
     const subCommandGroup = interaction.options.getSubcommandGroup(false);
     const subCommand = interaction.options.getSubcommand(false);
 
     if (subCommandGroup === "quote") {
       if (subCommand === "create") {
-        const quote = interaction.options.getString("quote", true);
-        const author = interaction.options.getString("author", true);
+        const quote = options.getString("quote", true);
+        const author = options.getString("author", true);
 
         quoteAdd(client, interaction, quote, author);
       }
       if (subCommand === "remove") {
-        const id = interaction.options.getString("id", true);
+        const id = options.getString("id", true);
 
         qouteDel(client, interaction, id);
       }

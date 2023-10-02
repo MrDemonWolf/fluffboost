@@ -4,10 +4,10 @@ import consola from "consola";
 /**
  * Import slash commands from the commands folder.
  */
-import admin from "../commands/admin";
-// import bot from "../commands/bot";
 import about from "../commands/about";
 import quote from "../commands/quote";
+import setup from "../commands/setup";
+import admin from "../commands/admin";
 
 export async function readyEvent(client: Client) {
   try {
@@ -56,10 +56,10 @@ export async function readyEvent(client: Client) {
     });
 
     await client.application?.commands.set([
-      admin.slashCommand,
-      // bot.slashCommand
       about.slashCommand,
       quote.slashCommand,
+      setup.slashCommand,
+      admin.slashCommand,
     ]);
 
     const commands = await client.application?.commands.fetch();

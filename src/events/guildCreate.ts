@@ -1,4 +1,4 @@
-import { Guild } from "discord.js";
+import type { Guild } from "discord.js";
 import consola from "consola";
 import { prisma } from "../database";
 
