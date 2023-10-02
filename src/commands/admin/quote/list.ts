@@ -1,7 +1,7 @@
-import { Client, CommandInteraction, TextChannel, quote } from "discord.js";
-import { info, success, error } from "../../../utils/commandLogger";
-import checkAllowedUser from "../../../utils/checkAllowedUser";
-import { prisma } from "../../../database";
+import { Client, CommandInteraction } from "discord.js";
+import { info, success, error } from "src/utils/commandLogger";
+import checkAllowedUser from "src/utils/checkAllowedUser";
+import { prisma } from "src/database";
 
 export default async function (
   client: Client,

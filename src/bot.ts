@@ -3,20 +3,20 @@ import { Client, Events, GatewayIntentBits } from "discord.js";
 /**
  * Import events from the events folder.
  */
-import { readyEvent } from "./events/ready";
-import { guildCreateEvent } from "./events/guildCreate";
-import { guildDeleteEvent } from "./events/guildDelete";
-import { interactionCreateEvent } from "./events/interactionCreate";
+import { readyEvent } from "src/events/ready";
+import { guildCreateEvent } from "src/events/guildCreate";
+import { guildDeleteEvent } from "src/events/guildDelete";
+import { interactionCreateEvent } from "src/events/interactionCreate";
 
 /**
  * Import functions from the utils folder.
  */
-import { setActivity } from "./utils/setActivity";
+import { setActivity } from "src/utils/setActivity";
 
 /**
  * Import worker main function.
  */
-import worker from "./worker";
+import worker from "src/worker";
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
