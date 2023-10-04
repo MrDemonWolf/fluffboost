@@ -8,15 +8,13 @@ import type {
   Client,
   CommandInteraction,
   CommandInteractionOptionResolver,
-  TextChannel,
 } from "discord.js";
-import { info, success, error } from "../../utils/commandLogger";
-import { prisma } from "../../database";
-import { guildExists } from "../../utils/guildExists";
+import { info, error } from "../../utils/commandLogger";
 
 /**
  * Import subcommands
  */
+import channel from "./channel";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("setup")
@@ -39,32 +37,25 @@ export const slashCommand = new SlashCommandBuilder()
 
 export async function execute(client: Client, interaction: CommandInteraction) {
   try {
-    info("setup", interaction.user.username, interaction.user.id);
+    if (!interaction.isChatInputCommand()) return;
 
-    if (!interaction.guildId) return;
+    info("setup", interaction.user.username, interaction.user.id);
 
     const options = interaction.options as CommandInteractionOptionResolver;
 
-    const motivationChannel = options.getChannel(
-      "channel",
-      true
-    ) as TextChannel;
+    const subcommands = options.getSubcommand();
 
-    await guildExists(interaction.guildId);
-    await prisma.guild.update({
-      where: {
-        guildId: interaction.guildId,
-      },
-      data: {
-        motivationChannel: motivationChannel.id,
-      },
-    });
-
-    await interaction.reply({
-      content: `The motivation channel has been set to <#${motivationChannel.id}>`,
-    });
-
-    success("setup", interaction.user.username, interaction.user.id);
+    switch (subcommands) {
+      case "channel":
+        await channel(client, interaction);
+        break;
+      default:
+        interaction.reply({
+          content: "Invalid subcommand",
+          ephemeral: true,
+        });
+        break;
+    }
   } catch (err) {
     error("setup", interaction.user.username, interaction.user.id);
     console.log(err);
