@@ -64,24 +64,36 @@ export async function execute(client: Client, interaction: CommandInteraction) {
 
     const options = interaction.options as CommandInteractionOptionResolver;
 
-    const subCommandGroup = interaction.options.getSubcommandGroup(false);
-    const subCommand = interaction.options.getSubcommand(false);
+    const subCommandGroup = options.getSubcommandGroup();
+    const subCommand = options.getSubcommand();
 
     if (subCommandGroup === "quote") {
-      if (subCommand === "create") {
-        const quote = options.getString("quote", true);
-        const author = options.getString("author", true);
+      switch (subCommand) {
+        case "create":
+          const quote = options.getString("quote", true);
+          const author = options.getString("author", true);
 
-        quoteAdd(client, interaction, quote, author);
-      }
-      if (subCommand === "remove") {
-        const id = options.getString("id", true);
+          quoteAdd(client, interaction, quote, author);
+          break;
+        case "remove":
+          const id = options.getString("id", true);
 
-        qouteDel(client, interaction, id);
+          qouteDel(client, interaction, id);
+          break;
+        case "list":
+          quoteList(client, interaction);
+          break;
+        default:
+          interaction.reply({
+            content: "Invalid subcommand",
+            ephemeral: true,
+          });
+          break;
       }
-      if (subCommand === "list") {
-        quoteList(client, interaction);
-      }
+      interaction.reply({
+        content: "Invalid subcommand",
+        ephemeral: true,
+      });
     }
   } catch (err) {
     error("admin", interaction.user.username, interaction.user.id);

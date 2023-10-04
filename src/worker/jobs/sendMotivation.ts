@@ -41,10 +41,13 @@ export default async function sendMotivation() {
       take: 1,
     });
 
+    if (!motivationQuote[0]) return consola.error("No motivation quote found");
+
     /**
      * Create a custom embed for the motivation message.
      */
     const addedBy = await client.users.fetch(motivationQuote[0].addedBy);
+
     if (!addedBy) return consola.error("No user found");
 
     const motivationEmbed = new EmbedBuilder()

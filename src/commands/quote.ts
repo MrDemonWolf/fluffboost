@@ -22,6 +22,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       take: 1,
     });
 
+    if (!motivationQuote[0])
+      return interaction.reply(
+        "No motivation quote found.  Please try again later!"
+      );
+
     /**
      * Create a custom embed for the motivation message.
      */
