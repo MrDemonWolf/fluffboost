@@ -31,7 +31,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         },
         {
           name: "Version",
-          value: "1.0.0",
+          value: "1.0.1",
         }
       )
       .setFooter({
