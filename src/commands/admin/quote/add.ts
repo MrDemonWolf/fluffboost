@@ -14,6 +14,8 @@ export default async function (
 
     const isAllowed = checkAllowedUser(interaction);
 
+    console.log(isAllowed);
+
     if (!isAllowed) return;
 
     if (!quote) return interaction.reply("Please provide a quote");

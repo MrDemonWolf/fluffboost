@@ -1,7 +1,11 @@
 import type { CommandInteraction } from "discord.js";
 
+import { trimArray } from "./trimArray";
+
 export function checkAllowedUser(interaction: CommandInteraction) {
-  const allowedUsers = process.env.ALLOWED_USERS?.split(",") as string[];
+  const allowedUsersArray = process.env.ALLOWED_USERS?.split(",") as string[];
+  const allowedUsers = trimArray(allowedUsersArray);
+
   if (!allowedUsers.includes(interaction.user.id)) {
     console.error(`User ${interaction.user.id} tired to use bot quote add`);
     interaction.reply({
