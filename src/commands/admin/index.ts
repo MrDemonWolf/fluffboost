@@ -51,7 +51,7 @@ export const slashCommand = new SlashCommandBuilder()
           );
       })
       .addSubcommand((subCommand: SlashCommandSubcommandBuilder) => {
-        return subCommand.setName("list").setDescription("List all quote");
+        return subCommand.setName("list").setDescription("List all quotes");
       });
   })
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
@@ -90,11 +90,12 @@ export async function execute(client: Client, interaction: CommandInteraction) {
           });
           break;
       }
-      interaction.reply({
-        content: "Invalid subcommand",
-        ephemeral: true,
-      });
+      return;
     }
+    interaction.reply({
+      content: "Invalid subcommand",
+      ephemeral: true,
+    });
   } catch (err) {
     error("admin", interaction.user.username, interaction.user.id);
     console.log(err);

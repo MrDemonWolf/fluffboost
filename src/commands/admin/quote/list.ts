@@ -16,11 +16,13 @@ export default async function (
 
     const quotes = await prisma.motivationQuote.findMany();
 
-    if (!quotes)
+    if (quotes.length === 0)
       return interaction.reply({
         content: "No quotes found. Add some!",
         ephemeral: true,
       });
+
+    console.log(quotes);
 
     let text = "";
     quotes.forEach((quote) => {
@@ -30,7 +32,7 @@ export default async function (
     interaction.reply({
       files: [
         {
-          attachment: Buffer.from(text, "utf-8"),
+          attachment: Buffer.from(text),
           name: "quotes.txt",
         },
       ],
