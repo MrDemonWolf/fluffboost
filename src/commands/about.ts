@@ -31,7 +31,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         },
         {
           name: "Version",
-          value: "1.0.1",
+          value: process.env.npm_package_version as string,
         }
       )
       .setFooter({
