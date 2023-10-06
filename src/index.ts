@@ -3,6 +3,8 @@ import { config } from "dotenv";
 import { PrismaClient } from "@prisma/client";
 import consola from "consola";
 
+import api from "./api";
+
 /**
  * Load environment variables from .env file.
  */
@@ -20,6 +22,23 @@ prisma
     consola.success({
       message: `Prisma: Connected`,
       badge: true,
+    });
+
+    /**
+     * Start Express API Server
+     */
+    api.listen(api.get("port"), () => {
+      /**
+       *  Log infomation after everything is started.
+       */
+      if (process.env.NODE_ENV !== "test") {
+        consola.success({
+          message: `API: Listening at http://${api.get("host")}:${api.get(
+            "port"
+          )}`,
+          badge: true,
+        });
+      }
     });
   })
   .catch(async (err: any) => {
