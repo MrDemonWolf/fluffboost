@@ -2,6 +2,8 @@ import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import type { Client, CommandInteraction, User } from "discord.js";
 import { info, success, error } from "../utils/commandLogger";
 
+import pjson from "../../package.json";
+
 export const slashCommand = new SlashCommandBuilder()
   .setName("about")
   .setDescription("Learn more about the bot and its creator");
@@ -31,7 +33,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         },
         {
           name: "Version",
-          value: process.env.npm_package_version as string,
+          value: pjson.version,
         }
       )
       .setFooter({
