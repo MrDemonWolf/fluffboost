@@ -23,23 +23,6 @@ prisma
       message: `Prisma: Connected`,
       badge: true,
     });
-
-    /**
-     * Start Express API Server
-     */
-    api.listen(api.get("port"), () => {
-      /**
-       *  Log infomation after everything is started.
-       */
-      if (process.env.NODE_ENV !== "test") {
-        consola.success({
-          message: `API: Listening at http://${api.get("host")}:${api.get(
-            "port"
-          )}`,
-          badge: true,
-        });
-      }
-    });
   })
   .catch(async (err: any) => {
     consola.error({
@@ -48,6 +31,29 @@ prisma
     });
     process.exit(1);
   });
+
+/**
+ * Start API server.
+ */
+api.listen(api.get("port"), () => {
+  /**
+   *  Log infomation after everything is started.
+   */
+  if (process.env.NODE_ENV !== "test") {
+    consola.success({
+      message: `API: Listening at http://${api.get("host")}:${api.get("port")}`,
+      badge: true,
+    });
+  }
+});
+
+api.on("error", (err) => {
+  consola.error({
+    message: `API: Error: ${err}`,
+    badge: true,
+  });
+  process.exit(1);
+});
 
 /**
  * Discord.js Sharding Manager
