@@ -2,6 +2,12 @@ import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import type { Client, CommandInteraction, User } from "discord.js";
 import { info, success, error } from "../utils/commandLogger";
 
+const revision = require("child_process")
+  .execSync("git rev-parse HEAD")
+  .toString()
+  .trim()
+  .slice(0, 7);
+
 export const slashCommand = new SlashCommandBuilder()
   .setName("about")
   .setDescription("Learn more about the bot and its creator");
@@ -20,18 +26,34 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       )
       .addFields(
         {
-          name: "Creators Website",
+          name: "Project GitHub",
+          value: "[GitHub](https://www.github.com/mrdemonwolf/fluffboost)",
+          inline: true,
+        },
+        {
+          name: "Status Page",
+          value: "[Status](https://status.mrdemonwolf.com)",
+          inline: true,
+        },
+        {
+          name: "Creator Website",
           value: "[Website](https://www.mrdmeonwolf.com)",
           inline: true,
         },
         {
-          name: "Creators Discord",
+          name: "Creator Discord",
           value: "[Discord](https://l.mrdemonwolf.com/discord)",
           inline: true,
         },
         {
           name: "Version",
           value: "1.1.0",
+          inline: true,
+        },
+        {
+          name: "Comiit",
+          value: revision,
+          inline: true,
         }
       )
       .setFooter({
