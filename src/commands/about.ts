@@ -47,7 +47,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         },
         {
           name: "Version",
-          value: "1.1.1",
+          value: "1.2.0",
           inline: true,
         },
         {
