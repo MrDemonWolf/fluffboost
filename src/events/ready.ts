@@ -7,6 +7,7 @@ import { prisma } from "../database";
  */
 import about from "../commands/about";
 import quote from "../commands/quote";
+import invite from "../commands/invite";
 import setup from "../commands/setup";
 import admin from "../commands/admin";
 
@@ -75,6 +76,7 @@ export async function readyEvent(client: Client) {
     await client.application?.commands.set([
       about.slashCommand,
       quote.slashCommand,
+      invite.slashCommand,
       setup.slashCommand,
       admin.slashCommand,
     ]);
