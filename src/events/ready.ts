@@ -5,6 +5,7 @@ import { prisma } from "../database";
 /**
  * Import slash commands from the commands folder.
  */
+import help from "../commands/help";
 import about from "../commands/about";
 import quote from "../commands/quote";
 import invite from "../commands/invite";
@@ -74,6 +75,7 @@ export async function readyEvent(client: Client) {
     });
 
     await client.application?.commands.set([
+      help.slashCommand,
       about.slashCommand,
       quote.slashCommand,
       invite.slashCommand,
