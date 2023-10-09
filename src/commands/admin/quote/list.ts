@@ -22,11 +22,9 @@ export default async function (
         ephemeral: true,
       });
 
-    console.log(quotes);
-
-    let text = "";
+    let text = "ID - Quote - Author\n";
     quotes.forEach((quote) => {
-      text += `${quote.id} - ${quote.quote}\n`;
+      text += `${quote.id} - ${quote.quote} - ${quote.author}\n`;
     });
 
     interaction.reply({
