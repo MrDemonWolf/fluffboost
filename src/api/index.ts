@@ -37,22 +37,4 @@ app.set("port", process.env.PORT || 8080);
  */
 app.use("/status", statusRoute);
 
-/**
- * Start API server.
- */
-app.listen(app.get("port"), () => {
-  consola.success({
-    message: `API: Listenings at http://${app.get("host")}:${app.get("port")}`,
-    badge: true,
-  });
-});
-
-app.on("error", (err) => {
-  consola.error({
-    message: `API: Error: ${err}`,
-    badge: true,
-  });
-  process.exit(1);
-});
-
 export default app;
