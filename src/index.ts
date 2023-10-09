@@ -3,8 +3,6 @@ import { config } from "dotenv";
 import { PrismaClient } from "@prisma/client";
 import consola from "consola";
 
-import api from "./api";
-
 /**
  * Load environment variables from .env file.
  */
@@ -31,29 +29,6 @@ prisma
     });
     process.exit(1);
   });
-
-/**
- * Start API server.
- */
-api.listen(api.get("port"), () => {
-  /**
-   *  Log infomation after everything is started.
-   */
-  if (process.env.NODE_ENV !== "test") {
-    consola.success({
-      message: `API: Listening at http://${api.get("host")}:${api.get("port")}`,
-      badge: true,
-    });
-  }
-});
-
-api.on("error", (err) => {
-  consola.error({
-    message: `API: Error: ${err}`,
-    badge: true,
-  });
-  process.exit(1);
-});
 
 /**
  * Discord.js Sharding Manager

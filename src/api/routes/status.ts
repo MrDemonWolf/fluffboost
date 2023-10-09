@@ -1,5 +1,4 @@
 import express from "express";
-import client from "../../bot";
 
 const router = express.Router();
 
@@ -11,16 +10,6 @@ const router = express.Router();
  */
 router.get("/", async (req, res) => {
   try {
-    // check if bot is ready and connected to Discord API Gateway
-
-    const isDiscordAPIReady = client.ws.status === 0;
-    const isClientReady = client.isReady();
-    const isOnline = isDiscordAPIReady || isClientReady;
-
-    if (!isOnline) {
-      return res.status(503).json({ status: "Offline" });
-    }
-
     res.status(200).json({
       status: "Online",
     });

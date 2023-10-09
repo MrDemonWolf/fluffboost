@@ -7,6 +7,7 @@ import { readyEvent } from "./events/ready";
 import { guildCreateEvent } from "./events/guildCreate";
 import { guildDeleteEvent } from "./events/guildDelete";
 import { interactionCreateEvent } from "./events/interactionCreate";
+import { shardDisconnectEvent } from "./events/shardDisconnect";
 
 /**
  * Import functions from the utils folder.
@@ -27,6 +28,9 @@ const client = new Client({
  */
 client.on(Events.ClientReady, async () => {
   try {
+    /**
+     * Start API server.
+     */
     await readyEvent(client);
     setActivity(client); // set activity on startup
     setInterval(() => {
@@ -58,6 +62,13 @@ client.on(Events.GuildDelete, (guild) => {
  */
 client.on(Events.InteractionCreate, (interaction) => {
   interactionCreateEvent(client, interaction);
+});
+
+/**
+ * Handle discord ShardDisconnect event.
+ */
+client.on(Events.ShardDisconnect, () => {
+  shardDisconnectEvent();
 });
 
 client.login(process.env.DISCORD_APPLICATION_BOT_TOKEN);
