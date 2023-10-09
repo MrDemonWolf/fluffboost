@@ -1,6 +1,6 @@
 {
   "name": "fluffboost",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "FluffBoost is a heartwarming Discord bot that delivers daily doses of motivation and inspiration wrapped in a furry-friendly package. Brighten your Discord server with adorable furry mascots and uplifting quotes. Let FluffBoost bring smiles and positivity to your community every day!  ",
   "main": "index.js",
   "scripts": {
