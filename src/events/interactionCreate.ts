@@ -4,6 +4,7 @@ import { info, success, warn } from "../utils/commandLogger";
 /**
  * Import slash commands from the commands folder.
  */
+import help from "../commands/help";
 import about from "../commands/about";
 import quote from "../commands/quote";
 import invite from "../commands/invite";
@@ -24,6 +25,15 @@ export async function interactionCreateEvent(
     if (!commandName) return;
 
     switch (commandName) {
+      case "help":
+        success(
+          "interactionCreate - help",
+          interaction.user.username,
+          interaction.user.id
+        );
+        help.execute(client, interaction as CommandInteraction);
+        break;
+
       case "about":
         success(
           "interactionCreate - about",
