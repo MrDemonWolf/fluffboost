@@ -6,6 +6,7 @@ import { info, success, warn } from "../utils/commandLogger";
  */
 import about from "../commands/about";
 import quote from "../commands/quote";
+import invite from "../commands/invite";
 import admin from "../commands/admin";
 import setup from "../commands/setup";
 
@@ -29,35 +30,47 @@ export async function interactionCreateEvent(
           interaction.user.username,
           interaction.user.id
         );
-        return about.execute(client, interaction as CommandInteraction);
+        about.execute(client, interaction as CommandInteraction);
+        break;
+
       case "quote":
         success(
           "interactionCreate - quote",
           interaction.user.username,
           interaction.user.id
         );
-        return quote.execute(client, interaction as CommandInteraction);
+        quote.execute(client, interaction as CommandInteraction);
+        break;
+      case "invite":
+        success(
+          "interactionCreate - invite",
+          interaction.user.username,
+          interaction.user.id
+        );
+        invite.execute(client, interaction as CommandInteraction);
+        break;
       case "admin":
         success(
           "interactionCreate - admin",
           interaction.user.username,
           interaction.user.id
         );
-        return admin.execute(client, interaction as CommandInteraction);
+        admin.execute(client, interaction as CommandInteraction);
+        break;
       case "setup":
         success(
           "interactionCreate - setup",
           interaction.user.username,
           interaction.user.id
         );
-        return setup.execute(client, interaction as CommandInteraction);
+        setup.execute(client, interaction as CommandInteraction);
+        break;
       default:
         warn(
           "interactionCreate - Command not found",
           interaction.user.username,
           interaction.user.id
         );
-        return;
     }
   } catch (err) {
     console.log("Error executing command: ", err);
