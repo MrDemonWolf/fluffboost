@@ -4,8 +4,8 @@
   "description": "FluffBoost is a heartwarming Discord bot that delivers daily doses of motivation and inspiration wrapped in a furry-friendly package. Brighten your Discord server with adorable furry mascots and uplifting quotes. Let FluffBoost bring smiles and positivity to your community every day!  ",
   "main": "index.js",
   "scripts": {
-    "start": "node dist/index.js",
-    "dev": "nodemon --exec ts-node src/index.ts",
+    "start": "node dist/app.js",
+    "dev": "nodemon --exec ts-node src/app.ts",
     "build": "rm -rf dist/ && tsc -p . --outDir dist",
     "lint": "eslint . --ext .js --fix",
     "format": "prettier-eslint --write $PWD/'**/*.{js,json}'",
