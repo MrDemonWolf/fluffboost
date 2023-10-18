@@ -6,7 +6,7 @@ import { prisma } from "../database";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("quote")
-  .setDescription("Get a random quote");
+  .setDescription("Get an instant dose of motivation");
 
 export async function execute(client: Client, interaction: CommandInteraction) {
   try {
