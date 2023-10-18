@@ -16,6 +16,25 @@ export default async function sendMotivation() {
     },
   });
 
+  /**
+   * Find a random motivation quote from the database.
+   */
+  const motivationQuoteCount = await prisma.motivationQuote.count();
+  const skip = Math.floor(Math.random() * motivationQuoteCount);
+  const motivationQuote = await prisma.motivationQuote.findMany({
+    skip,
+    take: 1,
+  });
+
+  if (!motivationQuote[0]) return consola.error("No motivation quote found");
+
+  /**
+   * Get the user who added the motivation quote.
+   */
+  const addedBy = await client.users.fetch(motivationQuote[0].addedBy);
+
+  if (!addedBy) return "Uknown user";
+
   guilds.map(async (g) => {
     /**
      * This is to keep typescript happy. As in the query above.
@@ -32,23 +51,8 @@ export default async function sendMotivation() {
     ) as TextChannel;
 
     /**
-     * Find a random motivation quote from the database.
-     */
-    const motivationQuoteCount = await prisma.motivationQuote.count();
-    const skip = Math.floor(Math.random() * motivationQuoteCount);
-    const motivationQuote = await prisma.motivationQuote.findMany({
-      skip,
-      take: 1,
-    });
-
-    if (!motivationQuote[0]) return consola.error("No motivation quote found");
-
-    /**
      * Create a custom embed for the motivation message.
      */
-    const addedBy = await client.users.fetch(motivationQuote[0].addedBy);
-
-    if (!addedBy) return consola.error("No user found");
 
     const motivationEmbed = new EmbedBuilder()
       .setColor(0xfadb7f)
