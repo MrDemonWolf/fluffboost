@@ -22,11 +22,11 @@ To add FluffBoost to your Discord server, follow these simple steps:
 
 FluffBoost is designed to be user-friendly and straightforward. Here are some basic commands to get you started:
 
-- `/quote`: Get an instant dose of motivation.
-- `/about`: Learn more about FluffBoost.
-- `/setup`: Set up FluffBoost for your server.
-- `/invite`: Invite FluffBoost to your server.
-- `/help`: Get help with FluffBoost
+- `/about` - Learn more about the bot and its creators.
+- `/invite` - Invite FluffBoost to your server.
+- `/quote` - Get an instant dose of motivation.
+- `/setup` - Setup the bot for your server such as the channel to send quotes to. (admin only)
+- `/admin` - Admin commands. (selected users only)
 
 ## License
 
