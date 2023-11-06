@@ -28,6 +28,37 @@ FluffBoost is designed to be user-friendly and straightforward. Here are some ba
 - `/setup` - Setup the bot for your server such as the channel to send quotes to. (admin only)
 - `/admin` - Admin commands. (selected users only)
 
+# Change Log
+
+# Changelog for Project "FluffBoost"
+
+## Version 1.0.0 (Released on Oct 17, 2023)
+
+### Fixed
+
+- Updated Quote description.
+- Optimized cron-job.
+- Fixed Quotes.
+- Fixed an issue where motivational quotes were posted twice.
+
+### Added
+
+- Added a Simple Express /status route.
+- Edited the Quote List Command.
+- Added a Help Command.
+- Added an Invite Command.
+- Updated the About Command.
+
+## Version 0.1.0 (Released on Oct 1, 2023)
+
+### Added
+
+- Set up the About Command.
+- Set up the Del Quote Command.
+- Set up the List Quote Command.
+- Set up the Add Quote Command.
+- Set up Worker.
+
 ## License
 
 ![GitHub license](https://img.shields.io/github/license/MrDemonWolf/fluffboost.svg?style=for-the-badge&logo=github)
