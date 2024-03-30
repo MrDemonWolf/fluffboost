@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  app:
+    build:
+      target: production # Specify the target build stage
+    environment:
+      - NODE_ENV=production # Override environment variables
+    ports:
+      - "3000:3000"
+  mariadb:
+    environment:
+      - MYSQL_ROOT_PASSWORD=override_root_password # Override MySQL root password
+    ports:
+      - "3306:3306" # Override port mapping for MySQL

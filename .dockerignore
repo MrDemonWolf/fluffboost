@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+.DS_Store
+.git
+.gitignore
+.vscode
+.idea
+*.swp
+*.swo
+*.log
+*.js
+*.js.map
