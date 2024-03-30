@@ -2,12 +2,6 @@ import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import type { Client, CommandInteraction, User } from "discord.js";
 import { info, success, error } from "../utils/commandLogger";
 
-const revision = require("child_process")
-  .execSync("git rev-parse HEAD")
-  .toString()
-  .trim()
-  .slice(0, 7);
-
 export const slashCommand = new SlashCommandBuilder()
   .setName("about")
   .setDescription("Learn more about the bot and its creator");
@@ -48,11 +42,6 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         {
           name: "Version",
           value: "1.0.0",
-          inline: true,
-        },
-        {
-          name: "Comiit",
-          value: revision,
           inline: true,
         }
       )

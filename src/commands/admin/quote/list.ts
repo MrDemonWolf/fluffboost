@@ -2,6 +2,7 @@ import { Client, CommandInteraction } from "discord.js";
 import { info, success, error } from "../../../utils/commandLogger";
 import checkAllowedUser from "../../../utils/checkAllowedUser";
 import { prisma } from "../../../database";
+import type { MotivationQuote } from "@prisma/client";
 
 export default async function (
   client: Client,
@@ -23,7 +24,7 @@ export default async function (
       });
 
     let text = "ID - Quote - Author\n";
-    quotes.forEach((quote) => {
+    quotes.forEach((quote: MotivationQuote) => {
       text += `${quote.id} - ${quote.quote} - ${quote.author}\n`;
     });
 
