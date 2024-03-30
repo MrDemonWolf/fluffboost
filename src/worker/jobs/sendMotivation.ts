@@ -3,6 +3,7 @@ import { TextChannel, EmbedBuilder } from "discord.js";
 
 import { prisma } from "../../database";
 import client from "../../bot";
+import type { Guild } from "@prisma/client";
 
 export default async function sendMotivation() {
   /**
@@ -35,7 +36,7 @@ export default async function sendMotivation() {
 
   if (!addedBy) return "Uknown user";
 
-  guilds.map(async (g) => {
+  guilds.map(async (g: Guild) => {
     /**
      * This is to keep typescript happy. As in the query above.
      * We are filtering out guilds that don't have the motivation channel set.

@@ -11,6 +11,7 @@ import quote from "../commands/quote";
 import invite from "../commands/invite";
 import setup from "../commands/setup";
 import admin from "../commands/admin";
+import changelog from "../commands/changelog";
 
 export async function readyEvent(client: Client) {
   try {
@@ -81,6 +82,7 @@ export async function readyEvent(client: Client) {
       invite.slashCommand,
       setup.slashCommand,
       admin.slashCommand,
+      changelog.slashCommand,
     ]);
 
     const commands = await client.application?.commands.fetch();
