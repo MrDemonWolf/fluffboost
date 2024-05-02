@@ -17,21 +17,11 @@ COPY pnpm-lock.yaml ./
 # Install dependencies
 RUN pnpm install
 
-# Use a lighter base image for development
-FROM base AS development
-
-# Expose server port for development
-EXPOSE 3000
-
-# Run the startup script
-CMD ["/bin/sh", "-c", "./startup-dev.sh"]
-
 # Use the base image for serving the application in production
 FROM base AS production
 
 # Copy the entire application
 COPY . .
-
 # Make startup script executable
 RUN chmod +x startup.sh
 
@@ -40,7 +30,6 @@ RUN pnpm db:generate
 
 # Build the application
 RUN pnpm build
-
 
 # Expose server port for production (default to 3000)
 ARG PORT=3000

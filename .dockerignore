@@ -10,3 +10,5 @@ npm-debug.log
 *.log
 *.js
 *.js.map
+docker-compose.override.yml*
+.env
