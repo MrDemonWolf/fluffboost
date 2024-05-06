@@ -32,7 +32,6 @@ RUN pnpm db:generate
 RUN pnpm build
 
 # Expose server port for production (default to 3000)
-ARG PORT=3000
 ENV PORT=${PORT}
 EXPOSE ${PORT}
 
