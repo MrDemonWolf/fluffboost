@@ -22,6 +22,7 @@ FROM base AS production
 
 # Copy the entire application
 COPY . .
+
 # Make startup script executable
 RUN chmod +x startup.sh
 
@@ -31,9 +32,8 @@ RUN pnpm db:generate
 # Build the application
 RUN pnpm build
 
-# Expose server port for production (default to 3000)
-ENV PORT=${PORT}
+# Expose server port for production (default to 3000, can be overridden)
 EXPOSE ${PORT}
 
-# Run the startup script
-CMD ["/bin/sh", "-c", "./startup.sh"]
+# Command to start the application
+CMD ["./startup.sh"]
