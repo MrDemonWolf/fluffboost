@@ -1,9 +1,6 @@
 # Use a base image suitable for both development and production
 FROM node:20-alpine AS base
 
-# Set environment variables
-ENV PORT=3000
-
 # Set app directory
 WORKDIR /usr/src/app
 
@@ -19,6 +16,9 @@ RUN pnpm install
 
 # Use the base image for serving the application in production
 FROM base AS production
+
+# Set environment variables
+ENV PORT=3000
 
 # Copy the entire application
 COPY . .
