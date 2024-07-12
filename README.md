@@ -67,7 +67,7 @@ FluffBoost is designed to be user-friendly and straightforward. Here are some ba
 
 If you have any questions, suggestions, or feedback, feel free to reach out to us on Discord!
 
-- Discord: [Join our server](https://l.mrdemonwolf.com/discord)
+- Discord: [Join our server](https://mrdwolf.com/discord)
 
 Thank you for choosing FluffBoost to add motivation and positivity to your Discord server!
 
