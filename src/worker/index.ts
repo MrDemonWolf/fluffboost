@@ -7,6 +7,12 @@ import cron from "node-cron";
 import sendMotivation from "./jobs/sendMotivation";
 
 export default function worker() {
+  if (process.env.NODE_ENV === "development") {
+    return consola.info({
+      message: `Worker: Running in Development Mode`,
+      badge: true,
+    });
+  }
   cron.schedule(
     "0 8 * * *",
     () => {

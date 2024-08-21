@@ -15,7 +15,7 @@ export function success(command: string, username: string, id: string) {
 
 export function error(command: string, username: string, id: string) {
   consola.error({
-    message: `* Error executing commadn ${command} from ${username} (${id})`,
+    message: `* Error executing command ${command} from ${username} (${id})`,
     badge: true,
   });
 }
