@@ -62,7 +62,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
 
     info("admin", interaction.user.username, interaction.user.id);
 
-    const options = interaction.options as CommandInteractionOptionResolver;
+    const options = interaction.options;
 
     const subCommandGroup = options.getSubcommandGroup();
     const subCommand = options.getSubcommand();
