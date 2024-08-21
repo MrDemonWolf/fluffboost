@@ -12,14 +12,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
   try {
     info("changelog", interaction.user.username, interaction.user.id);
     interaction.reply({
-      content: `Version 1.0.0 (Released on Oct 17, 2023)
-        Fixed Quotes.
-        Fixed an issue where motivational quotes were posted twice.
-        Added a Simple Express /status route.
-        Edited the Quote List Command.
-        Added a Help Command.
-        Added an Invite Command.
-        Updated the About Command.`,
+      content: `**Version 1.0.0** (Released on Oct 17, 2023)\n- Fixed Quotes.\n- Fixed an issue where motivational quotes were posted twice.\n- Added a Simple Express \`/status\` route.\n- Edited the Quote List Command.\n- Added a Help Command.\n- Added an Invite Command.\n- Updated the About Command.`,
       ephemeral: true,
     });
     success("changelog", interaction.user.username, interaction.user.id);

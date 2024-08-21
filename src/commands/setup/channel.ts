@@ -25,6 +25,7 @@ export default async function (
     ) as TextChannel;
 
     await guildExists(interaction.guildId);
+
     await prisma.guild.update({
       where: {
         guildId: interaction.guildId,
