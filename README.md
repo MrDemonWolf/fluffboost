@@ -2,7 +2,7 @@
 
 ![FluffBoost Logo](logo.jpg)
 
-FluffBoost is a heartwarming Discord bot that delivers daily doses of motivation and inspiration wrapped in a furry-friendly package. Brighten your Discord server with adorable furry mascots and uplifting quotes. Let FluffBoost bring smiles and positivity to your community every day!
+FluffBoost is the adorable Discord bot spreading daily motivation and inspiration with a furry-friendly flair. Add cute furry mascots and uplifting quotes to your server. Let FluffBoost bring smiles and positivity to your community!
 
 ## Features
 
