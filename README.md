@@ -34,32 +34,10 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 
 # Changelog for Project "FluffBoost"
 
-## Version 1.0.0 (Released on Oct 17, 2023)
+## Version 1.0.0 Released (on Dec 12, 2024)
 
-### Fixed
-
-- Updated Quote description.
-- Optimized cron-job.
-- Fixed Quotes.
-- Fixed an issue where motivational quotes were posted twice.
-
-### Added
-
-- Added a Simple Express /status route.
-- Edited the Quote List Command.
-- Added a Help Command.
-- Added an Invite Command.
-- Updated the About Command.
-
-## Version 0.1.0 (Released on Oct 1, 2023)
-
-### Added
-
-- Set up the About Command.
-- Set up the Del Quote Command.
-- Set up the List Quote Command.
-- Set up the Add Quote Command.
-- Set up Worker.
+- Remove Owner command
+- Change icon
 
 ## License
 

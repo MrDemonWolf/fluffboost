@@ -12,7 +12,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
   try {
     info("changelog", interaction.user.username, interaction.user.id);
     interaction.reply({
-      content: `**Version 1.1.1** (Released on Aug 21, 2024)\n- Remove Owner command.\n-Change icon`,
+      content: `**Version 1.1.1** (Released on Dec 12, 2024)\n- Remove Owner command.\n-Change icon`,
       ephemeral: true,
     });
     success("changelog", interaction.user.username, interaction.user.id);
