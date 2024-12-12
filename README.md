@@ -1,6 +1,6 @@
 # FluffBoost - Furry Motivation Discord Bot 🐾
 
-![FluffBoost Logo](logo.jpg)
+![FluffBoost Banner](banner.jpg)
 
 Your Daily Dose of Furry Motivation! Join our friendly community to enjoy daily uplifting quotes and heartwarming messages designed to brighten your day. Whether you’re seeking inspiration, a boost of positivity, or just a reason to smile, we’re here to make every day a little better.
 
