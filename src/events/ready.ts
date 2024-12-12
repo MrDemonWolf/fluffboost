@@ -12,7 +12,6 @@ import invite from "../commands/invite";
 import setup from "../commands/setup";
 import admin from "../commands/admin";
 import changelog from "../commands/changelog";
-import owner from "../commands/owner";
 
 export async function readyEvent(client: Client) {
   try {
@@ -77,7 +76,6 @@ export async function readyEvent(client: Client) {
     });
 
     await client.application?.commands.set([
-      owner.slashCommand,
       help.slashCommand,
       about.slashCommand,
       quote.slashCommand,
