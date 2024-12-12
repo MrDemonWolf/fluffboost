@@ -1,5 +1,5 @@
 # Use a base image suitable for both development and production
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 
 # Set app directory
 WORKDIR /usr/src/app
