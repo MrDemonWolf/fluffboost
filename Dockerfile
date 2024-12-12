@@ -4,8 +4,9 @@ FROM node:22-alpine AS base
 # Set app directory
 WORKDIR /usr/src/app
 
-# Install pnpm globally
-RUN npm install -g pnpm
+# Install pnpm and openssl globally
+RUN npm install -g pnpm && \
+    apk add --no-cache openssl
 
 # Copy package.json and pnpm files
 COPY package*.json ./
