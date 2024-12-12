@@ -47,7 +47,7 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 
 If you have any questions, suggestions, or feedback, feel free to reach out to us on Discord!
 
-- Discord: [Join our server](https://mrdwolf.com/discord)
+- Discord: [Join my server](https://mrdwolf.com/discord)
 
 Thank you for choosing FluffBoost to add motivation and positivity to your Discord server!
 
