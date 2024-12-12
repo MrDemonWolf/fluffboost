@@ -12,7 +12,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
   try {
     info("changelog", interaction.user.username, interaction.user.id);
     interaction.reply({
-      content: `**Version 1.1.0** (Released on Aug 21, 2024)\n- Added Changelog command.\n- Added Owner command.\n- Worker Dev Mode.\n- Fixed typo in Logger.`,
+      content: `**Version 1.1.1** (Released on Aug 21, 2024)\n- Remove Owner command.\n-Change icon`,
       ephemeral: true,
     });
     success("changelog", interaction.user.username, interaction.user.id);

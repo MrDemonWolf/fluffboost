@@ -2,14 +2,17 @@
 
 ![FluffBoost Logo](logo.jpg)
 
-FluffBoost is a heartwarming Discord bot that delivers daily doses of motivation and inspiration wrapped in a furry-friendly package. Brighten your Discord server with adorable furry mascots and uplifting quotes. Let FluffBoost bring smiles and positivity to your community every day!
+Your Daily Dose of Furry Motivation! Join our friendly community to enjoy daily uplifting quotes and heartwarming messages designed to brighten your day. Whether you’re seeking inspiration, a boost of positivity, or just a reason to smile, we’re here to make every day a little better.
+
+Connect with like-minded individuals who share your love for furry culture and positivity. Together, we’ll inspire kindness, growth, and happiness in a supportive and welcoming space.
+
+Start your day with a smile or find encouragement when you need it most. Join us today and let’s spread joy, one quote at a time!
 
 ## Features
 
-- Daily motivational quotes delivered to your Discord server.
-- Easy integration into your Discord server.
-- Open-source and community-driven development.
-- Built by furries, for furries! 🐺🐾
+- **Daily Motivational Quotes**: Automatically delivered to your server.
+- **Easy Integration**: Simple setup for any Discord server.
+- **Community-Driven**: Open-source development powered by furries, for furries! 🐺🐾
 
 ## Getting Started
 
@@ -20,13 +23,12 @@ To add FluffBoost to your Discord server, follow these simple steps:
 
 ## Usage
 
-FluffBoost is designed to be user-friendly and straightforward. Here are some basic commands to get you started:
+FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the basic commands:
 
-- `/about` - Learn more about the bot and its creators.
+- `/about` - Learn about the bot and its creators.
 - `/invite` - Invite FluffBoost to your server.
-- `/quote` - Get an instant dose of motivation.
-- `/setup` - Setup the bot for your server such as the channel to send quotes to. (admin only)
-- `/admin` - Admin commands. (selected users only)
+- `/quote` - Receive an instant motivational quote.
+- `/setup` - Configure bot settings like the target channel for quotes (admin only).
 
 # Change Log
 

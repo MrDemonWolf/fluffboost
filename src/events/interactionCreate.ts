@@ -11,7 +11,6 @@ import quote from "../commands/quote";
 import invite from "../commands/invite";
 import admin from "../commands/admin";
 import setup from "../commands/setup";
-import owner from "../commands/owner";
 
 export async function interactionCreateEvent(
   client: Client,
@@ -85,13 +84,6 @@ export async function interactionCreateEvent(
         );
         setup.execute(client, interaction);
         break;
-      case "owner":
-        success(
-          "interactionCreate - owner",
-          interaction.user.username,
-          interaction.user.id
-        );
-        owner.execute(client, interaction);
       default:
         warn(
           "interactionCreate - Command not found",
