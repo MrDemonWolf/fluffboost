@@ -32,9 +32,7 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 
 # Change Log
 
-# Changelog for Project "FluffBoost"
-
-## Version 1.0.0 Released (on Dec 12, 2024)
+## Version 1.1.1 Released (on Dec 12, 2024)
 
 - Remove Owner command
 - Change icon
