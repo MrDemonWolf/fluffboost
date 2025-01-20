@@ -1,5 +1,7 @@
 import express from "express";
 
+import { botStatus } from "../../bot";
+
 const router = express.Router();
 
 /**
@@ -11,7 +13,7 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   try {
     res.status(200).json({
-      status: "Online",
+      status: botStatus.status,
     });
   } catch (err) {
     console.error(err);
