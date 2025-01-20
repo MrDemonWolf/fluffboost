@@ -2,7 +2,7 @@ import { ShardingManager } from "discord.js";
 import { config } from "dotenv";
 import { PrismaClient } from "@prisma/client";
 import consola from "consola";
-import app from "./api";
+import api from "./api";
 
 /**
  * Load environment variables from .env file.
@@ -19,13 +19,13 @@ prisma
   .then(async () => {
     await prisma.$disconnect();
     consola.success({
-      message: `Prisma: Connected`,
+      message: `[Prisma] Connected`,
       badge: true,
     });
   })
   .catch(async (err: any) => {
     consola.error({
-      message: `Prisma: Error connecting to database: ${err}`,
+      message: `[Prisma] Error connecting to database: ${err}`,
       badge: true,
     });
     process.exit(1);
@@ -34,17 +34,22 @@ prisma
 /**
  * Start API server.
  */
-app.listen(app.get("port"), () => {
-  consola.success({
-    message: `API: Listenings at http://${app.get("host")}:${app.get("port")}`,
+
+api.listen(api.get("port"), () => {
+  consola.ready({
+    message: `[API] Listening on http://${api.get("host")}:${api.get("port")}`,
     badge: true,
+    timestamp: new Date(),
+    level: "info",
   });
 });
 
-app.on("error", (err) => {
+api.on("error", (err) => {
   consola.error({
-    message: `API: Error: ${err}`,
+    message: `[API] ${err}`,
     badge: true,
+    timestamp: new Date(),
+    level: "error",
   });
   process.exit(1);
 });

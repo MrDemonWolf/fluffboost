@@ -10,14 +10,13 @@ import { interactionCreateEvent } from "./events/interactionCreate";
 import { shardDisconnectEvent } from "./events/shardDisconnect";
 
 /**
- * Import functions from the utils folder.
- */
-import { setActivity } from "./utils/setActivity";
-
-/**
  * Import worker main function.
  */
 import worker from "./worker";
+
+export let botStatus = {
+  status: "offline",
+};
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
@@ -28,15 +27,9 @@ const client = new Client({
  */
 client.on(Events.ClientReady, async () => {
   try {
-    /**
-     * Start API server.
-     */
     await readyEvent(client);
-    setActivity(client); // set activity on startup
-    setInterval(() => {
-      setActivity(client);
-    }, 30 * 60 * 1000); // will set activity every 30 minutes
     worker();
+    botStatus.status = "online";
   } catch (err) {
     console.log(err);
     process.exit(1);
@@ -69,6 +62,12 @@ client.on(Events.InteractionCreate, (interaction) => {
  */
 client.on(Events.ShardDisconnect, () => {
   shardDisconnectEvent();
+  botStatus.status = "offline";
+});
+
+client.on(Events.ShardError, () => {
+  shardDisconnectEvent();
+  botStatus.status = "offline";
 });
 
 client.login(process.env.DISCORD_APPLICATION_BOT_TOKEN);
