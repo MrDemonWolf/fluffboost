@@ -32,10 +32,10 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 
 # Change Log
 
-## Version 1.1.1 Released (on Dec 12, 2024)
+## Version 1.2.0 Released (on Jan 20, 2025)
 
-- Remove Owner command
-- Change icon
+- Updated to new way to add/remove guilds.
+- Fixed status page express api to now show the correct status of the bot via discord api.
 
 ## License
 
