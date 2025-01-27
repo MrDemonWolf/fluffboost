@@ -27,7 +27,7 @@ const client = new Client({
  */
 client.on(Events.ClientReady, async () => {
   try {
-    await readyEvent(client);
+    readyEvent(client);
     worker();
     botStatus.status = "online";
   } catch (err) {
@@ -60,11 +60,6 @@ client.on(Events.InteractionCreate, (interaction) => {
 /**
  * Handle discord ShardDisconnect event.
  */
-client.on(Events.ShardDisconnect, () => {
-  shardDisconnectEvent();
-  botStatus.status = "offline";
-});
-
 client.on(Events.ShardError, () => {
   shardDisconnectEvent();
   botStatus.status = "offline";

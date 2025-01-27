@@ -1,6 +1,7 @@
 import { ShardingManager } from "discord.js";
 import { config } from "dotenv";
 import { PrismaClient } from "@prisma/client";
+
 import consola from "consola";
 import api from "./api";
 
