@@ -14,9 +14,10 @@ import { shardDisconnectEvent } from "./events/shardDisconnect";
  */
 import worker from "./worker";
 
-export let botStatus = {
-  status: "offline",
-};
+/**
+ * Import bot status object from the api.
+ */
+import { botStatus } from "./api/index";
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
