@@ -2,7 +2,6 @@ import express from "express";
 import morgan from "morgan";
 import helmet from "helmet";
 import cors from "cors";
-import consola from "consola";
 
 /**
  * Import all routes
@@ -10,6 +9,13 @@ import consola from "consola";
 import statusRoute from "./routes/status";
 
 const app = express();
+
+/**
+ * Export botStatus object to be used in the status route
+ */
+export let botStatus = {
+  status: "offline",
+};
 
 /**
  * Express configuration (express.json, express.urlencoded, helmet, morgan, cors)
