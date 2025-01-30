@@ -1,6 +1,6 @@
 import express from "express";
 
-import { botStatus } from "../../bot";
+import { botStatus } from "../index";
 
 const router = express.Router();
 
