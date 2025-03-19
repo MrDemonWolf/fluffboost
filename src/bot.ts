@@ -14,11 +14,6 @@ import { shardDisconnectEvent } from "./events/shardDisconnect";
  */
 import worker from "./worker";
 
-/**
- * Import bot status object from the api.
- */
-import { botStatus } from "./api/index";
-
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
@@ -30,7 +25,6 @@ client.on(Events.ClientReady, async () => {
   try {
     readyEvent(client);
     worker();
-    botStatus.status = "online";
   } catch (err) {
     console.log(err);
     process.exit(1);
