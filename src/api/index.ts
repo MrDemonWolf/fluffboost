@@ -9,14 +9,6 @@ import cors from "cors";
 import statusRoute from "./routes/status";
 
 const app = express();
-
-/**
- * Export botStatus object to be used in the status route
- */
-export let botStatus = {
-  status: "offline",
-};
-
 /**
  * Express configuration (express.json, express.urlencoded, helmet, morgan, cors)
  */
@@ -41,6 +33,6 @@ app.set("port", process.env.PORT || 8080);
 /**
  * Initialize routes
  */
-app.use("/status", statusRoute);
+app.use("/api/status", statusRoute);
 
 export default app;
