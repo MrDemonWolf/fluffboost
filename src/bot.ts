@@ -57,7 +57,6 @@ client.on(Events.InteractionCreate, (interaction) => {
  */
 client.on(Events.ShardError, () => {
   shardDisconnectEvent();
-  botStatus.status = "offline";
 });
 
 client.login(process.env.DISCORD_APPLICATION_BOT_TOKEN);
