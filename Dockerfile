@@ -1,16 +1,13 @@
 # Use a base image suitable for both development and production
-FROM node:22-alpine AS base
+FROM node:23-slim AS base
 
 # Set app directory
 WORKDIR /usr/src/app
 
 # Install pnpm and openssl globally
-RUN npm install -g pnpm && \
-    apk add --no-cache openssl
-
-# Copy package.json and pnpm files
-COPY package*.json ./
-COPY pnpm-lock.yaml ./
+RUN npm install -g pnpm &&
+    apt-get update &&
+    apt-get install -y openssl curl
 
 # Install dependencies
 RUN pnpm install
