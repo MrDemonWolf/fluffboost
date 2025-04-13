@@ -10,6 +10,7 @@ import { setActivity } from "../utils/setActivity";
 import help from "../commands/help";
 import about from "../commands/about";
 import quote from "../commands/quote";
+import suggestion from "../commands/suggestion";
 import invite from "../commands/invite";
 import setup from "../commands/setup";
 import admin from "../commands/admin";
@@ -81,6 +82,7 @@ export async function readyEvent(client: Client) {
       help.slashCommand,
       about.slashCommand,
       quote.slashCommand,
+      suggestion.slashCommand,
       invite.slashCommand,
       setup.slashCommand,
       admin.slashCommand,
