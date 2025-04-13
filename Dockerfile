@@ -5,8 +5,7 @@ FROM node:23-slim AS base
 WORKDIR /usr/src/app
 
 # Install pnpm and openssl globally
-RUN npm install -g pnpm &&
-    apk add --no-cache openssl
+RUN npm install -g pnpm
 
 # Copy package.json and pnpm files
 COPY package*.json ./
