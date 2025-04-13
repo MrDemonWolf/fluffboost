@@ -23,9 +23,6 @@ ENV PORT=3000
 # Copy the entire application
 COPY . .
 
-# Make startup script executable
-RUN chmod +x startup.sh
-
 # Run Prisma Generate to generate the Prisma Client
 RUN pnpm db:generate
 
