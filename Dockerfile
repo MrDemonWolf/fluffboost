@@ -36,4 +36,4 @@ RUN pnpm build
 EXPOSE ${PORT}
 
 # Command to start the application
-CMD ["./startup.sh"]
+CMD ["node", "dist/index.js"]
