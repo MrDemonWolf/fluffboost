@@ -1,5 +1,5 @@
 # Use a base image suitable for both development and production
-FROM node:23-slim AS base
+FROM node:22-slim AS base
 
 # Set app directory
 WORKDIR /usr/src/app
