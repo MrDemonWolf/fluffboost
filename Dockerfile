@@ -5,9 +5,9 @@ FROM node:23-alpine AS base
 WORKDIR /usr/src/app
 
 # Install pnpm and openssl globally
-RUN npm install -g pnpm &&
-    apk update &&
-    apk add --no-cache openssl
+RUN npm install -g pnpm
+RUN apk add --no-cache openssl
+
 # Copy package.json and pnpm files
 COPY package*.json ./
 COPY pnpm-lock.yaml ./
