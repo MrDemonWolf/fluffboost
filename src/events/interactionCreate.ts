@@ -8,6 +8,7 @@ import help from "../commands/help";
 import about from "../commands/about";
 import changelog from "../commands/changelog";
 import quote from "../commands/quote";
+import suggestion from "../commands/suggestion";
 import invite from "../commands/invite";
 import admin from "../commands/admin";
 import setup from "../commands/setup";
@@ -67,6 +68,14 @@ export async function interactionCreateEvent(
           interaction.user.id
         );
         invite.execute(client, interaction);
+        break;
+      case "suggestion":
+        success(
+          "interactionCreate - suggestion",
+          interaction.user.username,
+          interaction.user.id
+        );
+        suggestion.execute(client, interaction);
         break;
       case "admin":
         success(

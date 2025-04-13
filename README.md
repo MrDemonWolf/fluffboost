@@ -28,14 +28,14 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 - `/about` - Learn about the bot and its creators.
 - `/invite` - Invite FluffBoost to your server.
 - `/quote` - Receive an instant motivational quote.
+- `/suggestion` - Make a quote suggestion for the owner to review.
 - `/setup` - Configure bot settings like the target channel for quotes (admin only).
 
 # Change Log
 
-## Version 1.2.0 Released (on Jan 20, 2025)
+## Version 1.3.0 Released (on Apr 13, 2025)
 
-- Updated to new way to add/remove guilds.
-- Fixed status page express api to now show the correct status of the bot via discord api.
+- Added suggestion command.
 
 ## License
 
