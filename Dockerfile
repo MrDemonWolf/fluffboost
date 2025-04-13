@@ -1,17 +1,16 @@
 # Use a base image suitable for both development and production
-FROM node:22-slim AS base
+FROM node:23-slim AS base
 
 # Set app directory
 WORKDIR /usr/src/app
 
-# Install pnpm globally and openssl/curl
+# Install pnpm and openssl globally
 RUN npm install -g pnpm &&
-    apt-get update &&
-    apt-get install -y openssl curl --no-install-recommends &&
-    rm -rf /var/lib/apt/lists/*
+    apk add --no-cache openssl
 
-# Copy package files first to leverage Docker caching
-COPY package.json pnpm-lock.yaml* ./
+# Copy package.json and pnpm files
+COPY package*.json ./
+COPY pnpm-lock.yaml ./
 
 # Install dependencies
 RUN pnpm install
@@ -29,7 +28,7 @@ COPY . .
 RUN chmod +x startup.sh
 
 # Run Prisma Generate to generate the Prisma Client
-RUN pnpm prisma generate
+RUN pnpm db:generate
 
 # Build the application
 RUN pnpm build
