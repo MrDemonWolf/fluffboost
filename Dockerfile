@@ -1,5 +1,5 @@
 # Use a base image suitable for both development and production
-FROM node:22-slim AS base
+FROM node:20-slim AS base
 
 # Set app directory
 WORKDIR /usr/src/app
@@ -33,4 +33,4 @@ RUN pnpm build
 EXPOSE ${PORT}
 
 # Command to start the application
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/app.js"]
