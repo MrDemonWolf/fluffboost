@@ -11,11 +11,12 @@ datasource db {
 }
 
 model Guild {
-  id                String   @id @default(uuid())
-  guildId           String   @unique
+  id                String            @id @default(uuid())
+  guildId           String            @unique
   motivationChannel String?
-  joinedAt          DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  joinedAt          DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  SuggestionQuotes  SuggestionQuote[]
 }
 
 model MotivationQuote {
@@ -23,5 +24,16 @@ model MotivationQuote {
   quote     String
   author    String
   addedBy   String
+  createdAt DateTime @default(now())
+}
+
+model SuggestionQuote {
+  id        String   @id @default(uuid())
+  quote     String
+  author    String
+  addedBy   String
+  status    String   @default("pending")
+  guild     Guild    @relation(fields: [guildId], references: [id])
+  guildId   String
   createdAt DateTime @default(now())
 }
