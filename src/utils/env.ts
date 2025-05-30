@@ -8,10 +8,11 @@ const envSchema = z.object({
   DATABASE_URL: z
     .string()
     .refine((url) => url.startsWith("postgresql://"), "Invalid database URL"),
-  REDIS_HOST: z.string().min(1, "Redis host is required"),
-  REDIS_PORT: z.string().min(1, "Redis port is required"),
-  REDIS_PASSWORD: z.string().optional(),
-  REDIS_DB: z.string().optional(),
+  // Commenting out Redis configuration as it's not used in the current context it will be added later
+  // REDIS_HOST: z.string().min(1, "Redis host is required"),
+  // REDIS_PORT: z.string().min(1, "Redis port is required"),
+  // REDIS_PASSWORD: z.string().optional(),
+  // REDIS_DB: z.string().optional(),
   DISCORD_APPLICATION_ID: z
     .string()
     .min(1, "Discord application ID is required"),
