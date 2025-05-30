@@ -1,4 +1,5 @@
 import { Client, Events, GatewayIntentBits } from "discord.js";
+import { env } from "./utils/env";
 
 /**
  * Import events from the events folder.
@@ -13,7 +14,6 @@ import { shardDisconnectEvent } from "./events/shardDisconnect";
  * Import worker main function.
  */
 import worker from "./worker";
-
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
@@ -59,6 +59,6 @@ client.on(Events.ShardError, () => {
   shardDisconnectEvent();
 });
 
-client.login(process.env.DISCORD_APPLICATION_BOT_TOKEN);
+client.login(env.DISCORD_APPLICATION_BOT_TOKEN);
 
 export default client;
