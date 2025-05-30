@@ -3,6 +3,7 @@ import type { Client, CommandInteraction } from "discord.js";
 import { SlashCommandBuilder } from "discord.js";
 
 import { info, success, error } from "../utils/commandLogger";
+import posthog from "../utils/posthog";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("help")
@@ -22,6 +23,10 @@ export function execute(client: Client, interaction: CommandInteraction) {
       ephemeral: true,
     });
     success("help", interaction.user.username, interaction.user.id);
+    posthog.capture({
+      distinctId: interaction.user.id,
+      event: "help command used",
+    });
   } catch (err) {
     error("help", interaction.user.username, interaction.user.id);
     console.log(err);
