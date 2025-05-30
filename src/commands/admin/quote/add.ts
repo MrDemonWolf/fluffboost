@@ -2,6 +2,7 @@ import { Client, CommandInteraction, TextChannel } from "discord.js";
 import { info, success, error } from "../../../utils/commandLogger";
 import checkAllowedUser from "../../../utils/checkAllowedUser";
 import { prisma } from "../../../database";
+import { env } from "../../../utils/env";
 
 export default async function (
   client: Client,
@@ -31,7 +32,7 @@ export default async function (
 
     // send message to main channel
     const mainChannel = client.channels.cache.get(
-      process.env.MAIN_CHANNEL_ID as string
+      env.MAIN_CHANNEL_ID as string
     ) as TextChannel;
     mainChannel?.send(
       `Quote added by ${interaction.user.username} with id: ${newQuote.id}`

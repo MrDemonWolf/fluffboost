@@ -1,9 +1,10 @@
 import { ShardingManager } from "discord.js";
 import { config } from "dotenv";
 import { PrismaClient } from "@prisma/client";
-
 import consola from "consola";
+
 import api from "./api";
+import { env } from "./utils/env";
 
 /**
  * Load environment variables from .env file.
@@ -59,7 +60,7 @@ api.on("error", (err) => {
  * Discord.js Sharding Manager
  */
 const manager = new ShardingManager("./src/bot.ts", {
-  token: process.env.DISCORD_APPLICATION_BOT_TOKEN,
+  token: env.DISCORD_APPLICATION_BOT_TOKEN,
   execArgv: ["-r", "ts-node/register"],
 });
 
