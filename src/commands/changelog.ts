@@ -40,6 +40,11 @@ export function execute(client: Client, interaction: CommandInteraction) {
     posthog.capture({
       distinctId: interaction.user.id,
       event: "changelog command used",
+      properties: {
+        environment: process.env.NODE_ENV,
+        userId: interaction.user.id,
+        username: interaction.user.username,
+      },
     });
   } catch (err) {
     error("changelog", interaction.user.username, interaction.user.id);
