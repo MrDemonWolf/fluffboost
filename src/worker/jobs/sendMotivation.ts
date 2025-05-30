@@ -81,9 +81,8 @@ export default async function sendMotivation() {
     distinctId: "motivation-job",
     event: "motivation job executed",
     properties: {
-      motivationQuote: motivationQuote[0].quote,
-      author: motivationQuote[0].author,
-      addedBy: addedBy.username,
+      environment: process.env.NODE_ENV,
+      quote: motivationQuote[0].id,
     },
   });
 }

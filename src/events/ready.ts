@@ -66,6 +66,7 @@ export async function readyEvent(client: Client) {
           distinctId: guild.id,
           event: "guild joined",
           properties: {
+            environment: process.env.NODE_ENV,
             guildName: guild.name,
             guildId: guild.id,
           },
@@ -102,6 +103,7 @@ export async function readyEvent(client: Client) {
           distinctId: guild.guildId,
           event: "guild left",
           properties: {
+            environment: process.env.NODE_ENV,
             guildName: guild.guildId,
             guildId: guild.guildId,
           },
