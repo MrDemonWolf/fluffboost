@@ -27,8 +27,8 @@ const envSchema = z.object({
   MAIN_CHANNEL_ID: z.string().min(1, "Main channel ID is required"),
   POSTHOG_API_KEY: z.string().min(1, "PostHog API key is required"),
   POSTHOG_HOST: z.string().min(1, "PostHog host is required"),
-  HOST: z.string().min(1, "Host is required"),
-  PORT: z.string().min(1, "Port is required"),
+  HOST: z.string().optional(),
+  PORT: z.string().optional(),
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),

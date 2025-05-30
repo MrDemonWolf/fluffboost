@@ -3,6 +3,7 @@ import type { Client, CommandInteraction } from "discord.js";
 import consola from "consola";
 import { info, success, error } from "../utils/commandLogger";
 import { prisma } from "../database";
+import posthog from "../utils/posthog";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("quote")
@@ -56,6 +57,15 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       embeds: [motivationEmbed],
     });
     success("quote", interaction.user.username, interaction.user.id);
+    posthog.capture({
+      distinctId: interaction.user.id,
+      event: "quote command used",
+      properties: {
+        quote_author: motivationQuote[0].author,
+        quote_content: motivationQuote[0].quote,
+        added_by: addedBy.username,
+      },
+    });
   } catch (err) {
     error("quote", interaction.user.username, interaction.user.id);
     console.log(err);

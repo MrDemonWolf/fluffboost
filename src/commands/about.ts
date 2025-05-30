@@ -1,6 +1,7 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import type { Client, CommandInteraction, User } from "discord.js";
 import { info, success, error } from "../utils/commandLogger";
+import posthog from "../utils/posthog";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("about")
@@ -52,6 +53,10 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       embeds: [embed],
     });
     success("about", interaction.user.username, interaction.user.id);
+    posthog.capture({
+      distinctId: interaction.user.id,
+      event: "about command used",
+    });
   } catch (err) {
     error("about", interaction.user.username, interaction.user.id);
     console.log(err);
