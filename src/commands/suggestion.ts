@@ -8,6 +8,7 @@ import {
 import type { CommandInteractionOptionResolver } from "discord.js";
 import { info, success, error } from "../utils/commandLogger";
 import { prisma } from "../database";
+import { env } from "../utils/env";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("suggestion")
@@ -75,7 +76,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
      * Send the quote suggestion to the main channel for review
      */
     const mainChannel = client.channels.cache.get(
-      process.env.MAIN_CHANNEL_ID as string
+      env.MAIN_CHANNEL_ID as string
     ) as TextChannel;
 
     const embed = new EmbedBuilder()
