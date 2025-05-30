@@ -11,6 +11,10 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   try {
     res.status(200).json({
+      message: "FluffBoost is online!",
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+      version: process.env.npm_package_version || "unknown",
       status: "online",
     });
   } catch (err) {

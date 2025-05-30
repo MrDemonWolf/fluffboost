@@ -33,9 +33,9 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 
 # Change Log
 
-## Version 1.3.0 Released (on Apr 13, 2025)
+## Version 1.4.0 Released (on May 30, 2025)
 
-- Added suggestion command.
+- Added Posthog Tracking to be able to see more data of how the bot is being used.
 
 ## License
 

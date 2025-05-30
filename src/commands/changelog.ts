@@ -19,12 +19,17 @@ export function execute(client: Client, interaction: CommandInteraction) {
       .setDescription("Here are the latest changes to the bot:")
       .addFields(
         {
+          name: "Posthg Integration",
+          value:
+            "Added Posthog integration for user tracking to get insights on how the bot is being used.",
+        },
+        {
           name: "New Command",
           value: "`/suggestion` - Suggest a quote to be added to the bot",
         },
         {
           name: "Version Update",
-          value: "Updated to version 1.3.0",
+          value: "Updated to version 1.4.0",
         }
       )
       .setTimestamp()
