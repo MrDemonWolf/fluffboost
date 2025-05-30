@@ -16,7 +16,7 @@ import invite from "../commands/invite";
 import setup from "../commands/setup";
 import admin from "../commands/admin";
 import changelog from "../commands/changelog";
-import posthog from "src/utils/posthog";
+import posthog from "../utils/posthog";
 
 export async function readyEvent(client: Client) {
   try {
