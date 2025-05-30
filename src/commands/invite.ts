@@ -3,6 +3,7 @@ import type { Client, CommandInteraction } from "discord.js";
 import { SlashCommandBuilder, OAuth2Scopes } from "discord.js";
 
 import { info, success, error } from "../utils/commandLogger";
+import posthog from "../utils/posthog";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("invite")
@@ -25,6 +26,10 @@ export function execute(client: Client, interaction: CommandInteraction) {
       ephemeral: true,
     });
     success("invite", interaction.user.username, interaction.user.id);
+    posthog.capture({
+      distinctId: interaction.user.id,
+      event: "invite command used",
+    });
   } catch (err) {
     error("invite", interaction.user.username, interaction.user.id);
     console.log(err);

@@ -4,6 +4,7 @@ import cron from "node-cron";
 
 import { prisma } from "../database";
 import { setActivity } from "../utils/setActivity";
+
 /**
  * Import slash commands from the commands folder.
  */
@@ -15,6 +16,7 @@ import invite from "../commands/invite";
 import setup from "../commands/setup";
 import admin from "../commands/admin";
 import changelog from "../commands/changelog";
+import posthog from "src/utils/posthog";
 
 export async function readyEvent(client: Client) {
   try {
@@ -60,9 +62,53 @@ export async function readyEvent(client: Client) {
           message: `[Discord Event Logger - ReadyEvt] Created guild ${guild.name} (ID: ${guild.id}) in the database`,
           badge: true,
         });
+        posthog.capture({
+          distinctId: guild.id,
+          event: "guild joined",
+          properties: {
+            guildName: guild.name,
+            guildId: guild.id,
+          },
+        });
       } catch (err) {
         console.error({
           message: `[Discord Event Logger - ReadyEvt] Error creating guild in database: ${err}`,
+          badge: true,
+          level: "error",
+          timestamp: new Date(),
+        });
+      }
+    });
+
+    /**
+     * Check if the bot is not in a guild anymore and remove it from the database.
+     */
+    const guildsInDb = await prisma.guild.findMany();
+    const guildsToRemove = guildsInDb.filter(
+      (guild) => client.guilds.cache.get(guild.guildId) === undefined
+    );
+    guildsToRemove.forEach(async (guild) => {
+      try {
+        await prisma.guild.delete({
+          where: {
+            guildId: guild.guildId,
+          },
+        });
+        consola.success({
+          message: `[Discord Event Logger - ReadyEvt] Removed guild ${guild.guildId} from the database`,
+          badge: true,
+        });
+        posthog.capture({
+          distinctId: guild.guildId,
+          event: "guild left",
+          properties: {
+            guildName: guild.guildId,
+            guildId: guild.guildId,
+          },
+        });
+      } catch (err) {
+        console.error({
+          message: `[Discord Event Logger - ReadyEvt] Error removing guild from database: ${err}`,
           badge: true,
           level: "error",
           timestamp: new Date(),

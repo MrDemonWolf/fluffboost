@@ -2,6 +2,7 @@ import express from "express";
 import morgan from "morgan";
 import helmet from "helmet";
 import cors from "cors";
+import { env } from "../utils/env";
 
 /**
  * Import all routes
@@ -27,8 +28,8 @@ app.use(
  * @param {string} host - Hostname
  * @param {number} port - Port
  */
-app.set("host", process.env.HOST || "localhost");
-app.set("port", process.env.PORT || 8080);
+app.set("host", env.HOST || "localhost");
+app.set("port", env.PORT || 8080);
 
 /**
  * Initialize routes

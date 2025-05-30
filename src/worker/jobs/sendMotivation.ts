@@ -4,6 +4,7 @@ import { TextChannel, EmbedBuilder } from "discord.js";
 import { prisma } from "../../database";
 import client from "../../bot";
 import type { Guild } from "@prisma/client";
+import posthog from "../../utils/posthog";
 
 export default async function sendMotivation() {
   /**
@@ -75,5 +76,14 @@ export default async function sendMotivation() {
      * Send the motivation message.
      */
     motivationChannel.send({ embeds: [motivationEmbed] });
+  });
+  posthog.capture({
+    distinctId: "motivation-job",
+    event: "motivation job executed",
+    properties: {
+      motivationQuote: motivationQuote[0].quote,
+      author: motivationQuote[0].author,
+      addedBy: addedBy.username,
+    },
   });
 }
