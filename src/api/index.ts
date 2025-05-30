@@ -16,12 +16,21 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(helmet());
-app.use(morgan("tiny"));
 app.use(
   cors({
     origin: "*", // Be sure to switch to your production domain
   })
 );
+app.set("x-powered-by", "Fluffboost");
+
+/**
+ * Turn off logging in production
+ */
+if (env.NODE_ENV === "production") {
+  app.use(morgan("combined"));
+} else {
+  app.use(morgan("dev"));
+}
 
 /**
  * Set express variables
