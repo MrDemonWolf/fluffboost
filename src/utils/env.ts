@@ -7,7 +7,7 @@ dotenv.config();
 const envSchema = z.object({
   DATABASE_URL: z
     .string()
-    .refine((url) => url.startsWith("postgresql://"), "Invalid database URL"),
+    .refine((url) => url.startsWith("postgres://"), "Invalid database URL"),
   // Commenting out Redis configuration as it's not used in the current context it will be added later
   // REDIS_HOST: z.string().min(1, "Redis host is required"),
   // REDIS_PORT: z.string().min(1, "Redis port is required"),
