@@ -56,6 +56,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     posthog.capture({
       distinctId: interaction.user.id,
       event: "about command used",
+      properties: {
+        environment: process.env.NODE_ENV,
+        userId: interaction.user.id,
+        username: interaction.user.username,
+      },
     });
   } catch (err) {
     error("about", interaction.user.username, interaction.user.id);

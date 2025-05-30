@@ -61,9 +61,10 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       distinctId: interaction.user.id,
       event: "quote command used",
       properties: {
-        quote_author: motivationQuote[0].author,
-        quote_content: motivationQuote[0].quote,
-        added_by: addedBy.username,
+        quote: motivationQuote[0].id,
+        environment: process.env.NODE_ENV,
+        userId: interaction.user.id,
+        username: interaction.user.username,
       },
     });
   } catch (err) {

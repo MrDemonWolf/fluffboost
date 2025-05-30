@@ -24,6 +24,7 @@ export async function guildDeleteEvent(guild: Guild): Promise<void> {
       distinctId: guild.id,
       event: "guild left",
       properties: {
+        environment: process.env.NODE_ENV,
         guildName: guild.name,
         guildId: guild.id,
       },

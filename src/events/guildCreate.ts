@@ -31,6 +31,7 @@ export async function guildCreateEvent(guild: Guild): Promise<void> {
       distinctId: guild.id,
       event: "guild created",
       properties: {
+        environment: process.env.NODE_ENV,
         guildName: guild.name,
         guildId: guild.id,
       },
