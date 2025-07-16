@@ -46,7 +46,7 @@ export async function readyEvent(client: Client) {
      * Check if the bot is not in a guild anymore and remove it from the database.
      */
     await pruneGuilds(client);
-    \
+
     /**
      * Check if guilds exist in the database and add them if they don't.
      */
