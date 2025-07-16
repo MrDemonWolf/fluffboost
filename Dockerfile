@@ -36,6 +36,9 @@ EXPOSE ${PORT}
 # Copy the entrypoint script
 COPY entrypoint.sh .
 
+# Make the entrypoint script executable
+RUN chmod +x entrypoint.sh
+
 # Set the entrypoint to our script
 ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
 
