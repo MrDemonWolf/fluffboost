@@ -12,6 +12,7 @@
     "db:push": "prisma db push",
     "db:pull": "prisma db pull",
     "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "test": "cross-env NODE_ENV=test mocha tests --exit"
   },
