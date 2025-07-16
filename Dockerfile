@@ -27,14 +27,17 @@ COPY . .
 # Run Prisma Generate to generate the Prisma Client
 RUN pnpm db:generate
 
-# RUn Prisma Migrate to apply database migrations
-RUN pnpm db:migrate
-
 # Build the application
 RUN pnpm build
 
 # Expose server port for production (default to 3000, can be overridden)
 EXPOSE ${PORT}
+
+# Copy the entrypoint script
+COPY entrypoint.sh .
+
+# Set the entrypoint to our script
+ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
 
 # Command to start the application
 CMD ["node", "dist/app.js"]
