@@ -11,12 +11,12 @@ datasource db {
 }
 
 model Guild {
-  id                  String            @id @default(uuid())
-  guildId             String            @unique
-  motivationChannelId String?
-  joinedAt            DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-  SuggestionQuotes    SuggestionQuote[]
+  id                String            @id @default(uuid())
+  guildId           String            @unique
+  motivationChannel String?
+  joinedAt          DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  SuggestionQuotes  SuggestionQuote[]
 }
 
 model MotivationQuote {
