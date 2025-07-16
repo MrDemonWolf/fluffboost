@@ -33,9 +33,25 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 
 # Change Log
 
-## Version 1.4.0 Released (on May 30, 2025)
+# Change Log
 
-- Added Posthog Tracking to be able to see more data of how the bot is being used.
+## Version 1.5.0 Released (on July 10, 2025)
+
+**New Features & Enhancements:**
+
+- **Database Migrations:** Added a new entrypoint script and an `npm run db:migrate` command. Incorporated database migration into the Dockerfile.
+- **Entrypoint Script:** Made the main entrypoint script executable.
+- **Database Schema:** Initialized the database schema.
+- **Database Schema:** Added initial database schema and renamed a column.
+- **Improvements & Fixes:**
+
+- **Refactored:** Suggestion quote relations, guild database management, permissions, and overall code for clarity.
+- **Renamed:** Motivation channel column and other elements for better understanding.
+- **Fixed:** Guild configuration, dependencies, and incorrect field names in database queries.
+- **Replaced:** Baseline migration with `resolve` and the existing database migration tool.
+- **Removed:** Extraneous whitespace.
+- **Reverted:** `motivationChannelId` column rename.
+- **Updated:** Dependencies and project configuration.
 
 ## License
 
