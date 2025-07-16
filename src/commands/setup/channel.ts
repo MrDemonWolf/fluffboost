@@ -31,7 +31,7 @@ export default async function (
         guildId: interaction.guildId,
       },
       data: {
-        motivationChannel: motivationChannel.id,
+        motivationChannelId: motivationChannel.id,
       },
     });
 

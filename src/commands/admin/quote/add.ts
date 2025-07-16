@@ -13,7 +13,7 @@ export default async function (
   try {
     info("admin quote add", interaction.user.username, interaction.user.id);
 
-    const isAllowed = checkAllowedUser(interaction);
+    const isAllowed = isUserPermitted(interaction);
 
     console.log(isAllowed);
 
