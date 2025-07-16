@@ -27,6 +27,9 @@ COPY . .
 # Run Prisma Generate to generate the Prisma Client
 RUN pnpm db:generate
 
+# RUn Prisma Migrate to apply database migrations
+RUN pnpm db:migrate
+
 # Build the application
 RUN pnpm build
 
