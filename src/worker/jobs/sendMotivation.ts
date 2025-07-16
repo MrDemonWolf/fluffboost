@@ -12,7 +12,7 @@ export default async function sendMotivation() {
    */
   const guilds = await prisma.guild.findMany({
     where: {
-      motivationChannel: {
+      motivationChannelId: {
         not: null,
       },
     },
@@ -35,21 +35,21 @@ export default async function sendMotivation() {
    */
   const addedBy = await client.users.fetch(motivationQuote[0].addedBy);
 
-  if (!addedBy) return "Uknown user";
+  if (!addedBy) return "Uknown User";
 
   guilds.map(async (g: Guild) => {
     /**
      * This is to keep typescript happy. As in the query above.
      * We are filtering out guilds that don't have the motivation channel set.
      */
-    if (!g.motivationChannel) {
+    if (!g.motivationChannelId) {
       return consola.error("No motivation channel set for guild.");
     }
     /**
      * Get the motivation channel from the guild.
      */
     const motivationChannel = client.channels.cache.get(
-      g.motivationChannel
+      g.motivationChannelId
     ) as TextChannel;
 
     /**

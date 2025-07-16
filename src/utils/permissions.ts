@@ -1,9 +1,9 @@
 import type { CommandInteraction } from "discord.js";
 
 import { trimArray } from "./trimArray";
-import { env } from "../utils/env";
+import { env } from "./env";
 
-export function checkAllowedUser(interaction: CommandInteraction) {
+export function isUserPermitted(interaction: CommandInteraction) {
   const allowedUsersArray = env.ALLOWED_USERS?.split(",") as string[];
   const allowedUsers = trimArray(allowedUsersArray);
 
@@ -17,5 +17,3 @@ export function checkAllowedUser(interaction: CommandInteraction) {
   }
   return true;
 }
-
-export default checkAllowedUser;
