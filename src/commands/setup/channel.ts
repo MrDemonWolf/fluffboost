@@ -6,7 +6,7 @@ import type {
 } from "discord.js";
 import { info, success, error } from "../../utils/commandLogger";
 import { prisma } from "../../database";
-import { guildExists } from "../../utils/guildExists";
+import { guildExists } from "../../utils/guildDatabase";
 
 export default async function (
   client: Client,

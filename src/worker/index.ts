@@ -9,6 +9,16 @@ import sendMotivation from "./jobs/sendMotivation";
 
 export default function worker() {
   if (env.NODE_ENV === "development") {
+    // run it every 5 mins for development purposes.
+    cron.schedule(
+      "*/1 * * * *",
+      () => {
+        sendMotivation();
+      },
+      {
+        timezone: "America/Chicago",
+      }
+    );
     return consola.info({
       message: `Worker: Running in Development Mode`,
       badge: true,
@@ -20,7 +30,6 @@ export default function worker() {
       sendMotivation();
     },
     {
-      scheduled: true,
       timezone: "America/Chicago",
     }
   );

@@ -1,6 +1,6 @@
 import { Client, CommandInteraction } from "discord.js";
 import { info, success, error } from "../../../utils/commandLogger";
-import checkAllowedUser from "../../../utils/checkAllowedUser";
+import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
 import type { MotivationQuote } from "@prisma/client";
 
@@ -11,7 +11,7 @@ export default async function (
   try {
     info("admin quote list", interaction.user.username, interaction.user.id);
 
-    const isAllowed = checkAllowedUser(interaction);
+    const isAllowed = isUserPermitted(interaction);
 
     if (!isAllowed) return;
 

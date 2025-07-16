@@ -1,6 +1,6 @@
 import { Client, CommandInteraction, TextChannel } from "discord.js";
 import { info, success, error } from "../../../utils/commandLogger";
-import checkAllowedUser from "../../../utils/checkAllowedUser";
+import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
 import { env } from "../../../utils/env";
 

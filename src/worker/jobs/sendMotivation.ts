@@ -35,7 +35,7 @@ export default async function sendMotivation() {
    */
   const addedBy = await client.users.fetch(motivationQuote[0].addedBy);
 
-  if (!addedBy) return "Uknown user";
+  if (!addedBy) return "Uknown User";
 
   guilds.map(async (g: Guild) => {
     /**
