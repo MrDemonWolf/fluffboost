@@ -4,7 +4,7 @@ import cron from "node-cron";
 
 import { prisma } from "../database";
 import { setActivity } from "../utils/setActivity";
-import { cleanupGuildData } from "../utils/guildDatabase";
+import { pruneGuilds } from "../utils/guildDatabase";
 
 /**
  * Import slash commands from the commands folder.
@@ -45,7 +45,7 @@ export async function readyEvent(client: Client) {
     /**
      * Check if the bot is not in a guild anymore and remove it from the database.
      */
-    await cleanupGuildData(client);
+    await pruneGuilds(client);
     // const guildsInDb = await prisma.guild.findMany({});
     // const guildsToRemove = guildsInDb.filter(
     //   (guild) => client.guilds.cache.get(guild.guildId) === undefined
