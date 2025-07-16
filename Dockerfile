@@ -6,7 +6,7 @@ WORKDIR /usr/src/app
 
 # Install pnpm and openssl globally
 RUN npm install -g pnpm
-RUN apk add --no-cache openssl
+RUN apk add --no-cache openssl curl
 
 # Copy package.json and pnpm files
 COPY package*.json ./
@@ -32,6 +32,15 @@ RUN pnpm build
 
 # Expose server port for production (default to 3000, can be overridden)
 EXPOSE ${PORT}
+
+# Copy the entrypoint script
+COPY entrypoint.sh .
+
+# Make the entrypoint script executable
+RUN chmod +x entrypoint.sh
+
+# Set the entrypoint to our script
+ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
 
 # Command to start the application
 CMD ["node", "dist/app.js"]

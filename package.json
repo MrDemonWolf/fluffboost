@@ -1,6 +1,6 @@
 {
   "name": "fluffboost",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "FluffBoost is a heartwarming Discord bot that delivers daily doses of motivation and inspiration wrapped in a furry-friendly package. Brighten your Discord server with adorable furry mascots and uplifting quotes. Let FluffBoost bring smiles and positivity to your community every day!  ",
   "main": "app.js",
   "scripts": {
@@ -12,6 +12,7 @@
     "db:push": "prisma db push",
     "db:pull": "prisma db pull",
     "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "test": "cross-env NODE_ENV=test mocha tests --exit"
   },
