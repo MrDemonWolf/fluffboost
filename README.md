@@ -41,7 +41,8 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 - **Entrypoint Script:** Made the main entrypoint script executable.
 - **Database Schema:** Initialized the database schema.
 - **Database Schema:** Added initial database schema and renamed a column.
-- **Improvements & Fixes:**
+
+**Improvements & Fixes:**
 
 - **Refactored:** Suggestion quote relations, guild database management, permissions, and overall code for clarity.
 - **Renamed:** Motivation channel column and other elements for better understanding.
