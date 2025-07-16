@@ -4,6 +4,7 @@ import cron from "node-cron";
 
 import { prisma } from "../database";
 import { setActivity } from "../utils/setActivity";
+import { pruneGuilds, ensureGuildExists } from "../utils/guildDatabase";
 
 /**
  * Import slash commands from the commands folder.
@@ -42,81 +43,14 @@ export async function readyEvent(client: Client) {
     });
 
     /**
-     * Check if guilds exist in the database and add them if they don't.
-     */
-    const currentGuilds = await prisma.guild.findMany();
-
-    const guildsToAdd = client.guilds.cache.filter(
-      (guild) =>
-        !currentGuilds.some((currentGuild) => currentGuild.guildId === guild.id)
-    );
-
-    guildsToAdd.forEach(async (guild) => {
-      try {
-        await prisma.guild.create({
-          data: {
-            guildId: guild.id,
-          },
-        });
-        consola.success({
-          message: `[Discord Event Logger - ReadyEvt] Created guild ${guild.name} (ID: ${guild.id}) in the database`,
-          badge: true,
-        });
-        posthog.capture({
-          distinctId: guild.id,
-          event: "guild joined",
-          properties: {
-            environment: process.env.NODE_ENV,
-            guildName: guild.name,
-            guildId: guild.id,
-          },
-        });
-      } catch (err) {
-        console.error({
-          message: `[Discord Event Logger - ReadyEvt] Error creating guild in database: ${err}`,
-          badge: true,
-          level: "error",
-          timestamp: new Date(),
-        });
-      }
-    });
-
-    /**
      * Check if the bot is not in a guild anymore and remove it from the database.
      */
-    const guildsInDb = await prisma.guild.findMany();
-    const guildsToRemove = guildsInDb.filter(
-      (guild) => client.guilds.cache.get(guild.guildId) === undefined
-    );
-    guildsToRemove.forEach(async (guild) => {
-      try {
-        await prisma.guild.delete({
-          where: {
-            guildId: guild.guildId,
-          },
-        });
-        consola.success({
-          message: `[Discord Event Logger - ReadyEvt] Removed guild ${guild.guildId} from the database`,
-          badge: true,
-        });
-        posthog.capture({
-          distinctId: guild.guildId,
-          event: "guild left",
-          properties: {
-            environment: process.env.NODE_ENV,
-            guildName: guild.guildId,
-            guildId: guild.guildId,
-          },
-        });
-      } catch (err) {
-        console.error({
-          message: `[Discord Event Logger - ReadyEvt] Error removing guild from database: ${err}`,
-          badge: true,
-          level: "error",
-          timestamp: new Date(),
-        });
-      }
-    });
+    await pruneGuilds(client);
+    \
+    /**
+     * Check if guilds exist in the database and add them if they don't.
+     */
+    await ensureGuildExists(client);
 
     /**
      * Register slash commands.
