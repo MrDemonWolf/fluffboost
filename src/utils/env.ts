@@ -35,6 +35,7 @@ const envSchema = z.object({
     .default("development"),
 });
 
+type EnvSchema = z.infer<typeof envSchema>;
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
@@ -46,5 +47,4 @@ if (!parsed.success) {
   });
   process.exit(1);
 }
-
-export const env = parsed.data;
+export const env: EnvSchema = parsed.data;
