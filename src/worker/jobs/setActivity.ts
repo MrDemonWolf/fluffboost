@@ -20,7 +20,9 @@ export default async (client: Client) => {
       const randomIndex = Math.floor(Math.random() * activities.length);
       return activities[randomIndex];
     };
+
     const activity = await randomActivity();
+
     if (!activity) {
       consola.warn("No activity found, using default activity.");
       client.user?.setActivity(defaultActivity, {
@@ -29,6 +31,7 @@ export default async (client: Client) => {
       });
       return;
     }
+
     client.user?.setActivity(activity.activity, {
       type: ActivityType[activity.type],
       url: activity.url || undefined,
