@@ -76,10 +76,10 @@ export const slashCommand = new SlashCommandBuilder()
                 .setDescription("The type of activity")
                 .setRequired(true)
                 .addChoices(
-                  { name: "Playing", value: "PLAYING" },
-                  { name: "Streaming", value: "STREAMING" },
-                  { name: "Listening", value: "LISTENING" },
-                  { name: "Custom", value: "CUSTOM" }
+                  { name: "Playing", value: "Playing" },
+                  { name: "Streaming", value: "Streaming" },
+                  { name: "Listening", value: "Listening" },
+                  { name: "Custom", value: "Custom" }
                 )
             )
             .addStringOption((option) =>
