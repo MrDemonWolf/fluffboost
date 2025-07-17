@@ -11,10 +11,10 @@ datasource db {
 }
 
 enum DiscordActivityType {
-  CUSTOM
-  LISTENING
-  STREAMING
-  PLAYING
+  Custom
+  Listening
+  Streaming
+  Playing
 }
 
 model Guild {
@@ -46,7 +46,7 @@ model SuggestionQuote {
 model DiscordActivity {
   id        String              @id @default(uuid())
   activity  String
-  type      DiscordActivityType @default(CUSTOM)
+  type      DiscordActivityType @default(Custom)
   url       String?
   createdAt DateTime            @default(now())
 }
