@@ -30,7 +30,11 @@ export default async function (
       },
     });
 
-    // send message to main channel
+    /**
+     * Send a message to the main channelof the owner guild
+     * to notify that a new quote has been added.
+     * This is useful for tracking purposes and to keep the owner informed.
+     */
     const mainChannel = client.channels.cache.get(
       env.MAIN_CHANNEL_ID as string
     ) as TextChannel;
