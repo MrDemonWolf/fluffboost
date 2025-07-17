@@ -1,11 +1,13 @@
 import consola from "consola";
 import cron from "node-cron";
 import { env } from "../utils/env";
+import client from "../bot";
 
 /**
  * Worker Jobs
  */
 import sendMotivation from "./jobs/sendMotivation";
+import setActivity from "./jobs/setActivity";
 
 export default function worker() {
   if (env.NODE_ENV === "development") {
@@ -14,6 +16,15 @@ export default function worker() {
       "*/1 * * * *",
       () => {
         sendMotivation();
+      },
+      {
+        timezone: "America/Chicago",
+      }
+    );
+    cron.schedule(
+      env.DISCORD_ACTIVITY_CRON || "*/5 * * * *",
+      () => {
+        setActivity(client);
       },
       {
         timezone: "America/Chicago",
@@ -28,6 +39,15 @@ export default function worker() {
     "0 8 * * *",
     () => {
       sendMotivation();
+    },
+    {
+      timezone: "America/Chicago",
+    }
+  );
+  cron.schedule(
+    env.DISCORD_ACTIVITY_CRON || "*/10 * * * *",
+    () => {
+      setActivity(client);
     },
     {
       timezone: "America/Chicago",

@@ -22,7 +22,7 @@ const envSchema = z.object({
   DISCORD_APPLICATION_BOT_TOKEN: z
     .string()
     .min(1, "Discord application bot token is required"),
-  DISCORD_DEFAULT_STATUS: z.string().optional(),
+  DISCORD_DEFAULT_STATUS: z.string().default("Spreading Paw-sitivity 🐾"),
   DISCORD_DEFAULT_ACTIVITY_TYPE: z
     .enum(["Playing", "Streaming", "Listening", "Custom"])
     .default("Custom"),
