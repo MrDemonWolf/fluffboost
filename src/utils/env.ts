@@ -22,6 +22,12 @@ const envSchema = z.object({
   DISCORD_APPLICATION_BOT_TOKEN: z
     .string()
     .min(1, "Discord application bot token is required"),
+  DISCORD_DEFAULT_STATUS: z.string().optional(),
+  DISCORD_DEFAULT_ACTIVITY_TYPE: z
+    .enum(["Playing", "Streaming", "Listening", "Custom"])
+    .default("Custom"),
+  DEFAULT_ACTIVITY_URL: z.string().optional(),
+  DISCORD_ACTIVITY_CRON: z.string().default("*/5 * * * *"),
   ALLOWED_USERS: z.string().optional(),
   OWNER_ID: z.string().min(1, "Owner ID is required"),
   MAIN_GUILD_ID: z.string().min(1, "Main guild ID is required"),
