@@ -10,6 +10,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum DiscordActivityType {
+  Custom
+  Listening
+  Streaming
+  Playing
+}
+
 model Guild {
   id                  String   @id @default(uuid())
   guildId             String   @unique
@@ -34,4 +41,12 @@ model SuggestionQuote {
   status    String   @default("pending")
   createdAt DateTime @default(now())
   guildId   String
+}
+
+model DiscordActivity {
+  id        String              @id @default(uuid())
+  activity  String
+  type      DiscordActivityType @default(Custom)
+  url       String?
+  createdAt DateTime            @default(now())
 }

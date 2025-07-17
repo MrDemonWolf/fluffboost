@@ -1,9 +1,6 @@
 import type { Client } from "discord.js";
 import consola from "consola";
-import cron from "node-cron";
-
-import { prisma } from "../database";
-import { setActivity } from "../utils/setActivity";
+import setActivity from "../worker/jobs/setActivity";
 import { pruneGuilds, ensureGuildExists } from "../utils/guildDatabase";
 
 /**
@@ -17,7 +14,6 @@ import invite from "../commands/invite";
 import setup from "../commands/setup";
 import admin from "../commands/admin";
 import changelog from "../commands/changelog";
-import posthog from "../utils/posthog";
 
 export async function readyEvent(client: Client) {
   try {
@@ -89,8 +85,5 @@ export async function readyEvent(client: Client) {
   /**
    * Apply the bot's activity status on first run and every 60 minutes.
    */
-  setActivity(client);
-  cron.schedule("0 * * * *", () => {
-    setActivity(client);
-  });
+  await setActivity(client);
 }
