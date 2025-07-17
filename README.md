@@ -33,6 +33,23 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 
 # Change Log
 
+## Version 1.6.0 Released (on July 17, 2025)
+
+**New Features & Enhancements:**
+
+- **Configurable Bot Status:** The bot's Discord activity status is now configurable and managed, allowing for dynamic and engaging presence messages.
+  - Includes a default activity and a development delay for smooth startup.
+  - Activities are now fetched from the database for persistent and flexible status management.
+  - Activity status updates have been refactored to a dedicated worker for improved efficiency.
+- **Enhanced Activity Management:** Added new commands for managing bot activities.
+- **Improved Environment Configuration:** Configured default environment variables for easier setup and deployment.
+
+**Improvements & Fixes:**
+
+- **Discord Activity Enum Updates:** Updated internal Discord activity enum values for better compatibility and accuracy.
+- **Activity Type Replacement:** Replaced `WATCHING` activity type with `STREAMING` where appropriate for better clarity and Discord's current activity types.
+- **Quote Command Clarity:** Renamed quote-related commands for improved clarity and user understanding.
+
 ## Version 1.5.0 Released (on July 10, 2025)
 
 **New Features & Enhancements:**
