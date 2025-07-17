@@ -19,7 +19,7 @@ export default async function (
 
     if (quotes.length === 0)
       return interaction.reply({
-        content: "No quotes found. Add some!",
+        content: "No quotes found. Feel free to add some!",
         ephemeral: true,
       });
 

@@ -14,48 +14,25 @@ export function execute(client: Client, interaction: CommandInteraction) {
     info("changelog", interaction.user.username, interaction.user.id);
     const embed = new EmbedBuilder()
       .setColor(0xfadb7f)
-      .setTitle("Changelog")
-      .setDescription("Here are the latest changes to the bot:")
+      .setTitle("✨ FluffBoost Changelog - Version 1.6.0! ✨")
+      .setDescription(
+        "A fresh update focusing on dynamic bot status, better activity management, and internal refinements to keep things running smoothly!"
+      )
       .addFields(
         {
-          name: "🚀 Version 1.5.0 Released! (July 10, 2025)",
+          name: "🚀 Dynamic Bot Status & Activity Management",
           value:
-            "A significant update bringing new features and stability improvements.",
+            "The bot's Discord activity status is now fully configurable and dynamic! This includes a new system for managing activities from the database, efficient updates via a dedicated worker, and new commands to help manage these activities. Expect a more lively presence!",
         },
         {
-          name: "✨ Database Migration Enhancements",
+          name: "⚙️ Core System Enhancements",
           value:
-            "Streamlined database migration with new entrypoint scripts, an `npm run db:migrate` command, and integrated migration directly into the Dockerfile. Plus, the core database schema has been initialized.",
+            "We've refined default environment variables for easier setup and deployment, and updated internal Discord activity enum values for greater accuracy and compatibility.",
         },
         {
-          name: "✨ Executable Entrypoint Script",
+          name: "🛠️ Command & Type Refinements",
           value:
-            "The main entrypoint script is now executable for easier deployment and use.",
-        },
-        {
-          name: "🛠️ Refactoring & Code Clarity",
-          value:
-            "Extensive refactoring of suggestion quote relations, guild database management, permissions, and overall code for improved clarity and maintainability.",
-        },
-        {
-          name: "⚙️ Configuration & Dependency Updates",
-          value:
-            "Updated dependencies and project configuration for better performance and stability.",
-        },
-        {
-          name: "🐛 Bug Fixes & Optimizations",
-          value:
-            "Addressed incorrect field names in database queries, replaced baseline migration and the old database migration tool, and removed extraneous whitespace. Also reverted a previous `motivationChannelId` column rename.",
-        },
-        {
-          name: "♻️ Renames for Consistency",
-          value:
-            "The motivation channel column and various other elements have been renamed for better consistency.",
-        },
-        {
-          name: "🔄 Branch Merges",
-          value:
-            "The `dev` branch has been merged, incorporating all the latest developments.",
+            "Quote-related commands have been renamed for improved clarity, and activity types have been updated (e.g., replacing `WATCHING` with `STREAMING`) to align with Discord's current standards.",
         }
       )
       .setTimestamp()

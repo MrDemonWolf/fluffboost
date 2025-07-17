@@ -1,7 +1,5 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import type {
-  SlashCommandSubcommandGroupBuilder,
-  SlashCommandSubcommandBuilder,
   Client,
   CommandInteraction,
   CommandInteractionOptionResolver,
@@ -11,18 +9,21 @@ import { info, error } from "../../utils/commandLogger";
 /**
  * Import subcommands
  */
-import quoteAdd from "./quote/add";
+import quoteCreate from "./quote/create";
 import quoteList from "./quote/list";
-import qouteDel from "./quote/del";
+import qouteRemove from "./quote/remove";
+import activityAdd from "./activity/create";
+import activityList from "./activity/list";
+// import activityDel from "./activity/del";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("admin")
   .setDescription("Mange the bot")
-  .addSubcommandGroup((subCommandGroup: SlashCommandSubcommandGroupBuilder) => {
+  .addSubcommandGroup((subCommandGroup) => {
     return subCommandGroup
       .setName("quote")
       .setDescription("Get a random quote")
-      .addSubcommand((subCommand: SlashCommandSubcommandBuilder) => {
+      .addSubcommand((subCommand) => {
         return subCommand
           .setName("create")
           .setDescription("Create new quote")
@@ -39,7 +40,7 @@ export const slashCommand = new SlashCommandBuilder()
               .setRequired(true)
           );
       })
-      .addSubcommand((subCommand: SlashCommandSubcommandBuilder) => {
+      .addSubcommand((subCommand) => {
         return subCommand
           .setName("remove")
           .setDescription("Remove a quote")
@@ -50,9 +51,61 @@ export const slashCommand = new SlashCommandBuilder()
               .setRequired(true)
           );
       })
-      .addSubcommand((subCommand: SlashCommandSubcommandBuilder) => {
+      .addSubcommand((subCommand) => {
         return subCommand.setName("list").setDescription("List all quotes");
       });
+  })
+  .addSubcommandGroup((subCommandGroup) => {
+    return (
+      subCommandGroup
+        .setName("activity")
+        .setDescription("Manage the bot's activity status")
+        .addSubcommand((subcommand) =>
+          subcommand
+            .setName("create")
+            .setDescription("Create a new activity for the bot")
+            .addStringOption((option) =>
+              option
+                .setName("activity")
+                .setDescription("What is the bot doing?")
+                .setRequired(true)
+            )
+            .addStringOption((option) =>
+              option
+                .setName("type")
+                .setDescription("The type of activity")
+                .setRequired(true)
+                .addChoices(
+                  { name: "Playing", value: "Playing" },
+                  { name: "Streaming", value: "Streaming" },
+                  { name: "Listening", value: "Listening" },
+                  { name: "Custom", value: "Custom" }
+                )
+            )
+            .addStringOption((option) =>
+              option
+                .setName("url")
+                .setDescription("The URL for the activity (optional)")
+                .setRequired(false)
+            )
+        )
+        // .addSubcommand((subcommand) =>
+        //   subcommand
+        //     .setName("remove")
+        //     .setDescription("Remove an activity")
+        //     .addStringOption((option) =>
+        //       option
+        //         .setName("id")
+        //         .setDescription("The ID of the activity to remove")
+        //         .setRequired(true)
+        //     )
+        // )
+        .addSubcommand((subcommand) => {
+          return subcommand
+            .setName("list")
+            .setDescription("List all available activities");
+        })
+    );
   })
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
@@ -67,35 +120,60 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     const subCommandGroup = options.getSubcommandGroup();
     const subCommand = options.getSubcommand();
 
-    if (subCommandGroup === "quote") {
-      switch (subCommand) {
-        case "create":
-          const quote = options.getString("quote", true);
-          const author = options.getString("author", true);
+    switch (subCommandGroup) {
+      case "quote":
+        switch (subCommand) {
+          case "create":
+            const quote = options.getString("quote", true);
+            const author = options.getString("author", true);
 
-          quoteAdd(client, interaction, quote, author);
-          break;
-        case "remove":
-          const id = options.getString("id", true);
+            quoteCreate(client, interaction, quote, author);
+            break;
+          case "remove":
+            const id = options.getString("id", true);
 
-          qouteDel(client, interaction, id);
-          break;
-        case "list":
-          quoteList(client, interaction);
-          break;
-        default:
-          interaction.reply({
-            content: "Invalid subcommand",
-            ephemeral: true,
-          });
-          break;
-      }
-      return;
+            qouteRemove(client, interaction, id);
+            break;
+          case "list":
+            quoteList(client, interaction);
+            break;
+          default:
+            interaction.reply({
+              content: "Invalid subcommand",
+              ephemeral: true,
+            });
+        }
+        break;
+      case "activity":
+        switch (subCommand) {
+          case "create":
+            activityAdd(
+              client,
+              interaction,
+              options as CommandInteractionOptionResolver
+            );
+            break;
+          case "remove":
+            // const id = options.getString("id", true);
+            // activityDel(client, interaction, id);
+            break;
+          case "list":
+            activityList(client, interaction);
+            break;
+          default:
+            interaction.reply({
+              content: "Invalid subcommand",
+              ephemeral: true,
+            });
+        }
+        break;
+
+      default:
+        interaction.reply({
+          content: "Invalid subcommand group",
+          ephemeral: true,
+        });
     }
-    interaction.reply({
-      content: "Invalid subcommand",
-      ephemeral: true,
-    });
   } catch (err) {
     error("admin", interaction.user.username, interaction.user.id);
     console.log(err);
