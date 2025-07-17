@@ -4,6 +4,7 @@ import { env } from "../../utils/env";
 import { prisma } from "../../database";
 
 import consola from "consola";
+import { json } from "stream/consumers";
 
 export default async (client: Client) => {
   try {
@@ -17,7 +18,17 @@ export default async (client: Client) => {
       if (activities.length === 0) {
         return null;
       }
+
+      activities.push({
+        id: "default",
+        activity: defaultActivity,
+        type: defaultActivityType,
+        url: defaultActivityUrl ? defaultActivityUrl : null,
+        createdAt: new Date(),
+      });
+
       const randomIndex = Math.floor(Math.random() * activities.length);
+
       return activities[randomIndex];
     };
 
@@ -25,11 +36,10 @@ export default async (client: Client) => {
 
     if (!activity) {
       consola.warn("No activity found, using default activity.");
-      client.user?.setActivity(defaultActivity, {
+      return client.user?.setActivity(defaultActivity, {
         type: ActivityType[defaultActivityType],
         url: defaultActivityUrl,
       });
-      return;
     }
 
     client.user?.setActivity(activity.activity, {
