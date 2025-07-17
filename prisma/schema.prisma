@@ -13,7 +13,7 @@ datasource db {
 enum DiscordActivityType {
   CUSTOM
   LISTENING
-  WATCHING
+  STREAMING
   PLAYING
 }
 
