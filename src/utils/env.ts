@@ -10,7 +10,6 @@ const envSchema = z.object({
     .min(1, "Database URL is required")
     .refine((url) => {
       try {
-        // check if the URL is a valid PostgreSQL connection string
         const urlPattern = /^postgres:\/\/[^:]+:[^@]+@[^:]+:\d+\/[^/]+$/;
         return urlPattern.test(url);
       } catch {
