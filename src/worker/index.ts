@@ -13,7 +13,7 @@ export default function worker() {
   if (env.NODE_ENV === "development") {
     // run it every 5 mins for development purposes.
     cron.schedule(
-      "*/1 * * * *",
+      "*/5 * * * *",
       () => {
         sendMotivation();
       },
@@ -45,7 +45,7 @@ export default function worker() {
     }
   );
   cron.schedule(
-    env.DISCORD_ACTIVITY_CRON || "*/10 * * * *",
+    env.DISCORD_ACTIVITY_CRON || "*/30 * * * *",
     () => {
       setActivity(client);
     },

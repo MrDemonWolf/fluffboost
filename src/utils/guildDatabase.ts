@@ -6,6 +6,29 @@ import { prisma } from "../database";
 export async function pruneGuilds(client: Client) {
   try {
     const guildsInDb = await prisma.guild.findMany({});
+
+    const guildsInCache = client.guilds.cache.map((guild) => guild.id);
+
+    /**
+     * Duble check if there are guilds in the database and cache. If not, return early.
+     * This is to preverrt issues if cache is empty or database is empty.
+     */
+    if (guildsInDb.length === 0) {
+      consola.info({
+        message: `[Discord Event Logger - Clean up Guild Database] No guilds found in the database.`,
+        badge: true,
+      });
+      return;
+    }
+
+    if (guildsInCache.length === 0) {
+      consola.info({
+        message: `[Discord Event Logger - Clean up Guild Database] No guilds found in the cache.`,
+        badge: true,
+      });
+      return;
+    }
+
     const guildsToRemove = guildsInDb.filter(
       (guild) => client.guilds.cache.get(guild.guildId) === undefined
     );
@@ -17,7 +40,6 @@ export async function pruneGuilds(client: Client) {
       });
       return;
     }
-
     consola.info({
       message: `[Discord Event Logger - Clean up Guild Database] Found ${guildsToRemove.length} guilds to remove from the database.`,
       badge: true,
