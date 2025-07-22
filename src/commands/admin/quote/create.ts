@@ -4,6 +4,9 @@ import {
   TextChannel,
   MessageFlags,
 } from "discord.js";
+
+import type { CommandInteractionOptionResolver } from "discord.js";
+
 import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
@@ -12,11 +15,10 @@ import { env } from "../../../utils/env";
 export default async function (
   client: Client,
   interaction: CommandInteraction,
-  quote: string,
-  author: string
+  options: CommandInteractionOptionResolver
 ) {
   try {
-    info("admin quote add", interaction.user.username, interaction.user.id);
+    info("admin quote create", interaction.user.username, interaction.user.id);
 
     const isAllowed = isUserPermitted(interaction);
 
@@ -24,13 +26,16 @@ export default async function (
 
     if (!isAllowed) return;
 
+    const quote = options.getString("quote");
+    const quoteAuthor = options.getString("quote_author");
+
     if (!quote) return interaction.reply("Please provide a quote");
-    if (!author) return interaction.reply("Please provide an author");
+    if (!quoteAuthor) return interaction.reply("Please provide an author");
 
     const newQuote = await prisma.motivationQuote.create({
       data: {
         quote,
-        author,
+        author: quoteAuthor,
         addedBy: interaction.user.id,
       },
     });
@@ -44,16 +49,20 @@ export default async function (
       env.MAIN_CHANNEL_ID as string
     ) as TextChannel;
     mainChannel?.send(
-      `Quote added by ${interaction.user.username} with id: ${newQuote.id}`
+      `Quote create by ${interaction.user.username} with id: ${newQuote.id}`
     );
 
     await interaction.reply({
-      content: `Quote added with id: ${newQuote.id}`,
+      content: `Quote created with id: ${newQuote.id}`,
       flags: MessageFlags.Ephemeral,
     });
-    success("admin quote add", interaction.user.username, interaction.user.id);
+    success(
+      "admin quote create",
+      interaction.user.username,
+      interaction.user.id
+    );
   } catch (err) {
-    error("admin quote add", interaction.user.username, interaction.user.id);
+    error("admin quote create", interaction.user.username, interaction.user.id);
     console.log(err);
   }
 }
