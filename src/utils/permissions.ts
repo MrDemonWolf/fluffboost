@@ -1,3 +1,4 @@
+import { MessageFlags } from "discord.js";
 import type { CommandInteraction } from "discord.js";
 
 import { trimArray } from "./trimArray";
@@ -11,7 +12,7 @@ export function isUserPermitted(interaction: CommandInteraction) {
     console.error(`User ${interaction.user.id} tired to use bot quote add`);
     interaction.reply({
       content: "You are not allowed to use this command",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return false;
   }
