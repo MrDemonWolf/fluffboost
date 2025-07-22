@@ -1,6 +1,6 @@
 import type { Client, CommandInteraction } from "discord.js";
 
-import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
 
 import { info, success, error } from "../utils/commandLogger";
 import posthog from "../utils/posthog";
@@ -42,7 +42,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
 
     interaction.reply({
       embeds: [embed],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     success("changelog", interaction.user.username, interaction.user.id);
     posthog.capture({

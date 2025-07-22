@@ -1,4 +1,8 @@
-import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+  MessageFlags,
+} from "discord.js";
 import type {
   Client,
   CommandInteraction,
@@ -142,7 +146,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
           default:
             interaction.reply({
               content: "Invalid subcommand",
-              ephemeral: true,
+              flags: MessageFlags.Ephemeral,
             });
         }
         break;
@@ -168,7 +172,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
           default:
             interaction.reply({
               content: "Invalid subcommand",
-              ephemeral: true,
+              flags: MessageFlags.Ephemeral,
             });
         }
         break;
@@ -176,7 +180,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       default:
         interaction.reply({
           content: "Invalid subcommand group",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
     }
   } catch (err) {

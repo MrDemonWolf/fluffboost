@@ -1,4 +1,9 @@
-import { Client, CommandInteraction, TextChannel } from "discord.js";
+import {
+  Client,
+  CommandInteraction,
+  TextChannel,
+  MessageFlags,
+} from "discord.js";
 import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
@@ -45,7 +50,7 @@ export default async function (
 
     await interaction.reply({
       content: `Quote deleted with id: ${quoteId}`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     success(
       `admin quote remove with ${quoteId} `,
