@@ -1,4 +1,4 @@
-import { Client, CommandInteraction } from "discord.js";
+import { Client, CommandInteraction, MessageFlags } from "discord.js";
 import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
@@ -20,7 +20,7 @@ export default async function (
     if (quotes.length === 0)
       return interaction.reply({
         content: "No quotes found. Feel free to add some!",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
 
     let text = "ID - Quote - Author\n";
@@ -35,6 +35,7 @@ export default async function (
           name: "quotes.txt",
         },
       ],
+      flags: MessageFlags.Ephemeral,
     });
 
     success("admin quote add", interaction.user.username, interaction.user.id);
