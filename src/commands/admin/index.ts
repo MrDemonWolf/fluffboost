@@ -46,8 +46,8 @@ export const slashCommand = new SlashCommandBuilder()
           .setDescription("Remove a quote")
           .addStringOption((option) =>
             option
-              .setName("id")
-              .setDescription("The id of the quote you want to remove")
+              .setName("quote_id")
+              .setDescription("What is the ID of the quote you want to remove?")
               .setRequired(true)
           );
       })
@@ -95,7 +95,9 @@ export const slashCommand = new SlashCommandBuilder()
           .addStringOption((option) =>
             option
               .setName("activity_id")
-              .setDescription("The ID of the activity to remove")
+              .setDescription(
+                "What is the ID of the activity you want to remove?"
+              )
               .setRequired(true)
           )
       )
@@ -128,9 +130,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
             quoteCreate(client, interaction, quote, author);
             break;
           case "remove":
-            const id = options.getString("id", true);
-
-            qouteRemove(client, interaction, id);
+            qouteRemove(
+              client,
+              interaction,
+              options as CommandInteractionOptionResolver
+            );
             break;
           case "list":
             quoteList(client, interaction);
