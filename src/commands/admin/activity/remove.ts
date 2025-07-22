@@ -30,7 +30,10 @@ export default async function (
     });
 
     if (!activity) {
-      return interaction.reply("Activity not found");
+      return interaction.reply({
+        content: `No activity found with ID: ${activityId}`,
+        ephemeral: true,
+      });
     }
 
     await prisma.discordActivity.delete({
