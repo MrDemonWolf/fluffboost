@@ -1,9 +1,12 @@
+import { MessageFlags } from "discord.js";
+
 import type {
   Client,
   CommandInteraction,
   CommandInteractionOptionResolver,
   TextChannel,
 } from "discord.js";
+
 import { info, success, error } from "../../utils/commandLogger";
 import { prisma } from "../../database";
 import { guildExists } from "../../utils/guildDatabase";
@@ -37,7 +40,7 @@ export default async function (
 
     await interaction.reply({
       content: `The motivation channel has been set to <#${motivationChannel.id}>`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
 
     success("setup", interaction.user.username, interaction.user.id);

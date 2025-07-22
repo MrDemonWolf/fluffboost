@@ -4,6 +4,7 @@ import {
   TextChannel,
   SlashCommandBuilder,
   EmbedBuilder,
+  MessageFlags,
 } from "discord.js";
 import type { CommandInteractionOptionResolver } from "discord.js";
 import { info, success, error } from "../utils/commandLogger";
@@ -70,7 +71,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
 
     interaction.reply({
       content: `Quote suggestion created owner will review it soon!`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
 
     /**

@@ -1,4 +1,4 @@
-import { Client, CommandInteraction } from "discord.js";
+import { Client, CommandInteraction, MessageFlags } from "discord.js";
 import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
@@ -32,7 +32,7 @@ export default async function (
     if (!activity) {
       return interaction.reply({
         content: `No activity found with ID: ${activityId}`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -42,7 +42,7 @@ export default async function (
 
     await interaction.reply({
       content: `Activity with ID: ${activityId} has been deleted`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     success(
       "admin activity delete",

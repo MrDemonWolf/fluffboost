@@ -1,6 +1,6 @@
-import type { Client, CommandInteraction } from "discord.js";
+import { SlashCommandBuilder, OAuth2Scopes, MessageFlags } from "discord.js";
 
-import { SlashCommandBuilder, OAuth2Scopes } from "discord.js";
+import type { Client, CommandInteraction } from "discord.js";
 
 import { info, success, error } from "../utils/commandLogger";
 import posthog from "../utils/posthog";
@@ -23,7 +23,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
     // send invite link
     interaction.reply({
       content: `Invite me to your server! Let's keep spreading paw-sitivity 🐾\n${inviteLink}`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     success("invite", interaction.user.username, interaction.user.id);
     posthog.capture({
