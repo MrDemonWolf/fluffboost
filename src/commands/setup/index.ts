@@ -2,6 +2,7 @@ import {
   SlashCommandBuilder,
   PermissionFlagsBits,
   ChannelType,
+  MessageFlags,
 } from "discord.js";
 import type {
   SlashCommandSubcommandBuilder,
@@ -52,7 +53,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       default:
         interaction.reply({
           content: "Invalid subcommand",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         break;
     }
