@@ -34,13 +34,13 @@ export const slashCommand = new SlashCommandBuilder()
           .addStringOption((option) =>
             option
               .setName("quote")
-              .setDescription("The quote you want to create")
+              .setDescription("What is the quote?")
               .setRequired(true)
           )
           .addStringOption((option) =>
             option
-              .setName("author")
-              .setDescription("The author of the quote")
+              .setName("quote_author")
+              .setDescription("Who is the author of the quote?")
               .setRequired(true)
           );
       })
@@ -128,10 +128,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       case "quote":
         switch (subCommand) {
           case "create":
-            const quote = options.getString("quote", true);
-            const author = options.getString("author", true);
-
-            quoteCreate(client, interaction, quote, author);
+            quoteCreate(
+              client,
+              interaction,
+              options as CommandInteractionOptionResolver
+            );
             break;
           case "remove":
             qouteRemove(
