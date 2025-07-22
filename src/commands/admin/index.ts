@@ -14,7 +14,7 @@ import quoteList from "./quote/list";
 import qouteRemove from "./quote/remove";
 import activityAdd from "./activity/create";
 import activityList from "./activity/list";
-// import activityDel from "./activity/del";
+import activityRemove from "./activity/remove";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("admin")
@@ -56,56 +56,54 @@ export const slashCommand = new SlashCommandBuilder()
       });
   })
   .addSubcommandGroup((subCommandGroup) => {
-    return (
-      subCommandGroup
-        .setName("activity")
-        .setDescription("Manage the bot's activity status")
-        .addSubcommand((subcommand) =>
-          subcommand
-            .setName("create")
-            .setDescription("Create a new activity for the bot")
-            .addStringOption((option) =>
-              option
-                .setName("activity")
-                .setDescription("What is the bot doing?")
-                .setRequired(true)
-            )
-            .addStringOption((option) =>
-              option
-                .setName("type")
-                .setDescription("The type of activity")
-                .setRequired(true)
-                .addChoices(
-                  { name: "Playing", value: "Playing" },
-                  { name: "Streaming", value: "Streaming" },
-                  { name: "Listening", value: "Listening" },
-                  { name: "Custom", value: "Custom" }
-                )
-            )
-            .addStringOption((option) =>
-              option
-                .setName("url")
-                .setDescription("The URL for the activity (optional)")
-                .setRequired(false)
-            )
-        )
-        // .addSubcommand((subcommand) =>
-        //   subcommand
-        //     .setName("remove")
-        //     .setDescription("Remove an activity")
-        //     .addStringOption((option) =>
-        //       option
-        //         .setName("id")
-        //         .setDescription("The ID of the activity to remove")
-        //         .setRequired(true)
-        //     )
-        // )
-        .addSubcommand((subcommand) => {
-          return subcommand
-            .setName("list")
-            .setDescription("List all available activities");
-        })
-    );
+    return subCommandGroup
+      .setName("activity")
+      .setDescription("Manage the bot's activity status")
+      .addSubcommand((subcommand) =>
+        subcommand
+          .setName("create")
+          .setDescription("Create a new activity for the bot")
+          .addStringOption((option) =>
+            option
+              .setName("activity")
+              .setDescription("What is the bot doing?")
+              .setRequired(true)
+          )
+          .addStringOption((option) =>
+            option
+              .setName("type")
+              .setDescription("The type of activity")
+              .setRequired(true)
+              .addChoices(
+                { name: "Playing", value: "Playing" },
+                { name: "Streaming", value: "Streaming" },
+                { name: "Listening", value: "Listening" },
+                { name: "Custom", value: "Custom" }
+              )
+          )
+          .addStringOption((option) =>
+            option
+              .setName("url")
+              .setDescription("The URL for the activity (optional)")
+              .setRequired(false)
+          )
+      )
+      .addSubcommand((subcommand) =>
+        subcommand
+          .setName("remove")
+          .setDescription("Remove an activity")
+          .addStringOption((option) =>
+            option
+              .setName("activity_id")
+              .setDescription("The ID of the activity to remove")
+              .setRequired(true)
+          )
+      )
+      .addSubcommand((subcommand) => {
+        return subcommand
+          .setName("list")
+          .setDescription("List all available activities");
+      });
   })
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
@@ -154,8 +152,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
             );
             break;
           case "remove":
-            // const id = options.getString("id", true);
-            // activityDel(client, interaction, id);
+            activityRemove(
+              client,
+              interaction,
+              options as CommandInteractionOptionResolver
+            );
             break;
           case "list":
             activityList(client, interaction);
