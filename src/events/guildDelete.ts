@@ -1,5 +1,7 @@
-import type { Guild } from "discord.js";
 import consola from "consola";
+
+import type { Guild } from "discord.js";
+
 import { prisma } from "../database";
 import posthog from "../utils/posthog";
 
@@ -13,6 +15,7 @@ export async function guildDeleteEvent(guild: Guild): Promise<void> {
         guildId: guild.id,
       },
     });
+
     /**
      * Show the bot has left a guild in the console.
      */
@@ -20,6 +23,7 @@ export async function guildDeleteEvent(guild: Guild): Promise<void> {
       message: `Left a guild: ${guild.name} | Guild ID: ${guild.id}. Removed guild from database.`,
       badge: true,
     });
+
     posthog.capture({
       distinctId: guild.id,
       event: "guild left",

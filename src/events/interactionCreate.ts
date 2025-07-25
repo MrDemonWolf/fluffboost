@@ -1,4 +1,7 @@
+import { MessageFlags } from "discord.js";
+
 import type { Client, Interaction, CommandInteraction } from "discord.js";
+
 import { info, success, warn } from "../utils/commandLogger";
 
 /**
@@ -107,7 +110,7 @@ export async function interactionCreateEvent(
 
     await interactionWithError.reply({
       content: "There was an error while executing this command!",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 }

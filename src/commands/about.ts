@@ -1,5 +1,8 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import consola from "consola";
+
 import type { Client, CommandInteraction, User } from "discord.js";
+
 import { info, success, error } from "../utils/commandLogger";
 import posthog from "../utils/posthog";
 
@@ -49,10 +52,12 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       .setFooter({
         text: "Made with ❤️ by MrDemonWolf, Inc.",
       });
-    interaction.reply({
+    await interaction.reply({
       embeds: [embed],
     });
+
     success("about", interaction.user.username, interaction.user.id);
+
     posthog.capture({
       distinctId: interaction.user.id,
       event: "about command used",
@@ -64,7 +69,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     });
   } catch (err) {
     error("about", interaction.user.username, interaction.user.id);
-    console.log(err);
+    consola.error(err);
   }
 }
 

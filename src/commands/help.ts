@@ -1,6 +1,7 @@
 import type { Client, CommandInteraction } from "discord.js";
+import consola from "consola";
 
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder, MessageFlags } from "discord.js";
 
 import { info, success, error } from "../utils/commandLogger";
 import posthog from "../utils/posthog";
@@ -20,9 +21,11 @@ export function execute(client: Client, interaction: CommandInteraction) {
             \`/quote\` - Get a random quote
             \`/setup\` - Setup the bot for your server such as the channel to send quotes to. (admin only)
             \`/admin\` - Admin commands (selected users only)`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
+
     success("help", interaction.user.username, interaction.user.id);
+
     posthog.capture({
       distinctId: interaction.user.id,
       event: "help command used",
@@ -34,7 +37,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
     });
   } catch (err) {
     error("help", interaction.user.username, interaction.user.id);
-    console.log(err);
+    consola.error(err);
   }
 }
 

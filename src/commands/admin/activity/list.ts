@@ -1,8 +1,11 @@
-import { Client, CommandInteraction } from "discord.js";
+import { Client, CommandInteraction, MessageFlags } from "discord.js";
+import consola from "consola";
+
+import type { DiscordActivity } from "@prisma/client";
+
 import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
-import type { DiscordActivity } from "@prisma/client";
 
 export default async function (
   client: Client,
@@ -20,7 +23,7 @@ export default async function (
     if (activities.length === 0)
       return interaction.reply({
         content: "No activities found at the moment. Feel free to add some!",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
 
     let text = "ID - Activity - Type - URL\n";
@@ -50,6 +53,6 @@ export default async function (
       interaction.user.username,
       interaction.user.id
     );
-    console.log(err);
+    console.error("admin activity list error:", err);
   }
 }
