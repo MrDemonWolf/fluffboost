@@ -1,10 +1,11 @@
 import { Client, CommandInteraction, MessageFlags } from "discord.js";
-import { info, success, error } from "../../../utils/commandLogger";
-import { isUserPermitted } from "../../../utils/permissions";
-import { prisma } from "../../../database";
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 import type { DiscordActivityType } from "@prisma/client";
+
+import { info, success, error } from "../../../utils/commandLogger";
+import { isUserPermitted } from "../../../utils/permissions";
+import { prisma } from "../../../database";
 
 export default async function (
   client: Client,
@@ -37,6 +38,7 @@ export default async function (
       content: `Activity added with id: ${newActivity.id}`,
       flags: MessageFlags.Ephemeral,
     });
+
     success(
       "admin activity add",
       interaction.user.username,

@@ -1,4 +1,5 @@
 import { Client, Events, GatewayIntentBits } from "discord.js";
+
 import { env } from "./utils/env";
 
 /**

@@ -4,12 +4,13 @@ import {
   TextChannel,
   MessageFlags,
 } from "discord.js";
+
+import type { CommandInteractionOptionResolver } from "discord.js";
+
 import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
 import { env } from "../../../utils/env";
-
-import type { CommandInteractionOptionResolver } from "discord.js";
 
 export default async function (
   client: Client,
@@ -52,6 +53,7 @@ export default async function (
       content: `Quote deleted with id: ${quoteId}`,
       flags: MessageFlags.Ephemeral,
     });
+
     success(
       `admin quote remove with ${quoteId} `,
       interaction.user.username,
