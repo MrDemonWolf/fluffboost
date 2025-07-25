@@ -1,6 +1,7 @@
 import {
   Client,
   CommandInteraction,
+  EmbedBuilder,
   TextChannel,
   MessageFlags,
 } from "discord.js";
@@ -45,12 +46,35 @@ export default async function (
      * to notify that a new quote has been added.
      * This is useful for tracking purposes and to keep the owner informed.
      */
+    const emebed = new EmbedBuilder()
+      .setColor(0xfadb7f)
+      .setTitle("New Quote Created")
+      .setAuthor({
+        name: interaction.user.username,
+        iconURL: interaction.user.displayAvatarURL(),
+      })
+      .addFields(
+        { name: "Quote", value: newQuote.quote },
+        { name: "Author", value: newQuote.author }
+      )
+      .setFooter({
+        text: `Quote ID: ${newQuote.id}`,
+      })
+      .setTimestamp();
+
     const mainChannel = client.channels.cache.get(
       env.MAIN_CHANNEL_ID as string
     ) as TextChannel;
-    mainChannel?.send(
-      `Quote create by ${interaction.user.username} with id: ${newQuote.id}`
-    );
+    if (mainChannel) {
+      await mainChannel.send({ embeds: [emebed] });
+    } else {
+      error(
+        "admin quote create",
+        interaction.user.username,
+        interaction.user.id
+      );
+      console.error("Main channel not found. Please check the channel ID.");
+    }
 
     await interaction.reply({
       content: `Quote created with id: ${newQuote.id}`,
