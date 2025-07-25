@@ -1,4 +1,5 @@
 import { MessageFlags } from "discord.js";
+
 import type { CommandInteraction } from "discord.js";
 
 import { trimArray } from "./trimArray";

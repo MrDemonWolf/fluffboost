@@ -1,9 +1,10 @@
 import { Client, CommandInteraction, MessageFlags } from "discord.js";
+
+import type { CommandInteractionOptionResolver } from "discord.js";
+
 import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
-
-import type { CommandInteractionOptionResolver } from "discord.js";
 
 export default async function (
   client: Client,
@@ -44,6 +45,7 @@ export default async function (
       content: `Activity with ID: ${activityId} has been deleted`,
       flags: MessageFlags.Ephemeral,
     });
+
     success(
       "admin activity delete",
       interaction.user.username,

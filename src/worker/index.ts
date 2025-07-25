@@ -1,5 +1,6 @@
 import consola from "consola";
 import cron from "node-cron";
+
 import { env } from "../utils/env";
 import client from "../bot";
 
@@ -21,6 +22,7 @@ export default function worker() {
         timezone: "America/Chicago",
       }
     );
+
     cron.schedule(
       env.DISCORD_ACTIVITY_CRON || "*/5 * * * *",
       () => {
@@ -35,6 +37,8 @@ export default function worker() {
       badge: true,
     });
   }
+
+  // Production cron jobs
   cron.schedule(
     "0 8 * * *",
     () => {
@@ -44,6 +48,7 @@ export default function worker() {
       timezone: "America/Chicago",
     }
   );
+
   cron.schedule(
     env.DISCORD_ACTIVITY_CRON || "*/30 * * * *",
     () => {

@@ -1,10 +1,11 @@
 import { ActivityType } from "discord.js";
+
 import type { Client } from "discord.js";
+
 import { env } from "../../utils/env";
 import { prisma } from "../../database";
 
 import consola from "consola";
-import { json } from "stream/consumers";
 
 export default async (client: Client) => {
   try {

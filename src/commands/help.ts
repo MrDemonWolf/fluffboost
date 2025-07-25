@@ -22,7 +22,9 @@ export function execute(client: Client, interaction: CommandInteraction) {
             \`/admin\` - Admin commands (selected users only)`,
       flags: MessageFlags.Ephemeral,
     });
+
     success("help", interaction.user.username, interaction.user.id);
+
     posthog.capture({
       distinctId: interaction.user.id,
       event: "help command used",

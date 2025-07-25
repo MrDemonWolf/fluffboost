@@ -1,6 +1,8 @@
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
-import type { Client, CommandInteraction } from "discord.js";
 import consola from "consola";
+
+import type { Client, CommandInteraction } from "discord.js";
+
 import { info, success, error } from "../utils/commandLogger";
 import { prisma } from "../database";
 import posthog from "../utils/posthog";
@@ -56,7 +58,9 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     await interaction.reply({
       embeds: [motivationEmbed],
     });
+
     success("quote", interaction.user.username, interaction.user.id);
+
     posthog.capture({
       distinctId: interaction.user.id,
       event: "quote command used",

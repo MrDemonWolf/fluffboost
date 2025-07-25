@@ -57,6 +57,7 @@ api.on("error", (err) => {
 });
 
 if (env.NODE_ENV === "development") setTimeout(() => {}, 1500);
+
 /**
  * Discord.js Sharding Manager
  */

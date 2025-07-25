@@ -1,8 +1,10 @@
 import { Client, CommandInteraction, MessageFlags } from "discord.js";
+
+import type { DiscordActivity } from "@prisma/client";
+
 import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
-import type { DiscordActivity } from "@prisma/client";
 
 export default async function (
   client: Client,

@@ -1,5 +1,7 @@
-import type { Client } from "discord.js";
 import consola from "consola";
+
+import type { Client } from "discord.js";
+
 import posthog from "../utils/posthog";
 import { prisma } from "../database";
 
@@ -40,10 +42,12 @@ export async function pruneGuilds(client: Client) {
       });
       return;
     }
+
     consola.info({
       message: `[Discord Event Logger - Clean up Guild Database] Found ${guildsToRemove.length} guilds to remove from the database.`,
       badge: true,
     });
+
     guildsToRemove.forEach(async (guild) => {
       try {
         await prisma.guild.delete({
@@ -51,10 +55,12 @@ export async function pruneGuilds(client: Client) {
             guildId: guild.guildId,
           },
         });
+
         consola.success({
           message: `[Discord Event Logger - Clean up Guild Database] Removed guild ${guild.guildId} from the database`,
           badge: true,
         });
+
         posthog.capture({
           distinctId: guild.guildId,
           event: "guild left",
@@ -102,6 +108,7 @@ export async function ensureGuildExists(client: Client) {
       });
       return;
     }
+
     consola.info({
       message: `[Discord Event Logger - Ensure Guild Exists] Found ${guildsToAdd.size} guilds to add to the database.`,
       badge: true,
@@ -114,10 +121,12 @@ export async function ensureGuildExists(client: Client) {
             guildId: guild.id,
           },
         });
+
         consola.success({
           message: `[Discord Event Logger - ReadyEvt] Created guild ${guild.name} (ID: ${guild.id}) in the database`,
           badge: true,
         });
+
         posthog.capture({
           distinctId: guild.id,
           event: "guild joined",

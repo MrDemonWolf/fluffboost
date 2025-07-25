@@ -25,7 +25,9 @@ export function execute(client: Client, interaction: CommandInteraction) {
       content: `Invite me to your server! Let's keep spreading paw-sitivity 🐾\n${inviteLink}`,
       flags: MessageFlags.Ephemeral,
     });
+
     success("invite", interaction.user.username, interaction.user.id);
+
     posthog.capture({
       distinctId: interaction.user.id,
       event: "invite command used",

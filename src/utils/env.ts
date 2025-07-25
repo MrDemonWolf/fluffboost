@@ -58,6 +58,7 @@ const envSchema = z.object({
 });
 
 type EnvSchema = z.infer<typeof envSchema>;
+
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {

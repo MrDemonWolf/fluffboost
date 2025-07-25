@@ -23,8 +23,6 @@ export default async function (
 
     const isAllowed = isUserPermitted(interaction);
 
-    console.log(isAllowed);
-
     if (!isAllowed) return;
 
     const quote = options.getString("quote");
@@ -65,6 +63,7 @@ export default async function (
     const mainChannel = client.channels.cache.get(
       env.MAIN_CHANNEL_ID as string
     ) as TextChannel;
+
     if (mainChannel) {
       await mainChannel.send({ embeds: [emebed] });
     } else {
@@ -80,6 +79,7 @@ export default async function (
       content: `Quote created with id: ${newQuote.id}`,
       flags: MessageFlags.Ephemeral,
     });
+
     success(
       "admin quote create",
       interaction.user.username,
