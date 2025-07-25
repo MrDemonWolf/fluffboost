@@ -26,7 +26,7 @@ export default async function (
 
     const quoteId = options.getString("quote_id", true);
 
-    if (!quoteId) return interaction.reply("Please provide an id");
+    if (!quoteId) return interaction.reply("Quote ID is required");
 
     const quote = await prisma.motivationQuote.findUnique({
       where: {

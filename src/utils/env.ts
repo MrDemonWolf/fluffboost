@@ -10,12 +10,16 @@ const envSchema = z.object({
     .min(1, "Database URL is required")
     .refine((url) => {
       try {
-        const urlPattern = /^postgres:\/\/[^:]+:[^@]+@[^:]+:\d+\/[^/]+$/;
-        return urlPattern.test(url);
+        const parsedUrl = new URL(url);
+        return (
+          parsedUrl.protocol === "postgres:" &&
+          parsedUrl.hostname &&
+          parsedUrl.pathname.length > 1
+        );
       } catch {
         return false;
       }
-    }, "Invalid database URL"),
+    }, "Invalid PostgreSQL database URL"),
   DISCORD_APPLICATION_ID: z
     .string()
     .min(1, "Discord application ID is required"),
@@ -58,7 +62,6 @@ const envSchema = z.object({
 });
 
 type EnvSchema = z.infer<typeof envSchema>;
-
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
