@@ -51,7 +51,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       .setFooter({
         text: "Made with ❤️ by MrDemonWolf, Inc.",
       });
-    interaction.reply({
+    await interaction.reply({
       embeds: [embed],
     });
 

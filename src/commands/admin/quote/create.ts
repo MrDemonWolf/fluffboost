@@ -44,7 +44,7 @@ export default async function (
      * to notify that a new quote has been added.
      * This is useful for tracking purposes and to keep the owner informed.
      */
-    const emebed = new EmbedBuilder()
+    const embed = new EmbedBuilder()
       .setColor(0xfadb7f)
       .setTitle("New Quote Created")
       .setAuthor({
@@ -65,14 +65,16 @@ export default async function (
     ) as TextChannel;
 
     if (mainChannel) {
-      await mainChannel.send({ embeds: [emebed] });
+      await mainChannel.send({ embeds: [embed] });
     } else {
       error(
         "admin quote create",
         interaction.user.username,
         interaction.user.id
       );
-      console.error("Main channel not found. Please check the channel ID.");
+      console.error(
+        `Main channel not found. Channel ID: ${env.MAIN_CHANNEL_ID}`
+      );
     }
 
     await interaction.reply({
