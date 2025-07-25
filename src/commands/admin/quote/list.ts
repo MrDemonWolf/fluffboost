@@ -1,4 +1,5 @@
 import { Client, CommandInteraction, MessageFlags } from "discord.js";
+import consola from "consola";
 
 import type { MotivationQuote } from "@prisma/client";
 
@@ -43,6 +44,6 @@ export default async function (
     success("admin quote add", interaction.user.username, interaction.user.id);
   } catch (err) {
     error("admin quote add", interaction.user.username, interaction.user.id);
-    console.log(err);
+    consola.error(err);
   }
 }

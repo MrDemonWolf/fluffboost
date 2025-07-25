@@ -3,6 +3,7 @@ import {
   PermissionFlagsBits,
   MessageFlags,
 } from "discord.js";
+import consola from "consola";
 
 import type {
   Client,
@@ -187,7 +188,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     }
   } catch (err) {
     error("admin", interaction.user.username, interaction.user.id);
-    console.log(err);
+    consola.error(err);
   }
 }
 
