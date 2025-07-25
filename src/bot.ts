@@ -1,4 +1,5 @@
 import { Client, Events, GatewayIntentBits } from "discord.js";
+import consola from "consola";
 
 import { env } from "./utils/env";
 
@@ -27,7 +28,7 @@ client.on(Events.ClientReady, async () => {
     readyEvent(client);
     worker();
   } catch (err) {
-    console.log(err);
+    consola.error(err);
     process.exit(1);
   }
 });

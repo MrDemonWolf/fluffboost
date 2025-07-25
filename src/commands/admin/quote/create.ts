@@ -5,6 +5,7 @@ import {
   TextChannel,
   MessageFlags,
 } from "discord.js";
+import consola from "consola";
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 
@@ -89,6 +90,6 @@ export default async function (
     );
   } catch (err) {
     error("admin quote create", interaction.user.username, interaction.user.id);
-    console.log(err);
+    consola.error(err);
   }
 }

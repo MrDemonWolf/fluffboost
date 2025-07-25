@@ -1,4 +1,5 @@
 import { Client, CommandInteraction, MessageFlags } from "discord.js";
+import consola from "consola";
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 import type { DiscordActivityType } from "@prisma/client";
@@ -46,6 +47,6 @@ export default async function (
     );
   } catch (err) {
     error("admin activity add", interaction.user.username, interaction.user.id);
-    console.log(err);
+    consola.error(err);
   }
 }

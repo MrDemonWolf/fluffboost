@@ -1,4 +1,5 @@
 import { MessageFlags } from "discord.js";
+import consola from "consola";
 
 import type {
   Client,
@@ -46,6 +47,6 @@ export default async function (
     success("setup", interaction.user.username, interaction.user.id);
   } catch (err) {
     error("setup", interaction.user.username, interaction.user.id);
-    console.log(err);
+    consola.error(err);
   }
 }

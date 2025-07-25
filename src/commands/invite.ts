@@ -1,4 +1,5 @@
 import { SlashCommandBuilder, OAuth2Scopes, MessageFlags } from "discord.js";
+import consola from "consola";
 
 import type { Client, CommandInteraction } from "discord.js";
 
@@ -39,7 +40,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
     });
   } catch (err) {
     error("invite", interaction.user.username, interaction.user.id);
-    console.log(err);
+    consola.error(err);
   }
 }
 

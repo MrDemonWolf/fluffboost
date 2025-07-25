@@ -1,4 +1,5 @@
 import type { Client, CommandInteraction } from "discord.js";
+import consola from "consola";
 
 import { SlashCommandBuilder, MessageFlags } from "discord.js";
 
@@ -36,7 +37,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
     });
   } catch (err) {
     error("help", interaction.user.username, interaction.user.id);
-    console.log(err);
+    consola.error(err);
   }
 }
 
