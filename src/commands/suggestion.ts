@@ -87,7 +87,10 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     const embed = new EmbedBuilder()
       .setColor(0xfadb7f)
       .setTitle("New Quote Suggestion")
-      .setDescription(`Quote suggestion by ${interaction.user.username}`)
+      .setAuthor({
+        name: interaction.user.username,
+        iconURL: interaction.user.displayAvatarURL(),
+      })
       .addFields(
         {
           name: "Quote",
@@ -95,7 +98,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
           inline: true,
         },
         {
-          name: "Author",
+          name: "Quote Author",
           value: author,
           inline: true,
         },
@@ -111,7 +114,6 @@ export async function execute(client: Client, interaction: CommandInteraction) {
 
     mainChannel?.send({
       embeds: [embed],
-      content: `<@${interaction.user.id}>`,
     });
 
     success("suggestion", interaction.user.username, interaction.user.id);
