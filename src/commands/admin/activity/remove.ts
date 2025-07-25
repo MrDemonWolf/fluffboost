@@ -29,7 +29,12 @@ export default async function (
 
     const activityId = options.getString("activity_id", true);
 
-    if (!activityId) return interaction.reply("Please provide an activity ID");
+    if (!activityId.trim()) {
+      return interaction.reply({
+        content: "Please provide a valid activity ID",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
 
     const activity = await prisma.discordActivity.findUnique({
       where: { id: activityId },

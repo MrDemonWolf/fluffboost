@@ -73,7 +73,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     });
   } catch (err) {
     error("quote", interaction.user.username, interaction.user.id);
-    console.log(err);
+    consola.error(err);
   }
 }
 

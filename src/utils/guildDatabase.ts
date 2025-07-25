@@ -12,8 +12,8 @@ export async function pruneGuilds(client: Client) {
     const guildsInCache = client.guilds.cache.map((guild) => guild.id);
 
     /**
-     * Duble check if there are guilds in the database and cache. If not, return early.
-     * This is to preverrt issues if cache is empty or database is empty.
+     * Double check if there are guilds in the database and cache. If not, return early.
+     * This is to prevent issues if cache is empty or database is empty.
      */
     if (guildsInDb.length === 0) {
       consola.info({
@@ -30,7 +30,6 @@ export async function pruneGuilds(client: Client) {
       });
       return;
     }
-
     const guildsToRemove = guildsInDb.filter(
       (guild) => client.guilds.cache.get(guild.guildId) === undefined
     );

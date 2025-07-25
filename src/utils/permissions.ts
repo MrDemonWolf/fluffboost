@@ -10,7 +10,7 @@ export function isUserPermitted(interaction: CommandInteraction) {
   const allowedUsers = trimArray(allowedUsersArray);
 
   if (!allowedUsers.includes(interaction.user.id)) {
-    console.error(`User ${interaction.user.id} tired to use bot quote add`);
+    console.error(`User ${interaction.user.id} tried to use bot quote add`);
     interaction.reply({
       content: "You are not allowed to use this command",
       flags: MessageFlags.Ephemeral,
