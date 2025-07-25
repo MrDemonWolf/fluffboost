@@ -49,7 +49,7 @@ export default async (client: Client) => {
     });
 
     consola.success({
-      message: "Discord has been activity set",
+      message: "Discord activity has been set",
       badge: true,
     });
   } catch (err) {
