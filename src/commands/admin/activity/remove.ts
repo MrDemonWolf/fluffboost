@@ -20,7 +20,12 @@ export default async function (
 
     const isAllowed = isUserPermitted(interaction);
 
-    if (!isAllowed) return;
+    if (!isAllowed) {
+      return interaction.reply({
+        content: "You don't have permission to use this command.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
 
     const activityId = options.getString("activity_id", true);
 
@@ -57,6 +62,14 @@ export default async function (
       interaction.user.username,
       interaction.user.id
     );
-    console.log(err);
+    console.error("Error in admin activity delete:", err);
+
+    if (!interaction.replied) {
+      await interaction.reply({
+        content:
+          "An error occurred while deleting the activity. Please try again.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
 }
