@@ -16,7 +16,7 @@ import { info, error } from "../../utils/commandLogger";
  */
 import quoteCreate from "./quote/create";
 import quoteList from "./quote/list";
-import qouteRemove from "./quote/remove";
+import quoteRemove from "./quote/remove";
 import activityAdd from "./activity/create";
 import activityList from "./activity/list";
 import activityRemove from "./activity/remove";
@@ -136,7 +136,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
             );
             break;
           case "remove":
-            qouteRemove(
+            quoteRemove(
               client,
               interaction,
               options as CommandInteractionOptionResolver
