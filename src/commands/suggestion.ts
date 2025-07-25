@@ -6,7 +6,9 @@ import {
   EmbedBuilder,
   MessageFlags,
 } from "discord.js";
+
 import type { CommandInteractionOptionResolver } from "discord.js";
+
 import { info, success, error } from "../utils/commandLogger";
 import { prisma } from "../database";
 import { env } from "../utils/env";
@@ -54,6 +56,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         guildId: interaction.guildId,
       },
     });
+
     if (!guild)
       return interaction.reply(
         "This server is not setup yet. Please setup the bot first."
@@ -112,6 +115,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     });
 
     success("suggestion", interaction.user.username, interaction.user.id);
+
     posthog.capture({
       distinctId: interaction.user.id,
       event: "suggestion command used",

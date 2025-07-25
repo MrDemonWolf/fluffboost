@@ -1,6 +1,7 @@
 import { MessageFlags } from "discord.js";
 
 import type { Client, Interaction, CommandInteraction } from "discord.js";
+
 import { info, success, warn } from "../utils/commandLogger";
 
 /**

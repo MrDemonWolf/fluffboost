@@ -1,5 +1,7 @@
-import type { Guild } from "discord.js";
 import consola from "consola";
+
+import type { Guild } from "discord.js";
+
 import { prisma } from "../database";
 import posthog from "../utils/posthog";
 
@@ -27,6 +29,7 @@ export async function guildCreateEvent(guild: Guild): Promise<void> {
       message: `Added guild ${guildData.guildId} to the database.`,
       badge: true,
     });
+
     posthog.capture({
       distinctId: guild.id,
       event: "guild created",
