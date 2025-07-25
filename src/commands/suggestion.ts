@@ -6,6 +6,7 @@ import {
   EmbedBuilder,
   MessageFlags,
 } from "discord.js";
+import consola from "consola";
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 
@@ -95,12 +96,10 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         {
           name: "Quote",
           value: quote,
-          inline: true,
         },
         {
           name: "Quote Author",
           value: author,
-          inline: true,
         },
         {
           name: "Status",
@@ -132,7 +131,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     });
   } catch (err) {
     error("suggestion", interaction.user.username, interaction.user.id);
-    console.log(err);
+    consola.error(err);
   }
 }
 
