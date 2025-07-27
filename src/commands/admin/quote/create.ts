@@ -61,21 +61,17 @@ export default async function (
       })
       .setTimestamp();
 
-    const mainChannel = client.channels.cache.get(
-      env.MAIN_CHANNEL_ID as string
-    ) as TextChannel;
-
-    if (mainChannel) {
-      await mainChannel.send({ embeds: [embed] });
+    if (env.MAIN_CHANNEL_ID) {
+      const channel = client.channels.cache.get(env.MAIN_CHANNEL_ID);
+      if (channel?.isTextBased()) {
+        await channel.send({ embeds: [embed] });
+      } else {
+        consola.warn(
+          `Main channel not found or not text-based. ID: ${env.MAIN_CHANNEL_ID}`
+        );
+      }
     } else {
-      error(
-        "admin quote create",
-        interaction.user.username,
-        interaction.user.id
-      );
-      console.error(
-        `Main channel not found. Channel ID: ${env.MAIN_CHANNEL_ID}`
-      );
+      consola.warn("MAIN_CHANNEL_ID not configured");
     }
 
     await interaction.reply({

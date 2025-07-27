@@ -48,9 +48,10 @@ export default async function (
   } catch (err) {
     error("admin activity add", interaction.user.username, interaction.user.id);
     consola.error({
-      message: `[Admin Activity Add Command] Error executing command: ${err}`,
+      message: `[Admin Activity Add Command] Error executing command: ${err.message}`,
       badge: true,
       timestamp: new Date(),
+      stack: err.stack,
     });
   }
 }
