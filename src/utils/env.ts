@@ -20,6 +20,19 @@ const envSchema = z.object({
         return false;
       }
     }, "Invalid PostgreSQL database URL"),
+  REDIS_URL: z
+    .string()
+    .min(1, "Redis URL is required")
+    .refine((url) => {
+      try {
+        const parsedUrl = new URL(url); // Ensure it's a valid URL
+        return (
+          parsedUrl.protocol === "redis:" || parsedUrl.protocol === "rediss:" // Support both redis and rediss protocols
+        );
+      } catch {
+        return false;
+      }
+    }, "Invalid Redis URL"),
   DISCORD_APPLICATION_ID: z
     .string()
     .min(1, "Discord application ID is required"),
@@ -73,4 +86,7 @@ if (!parsed.success) {
   });
   process.exit(1);
 }
-export const env: EnvSchema = parsed.data;
+
+const env: EnvSchema = parsed.data;
+
+export default env;
