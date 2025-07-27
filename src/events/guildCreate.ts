@@ -14,6 +14,7 @@ export async function guildCreateEvent(guild: Guild): Promise<void> {
     consola.success({
       message: `Joined a new guild: ${guild.name} | Guild ID: ${guild.id}`,
       badge: true,
+      timestamp: new Date(),
     });
 
     /**
@@ -28,6 +29,7 @@ export async function guildCreateEvent(guild: Guild): Promise<void> {
     consola.success({
       message: `Added guild ${guildData.guildId} to the database.`,
       badge: true,
+      timestamp: new Date(),
     });
 
     posthog.capture({
@@ -43,6 +45,7 @@ export async function guildCreateEvent(guild: Guild): Promise<void> {
     consola.error({
       message: `Error joining a new guild: ${err}`,
       badge: true,
+      timestamp: new Date(),
     });
   }
 }

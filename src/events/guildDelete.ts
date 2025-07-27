@@ -22,6 +22,7 @@ export async function guildDeleteEvent(guild: Guild): Promise<void> {
     consola.success({
       message: `Left a guild: ${guild.name} | Guild ID: ${guild.id}. Removed guild from database.`,
       badge: true,
+      timestamp: new Date(),
     });
 
     posthog.capture({
@@ -37,6 +38,7 @@ export async function guildDeleteEvent(guild: Guild): Promise<void> {
     consola.error({
       message: `Error leaving guild: ${err}`,
       badge: true,
+      timestamp: new Date(),
     });
   }
 }

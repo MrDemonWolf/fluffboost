@@ -131,7 +131,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     });
   } catch (err) {
     error("suggestion", interaction.user.username, interaction.user.id);
-    consola.error(err);
+    consola.error({
+      message: `[Suggestion Command] Error executing command: ${err}`,
+      badge: true,
+      timestamp: new Date(),
+    });
   }
 }
 
