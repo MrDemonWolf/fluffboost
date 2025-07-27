@@ -20,7 +20,7 @@ export async function guildDeleteEvent(guild: Guild): Promise<void> {
      * Show the bot has left a guild in the console.
      */
     consola.success({
-      message: `Left a guild: ${guild.name} | Guild ID: ${guild.id}. Removed guild from database.`,
+      message: `[Discord] Left a guild ${guild.name} | Guild ID: ${guild.id}. Removed guild from database.`,
       badge: true,
       timestamp: new Date(),
     });
@@ -36,7 +36,7 @@ export async function guildDeleteEvent(guild: Guild): Promise<void> {
     });
   } catch (err) {
     consola.error({
-      message: `Error leaving guild: ${err}`,
+      message: `[Discord] Error leaving guild: ${err}`,
       badge: true,
       timestamp: new Date(),
     });

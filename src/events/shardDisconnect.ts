@@ -2,7 +2,7 @@ import consola from "consola";
 
 export function shardDisconnectEvent() {
   consola.error({
-    message: `Shard disconnected`,
+    message: `[Discord] Shard disconnected`,
     badge: true,
     timestamp: new Date().toISOString(),
   });
