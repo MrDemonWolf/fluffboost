@@ -62,7 +62,9 @@ export default async function (
       .setTimestamp();
 
     if (env.MAIN_CHANNEL_ID) {
-      const channel = client.channels.cache.get(env.MAIN_CHANNEL_ID);
+      const channel = client.channels.cache.get(
+        env.MAIN_CHANNEL_ID
+      ) as TextChannel;
       if (channel?.isTextBased()) {
         await channel.send({ embeds: [embed] });
       } else {
