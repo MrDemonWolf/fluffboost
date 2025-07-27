@@ -37,7 +37,8 @@ export default async (client: Client) => {
 
     if (!activity) {
       consola.warn({
-        message: "No custom discord activity found, using default activity.",
+        message:
+          "[Discord] No custom discord activity found, using default activity.",
         badge: true,
         timestamp: new Date(),
       });
@@ -53,13 +54,13 @@ export default async (client: Client) => {
     });
 
     consola.success({
-      message: "Discord activity has been set",
+      message: "[Discord] Activity has been set",
       badge: true,
       timestamp: new Date(),
     });
   } catch (err) {
     consola.error({
-      message: `Error setting custom discord activity: ${err}`,
+      message: `[Discord] Error setting custom discord activity: ${err}`,
       badge: true,
       timestamp: new Date(),
     });
