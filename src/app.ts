@@ -89,13 +89,13 @@ const manager = new ShardingManager("./src/bot.ts", {
 manager.on("shardCreate", (shard) => {
   try {
     consola.success({
-      message: `Launched shard ${shard.id}`,
+      message: `[Discord] Launched shard ${shard.id}`,
       badge: true,
       timestamp: new Date(),
     });
   } catch (err) {
     consola.error({
-      message: `Error launching shard ${shard.id}: ${err}`,
+      message: `[Discord] Error launching shard ${shard.id}: ${err}`,
       badge: true,
       timestamp: new Date(),
     });
