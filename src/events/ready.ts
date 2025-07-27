@@ -23,13 +23,13 @@ export async function readyEvent(client: Client) {
      * Show the bot is ready in the console.
      */
     consola.success({
-      message: "Discord bot is ready! 🐾",
+      message: "[Discord] Bot is ready! 🐾",
       badge: true,
       timestamp: new Date(),
     });
 
     consola.info({
-      message: `Logged in as ${client.user?.tag}!`,
+      message: `[Discord] Logged in as ${client.user?.tag}!`,
       badge: true,
       timestamp: new Date(),
     });
@@ -38,7 +38,7 @@ export async function readyEvent(client: Client) {
      * Show how many guilds the bot is in and their names + IDs. but this is shared across all shards.
      */
     consola.info({
-      message: `Currently in ${client.guilds.cache.size} guilds.`,
+      message: `[Discord] In ${client.guilds.cache.size} guilds.`,
       badge: true,
       timestamp: new Date(),
     });
@@ -57,7 +57,7 @@ export async function readyEvent(client: Client) {
      * Register slash commands.
      */
     consola.info({
-      message: `Registering slash commands...`,
+      message: "[Slash commands] Registering ",
       badge: true,
       timestamp: new Date(),
     });
@@ -76,15 +76,15 @@ export async function readyEvent(client: Client) {
     const commands = await client.application?.commands.fetch();
 
     consola.success({
-      message: `Slash commands registered: ${commands?.map(
+      message: `[Slash commands] Registered ${commands?.map(
         (command) => command.name
-      )}`,
+      )} commands`,
       badge: true,
       timestamp: new Date(),
     });
   } catch (err) {
     consola.error({
-      message: `Error logging in to discord: ${err}`,
+      message: `[Discord] Error logging in to discord: ${err}`,
       badge: true,
       timestamp: new Date(),
     });
