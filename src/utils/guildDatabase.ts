@@ -146,7 +146,6 @@ export async function ensureGuildExists(client: Client) {
         console.error({
           message: `[Discord Event Logger - Ensure Guild Exists] Error adding guild to the database: ${err}`,
           badge: true,
-          level: "error",
           timestamp: new Date(),
         });
       }
@@ -154,6 +153,7 @@ export async function ensureGuildExists(client: Client) {
     consola.info({
       message: `[Discord Event Logger - ReadyEvt] Finished ensuring guilds exist in the database.`,
       badge: true,
+      timestamp: new Date(),
     });
   } catch (err) {
     console.error({
