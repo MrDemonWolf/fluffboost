@@ -15,25 +15,74 @@ export function execute(client: Client, interaction: CommandInteraction) {
     info("changelog", interaction.user.username, interaction.user.id);
     const embed = new EmbedBuilder()
       .setColor(0xfadb7f)
-      .setTitle("✨ FluffBoost Changelog - Version 1.6.0! ✨")
+      .setTitle("✨ FluffBoost Changelog - Version 1.7.0! ✨")
       .setDescription(
-        "A fresh update focusing on dynamic bot status, better activity management, and internal refinements to keep things running smoothly!"
+        "Check out the latest enhancements and new features in FluffBoost!"
       )
       .addFields(
+        // New Features
         {
-          name: "🚀 Dynamic Bot Status & Activity Management",
-          value:
-            "The bot's Discord activity status is now fully configurable and dynamic! This includes a new system for managing activities from the database, efficient updates via a dedicated worker, and new commands to help manage these activities. Expect a more lively presence!",
+          name: "🚀 New Feature: Activity Deletion Command",
+          value: "You can now delete user activities using a new command!",
         },
         {
-          name: "⚙️ Core System Enhancements",
+          name: "🚀 New Feature: Ephemeral Messages",
           value:
-            "We've refined default environment variables for easier setup and deployment, and updated internal Discord activity enum values for greater accuracy and compatibility.",
+            "Commands can now respond with private messages visible only to you, ensuring less chat clutter.",
         },
         {
-          name: "🛠️ Command & Type Refinements",
+          name: "🚀 New Feature: Quote Creation Notifications",
           value:
-            "Quote-related commands have been renamed for improved clarity, and activity types have been updated (e.g., replacing `WATCHING` with `STREAMING`) to align with Discord's current standards.",
+            "Get notified directly when a new quote is successfully created.",
+        },
+
+        // Core System Improvements
+        {
+          name: "⚙️ Improved: Database & Cache Stability",
+          value:
+            "Enhanced pre-pruning checks prevent errors if the database or cache is unexpectedly empty.",
+        },
+        {
+          name: "⚙️ Improved: Task Scheduling",
+          value:
+            "Adjusted the frequencies of various background tasks for better performance.",
+        },
+        {
+          name: "⚙️ Improved: Environment Variable Handling",
+          value:
+            "Better validation for environment variables at bot startup ensures smoother deployment.",
+        },
+        {
+          name: "⚙️ Improved: Internal Logging",
+          value:
+            "Switched to a more robust and structured logging system, aiding in better debugging and monitoring.",
+        },
+
+        // Command & User Experience Enhancements
+        {
+          name: "✨ Enhanced: Quote Management",
+          value:
+            "Both the quote removal command and the internal logic for creating quotes have been improved.",
+        },
+        {
+          name: "✨ Enhanced: Admin Command Handling",
+          value:
+            "Better management and more informative error reporting for all administrative commands.",
+        },
+        {
+          name: "✨ Enhanced: Input Validation & Error Handling",
+          value:
+            "Significant improvements to how user input is validated, leading to clearer error messages for you.",
+        },
+        {
+          name: "✨ Enhanced: User Feedback",
+          value:
+            "Updated success messages for setting activities and refined the visual appearance of suggestion embeds.",
+        },
+        {
+          name: "✨ Enhanced: Code Quality",
+          value:
+            "General improvements in code readability and consistency across the entire bot's codebase.",
         }
       )
       .setTimestamp()
