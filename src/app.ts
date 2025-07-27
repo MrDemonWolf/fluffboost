@@ -4,7 +4,8 @@ import { PrismaClient } from "@prisma/client";
 import consola from "consola";
 
 import api from "./api";
-import { env } from "./utils/env";
+import redisClient from "./redis";
+import env from "./utils/env";
 
 /**
  * Load environment variables from .env file.
@@ -28,6 +29,24 @@ prisma
   .catch(async (err: any) => {
     consola.error({
       message: `[Prisma] Error connecting to database: ${err}`,
+      badge: true,
+    });
+    process.exit(1);
+  });
+
+/**
+ * Load Redis connection and connect to Redis Server if failed to connect, throw error.
+ */
+redisClient
+  .on("connect", () => {
+    consola.success({
+      message: `[Redis] Connected`,
+      badge: true,
+    });
+  })
+  .on("error", (err: any) => {
+    consola.error({
+      message: `[Redis] Error connecting to Redis: ${err}`,
       badge: true,
     });
     process.exit(1);
