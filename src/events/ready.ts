@@ -25,11 +25,13 @@ export async function readyEvent(client: Client) {
     consola.success({
       message: "Discord bot is ready! 🐾",
       badge: true,
+      timestamp: new Date(),
     });
 
     consola.info({
       message: `Logged in as ${client.user?.tag}!`,
       badge: true,
+      timestamp: new Date(),
     });
 
     /**
@@ -38,6 +40,7 @@ export async function readyEvent(client: Client) {
     consola.info({
       message: `Currently in ${client.guilds.cache.size} guilds.`,
       badge: true,
+      timestamp: new Date(),
     });
 
     /**
@@ -56,6 +59,7 @@ export async function readyEvent(client: Client) {
     consola.info({
       message: `Registering slash commands...`,
       badge: true,
+      timestamp: new Date(),
     });
 
     await client.application?.commands.set([
@@ -76,11 +80,13 @@ export async function readyEvent(client: Client) {
         (command) => command.name
       )}`,
       badge: true,
+      timestamp: new Date(),
     });
   } catch (err) {
     consola.error({
       message: `Error logging in to discord: ${err}`,
       badge: true,
+      timestamp: new Date(),
     });
   }
 

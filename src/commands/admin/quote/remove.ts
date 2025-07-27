@@ -62,6 +62,10 @@ export default async function (
     );
   } catch (err) {
     error("admin quote remove", interaction.user.username, interaction.user.id);
-    consola.error(err);
+    consola.error({
+      message: `[Admin Quote Remove Command] Error executing command: ${err}`,
+      badge: true,
+      timestamp: new Date(),
+    });
   }
 }

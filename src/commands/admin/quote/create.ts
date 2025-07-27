@@ -90,6 +90,10 @@ export default async function (
     );
   } catch (err) {
     error("admin quote create", interaction.user.username, interaction.user.id);
-    consola.error(err);
+    consola.error({
+      message: `[Admin Quote Create Command] Error executing command: ${err}`,
+      badge: true,
+      timestamp: new Date(),
+    });
   }
 }

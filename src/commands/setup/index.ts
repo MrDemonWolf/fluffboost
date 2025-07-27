@@ -62,7 +62,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     }
   } catch (err) {
     error("setup", interaction.user.username, interaction.user.id);
-    consola.error(err);
+    consola.error({
+      message: `[Setup Command] Error executing command: ${err}`,
+      badge: true,
+      timestamp: new Date(),
+    });
   }
 }
 

@@ -29,7 +29,11 @@ client.on(Events.ClientReady, async () => {
     readyEvent(client);
     worker();
   } catch (err) {
-    consola.error(err);
+    consola.error({
+      message: `[Discord Client Ready] Error during client ready event: ${err}`,
+      badge: true,
+      timestamp: new Date(),
+    });
     process.exit(1);
   }
 });
