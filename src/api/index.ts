@@ -3,7 +3,7 @@ import morgan from "morgan";
 import helmet from "helmet";
 import cors from "cors";
 
-import { env } from "../utils/env";
+import env from "../utils/env";
 
 /**
  * Import all routes

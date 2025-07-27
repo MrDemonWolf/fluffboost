@@ -1,7 +1,7 @@
 import { Client, Events, GatewayIntentBits } from "discord.js";
 import consola from "consola";
 
-import { env } from "./utils/env";
+import env from "./utils/env";
 
 /**
  * Import events from the events folder.
@@ -16,6 +16,7 @@ import { shardDisconnectEvent } from "./events/shardDisconnect";
  * Import worker main function.
  */
 import worker from "./worker";
+
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });

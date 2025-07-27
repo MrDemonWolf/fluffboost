@@ -2,8 +2,8 @@ import { ActivityType } from "discord.js";
 
 import type { Client } from "discord.js";
 
-import { env } from "../../utils/env";
 import { prisma } from "../../database";
+import env from "../../utils/env";
 
 import consola from "consola";
 

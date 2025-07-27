@@ -12,7 +12,7 @@ import type { CommandInteractionOptionResolver } from "discord.js";
 import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
-import { env } from "../../../utils/env";
+import env from "../../../utils/env";
 
 export default async function (
   client: Client,
