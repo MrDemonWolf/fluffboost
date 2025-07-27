@@ -40,7 +40,11 @@ export function execute(client: Client, interaction: CommandInteraction) {
     });
   } catch (err) {
     error("invite", interaction.user.username, interaction.user.id);
-    consola.error(err);
+    consola.error({
+      message: `[Invite Command] Error executing command: ${err}`,
+      badge: true,
+      timestamp: new Date(),
+    });
   }
 }
 

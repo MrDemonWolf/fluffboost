@@ -35,6 +35,7 @@ export default function worker() {
     return consola.info({
       message: `Worker: Running in Development Mode`,
       badge: true,
+      timestamp: new Date(),
     });
   }
 
@@ -61,5 +62,6 @@ export default function worker() {
   consola.success({
     message: `Worker: Launched`,
     badge: true,
+    timestamp: new Date(),
   });
 }
