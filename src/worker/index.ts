@@ -1,8 +1,8 @@
 import consola from "consola";
 import cron from "node-cron";
 
-import { env } from "../utils/env";
 import client from "../bot";
+import env from "../utils/env";
 
 /**
  * Worker Jobs

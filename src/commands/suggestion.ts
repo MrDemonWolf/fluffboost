@@ -12,8 +12,8 @@ import type { CommandInteractionOptionResolver } from "discord.js";
 
 import { info, success, error } from "../utils/commandLogger";
 import { prisma } from "../database";
-import { env } from "../utils/env";
 import posthog from "../utils/posthog";
+import env from "../utils/env";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("suggestion")
