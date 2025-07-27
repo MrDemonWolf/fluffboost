@@ -33,6 +33,28 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 
 # Change Log
 
+## Version 1.7.0 Released ()
+
+### New Features
+
+- **Activity Deletion Command:** Added a command to delete user activities.
+- **Ephemeral Messages:** Implemented support for ephemeral (private) responses using flags.
+- **New Quote Creation Notifications:** Introduced notifications when a new quote is successfully created.
+
+### Improvements & Refinements
+
+- **Database & Cache Stability:** Enhanced pre-pruning checks to ensure the guild cache or database is not empty, preventing potential errors.
+- **Task Scheduling:** Adjusted the frequencies of various scheduled tasks.
+- **Environment Variable Handling:** Improved validation for environment variables at startup.
+- **Quote Management:**
+  - Enhanced the quote removal command.
+  - Refactored the internal logic for quote creation.
+- **Code Quality:** Significant improvements in code readability and consistency across the codebase.
+- **Admin Command Experience:** Better handling and more informative error reporting for administrative commands.
+- **User Input & Error Handling:** Strengthened input validation and improved error messaging for a smoother user experience.
+- **User Feedback:** Updated success messages for setting activities and refined the appearance of suggestion embeds.
+- **Internal Logging:** Migrated from basic `console.log` to a more structured and robust logging system.
+
 ## Version 1.6.0 Released (on July 17, 2025)
 
 **New Features & Enhancements:**
@@ -49,25 +71,6 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 - **Discord Activity Enum Updates:** Updated internal Discord activity enum values for better compatibility and accuracy.
 - **Activity Type Replacement:** Replaced `WATCHING` activity type with `STREAMING` where appropriate for better clarity and Discord's current activity types.
 - **Quote Command Clarity:** Renamed quote-related commands for improved clarity and user understanding.
-
-## Version 1.5.0 Released (on July 10, 2025)
-
-**New Features & Enhancements:**
-
-- **Database Migrations:** Added a new entrypoint script and an `npm run db:migrate` command. Incorporated database migration into the Dockerfile.
-- **Entrypoint Script:** Made the main entrypoint script executable.
-- **Database Schema:** Initialized the database schema.
-- **Database Schema:** Added initial database schema and renamed a column.
-
-**Improvements & Fixes:**
-
-- **Refactored:** Suggestion quote relations, guild database management, permissions, and overall code for clarity.
-- **Renamed:** Motivation channel column and other elements for better understanding.
-- **Fixed:** Guild configuration, dependencies, and incorrect field names in database queries.
-- **Replaced:** Baseline migration with `resolve` and the existing database migration tool.
-- **Removed:** Extraneous whitespace.
-- **Reverted:** `motivationChannelId` column rename.
-- **Updated:** Dependencies and project configuration.
 
 ## License
 
