@@ -2,13 +2,17 @@ import {
   SlashCommandBuilder,
   PermissionFlagsBits,
   ChannelType,
+  MessageFlags,
 } from "discord.js";
+import consola from "consola";
+
 import type {
   SlashCommandSubcommandBuilder,
   Client,
   CommandInteraction,
   CommandInteractionOptionResolver,
 } from "discord.js";
+
 import { info, error } from "../../utils/commandLogger";
 
 /**
@@ -52,13 +56,13 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       default:
         interaction.reply({
           content: "Invalid subcommand",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         break;
     }
   } catch (err) {
     error("setup", interaction.user.username, interaction.user.id);
-    console.log(err);
+    consola.error(err);
   }
 }
 

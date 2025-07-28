@@ -1,5 +1,7 @@
-import type { Client } from "discord.js";
 import consola from "consola";
+
+import type { Client } from "discord.js";
+
 import setActivity from "../worker/jobs/setActivity";
 import { pruneGuilds, ensureGuildExists } from "../utils/guildDatabase";
 

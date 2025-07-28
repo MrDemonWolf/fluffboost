@@ -1,8 +1,11 @@
-import { Client, CommandInteraction } from "discord.js";
+import { Client, CommandInteraction, MessageFlags } from "discord.js";
+import consola from "consola";
+
+import type { MotivationQuote } from "@prisma/client";
+
 import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
-import type { MotivationQuote } from "@prisma/client";
 
 export default async function (
   client: Client,
@@ -20,7 +23,7 @@ export default async function (
     if (quotes.length === 0)
       return interaction.reply({
         content: "No quotes found. Feel free to add some!",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
 
     let text = "ID - Quote - Author\n";
@@ -35,11 +38,12 @@ export default async function (
           name: "quotes.txt",
         },
       ],
+      flags: MessageFlags.Ephemeral,
     });
 
     success("admin quote add", interaction.user.username, interaction.user.id);
   } catch (err) {
     error("admin quote add", interaction.user.username, interaction.user.id);
-    console.log(err);
+    consola.error(err);
   }
 }

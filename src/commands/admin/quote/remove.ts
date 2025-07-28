@@ -1,4 +1,13 @@
-import { Client, CommandInteraction, TextChannel } from "discord.js";
+import {
+  Client,
+  CommandInteraction,
+  TextChannel,
+  MessageFlags,
+} from "discord.js";
+import consola from "consola";
+
+import type { CommandInteractionOptionResolver } from "discord.js";
+
 import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
@@ -7,27 +16,29 @@ import { env } from "../../../utils/env";
 export default async function (
   client: Client,
   interaction: CommandInteraction,
-  id: string
+  options: CommandInteractionOptionResolver
 ) {
   try {
-    info("admin quote del", interaction.user.username, interaction.user.id);
+    info("admin quote remove", interaction.user.username, interaction.user.id);
 
     const isAllowed = isUserPermitted(interaction);
 
     if (!isAllowed) return;
 
-    if (!id) return interaction.reply("Please provide an id");
+    const quoteId = options.getString("quote_id", true);
+
+    if (!quoteId) return interaction.reply("Quote ID is required");
 
     const quote = await prisma.motivationQuote.findUnique({
       where: {
-        id,
+        id: quoteId,
       },
     });
-    if (!quote) return interaction.reply(`Quote with id ${id} not found`);
+    if (!quote) return interaction.reply(`Quote with id ${quoteId} not found`);
 
     await prisma.motivationQuote.delete({
       where: {
-        id,
+        id: quoteId,
       },
     });
 
@@ -36,20 +47,21 @@ export default async function (
       env.MAIN_CHANNEL_ID as string
     ) as TextChannel;
     mainChannel?.send(
-      `Quote deleted by ${interaction.user.username} with id: ${id}`
+      `Quote deleted by ${interaction.user.username} with id: ${quoteId}`
     );
 
     await interaction.reply({
-      content: `Quote deleted with id: ${id}`,
-      ephemeral: true,
+      content: `Quote deleted with id: ${quoteId}`,
+      flags: MessageFlags.Ephemeral,
     });
+
     success(
-      `admin quote del with ${id} `,
+      `admin quote remove with ${quoteId} `,
       interaction.user.username,
       interaction.user.id
     );
   } catch (err) {
-    error("admin quote del", interaction.user.username, interaction.user.id);
-    console.log(err);
+    error("admin quote remove", interaction.user.username, interaction.user.id);
+    consola.error(err);
   }
 }

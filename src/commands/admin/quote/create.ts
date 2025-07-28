@@ -1,4 +1,14 @@
-import { Client, CommandInteraction, TextChannel } from "discord.js";
+import {
+  Client,
+  CommandInteraction,
+  EmbedBuilder,
+  TextChannel,
+  MessageFlags,
+} from "discord.js";
+import consola from "consola";
+
+import type { CommandInteractionOptionResolver } from "discord.js";
+
 import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
@@ -7,25 +17,25 @@ import { env } from "../../../utils/env";
 export default async function (
   client: Client,
   interaction: CommandInteraction,
-  quote: string,
-  author: string
+  options: CommandInteractionOptionResolver
 ) {
   try {
-    info("admin quote add", interaction.user.username, interaction.user.id);
+    info("admin quote create", interaction.user.username, interaction.user.id);
 
     const isAllowed = isUserPermitted(interaction);
 
-    console.log(isAllowed);
-
     if (!isAllowed) return;
 
+    const quote = options.getString("quote");
+    const quoteAuthor = options.getString("quote_author");
+
     if (!quote) return interaction.reply("Please provide a quote");
-    if (!author) return interaction.reply("Please provide an author");
+    if (!quoteAuthor) return interaction.reply("Please provide an author");
 
     const newQuote = await prisma.motivationQuote.create({
       data: {
         quote,
-        author,
+        author: quoteAuthor,
         addedBy: interaction.user.id,
       },
     });
@@ -35,20 +45,51 @@ export default async function (
      * to notify that a new quote has been added.
      * This is useful for tracking purposes and to keep the owner informed.
      */
+    const embed = new EmbedBuilder()
+      .setColor(0xfadb7f)
+      .setTitle("New Quote Created")
+      .setAuthor({
+        name: interaction.user.username,
+        iconURL: interaction.user.displayAvatarURL(),
+      })
+      .addFields(
+        { name: "Quote", value: newQuote.quote },
+        { name: "Author", value: newQuote.author }
+      )
+      .setFooter({
+        text: `Quote ID: ${newQuote.id}`,
+      })
+      .setTimestamp();
+
     const mainChannel = client.channels.cache.get(
       env.MAIN_CHANNEL_ID as string
     ) as TextChannel;
-    mainChannel?.send(
-      `Quote added by ${interaction.user.username} with id: ${newQuote.id}`
-    );
+
+    if (mainChannel) {
+      await mainChannel.send({ embeds: [embed] });
+    } else {
+      error(
+        "admin quote create",
+        interaction.user.username,
+        interaction.user.id
+      );
+      console.error(
+        `Main channel not found. Channel ID: ${env.MAIN_CHANNEL_ID}`
+      );
+    }
 
     await interaction.reply({
-      content: `Quote added with id: ${newQuote.id}`,
-      ephemeral: true,
+      content: `Quote created with id: ${newQuote.id}`,
+      flags: MessageFlags.Ephemeral,
     });
-    success("admin quote add", interaction.user.username, interaction.user.id);
+
+    success(
+      "admin quote create",
+      interaction.user.username,
+      interaction.user.id
+    );
   } catch (err) {
-    error("admin quote add", interaction.user.username, interaction.user.id);
-    console.log(err);
+    error("admin quote create", interaction.user.username, interaction.user.id);
+    consola.error(err);
   }
 }

@@ -1,4 +1,10 @@
-import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+  MessageFlags,
+} from "discord.js";
+import consola from "consola";
+
 import type {
   Client,
   CommandInteraction,
@@ -11,10 +17,10 @@ import { info, error } from "../../utils/commandLogger";
  */
 import quoteCreate from "./quote/create";
 import quoteList from "./quote/list";
-import qouteRemove from "./quote/remove";
+import quoteRemove from "./quote/remove";
 import activityAdd from "./activity/create";
 import activityList from "./activity/list";
-// import activityDel from "./activity/del";
+import activityRemove from "./activity/remove";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("admin")
@@ -30,13 +36,13 @@ export const slashCommand = new SlashCommandBuilder()
           .addStringOption((option) =>
             option
               .setName("quote")
-              .setDescription("The quote you want to create")
+              .setDescription("What is the quote?")
               .setRequired(true)
           )
           .addStringOption((option) =>
             option
-              .setName("author")
-              .setDescription("The author of the quote")
+              .setName("quote_author")
+              .setDescription("Who is the author of the quote?")
               .setRequired(true)
           );
       })
@@ -46,8 +52,8 @@ export const slashCommand = new SlashCommandBuilder()
           .setDescription("Remove a quote")
           .addStringOption((option) =>
             option
-              .setName("id")
-              .setDescription("The id of the quote you want to remove")
+              .setName("quote_id")
+              .setDescription("What is the ID of the quote you want to remove?")
               .setRequired(true)
           );
       })
@@ -56,56 +62,56 @@ export const slashCommand = new SlashCommandBuilder()
       });
   })
   .addSubcommandGroup((subCommandGroup) => {
-    return (
-      subCommandGroup
-        .setName("activity")
-        .setDescription("Manage the bot's activity status")
-        .addSubcommand((subcommand) =>
-          subcommand
-            .setName("create")
-            .setDescription("Create a new activity for the bot")
-            .addStringOption((option) =>
-              option
-                .setName("activity")
-                .setDescription("What is the bot doing?")
-                .setRequired(true)
-            )
-            .addStringOption((option) =>
-              option
-                .setName("type")
-                .setDescription("The type of activity")
-                .setRequired(true)
-                .addChoices(
-                  { name: "Playing", value: "Playing" },
-                  { name: "Streaming", value: "Streaming" },
-                  { name: "Listening", value: "Listening" },
-                  { name: "Custom", value: "Custom" }
-                )
-            )
-            .addStringOption((option) =>
-              option
-                .setName("url")
-                .setDescription("The URL for the activity (optional)")
-                .setRequired(false)
-            )
-        )
-        // .addSubcommand((subcommand) =>
-        //   subcommand
-        //     .setName("remove")
-        //     .setDescription("Remove an activity")
-        //     .addStringOption((option) =>
-        //       option
-        //         .setName("id")
-        //         .setDescription("The ID of the activity to remove")
-        //         .setRequired(true)
-        //     )
-        // )
-        .addSubcommand((subcommand) => {
-          return subcommand
-            .setName("list")
-            .setDescription("List all available activities");
-        })
-    );
+    return subCommandGroup
+      .setName("activity")
+      .setDescription("Manage the bot's activity status")
+      .addSubcommand((subcommand) =>
+        subcommand
+          .setName("create")
+          .setDescription("Create a new activity for the bot")
+          .addStringOption((option) =>
+            option
+              .setName("activity")
+              .setDescription("What is the bot doing?")
+              .setRequired(true)
+          )
+          .addStringOption((option) =>
+            option
+              .setName("type")
+              .setDescription("The type of activity")
+              .setRequired(true)
+              .addChoices(
+                { name: "Playing", value: "Playing" },
+                { name: "Streaming", value: "Streaming" },
+                { name: "Listening", value: "Listening" },
+                { name: "Custom", value: "Custom" }
+              )
+          )
+          .addStringOption((option) =>
+            option
+              .setName("url")
+              .setDescription("The URL for the activity (optional)")
+              .setRequired(false)
+          )
+      )
+      .addSubcommand((subcommand) =>
+        subcommand
+          .setName("remove")
+          .setDescription("Remove an activity")
+          .addStringOption((option) =>
+            option
+              .setName("activity_id")
+              .setDescription(
+                "What is the ID of the activity you want to remove?"
+              )
+              .setRequired(true)
+          )
+      )
+      .addSubcommand((subcommand) => {
+        return subcommand
+          .setName("list")
+          .setDescription("List all available activities");
+      });
   })
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
@@ -124,15 +130,18 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       case "quote":
         switch (subCommand) {
           case "create":
-            const quote = options.getString("quote", true);
-            const author = options.getString("author", true);
-
-            quoteCreate(client, interaction, quote, author);
+            quoteCreate(
+              client,
+              interaction,
+              options as CommandInteractionOptionResolver
+            );
             break;
           case "remove":
-            const id = options.getString("id", true);
-
-            qouteRemove(client, interaction, id);
+            quoteRemove(
+              client,
+              interaction,
+              options as CommandInteractionOptionResolver
+            );
             break;
           case "list":
             quoteList(client, interaction);
@@ -140,7 +149,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
           default:
             interaction.reply({
               content: "Invalid subcommand",
-              ephemeral: true,
+              flags: MessageFlags.Ephemeral,
             });
         }
         break;
@@ -154,8 +163,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
             );
             break;
           case "remove":
-            // const id = options.getString("id", true);
-            // activityDel(client, interaction, id);
+            activityRemove(
+              client,
+              interaction,
+              options as CommandInteractionOptionResolver
+            );
             break;
           case "list":
             activityList(client, interaction);
@@ -163,7 +175,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
           default:
             interaction.reply({
               content: "Invalid subcommand",
-              ephemeral: true,
+              flags: MessageFlags.Ephemeral,
             });
         }
         break;
@@ -171,12 +183,12 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       default:
         interaction.reply({
           content: "Invalid subcommand group",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
     }
   } catch (err) {
     error("admin", interaction.user.username, interaction.user.id);
-    console.log(err);
+    consola.error(err);
   }
 }
 

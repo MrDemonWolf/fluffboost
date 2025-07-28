@@ -7,12 +7,19 @@ dotenv.config();
 const envSchema = z.object({
   DATABASE_URL: z
     .string()
-    .refine((url) => url.startsWith("postgres://"), "Invalid database URL"),
-  // Commenting out Redis configuration as it's not used in the current context it will be added later
-  // REDIS_HOST: z.string().min(1, "Redis host is required"),
-  // REDIS_PORT: z.string().min(1, "Redis port is required"),
-  // REDIS_PASSWORD: z.string().optional(),
-  // REDIS_DB: z.string().optional(),
+    .min(1, "Database URL is required")
+    .refine((url) => {
+      try {
+        const parsedUrl = new URL(url);
+        return (
+          parsedUrl.protocol === "postgres:" &&
+          parsedUrl.hostname &&
+          parsedUrl.pathname.length > 1
+        );
+      } catch {
+        return false;
+      }
+    }, "Invalid PostgreSQL database URL"),
   DISCORD_APPLICATION_ID: z
     .string()
     .min(1, "Discord application ID is required"),
@@ -27,7 +34,20 @@ const envSchema = z.object({
     .enum(["Playing", "Streaming", "Listening", "Custom"])
     .default("Custom"),
   DEFAULT_ACTIVITY_URL: z.string().optional(),
-  DISCORD_ACTIVITY_CRON: z.string().default("*/5 * * * *"),
+  DISCORD_ACTIVITY_CRON: z
+    .string()
+    .refine((cron) => {
+      try {
+        const parts = cron.split(" ");
+        return (
+          (parts.length === 5 || parts.length === 6) &&
+          parts.every((part) => part !== "")
+        );
+      } catch {
+        return false;
+      }
+    }, "Invalid cron expression for Discord activity")
+    .default("0 * * * *"), // Default to every hour
   ALLOWED_USERS: z.string().optional(),
   OWNER_ID: z.string().min(1, "Owner ID is required"),
   MAIN_GUILD_ID: z.string().min(1, "Main guild ID is required"),
