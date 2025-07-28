@@ -12,7 +12,7 @@ import type { CommandInteractionOptionResolver } from "discord.js";
 import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
-import { env } from "../../../utils/env";
+import env from "../../../utils/env";
 
 export default async function (
   client: Client,
@@ -61,21 +61,19 @@ export default async function (
       })
       .setTimestamp();
 
-    const mainChannel = client.channels.cache.get(
-      env.MAIN_CHANNEL_ID as string
-    ) as TextChannel;
-
-    if (mainChannel) {
-      await mainChannel.send({ embeds: [embed] });
+    if (env.MAIN_CHANNEL_ID) {
+      const channel = client.channels.cache.get(
+        env.MAIN_CHANNEL_ID
+      ) as TextChannel;
+      if (channel?.isTextBased()) {
+        await channel.send({ embeds: [embed] });
+      } else {
+        consola.warn(
+          `Main channel not found or not text-based. ID: ${env.MAIN_CHANNEL_ID}`
+        );
+      }
     } else {
-      error(
-        "admin quote create",
-        interaction.user.username,
-        interaction.user.id
-      );
-      console.error(
-        `Main channel not found. Channel ID: ${env.MAIN_CHANNEL_ID}`
-      );
+      consola.warn("MAIN_CHANNEL_ID not configured");
     }
 
     await interaction.reply({
@@ -90,6 +88,10 @@ export default async function (
     );
   } catch (err) {
     error("admin quote create", interaction.user.username, interaction.user.id);
-    consola.error(err);
+    consola.error({
+      message: `[Admin Quote Create Command] Error executing command: ${err}`,
+      badge: true,
+      timestamp: new Date(),
+    });
   }
 }

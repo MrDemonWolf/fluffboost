@@ -69,7 +69,10 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     });
   } catch (err) {
     error("about", interaction.user.username, interaction.user.id);
-    consola.error(err);
+    consola.error(`[About Command] Error executing command: ${err}`, {
+      badge: true,
+      timestamp: new Date(),
+    });
   }
 }
 
