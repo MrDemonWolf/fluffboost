@@ -1,9 +1,10 @@
 import consola from "consola";
 
-export async function shardDisconnectEvent() {
+export function shardDisconnectEvent() {
   consola.error({
-    message: `Shard disconnected`,
+    message: `[Discord] Shard disconnected`,
     badge: true,
+    timestamp: new Date().toISOString(),
   });
   process.exit(1);
 }

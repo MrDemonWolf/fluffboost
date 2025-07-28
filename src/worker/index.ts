@@ -1,8 +1,8 @@
 import consola from "consola";
 import cron from "node-cron";
 
-import { env } from "../utils/env";
 import client from "../bot";
+import env from "../utils/env";
 
 /**
  * Worker Jobs
@@ -33,8 +33,9 @@ export default function worker() {
       }
     );
     return consola.info({
-      message: `Worker: Running in Development Mode`,
+      message: `[Worker] Running in Development Mode`,
       badge: true,
+      timestamp: new Date(),
     });
   }
 
@@ -59,7 +60,8 @@ export default function worker() {
     }
   );
   consola.success({
-    message: `Worker: Launched`,
+    message: "[Worker] Running in Production Mode",
     badge: true,
+    timestamp: new Date(),
   });
 }

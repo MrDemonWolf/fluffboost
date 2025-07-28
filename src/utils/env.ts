@@ -20,6 +20,19 @@ const envSchema = z.object({
         return false;
       }
     }, "Invalid PostgreSQL database URL"),
+  REDIS_URL: z
+    .string()
+    .min(1, "Redis URL is required")
+    .refine((url) => {
+      try {
+        const parsedUrl = new URL(url); // Ensure it's a valid URL
+        return (
+          parsedUrl.protocol === "redis:" || parsedUrl.protocol === "rediss:" // Support both redis and rediss protocols
+        );
+      } catch {
+        return false;
+      }
+    }, "Invalid Redis URL"),
   DISCORD_APPLICATION_ID: z
     .string()
     .min(1, "Discord application ID is required"),
@@ -39,10 +52,33 @@ const envSchema = z.object({
     .refine((cron) => {
       try {
         const parts = cron.split(" ");
-        return (
-          (parts.length === 5 || parts.length === 6) &&
-          parts.every((part) => part !== "")
-        );
+        // Must be 5 or 6 fields, none empty
+        if (parts.length !== 5 && parts.length !== 6) return false;
+        if (parts.some((part) => part === "")) return false;
+
+        // Basic validation for each of the first five fields
+        const ranges = [
+          [0, 59], // minute
+          [0, 23], // hour
+          [1, 31], // day of month
+          [1, 12], // month
+          [0, 7], // day of week
+        ];
+
+        for (let i = 0; i < Math.min(parts.length, 5); i++) {
+          const part = parts[i];
+          // Allow wildcards and step values
+          if (part === "*" || part.includes("*/")) continue;
+          // Allow ranges and lists
+          if (part.includes("-") || part.includes(",")) continue;
+          // Otherwise it must be a valid integer within range
+          const num = parseInt(part, 10);
+          if (isNaN(num) || num < ranges[i][0] || num > ranges[i][1]) {
+            return false;
+          }
+        }
+
+        return true;
       } catch {
         return false;
       }
@@ -56,6 +92,7 @@ const envSchema = z.object({
   POSTHOG_HOST: z.string().min(1, "PostHog host is required"),
   HOST: z.string().optional(),
   PORT: z.string().optional(),
+  CORS_ORIGIN: z.string().default("*"),
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
@@ -73,4 +110,7 @@ if (!parsed.success) {
   });
   process.exit(1);
 }
-export const env: EnvSchema = parsed.data;
+
+const env: EnvSchema = parsed.data;
+
+export default env;

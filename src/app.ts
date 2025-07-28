@@ -4,7 +4,8 @@ import { PrismaClient } from "@prisma/client";
 import consola from "consola";
 
 import api from "./api";
-import { env } from "./utils/env";
+import redisClient from "./redis";
+import env from "./utils/env";
 
 /**
  * Load environment variables from .env file.
@@ -23,12 +24,33 @@ prisma
     consola.success({
       message: `[Prisma] Connected`,
       badge: true,
+      timestamp: new Date(),
     });
   })
   .catch(async (err: any) => {
     consola.error({
       message: `[Prisma] Error connecting to database: ${err}`,
       badge: true,
+    });
+    process.exit(1);
+  });
+
+/**
+ * Load Redis connection and connect to Redis Server if failed to connect, throw error.
+ */
+redisClient
+  .on("connect", () => {
+    consola.success({
+      message: `[Redis] Connected`,
+      badge: true,
+      timestamp: new Date(),
+    });
+  })
+  .on("error", (err: any) => {
+    consola.error({
+      message: `[Redis] Error connecting to Redis: ${err}`,
+      badge: true,
+      timestamp: new Date(),
     });
     process.exit(1);
   });
@@ -50,8 +72,8 @@ api.on("error", (err) => {
   consola.error({
     message: `[API] ${err}`,
     badge: true,
-    timestamp: new Date(),
     level: "error",
+    timestamp: new Date(),
   });
   process.exit(1);
 });
@@ -67,13 +89,15 @@ const manager = new ShardingManager("./src/bot.ts", {
 manager.on("shardCreate", (shard) => {
   try {
     consola.success({
-      message: `Launched shard ${shard.id}`,
+      message: `[Discord] Launched shard ${shard.id}`,
       badge: true,
+      timestamp: new Date(),
     });
   } catch (err) {
     consola.error({
-      message: `Error launching shard ${shard.id}: ${err}`,
+      message: `[Discord] Error launching shard ${shard.id}: ${err}`,
       badge: true,
+      timestamp: new Date(),
     });
   }
 });

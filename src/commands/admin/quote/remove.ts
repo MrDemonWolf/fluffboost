@@ -11,7 +11,7 @@ import type { CommandInteractionOptionResolver } from "discord.js";
 import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
-import { env } from "../../../utils/env";
+import env from "../../../utils/env";
 
 export default async function (
   client: Client,
@@ -62,6 +62,10 @@ export default async function (
     );
   } catch (err) {
     error("admin quote remove", interaction.user.username, interaction.user.id);
-    consola.error(err);
+    consola.error({
+      message: `[Admin Quote Remove Command] Error executing command: ${err}`,
+      badge: true,
+      timestamp: new Date(),
+    });
   }
 }

@@ -3,7 +3,7 @@ import morgan from "morgan";
 import helmet from "helmet";
 import cors from "cors";
 
-import { env } from "../utils/env";
+import env from "../utils/env";
 
 /**
  * Import all routes
@@ -19,13 +19,16 @@ app.use(express.urlencoded({ extended: true }));
 app.use(helmet());
 app.use(
   cors({
-    origin: "*", // Be sure to switch to your production domain
+    origin:
+      env.NODE_ENV === "production"
+        ? env.CORS_ORIGIN // e.g. "https://app.example.com"
+        : "*",
   })
 );
 app.set("x-powered-by", "Fluffboost");
 
 /**
- * Turn off logging in production
+ * Use verbose logs in development, concise logs in production
  */
 if (env.NODE_ENV === "production") {
   app.use(morgan("combined"));
