@@ -33,7 +33,7 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 
 # Change Log
 
-## Version 1.7.0 Released ()
+## Version 1.7.0 Released (on July 28, 2025)
 
 ### New Features
 
