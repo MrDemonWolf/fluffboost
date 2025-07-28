@@ -47,6 +47,10 @@ export default async function (
     success("setup", interaction.user.username, interaction.user.id);
   } catch (err) {
     error("setup", interaction.user.username, interaction.user.id);
-    consola.error(err);
+    consola.error({
+      message: `[Setup Channel Command] Error executing command: ${err}`,
+      badge: true,
+      timestamp: new Date(),
+    });
   }
 }

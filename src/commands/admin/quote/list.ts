@@ -41,9 +41,13 @@ export default async function (
       flags: MessageFlags.Ephemeral,
     });
 
-    success("admin quote add", interaction.user.username, interaction.user.id);
+    success("admin quote list", interaction.user.username, interaction.user.id);
   } catch (err) {
-    error("admin quote add", interaction.user.username, interaction.user.id);
-    consola.error(err);
+    error("admin quote list", interaction.user.username, interaction.user.id);
+    consola.error({
+      message: `[Admin Quote List Command] Error executing command: ${err}`,
+      badge: true,
+      timestamp: new Date(),
+    });
   }
 }

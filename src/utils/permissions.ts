@@ -3,7 +3,7 @@ import { MessageFlags } from "discord.js";
 import type { CommandInteraction } from "discord.js";
 
 import { trimArray } from "./trimArray";
-import { env } from "./env";
+import env from "./env";
 
 export function isUserPermitted(interaction: CommandInteraction) {
   const allowedUsersArray = env.ALLOWED_USERS?.split(",") as string[];

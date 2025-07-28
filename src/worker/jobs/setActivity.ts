@@ -2,8 +2,8 @@ import { ActivityType } from "discord.js";
 
 import type { Client } from "discord.js";
 
-import { env } from "../../utils/env";
 import { prisma } from "../../database";
+import env from "../../utils/env";
 
 import consola from "consola";
 
@@ -36,7 +36,12 @@ export default async (client: Client) => {
     const activity = await randomActivity();
 
     if (!activity) {
-      consola.warn("No activity found, using default activity.");
+      consola.warn({
+        message:
+          "[Discord] No custom discord activity found, using default activity.",
+        badge: true,
+        timestamp: new Date(),
+      });
       return client.user?.setActivity(defaultActivity, {
         type: ActivityType[defaultActivityType],
         url: defaultActivityUrl,
@@ -49,13 +54,15 @@ export default async (client: Client) => {
     });
 
     consola.success({
-      message: "Discord activity has been set",
+      message: "[Discord] Activity has been set",
       badge: true,
+      timestamp: new Date(),
     });
   } catch (err) {
     consola.error({
-      message: `Error setting custom discord activity: ${err}`,
+      message: `[Discord] Error setting custom discord activity: ${err}`,
       badge: true,
+      timestamp: new Date(),
     });
   }
 };

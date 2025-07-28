@@ -188,7 +188,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     }
   } catch (err) {
     error("admin", interaction.user.username, interaction.user.id);
-    consola.error(err);
+    consola.error({
+      message: `[Admin Command] Error executing command: ${err}`,
+      badge: true,
+      timestamp: new Date(),
+    });
   }
 }
 
