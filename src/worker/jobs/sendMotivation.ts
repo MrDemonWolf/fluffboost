@@ -28,7 +28,12 @@ export default async function sendMotivation() {
     take: 1,
   });
 
-  if (!motivationQuote[0]) return consola.error("No motivation quote found");
+  if (!motivationQuote[0])
+    return consola.error({
+      message: "No motivation quote found in the database.",
+      badge: true,
+      timestamp: new Date(),
+    });
 
   /**
    * Get the user who added the motivation quote.
@@ -43,7 +48,11 @@ export default async function sendMotivation() {
      * We are filtering out guilds that don't have the motivation channel set.
      */
     if (!g.motivationChannelId) {
-      return consola.error("No motivation channel set for guild.");
+      return consola.error({
+        message: `[Discord Event Logger - Send Motivation] Guild ${g.guildId} does not have a motivation channel set.`,
+        badge: true,
+        timestamp: new Date(),
+      });
     }
     /**
      * Get the motivation channel from the guild.
