@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
       message: "FluffBoost is online!",
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
-      version: "1.7.0",
+      version: process.env.npm_package_version || "1.7.0",
       status: "online",
     });
   } catch (err) {

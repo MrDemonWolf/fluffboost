@@ -1,7 +1,7 @@
 import { Client, Events, GatewayIntentBits } from "discord.js";
 import consola from "consola";
 
-import { env } from "./utils/env";
+import env from "./utils/env";
 
 /**
  * Import events from the events folder.
@@ -16,6 +16,7 @@ import { shardDisconnectEvent } from "./events/shardDisconnect";
  * Import worker main function.
  */
 import worker from "./worker";
+
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
@@ -28,7 +29,11 @@ client.on(Events.ClientReady, async () => {
     readyEvent(client);
     worker();
   } catch (err) {
-    consola.error(err);
+    consola.error({
+      message: `[Discord Client Ready] Error during client ready event: ${err}`,
+      badge: true,
+      timestamp: new Date(),
+    });
     process.exit(1);
   }
 });

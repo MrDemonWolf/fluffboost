@@ -12,8 +12,8 @@ import type { CommandInteractionOptionResolver } from "discord.js";
 
 import { info, success, error } from "../utils/commandLogger";
 import { prisma } from "../database";
-import { env } from "../utils/env";
 import posthog from "../utils/posthog";
+import env from "../utils/env";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("suggestion")
@@ -131,7 +131,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     });
   } catch (err) {
     error("suggestion", interaction.user.username, interaction.user.id);
-    consola.error(err);
+    consola.error({
+      message: `[Suggestion Command] Error executing command: ${err}`,
+      badge: true,
+      timestamp: new Date(),
+    });
   }
 }
 

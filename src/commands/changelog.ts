@@ -108,7 +108,11 @@ export function execute(client: Client, interaction: CommandInteraction) {
     });
   } catch (err) {
     error("changelog", interaction.user.username, interaction.user.id);
-    consola.error(err);
+    consola.error({
+      message: `[Changelog Command] Error executing command: ${err}`,
+      badge: true,
+      timestamp: new Date(),
+    });
   }
 }
 

@@ -34,7 +34,16 @@ export async function execute(client: Client, interaction: CommandInteraction) {
      * Create a custom embed for the motivation message.
      */
     const addedBy = await client.users.fetch(motivationQuote[0].addedBy);
-    if (!addedBy) return consola.error("No user found");
+    if (!addedBy) {
+      consola.error({
+        message: `[Quote Command] Could not fetch user with ID ${motivationQuote[0].addedBy}`,
+        badge: true,
+        timestamp: new Date(),
+      });
+      return interaction.reply(
+        "Failed to fetch quote information. Please try again later!"
+      );
+    }
 
     const motivationEmbed = new EmbedBuilder()
       .setColor(0xfadb7f)
@@ -73,7 +82,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     });
   } catch (err) {
     error("quote", interaction.user.username, interaction.user.id);
-    consola.error(err);
+    consola.error({
+      message: `[Quote Command] Error executing command: ${err}`,
+      badge: true,
+      timestamp: new Date(),
+    });
   }
 }
 
