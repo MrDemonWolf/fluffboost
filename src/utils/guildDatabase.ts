@@ -19,6 +19,7 @@ export async function pruneGuilds(client: Client) {
       consola.info({
         message: `[Discord Event Logger - Clean up Guild Database] No guilds found in the database.`,
         badge: true,
+        timestamp: new Date(),
       });
       return;
     }
@@ -27,6 +28,7 @@ export async function pruneGuilds(client: Client) {
       consola.info({
         message: `[Discord Event Logger - Clean up Guild Database] No guilds found in the cache.`,
         badge: true,
+        timestamp: new Date(),
       });
       return;
     }
@@ -38,6 +40,7 @@ export async function pruneGuilds(client: Client) {
       consola.info({
         message: `[Discord Event Logger - Clean up Guild Database] No guilds to remove from the database.`,
         badge: true,
+        timestamp: new Date(),
       });
       return;
     }
@@ -45,6 +48,7 @@ export async function pruneGuilds(client: Client) {
     consola.info({
       message: `[Discord Event Logger - Clean up Guild Database] Found ${guildsToRemove.length} guilds to remove from the database.`,
       badge: true,
+      timestamp: new Date(),
     });
 
     guildsToRemove.forEach(async (guild) => {
@@ -58,6 +62,7 @@ export async function pruneGuilds(client: Client) {
         consola.success({
           message: `[Discord Event Logger - Clean up Guild Database] Removed guild ${guild.guildId} from the database`,
           badge: true,
+          timestamp: new Date(),
         });
 
         posthog.capture({
@@ -73,7 +78,6 @@ export async function pruneGuilds(client: Client) {
         consola.error({
           message: `[Discord Event Logger - Clean up Guild Database] Error removing guild from database: ${err}`,
           badge: true,
-          level: "error",
           timestamp: new Date(),
         });
       }
@@ -81,12 +85,12 @@ export async function pruneGuilds(client: Client) {
     consola.info({
       message: `[Discord Event Logger - Clean up Guild Database] Finished cleaning up guilds in the database.`,
       badge: true,
+      timestamp: new Date(),
     });
   } catch (err) {
     console.error({
       message: `[Discord Event Logger - Clean up Guild Dataqbase] Error during cleaning of the database of guild: ${err}`,
       badge: true,
-      level: "error",
       timestamp: new Date(),
     });
   }
@@ -104,6 +108,7 @@ export async function ensureGuildExists(client: Client) {
       consola.info({
         message: `[Discord Event Logger - Ensure Guild Exists] No new guilds to add to the database.`,
         badge: true,
+        timestamp: new Date(),
       });
       return;
     }
@@ -111,6 +116,7 @@ export async function ensureGuildExists(client: Client) {
     consola.info({
       message: `[Discord Event Logger - Ensure Guild Exists] Found ${guildsToAdd.size} guilds to add to the database.`,
       badge: true,
+      timestamp: new Date(),
     });
 
     guildsToAdd.forEach(async (guild) => {
@@ -124,6 +130,7 @@ export async function ensureGuildExists(client: Client) {
         consola.success({
           message: `[Discord Event Logger - ReadyEvt] Created guild ${guild.name} (ID: ${guild.id}) in the database`,
           badge: true,
+          timestamp: new Date(),
         });
 
         posthog.capture({
@@ -139,7 +146,6 @@ export async function ensureGuildExists(client: Client) {
         console.error({
           message: `[Discord Event Logger - Ensure Guild Exists] Error adding guild to the database: ${err}`,
           badge: true,
-          level: "error",
           timestamp: new Date(),
         });
       }
@@ -147,12 +153,12 @@ export async function ensureGuildExists(client: Client) {
     consola.info({
       message: `[Discord Event Logger - ReadyEvt] Finished ensuring guilds exist in the database.`,
       badge: true,
+      timestamp: new Date(),
     });
   } catch (err) {
     console.error({
       message: `[Discord Event Logger - Ensure Guild Exists] Error during ensuring guild exists in the database: ${err}`,
       badge: true,
-      level: "error",
       timestamp: new Date(),
     });
   }
