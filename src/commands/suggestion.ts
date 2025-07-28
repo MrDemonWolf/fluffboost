@@ -4,8 +4,12 @@ import {
   TextChannel,
   SlashCommandBuilder,
   EmbedBuilder,
+  MessageFlags,
 } from "discord.js";
+import consola from "consola";
+
 import type { CommandInteractionOptionResolver } from "discord.js";
+
 import { info, success, error } from "../utils/commandLogger";
 import { prisma } from "../database";
 import { env } from "../utils/env";
@@ -53,6 +57,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         guildId: interaction.guildId,
       },
     });
+
     if (!guild)
       return interaction.reply(
         "This server is not setup yet. Please setup the bot first."
@@ -70,7 +75,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
 
     interaction.reply({
       content: `Quote suggestion created owner will review it soon!`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
 
     /**
@@ -83,17 +88,18 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     const embed = new EmbedBuilder()
       .setColor(0xfadb7f)
       .setTitle("New Quote Suggestion")
-      .setDescription(`Quote suggestion by ${interaction.user.username}`)
+      .setAuthor({
+        name: interaction.user.username,
+        iconURL: interaction.user.displayAvatarURL(),
+      })
       .addFields(
         {
           name: "Quote",
           value: quote,
-          inline: true,
         },
         {
-          name: "Author",
+          name: "Quote Author",
           value: author,
-          inline: true,
         },
         {
           name: "Status",
@@ -107,10 +113,10 @@ export async function execute(client: Client, interaction: CommandInteraction) {
 
     mainChannel?.send({
       embeds: [embed],
-      content: `<@${interaction.user.id}>`,
     });
 
     success("suggestion", interaction.user.username, interaction.user.id);
+
     posthog.capture({
       distinctId: interaction.user.id,
       event: "suggestion command used",
@@ -125,7 +131,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     });
   } catch (err) {
     error("suggestion", interaction.user.username, interaction.user.id);
-    console.log(err);
+    consola.error(err);
   }
 }
 
