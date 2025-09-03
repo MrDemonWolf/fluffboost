@@ -23,17 +23,39 @@ app.use(
       env.NODE_ENV === "production"
         ? env.CORS_ORIGIN // e.g. "https://app.example.com"
         : "*",
-  })
+  }),
 );
 app.set("x-powered-by", "Fluffboost");
 
 /**
  * Use verbose logs in development, concise logs in production
+ * Skip logging for health check requests from Coolify (curl/*) and localhost IPs
  */
+const skipHealthChecks = (req: express.Request) => {
+  const userAgent = req.get("User-Agent") || "";
+  const clientIP = req.ip || req.connection.remoteAddress || "";
+
+  // Skip if User-Agent starts with curl/ (Coolify health checks)
+  if (userAgent.startsWith("curl/")) {
+    return true;
+  }
+
+  // Skip if request is from localhost (IPv4 or IPv6)
+  if (
+    clientIP === "127.0.0.1" ||
+    clientIP === "::1" ||
+    clientIP === "::ffff:127.0.0.1"
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
 if (env.NODE_ENV === "production") {
-  app.use(morgan("combined"));
+  app.use(morgan("combined", { skip: skipHealthChecks }));
 } else {
-  app.use(morgan("dev"));
+  app.use(morgan("dev", { skip: skipHealthChecks }));
 }
 
 /**
