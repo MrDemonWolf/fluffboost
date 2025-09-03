@@ -36,13 +36,13 @@ export const slashCommand = new SlashCommandBuilder()
             option
               .setName("quote")
               .setDescription("What is the quote?")
-              .setRequired(true)
+              .setRequired(true),
           )
           .addStringOption((option) =>
             option
               .setName("quote_author")
               .setDescription("Who is the author of the quote?")
-              .setRequired(true)
+              .setRequired(true),
           );
       })
       .addSubcommand((subCommand) => {
@@ -53,7 +53,7 @@ export const slashCommand = new SlashCommandBuilder()
             option
               .setName("quote_id")
               .setDescription("What is the ID of the quote you want to remove?")
-              .setRequired(true)
+              .setRequired(true),
           );
       })
       .addSubcommand((subCommand) => {
@@ -72,7 +72,7 @@ export const slashCommand = new SlashCommandBuilder()
             option
               .setName("activity")
               .setDescription("What is the bot doing?")
-              .setRequired(true)
+              .setRequired(true),
           )
           .addStringOption((option) =>
             option
@@ -83,15 +83,15 @@ export const slashCommand = new SlashCommandBuilder()
                 { name: "Playing", value: "Playing" },
                 { name: "Streaming", value: "Streaming" },
                 { name: "Listening", value: "Listening" },
-                { name: "Custom", value: "Custom" }
-              )
+                { name: "Custom", value: "Custom" },
+              ),
           )
           .addStringOption((option) =>
             option
               .setName("url")
               .setDescription("The URL for the activity (optional)")
-              .setRequired(false)
-          )
+              .setRequired(false),
+          ),
       )
       .addSubcommand((subcommand) =>
         subcommand
@@ -101,10 +101,10 @@ export const slashCommand = new SlashCommandBuilder()
             option
               .setName("activity_id")
               .setDescription(
-                "What is the ID of the activity you want to remove?"
+                "What is the ID of the activity you want to remove?",
               )
-              .setRequired(true)
-          )
+              .setRequired(true),
+          ),
       )
       .addSubcommand((subcommand) => {
         return subcommand
@@ -116,12 +116,14 @@ export const slashCommand = new SlashCommandBuilder()
 
 export async function execute(client: Client, interaction: CommandInteraction) {
   try {
-    if (!interaction.isChatInputCommand()) return;
+    if (!interaction.isChatInputCommand()) {
+return;
+}
 
     logger.commands.executing(
       "admin",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
     );
 
     const options = interaction.options;
@@ -136,14 +138,14 @@ export async function execute(client: Client, interaction: CommandInteraction) {
             quoteCreate(
               client,
               interaction,
-              options as CommandInteractionOptionResolver
+              options as CommandInteractionOptionResolver,
             );
             break;
           case "remove":
             quoteRemove(
               client,
               interaction,
-              options as CommandInteractionOptionResolver
+              options as CommandInteractionOptionResolver,
             );
             break;
           case "list":
@@ -162,14 +164,14 @@ export async function execute(client: Client, interaction: CommandInteraction) {
             activityAdd(
               client,
               interaction,
-              options as CommandInteractionOptionResolver
+              options as CommandInteractionOptionResolver,
             );
             break;
           case "remove":
             activityRemove(
               client,
               interaction,
-              options as CommandInteractionOptionResolver
+              options as CommandInteractionOptionResolver,
             );
             break;
           case "list":
@@ -194,7 +196,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       "admin",
       interaction.user.username,
       interaction.user.id,
-      err
+      err,
     );
     logger.error("Command", "Error executing admin command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
