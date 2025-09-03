@@ -136,7 +136,12 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       },
     });
   } catch (err) {
-    error("suggestion", interaction.user.username, interaction.user.id);
+    logger.commands.error(
+      "suggestion",
+      interaction.user.username,
+      interaction.user.id,
+      err
+    );
     logger.error("Command", "Error executing suggestion command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "suggestion",
