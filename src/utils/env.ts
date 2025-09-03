@@ -1,6 +1,5 @@
 import { z } from "zod";
 import dotenv from "dotenv";
-import consola from "consola";
 
 dotenv.config();
 
@@ -110,11 +109,8 @@ type EnvSchema = z.infer<typeof envSchema>;
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
-  consola.error({
-    message: "Invalid environment variables found",
-    additional: JSON.stringify(parsed.error.format(), null, 4),
-    badge: true,
-  });
+  console.error("❌ Invalid environment variables found");
+  console.error(JSON.stringify(parsed.error.format(), null, 4));
   process.exit(1);
 }
 
