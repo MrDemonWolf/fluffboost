@@ -20,9 +20,6 @@ importers:
       '@types/node-cron':
         specifier: ^3.0.11
         version: 3.0.11
-      '@upstash/qstash':
-        specifier: ^2.8.1
-        version: 2.8.1
       bullmq:
         specifier: ^5.56.8
         version: 5.56.8
@@ -459,9 +456,6 @@ packages:
 
   '@ungap/structured-clone@1.2.1':
     resolution: {integrity: sha512-fEzPV3hSkSMltkw152tJKNARhOupqbH96MZWyRjNaYZOMIzbrTeQDG+MTc6Mr2pgzFQzFxAfmhGDNP5QK++2ZA==}
-
-  '@upstash/qstash@2.8.1':
-    resolution: {integrity: sha512-E+JoLHMqygQksWATjS/9AAo7Mhi/k21Tu0zDwMm9GyNyNVjEJntQvmrH5NC7x6kXwjCDTEWFtIWz0JXu9/9pMQ==}
 
   '@vladfrangu/async_event_emitter@2.4.6':
     resolution: {integrity: sha512-RaI5qZo6D2CVS6sTHFKg1v5Ohq/+Bo2LZ5gzUEwZ/WkHhwtGTCB/sVLw8ijOkAUxasZ+WshN/Rzj4ywsABJ5ZA==}
@@ -2479,12 +2473,6 @@ snapshots:
       eslint-visitor-keys: 3.4.3
 
   '@ungap/structured-clone@1.2.1': {}
-
-  '@upstash/qstash@2.8.1':
-    dependencies:
-      crypto-js: 4.2.0
-      jose: 5.9.6
-      neverthrow: 7.2.0
 
   '@vladfrangu/async_event_emitter@2.4.6': {}
 

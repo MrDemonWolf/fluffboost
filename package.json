@@ -23,7 +23,6 @@
     "@discordjs/rest": "^2.5.0",
     "@prisma/client": "6.9.0",
     "@types/node-cron": "^3.0.11",
-    "@upstash/qstash": "^2.8.1",
     "bullmq": "^5.56.8",
     "consola": "^3.4.2",
     "cors": "^2.8.5",
