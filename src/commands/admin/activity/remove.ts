@@ -2,10 +2,9 @@ import { Client, CommandInteraction, MessageFlags } from "discord.js";
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 
-import { info, success, error } from "../../../utils/commandLogger";
+import logger from "../../../utils/logger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
-import logger from "../../../utils/logger";
 
 export default async function (
   client: Client,
@@ -13,7 +12,7 @@ export default async function (
   options: CommandInteractionOptionResolver
 ) {
   try {
-    info(
+    logger.commands.executing(
       "admin activity delete",
       interaction.user.username,
       interaction.user.id
@@ -57,16 +56,17 @@ export default async function (
       flags: MessageFlags.Ephemeral,
     });
 
-    success(
+    logger.commands.success(
       "admin activity delete",
       interaction.user.username,
       interaction.user.id
     );
   } catch (err) {
-    error(
+    logger.commands.error(
       "admin activity delete",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
+      err
     );
     logger.error("Command", "Error in admin activity delete", err, {
       user: { username: interaction.user.username, id: interaction.user.id },

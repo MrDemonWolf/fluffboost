@@ -7,18 +7,21 @@ import {
 
 import type { DiscordActivity } from "@prisma/client";
 
-import { info, success, error } from "../../../utils/commandLogger";
+import logger from "../../../utils/logger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
 import { trimArray } from "../../../utils/trimArray";
-import logger from "../../../utils/logger";
 
 export default async function (
   client: Client,
   interaction: CommandInteraction
 ) {
   try {
-    info("admin activity list", interaction.user.username, interaction.user.id);
+    logger.commands.executing(
+      "admin activity list",
+      interaction.user.username,
+      interaction.user.id
+    );
 
     const isAllowed = isUserPermitted(interaction);
 
@@ -48,16 +51,17 @@ export default async function (
       ],
     });
 
-    success(
+    logger.commands.success(
       "admin activity list",
       interaction.user.username,
       interaction.user.id
     );
   } catch (err) {
-    error(
+    logger.commands.error(
       "admin activity list",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
+      err
     );
     logger.error("Command", "Error in admin activity list", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
