@@ -1,5 +1,3 @@
-import consola from "consola";
-
 import type { Client } from "discord.js";
 
 import posthog from "../utils/posthog";
