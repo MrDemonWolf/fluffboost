@@ -1,31 +1,29 @@
-import consola from "consola";
+import logger from "./logger";
 
 export function info(command: string, username: string, id: string) {
-  consola.info({
-    message: `* Executing command ${command} from ${username} (${id})`,
-    badge: true,
-    timestamp: new Date(),
+  logger.info("Command", `Executing ${command}`, {
+    command,
+    user: { username, id },
   });
 }
+
 export function success(command: string, username: string, id: string) {
-  consola.success({
-    message: `* Successfully executed command ${command} from ${username} (${id})`,
-    badge: true,
-    timestamp: new Date(),
+  logger.success("Command", `Successfully executed ${command}`, {
+    command,
+    user: { username, id },
   });
 }
 
 export function error(command: string, username: string, id: string) {
-  consola.error({
-    message: `* Error executing command ${command} from ${username} (${id})`,
-    badge: true,
-    timestamp: new Date(),
+  logger.error("Command", `Error executing ${command}`, undefined, {
+    command,
+    user: { username, id },
   });
 }
+
 export function warn(command: string, username: string, id: string) {
-  consola.warn({
-    message: `* Warning executing command ${command} from ${username} (${id})`,
-    badge: true,
-    timestamp: new Date(),
+  logger.warn("Command", `Warning executing ${command}`, {
+    command,
+    user: { username, id },
   });
 }

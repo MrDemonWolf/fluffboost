@@ -8,7 +8,6 @@ import {
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 
-import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
 import env from "../../../utils/env";
@@ -20,7 +19,11 @@ export default async function (
   options: CommandInteractionOptionResolver
 ) {
   try {
-    info("admin quote create", interaction.user.username, interaction.user.id);
+    logger.commands.executing(
+      "admin quote create",
+      interaction.user.username,
+      interaction.user.id
+    );
 
     const isAllowed = isUserPermitted(interaction);
 
@@ -81,13 +84,18 @@ export default async function (
       flags: MessageFlags.Ephemeral,
     });
 
-    success(
+    logger.commands.success(
       "admin quote create",
       interaction.user.username,
       interaction.user.id
     );
   } catch (err) {
-    error("admin quote create", interaction.user.username, interaction.user.id);
+    logger.commands.error(
+      "admin quote create",
+      interaction.user.username,
+      interaction.user.id,
+      err
+    );
     logger.error("Command", "Error executing admin quote create command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "admin quote create",

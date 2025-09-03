@@ -91,21 +91,6 @@ export const logger = {
   },
 
   /**
-   * Log command execution for audit trail
-   */
-  command: (
-    commandName: string,
-    username: string,
-    userId: string,
-    guildId?: string
-  ) => {
-    logger.info("Command", `${commandName} executed`, {
-      user: { username, id: userId },
-      ...(guildId && { guild: guildId }),
-    });
-  },
-
-  /**
    * Log permission violations
    */
   unauthorized: (
@@ -118,6 +103,74 @@ export const logger = {
       user: { username, id: userId },
       ...(guildId && { guild: guildId }),
     });
+  },
+
+  /**
+   * Log command operations and execution tracking
+   */
+  commands: {
+    executing: (
+      command: string,
+      username: string,
+      id: string,
+      guildId?: string
+    ) => {
+      logger.info("Command", `Executing ${command}`, {
+        command,
+        user: { username, id },
+        ...(guildId && { guild: guildId }),
+      });
+    },
+    success: (
+      command: string,
+      username: string,
+      id: string,
+      guildId?: string
+    ) => {
+      logger.success("Command", `Successfully executed ${command}`, {
+        command,
+        user: { username, id },
+        ...(guildId && { guild: guildId }),
+      });
+    },
+    error: (
+      command: string,
+      username: string,
+      id: string,
+      error?: any,
+      guildId?: string
+    ) => {
+      logger.error("Command", `Error executing ${command}`, error, {
+        command,
+        user: { username, id },
+        ...(guildId && { guild: guildId }),
+      });
+    },
+    warn: (
+      command: string,
+      username: string,
+      id: string,
+      message?: string,
+      guildId?: string
+    ) => {
+      logger.warn("Command", message || `Warning executing ${command}`, {
+        command,
+        user: { username, id },
+        ...(guildId && { guild: guildId }),
+      });
+    },
+    unauthorized: (
+      command: string,
+      username: string,
+      id: string,
+      guildId?: string
+    ) => {
+      logger.warn("Command", `Unauthorized access to ${command}`, {
+        command,
+        user: { username, id },
+        ...(guildId && { guild: guildId }),
+      });
+    },
   },
 
   /**
