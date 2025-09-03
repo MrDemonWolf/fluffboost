@@ -1,9 +1,8 @@
-import consola from "consola";
-
 import type { Client } from "discord.js";
 
 import setActivity from "../worker/jobs/setActivity";
 import { pruneGuilds, ensureGuildExists } from "../utils/guildDatabase";
+import logger from "../utils/logger";
 
 /**
  * Import slash commands from the commands folder.
@@ -22,26 +21,10 @@ export async function readyEvent(client: Client) {
     /**
      * Show the bot is ready in the console.
      */
-    consola.success({
-      message: "[Discord] Bot is ready! 🐾",
-      badge: true,
-      timestamp: new Date(),
-    });
+    const username = client.user?.tag || "Unknown";
+    const guildCount = client.guilds.cache.size;
 
-    consola.info({
-      message: `[Discord] Logged in as ${client.user?.tag}!`,
-      badge: true,
-      timestamp: new Date(),
-    });
-
-    /**
-     * Show how many guilds the bot is in and their names + IDs. but this is shared across all shards.
-     */
-    consola.info({
-      message: `[Discord] In ${client.guilds.cache.size} guilds.`,
-      badge: true,
-      timestamp: new Date(),
-    });
+    logger.discord.ready(username, guildCount);
 
     /**
      * Check if the bot is not in a guild anymore and remove it from the database.
@@ -56,11 +39,7 @@ export async function readyEvent(client: Client) {
     /**
      * Register slash commands.
      */
-    consola.info({
-      message: "[Slash commands] Registering ",
-      badge: true,
-      timestamp: new Date(),
-    });
+    logger.info("Slash Commands", "Registering commands");
 
     await client.application?.commands.set([
       help.slashCommand,
@@ -74,20 +53,17 @@ export async function readyEvent(client: Client) {
     ]);
 
     const commands = await client.application?.commands.fetch();
+    const commandNames = commands?.map((command) => command.name) || [];
 
-    consola.success({
-      message: `[Slash commands] Registered ${commands?.map(
-        (command) => command.name
-      )} commands`,
-      badge: true,
-      timestamp: new Date(),
-    });
+    logger.success(
+      "Slash Commands",
+      `Registered ${commandNames.length} commands`,
+      {
+        commands: commandNames,
+      }
+    );
   } catch (err) {
-    consola.error({
-      message: `[Discord] Error logging in to discord: ${err}`,
-      badge: true,
-      timestamp: new Date(),
-    });
+    logger.error("Discord", "Error during ready event", err);
   }
 
   /**

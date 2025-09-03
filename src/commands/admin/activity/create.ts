@@ -1,5 +1,4 @@
 import { Client, CommandInteraction, MessageFlags } from "discord.js";
-import consola from "consola";
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 import type { DiscordActivityType } from "@prisma/client";
@@ -7,6 +6,7 @@ import type { DiscordActivityType } from "@prisma/client";
 import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
+import logger from "../../../utils/logger";
 
 export default async function (
   client: Client,
@@ -47,10 +47,9 @@ export default async function (
     );
   } catch (err) {
     error("admin activity add", interaction.user.username, interaction.user.id);
-    consola.error({
-      message: `[Admin Activity Add Command] Error executing command: ${err}`,
-      badge: true,
-      timestamp: new Date(),
+    logger.error("Command", "Error executing admin activity add command", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: "admin activity add",
     });
   }
 }

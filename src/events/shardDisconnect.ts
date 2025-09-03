@@ -1,10 +1,6 @@
-import consola from "consola";
+import logger from "../utils/logger";
 
 export function shardDisconnectEvent() {
-  consola.error({
-    message: `[Discord] Shard disconnected`,
-    badge: true,
-    timestamp: new Date().toISOString(),
-  });
+  logger.error("Discord", "Shard disconnected - exiting process");
   process.exit(1);
 }

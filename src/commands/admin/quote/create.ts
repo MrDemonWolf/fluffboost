@@ -5,7 +5,6 @@ import {
   TextChannel,
   MessageFlags,
 } from "discord.js";
-import consola from "consola";
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 
@@ -13,6 +12,7 @@ import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
 import env from "../../../utils/env";
+import logger from "../../../utils/logger";
 
 export default async function (
   client: Client,
@@ -68,12 +68,12 @@ export default async function (
       if (channel?.isTextBased()) {
         await channel.send({ embeds: [embed] });
       } else {
-        consola.warn(
-          `Main channel not found or not text-based. ID: ${env.MAIN_CHANNEL_ID}`
-        );
+        logger.warn("Admin", "Main channel not found or not text-based", {
+          channelId: env.MAIN_CHANNEL_ID,
+        });
       }
     } else {
-      consola.warn("MAIN_CHANNEL_ID not configured");
+      logger.warn("Admin", "MAIN_CHANNEL_ID not configured");
     }
 
     await interaction.reply({
@@ -88,10 +88,9 @@ export default async function (
     );
   } catch (err) {
     error("admin quote create", interaction.user.username, interaction.user.id);
-    consola.error({
-      message: `[Admin Quote Create Command] Error executing command: ${err}`,
-      badge: true,
-      timestamp: new Date(),
+    logger.error("Command", "Error executing admin quote create command", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: "admin quote create",
     });
   }
 }

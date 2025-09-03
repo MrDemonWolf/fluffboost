@@ -5,6 +5,7 @@ import type { CommandInteractionOptionResolver } from "discord.js";
 import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
+import logger from "../../../utils/logger";
 
 export default async function (
   client: Client,
@@ -67,7 +68,11 @@ export default async function (
       interaction.user.username,
       interaction.user.id
     );
-    console.error("Error in admin activity delete:", err);
+    logger.error("Command", "Error in admin activity delete", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: "admin activity delete",
+      activityId: options.getString("id"),
+    });
 
     if (!interaction.replied) {
       await interaction.reply({
