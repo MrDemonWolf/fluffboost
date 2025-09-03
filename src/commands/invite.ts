@@ -8,7 +8,7 @@ import posthog from "../utils/posthog";
 export const slashCommand = new SlashCommandBuilder()
   .setName("invite")
   .setDescription(
-    "Invite me to your server! Let's keep spreading paw-sitivity 🐾"
+    "Invite me to your server! Let's keep spreading paw-sitivity 🐾",
   );
 
 export function execute(client: Client, interaction: CommandInteraction) {
@@ -16,7 +16,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
     logger.commands.executing(
       "invite",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
     );
 
     // generate invite link
@@ -33,7 +33,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
     logger.commands.success(
       "invite",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
     );
 
     posthog.capture({
@@ -50,7 +50,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
       "invite",
       interaction.user.username,
       interaction.user.id,
-      err
+      err,
     );
     logger.error("Command", "Error executing invite command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },

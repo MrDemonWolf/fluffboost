@@ -14,13 +14,13 @@ export function execute(client: Client, interaction: CommandInteraction) {
     logger.commands.executing(
       "changelog",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
     );
     const embed = new EmbedBuilder()
       .setColor(0xfadb7f)
       .setTitle("✨ FluffBoost Changelog - Version 1.7.0! ✨")
       .setDescription(
-        "Check out the latest enhancements and new features in FluffBoost!"
+        "Check out the latest enhancements and new features in FluffBoost!",
       )
       .addFields(
         // New Features
@@ -86,7 +86,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
           name: "✨ Enhanced: Code Quality",
           value:
             "General improvements in code readability and consistency across the entire bot's codebase.",
-        }
+        },
       )
       .setTimestamp()
       .setFooter({
@@ -101,7 +101,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
     logger.commands.success(
       "changelog",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
     );
 
     posthog.capture({
@@ -118,7 +118,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
       "changelog",
       interaction.user.username,
       interaction.user.id,
-      err
+      err,
     );
     logger.error("Command", "Error executing changelog command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },

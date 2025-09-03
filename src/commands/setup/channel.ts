@@ -13,22 +13,24 @@ import { guildExists } from "../../utils/guildDatabase";
 
 export default async function (
   client: Client,
-  interaction: CommandInteraction
+  interaction: CommandInteraction,
 ) {
   try {
     logger.commands.executing(
       "setup channel",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
     );
 
-    if (!interaction.guildId) return;
+    if (!interaction.guildId) {
+return;
+}
 
     const options = interaction.options as CommandInteractionOptionResolver;
 
     const motivationChannel = options.getChannel(
       "channel",
-      true
+      true,
     ) as TextChannel;
 
     await guildExists(interaction.guildId);
@@ -50,14 +52,14 @@ export default async function (
     logger.commands.success(
       "setup",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
     );
   } catch (err) {
     logger.commands.error(
       "setup",
       interaction.user.username,
       interaction.user.id,
-      err
+      err,
     );
     logger.error("Command", "Error executing setup channel command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },

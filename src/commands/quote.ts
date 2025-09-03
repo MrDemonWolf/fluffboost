@@ -15,7 +15,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     logger.commands.executing(
       "quote",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
     );
 
     /**
@@ -28,10 +28,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       take: 1,
     });
 
-    if (!motivationQuote[0])
-      return interaction.reply(
-        "No motivation quote found.  Please try again later!"
+    if (!motivationQuote[0]) {
+return interaction.reply(
+        "No motivation quote found.  Please try again later!",
       );
+}
 
     /**
      * Create a custom embed for the motivation message.
@@ -45,10 +46,10 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         {
           userId: motivationQuote[0].addedBy,
           command: "quote",
-        }
+        },
       );
       return interaction.reply(
-        "Failed to fetch quote information. Please try again later!"
+        "Failed to fetch quote information. Please try again later!",
       );
     }
 
@@ -56,7 +57,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       .setColor(0xfadb7f)
       .setTitle("Motivation quote of the day 📅")
       .setDescription(
-        `**"${motivationQuote[0].quote}"**\n by ${motivationQuote[0].author}`
+        `**"${motivationQuote[0].quote}"**\n by ${motivationQuote[0].author}`,
       )
       .setAuthor({
         name: addedBy.username,
@@ -78,7 +79,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     logger.commands.success(
       "quote",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
     );
 
     posthog.capture({
@@ -96,7 +97,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       "quote",
       interaction.user.username,
       interaction.user.id,
-      err
+      err,
     );
     logger.error("Command", "Error executing quote command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },

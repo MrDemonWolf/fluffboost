@@ -20,7 +20,7 @@ export default function worker() {
       },
       {
         timezone: "America/Chicago",
-      }
+      },
     );
 
     cron.schedule(
@@ -30,7 +30,7 @@ export default function worker() {
       },
       {
         timezone: "America/Chicago",
-      }
+      },
     );
     return logger.info("Worker", "Running in Development Mode", {
       activityCron: env.DISCORD_ACTIVITY_CRON || "*/5 * * * *",
@@ -45,7 +45,7 @@ export default function worker() {
     },
     {
       timezone: "America/Chicago",
-    }
+    },
   );
 
   cron.schedule(
@@ -55,7 +55,7 @@ export default function worker() {
     },
     {
       timezone: "America/Chicago",
-    }
+    },
   );
   logger.success("Worker", "Running in Production Mode", {
     motivationCron: "0 8 * * *",

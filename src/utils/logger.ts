@@ -188,7 +188,7 @@ export const logger: Logger = {
     operation: string,
     username: string,
     userId: string,
-    guildId?: string
+    guildId?: string,
   ) => {
     logger.warn("Security", `Unauthorized ${operation} attempt`, {
       user: { username, id: userId },
@@ -204,7 +204,7 @@ export const logger: Logger = {
       command: string,
       username: string,
       id: string,
-      guildId?: string
+      guildId?: string,
     ) => {
       logger.info("Command", `Executing ${command}`, {
         command,
@@ -216,7 +216,7 @@ export const logger: Logger = {
       command: string,
       username: string,
       id: string,
-      guildId?: string
+      guildId?: string,
     ) => {
       logger.success("Command", `Successfully executed ${command}`, {
         command,
@@ -229,7 +229,7 @@ export const logger: Logger = {
       username: string,
       id: string,
       error?: any,
-      guildId?: string
+      guildId?: string,
     ) => {
       logger.error("Command", `Error executing ${command}`, error, {
         command,
@@ -242,7 +242,7 @@ export const logger: Logger = {
       username: string,
       id: string,
       message?: string,
-      guildId?: string
+      guildId?: string,
     ) => {
       logger.warn("Command", message || `Warning executing ${command}`, {
         command,
@@ -254,7 +254,7 @@ export const logger: Logger = {
       command: string,
       username: string,
       id: string,
-      guildId?: string
+      guildId?: string,
     ) => {
       logger.warn("Command", `Unauthorized access to ${command}`, {
         command,
@@ -298,7 +298,7 @@ export const logger: Logger = {
     ready: (username: string, guildCount: number) =>
       logger.ready(
         "Discord",
-        `Bot ready as ${username} in ${guildCount} guilds`
+        `Bot ready as ${username} in ${guildCount} guilds`,
       ),
     guildJoined: (guildName: string, guildId: string, memberCount: number) =>
       logger.info("Discord", `Joined guild: ${guildName}`, {
