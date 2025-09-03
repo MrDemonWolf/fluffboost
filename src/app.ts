@@ -1,11 +1,11 @@
 import { ShardingManager } from "discord.js";
 import { config } from "dotenv";
 import { PrismaClient } from "@prisma/client";
-import consola from "consola";
 
 import api from "./api";
 import redisClient from "./redis";
 import env from "./utils/env";
+import logger from "./utils/logger";
 
 /**
  * Load environment variables from .env file.
@@ -21,17 +21,10 @@ prisma
   .$connect()
   .then(async () => {
     await prisma.$disconnect();
-    consola.success({
-      message: `[Prisma] Connected`,
-      badge: true,
-      timestamp: new Date(),
-    });
+    logger.database.connected("Prisma");
   })
   .catch(async (err: any) => {
-    consola.error({
-      message: `[Prisma] Error connecting to database: ${err}`,
-      badge: true,
-    });
+    logger.database.error("Prisma", err);
     process.exit(1);
   });
 
@@ -40,18 +33,10 @@ prisma
  */
 redisClient
   .on("connect", () => {
-    consola.success({
-      message: `[Redis] Connected`,
-      badge: true,
-      timestamp: new Date(),
-    });
+    logger.database.connected("Redis");
   })
   .on("error", (err: any) => {
-    consola.error({
-      message: `[Redis] Error connecting to Redis: ${err}`,
-      badge: true,
-      timestamp: new Date(),
-    });
+    logger.database.error("Redis", err);
     process.exit(1);
   });
 
@@ -60,21 +45,11 @@ redisClient
  */
 
 api.listen(api.get("port"), () => {
-  consola.ready({
-    message: `[API] Listening on http://${api.get("host")}:${api.get("port")}`,
-    badge: true,
-    timestamp: new Date(),
-    level: "info",
-  });
+  logger.api.started(api.get("host"), api.get("port"));
 });
 
 api.on("error", (err) => {
-  consola.error({
-    message: `[API] ${err}`,
-    badge: true,
-    level: "error",
-    timestamp: new Date(),
-  });
+  logger.api.error(err);
   process.exit(1);
 });
 
@@ -88,17 +63,9 @@ const manager = new ShardingManager("./src/bot.ts", {
 
 manager.on("shardCreate", (shard) => {
   try {
-    consola.success({
-      message: `[Discord] Launched shard ${shard.id}`,
-      badge: true,
-      timestamp: new Date(),
-    });
+    logger.discord.shardLaunched(shard.id);
   } catch (err) {
-    consola.error({
-      message: `[Discord] Error launching shard ${shard.id}: ${err}`,
-      badge: true,
-      timestamp: new Date(),
-    });
+    logger.discord.shardError(shard.id, err);
   }
 });
 

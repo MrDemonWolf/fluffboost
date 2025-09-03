@@ -3,7 +3,6 @@ import {
   PermissionFlagsBits,
   MessageFlags,
 } from "discord.js";
-import consola from "consola";
 
 import type {
   Client,
@@ -11,6 +10,7 @@ import type {
   CommandInteractionOptionResolver,
 } from "discord.js";
 import { info, error } from "../../utils/commandLogger";
+import logger from "../../utils/logger";
 
 /**
  * Import subcommands
@@ -188,10 +188,9 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     }
   } catch (err) {
     error("admin", interaction.user.username, interaction.user.id);
-    consola.error({
-      message: `[Admin Command] Error executing command: ${err}`,
-      badge: true,
-      timestamp: new Date(),
+    logger.error("Command", "Error executing admin command", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: "admin",
     });
   }
 }

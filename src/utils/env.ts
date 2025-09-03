@@ -106,7 +106,6 @@ if (!parsed.success) {
     message: "Invalid environment variables found",
     additional: JSON.stringify(parsed.error.format(), null, 4),
     badge: true,
-    timestamp: new Date(),
   });
   process.exit(1);
 }

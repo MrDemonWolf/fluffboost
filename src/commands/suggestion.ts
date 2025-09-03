@@ -6,14 +6,14 @@ import {
   EmbedBuilder,
   MessageFlags,
 } from "discord.js";
-import consola from "consola";
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 
 import { info, success, error } from "../utils/commandLogger";
 import { prisma } from "../database";
-import posthog from "../utils/posthog";
 import env from "../utils/env";
+import posthog from "../utils/posthog";
+import logger from "../utils/logger";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("suggestion")
@@ -131,10 +131,9 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     });
   } catch (err) {
     error("suggestion", interaction.user.username, interaction.user.id);
-    consola.error({
-      message: `[Suggestion Command] Error executing command: ${err}`,
-      badge: true,
-      timestamp: new Date(),
+    logger.error("Command", "Error executing suggestion command", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: "suggestion",
     });
   }
 }

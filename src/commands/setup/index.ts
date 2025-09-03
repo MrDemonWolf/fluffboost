@@ -4,7 +4,6 @@ import {
   ChannelType,
   MessageFlags,
 } from "discord.js";
-import consola from "consola";
 
 import type {
   SlashCommandSubcommandBuilder,
@@ -14,6 +13,7 @@ import type {
 } from "discord.js";
 
 import { info, error } from "../../utils/commandLogger";
+import logger from "../../utils/logger";
 
 /**
  * Import subcommands
@@ -62,10 +62,9 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     }
   } catch (err) {
     error("setup", interaction.user.username, interaction.user.id);
-    consola.error({
-      message: `[Setup Command] Error executing command: ${err}`,
-      badge: true,
-      timestamp: new Date(),
+    logger.error("Command", "Error executing setup command", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: "setup",
     });
   }
 }
