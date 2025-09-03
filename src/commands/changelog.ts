@@ -1,10 +1,10 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
-import consola from "consola";
 
 import type { Client, CommandInteraction } from "discord.js";
 
 import { info, success, error } from "../utils/commandLogger";
 import posthog from "../utils/posthog";
+import logger from "../utils/logger";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("changelog")
@@ -108,10 +108,9 @@ export function execute(client: Client, interaction: CommandInteraction) {
     });
   } catch (err) {
     error("changelog", interaction.user.username, interaction.user.id);
-    consola.error({
-      message: `[Changelog Command] Error executing command: ${err}`,
-      badge: true,
-      timestamp: new Date(),
+    logger.error("Command", "Error executing changelog command", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: "changelog",
     });
   }
 }

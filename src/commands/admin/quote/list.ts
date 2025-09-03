@@ -1,11 +1,11 @@
 import { Client, CommandInteraction, MessageFlags } from "discord.js";
-import consola from "consola";
 
 import type { MotivationQuote } from "@prisma/client";
 
 import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
+import logger from "../../../utils/logger";
 
 export default async function (
   client: Client,
@@ -44,10 +44,9 @@ export default async function (
     success("admin quote list", interaction.user.username, interaction.user.id);
   } catch (err) {
     error("admin quote list", interaction.user.username, interaction.user.id);
-    consola.error({
-      message: `[Admin Quote List Command] Error executing command: ${err}`,
-      badge: true,
-      timestamp: new Date(),
+    logger.error("Command", "Error executing admin quote list command", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: "admin quote list",
     });
   }
 }
