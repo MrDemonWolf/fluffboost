@@ -2,6 +2,97 @@ import consola from "consola";
 import env from "./env";
 
 /**
+ * Type definitions for logger methods
+ */
+interface UserContext {
+  username: string;
+  id: string;
+}
+
+interface CommandLogger {
+  executing: (
+    command: string,
+    username: string,
+    id: string,
+    guildId?: string
+  ) => void;
+  success: (
+    command: string,
+    username: string,
+    id: string,
+    guildId?: string
+  ) => void;
+  error: (
+    command: string,
+    username: string,
+    id: string,
+    error?: any,
+    guildId?: string
+  ) => void;
+  warn: (
+    command: string,
+    username: string,
+    id: string,
+    message?: string,
+    guildId?: string
+  ) => void;
+  unauthorized: (
+    command: string,
+    username: string,
+    id: string,
+    guildId?: string
+  ) => void;
+}
+
+interface DatabaseLogger {
+  connected: (service: string) => void;
+  error: (service: string, error: any) => void;
+  operation: (operation: string, details?: any) => void;
+}
+
+interface ApiLogger {
+  started: (host: string, port: number) => void;
+  error: (error: any) => void;
+  request: (method: string, path: string, status: number) => void;
+}
+
+interface DiscordLogger {
+  shardLaunched: (shardId: number) => void;
+  shardError: (shardId: number, error: any) => void;
+  ready: (username: string, guildCount: number) => void;
+  guildJoined: (
+    guildName: string,
+    guildId: string,
+    memberCount: number
+  ) => void;
+  guildLeft: (guildName: string, guildId: string) => void;
+}
+
+interface Logger {
+  success: (component: string, message: string, metadata?: any) => void;
+  info: (component: string, message: string, metadata?: any) => void;
+  warn: (component: string, message: string, metadata?: any) => void;
+  error: (
+    component: string,
+    message: string,
+    error?: any,
+    metadata?: any
+  ) => void;
+  debug: (component: string, message: string, metadata?: any) => void;
+  ready: (component: string, message: string, metadata?: any) => void;
+  unauthorized: (
+    operation: string,
+    username: string,
+    userId: string,
+    guildId?: string
+  ) => void;
+  commands: CommandLogger;
+  database: DatabaseLogger;
+  api: ApiLogger;
+  discord: DiscordLogger;
+}
+
+/**
  * Centralized logger utility with consistent formatting for FluffBoost
  * Provides structured logging for different contexts with environment-aware configuration
  */
