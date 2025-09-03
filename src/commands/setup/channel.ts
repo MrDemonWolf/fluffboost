@@ -1,5 +1,4 @@
 import { MessageFlags } from "discord.js";
-import consola from "consola";
 
 import type {
   Client,
@@ -11,6 +10,7 @@ import type {
 import { info, success, error } from "../../utils/commandLogger";
 import { prisma } from "../../database";
 import { guildExists } from "../../utils/guildDatabase";
+import logger from "../../utils/logger";
 
 export default async function (
   client: Client,
@@ -47,10 +47,9 @@ export default async function (
     success("setup", interaction.user.username, interaction.user.id);
   } catch (err) {
     error("setup", interaction.user.username, interaction.user.id);
-    consola.error({
-      message: `[Setup Channel Command] Error executing command: ${err}`,
-      badge: true,
-      timestamp: new Date(),
+    logger.error("Command", "Error executing setup channel command", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: "setup channel",
     });
   }
 }

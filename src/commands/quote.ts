@@ -1,11 +1,11 @@
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
-import consola from "consola";
 
 import type { Client, CommandInteraction } from "discord.js";
 
 import { info, success, error } from "../utils/commandLogger";
 import { prisma } from "../database";
 import posthog from "../utils/posthog";
+import logger from "../utils/logger";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("quote")
@@ -35,11 +35,15 @@ export async function execute(client: Client, interaction: CommandInteraction) {
      */
     const addedBy = await client.users.fetch(motivationQuote[0].addedBy);
     if (!addedBy) {
-      consola.error({
-        message: `[Quote Command] Could not fetch user with ID ${motivationQuote[0].addedBy}`,
-        badge: true,
-        timestamp: new Date(),
-      });
+      logger.error(
+        "Command",
+        "Could not fetch user for quote",
+        new Error(`User ID not found: ${motivationQuote[0].addedBy}`),
+        {
+          userId: motivationQuote[0].addedBy,
+          command: "quote",
+        }
+      );
       return interaction.reply(
         "Failed to fetch quote information. Please try again later!"
       );
@@ -82,10 +86,9 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     });
   } catch (err) {
     error("quote", interaction.user.username, interaction.user.id);
-    consola.error({
-      message: `[Quote Command] Error executing command: ${err}`,
-      badge: true,
-      timestamp: new Date(),
+    logger.error("Command", "Error executing quote command", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: "quote",
     });
   }
 }
