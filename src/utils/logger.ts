@@ -4,10 +4,8 @@ import env from "./env";
 /**
  * Type definitions for logger methods
  */
-interface UserContext {
-  username: string;
-  id: string;
-}
+type LogMetadata = Record<string, unknown>;
+type LogError = Error | string | unknown;
 
 interface CommandLogger {
   executing: (
@@ -26,7 +24,7 @@ interface CommandLogger {
     command: string,
     username: string,
     id: string,
-    error?: any,
+    error?: LogError,
     guildId?: string
   ) => void;
   warn: (
@@ -46,19 +44,19 @@ interface CommandLogger {
 
 interface DatabaseLogger {
   connected: (service: string) => void;
-  error: (service: string, error: any) => void;
-  operation: (operation: string, details?: any) => void;
+  error: (service: string, error: LogError) => void;
+  operation: (operation: string, details?: LogMetadata) => void;
 }
 
 interface ApiLogger {
   started: (host: string, port: number) => void;
-  error: (error: any) => void;
+  error: (error: LogError) => void;
   request: (method: string, path: string, status: number) => void;
 }
 
 interface DiscordLogger {
   shardLaunched: (shardId: number) => void;
-  shardError: (shardId: number, error: any) => void;
+  shardError: (shardId: number, error: LogError) => void;
   ready: (username: string, guildCount: number) => void;
   guildJoined: (
     guildName: string,
@@ -69,17 +67,17 @@ interface DiscordLogger {
 }
 
 interface Logger {
-  success: (component: string, message: string, metadata?: any) => void;
-  info: (component: string, message: string, metadata?: any) => void;
-  warn: (component: string, message: string, metadata?: any) => void;
+  success: (component: string, message: string, metadata?: LogMetadata) => void;
+  info: (component: string, message: string, metadata?: LogMetadata) => void;
+  warn: (component: string, message: string, metadata?: LogMetadata) => void;
   error: (
     component: string,
     message: string,
-    error?: any,
-    metadata?: any
+    error?: LogError,
+    metadata?: LogMetadata
   ) => void;
-  debug: (component: string, message: string, metadata?: any) => void;
-  ready: (component: string, message: string, metadata?: any) => void;
+  debug: (component: string, message: string, metadata?: LogMetadata) => void;
+  ready: (component: string, message: string, metadata?: LogMetadata) => void;
   unauthorized: (
     operation: string,
     username: string,
@@ -111,7 +109,7 @@ export const logger: Logger = {
   /**
    * Log successful operations
    */
-  success: (component: string, message: string, metadata?: any) => {
+  success: (component: string, message: string, metadata?: LogMetadata) => {
     consola.success({
       message: `[${component}] ${message}`,
       ...(metadata && { metadata }),
@@ -122,7 +120,7 @@ export const logger: Logger = {
   /**
    * Log informational messages
    */
-  info: (component: string, message: string, metadata?: any) => {
+  info: (component: string, message: string, metadata?: LogMetadata) => {
     consola.info({
       message: `[${component}] ${message}`,
       ...(metadata && { metadata }),
@@ -133,7 +131,7 @@ export const logger: Logger = {
   /**
    * Log warnings
    */
-  warn: (component: string, message: string, metadata?: any) => {
+  warn: (component: string, message: string, metadata?: LogMetadata) => {
     consola.warn({
       message: `[${component}] ${message}`,
       ...(metadata && { metadata }),
@@ -144,7 +142,7 @@ export const logger: Logger = {
   /**
    * Log errors with proper error handling
    */
-  error: (component: string, message: string, error?: any, metadata?: any) => {
+  error: (component: string, message: string, error?: LogError, metadata?: LogMetadata) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorStack = error instanceof Error ? error.stack : undefined;
 
@@ -160,7 +158,7 @@ export const logger: Logger = {
   /**
    * Log debug information (only in development)
    */
-  debug: (component: string, message: string, metadata?: any) => {
+  debug: (component: string, message: string, metadata?: LogMetadata) => {
     if (isDevelopment) {
       consola.debug({
         message: `[${component}] ${message}`,
@@ -173,7 +171,7 @@ export const logger: Logger = {
   /**
    * Log when services are ready
    */
-  ready: (component: string, message: string, metadata?: any) => {
+  ready: (component: string, message: string, metadata?: LogMetadata) => {
     consola.ready({
       message: `[${component}] ${message}`,
       ...(metadata && { metadata }),
@@ -228,7 +226,7 @@ export const logger: Logger = {
       command: string,
       username: string,
       id: string,
-      error?: any,
+      error?: LogError,
       guildId?: string,
     ) => {
       logger.error("Command", `Error executing ${command}`, error, {
@@ -270,9 +268,9 @@ export const logger: Logger = {
   database: {
     connected: (service: string) =>
       logger.success("Database", `${service} connected`),
-    error: (service: string, error: any) =>
+    error: (service: string, error: LogError) =>
       logger.error("Database", `${service} connection failed`, error),
-    operation: (operation: string, details?: any) =>
+    operation: (operation: string, details?: LogMetadata) =>
       logger.debug("Database", operation, details),
   },
 
@@ -282,7 +280,7 @@ export const logger: Logger = {
   api: {
     started: (host: string, port: number) =>
       logger.ready("API", `Server listening on http://${host}:${port}`),
-    error: (error: any) => logger.error("API", "Server error", error),
+    error: (error: LogError) => logger.error("API", "Server error", error),
     request: (method: string, path: string, status: number) =>
       logger.debug("API", `${method} ${path} - ${status}`),
   },
@@ -293,7 +291,7 @@ export const logger: Logger = {
   discord: {
     shardLaunched: (shardId: number) =>
       logger.success("Discord", `Shard ${shardId} launched`),
-    shardError: (shardId: number, error: any) =>
+    shardError: (shardId: number, error: LogError) =>
       logger.error("Discord", `Shard ${shardId} error`, error),
     ready: (username: string, guildCount: number) =>
       logger.ready(
