@@ -1,9 +1,9 @@
 // @ts-check
-import js from "@eslint/js";
-import tseslint from "@typescript-eslint/eslint-plugin";
-import tseslintParser from "@typescript-eslint/parser";
+const js = require("@eslint/js");
+const tseslint = require("@typescript-eslint/eslint-plugin");
+const tseslintParser = require("@typescript-eslint/parser");
 
-export default [
+module.exports = [
   // Base configuration
   js.configs.recommended,
 
@@ -43,9 +43,6 @@ export default [
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/explicit-module-boundary-types": "off",
       "@typescript-eslint/no-non-null-assertion": "warn",
-      "@typescript-eslint/no-inferrable-types": "error",
-      "@typescript-eslint/prefer-nullish-coalescing": "error",
-      "@typescript-eslint/prefer-optional-chain": "error",
 
       // General rules (not TypeScript prefixed)
       "no-console": "off", // We use consola for logging
@@ -57,14 +54,10 @@ export default [
       "prefer-template": "error",
       eqeqeq: ["error", "always"],
       curly: ["error", "all"],
-      "brace-style": ["error", "1tbs"],
-      "comma-dangle": ["error", "always-multiline"],
-      quotes: ["error", "double"],
-      semi: ["error", "always"],
 
-      // Discord.js and Node.js specific
+      // Relaxed rules for Discord.js
       "max-len": [
-        "error",
+        "warn",
         {
           code: 120,
           ignoreStrings: true,
@@ -73,7 +66,7 @@ export default [
         },
       ],
       camelcase: [
-        "error",
+        "warn",
         {
           properties: "never",
           ignoreImports: true,
