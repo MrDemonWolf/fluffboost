@@ -69,7 +69,6 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         author,
         addedBy: interaction.user.id,
         status: "Pending",
-        guildId: guild.id,
       },
     });
 
