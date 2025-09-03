@@ -1,10 +1,10 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
-import consola from "consola";
 
 import type { Client, CommandInteraction, User } from "discord.js";
 
 import { info, success, error } from "../utils/commandLogger";
 import posthog from "../utils/posthog";
+import logger from "../utils/logger";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("about")
@@ -69,9 +69,9 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     });
   } catch (err) {
     error("about", interaction.user.username, interaction.user.id);
-    consola.error(`[About Command] Error executing command: ${err}`, {
-      badge: true,
-      timestamp: new Date(),
+    logger.error("Command", "Error executing about command", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: "about",
     });
   }
 }
