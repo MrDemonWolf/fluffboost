@@ -7,25 +7,30 @@ import type {
   TextChannel,
 } from "discord.js";
 
-import { info, success, error } from "../../utils/commandLogger";
+import logger from "../../utils/logger";
 import { prisma } from "../../database";
 import { guildExists } from "../../utils/guildDatabase";
-import logger from "../../utils/logger";
 
 export default async function (
   client: Client,
-  interaction: CommandInteraction
+  interaction: CommandInteraction,
 ) {
   try {
-    info("setup channel", interaction.user.username, interaction.user.id);
+    logger.commands.executing(
+      "setup channel",
+      interaction.user.username,
+      interaction.user.id,
+    );
 
-    if (!interaction.guildId) return;
+    if (!interaction.guildId) {
+return;
+}
 
     const options = interaction.options as CommandInteractionOptionResolver;
 
     const motivationChannel = options.getChannel(
       "channel",
-      true
+      true,
     ) as TextChannel;
 
     await guildExists(interaction.guildId);
@@ -44,9 +49,18 @@ export default async function (
       flags: MessageFlags.Ephemeral,
     });
 
-    success("setup", interaction.user.username, interaction.user.id);
+    logger.commands.success(
+      "setup",
+      interaction.user.username,
+      interaction.user.id,
+    );
   } catch (err) {
-    error("setup", interaction.user.username, interaction.user.id);
+    logger.commands.error(
+      "setup",
+      interaction.user.username,
+      interaction.user.id,
+      err,
+    );
     logger.error("Command", "Error executing setup channel command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "setup channel",

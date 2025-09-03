@@ -1,5 +1,3 @@
-import consola from "consola";
-
 import type { Client } from "discord.js";
 
 import posthog from "../utils/posthog";
@@ -19,7 +17,7 @@ export async function pruneGuilds(client: Client) {
     if (guildsInDb.length === 0) {
       logger.info(
         "Discord Event Logger",
-        "No guilds found in the database for cleanup"
+        "No guilds found in the database for cleanup",
       );
       return;
     }
@@ -27,18 +25,18 @@ export async function pruneGuilds(client: Client) {
     if (guildsInCache.length === 0) {
       logger.info(
         "Discord Event Logger",
-        "No guilds found in the cache for cleanup"
+        "No guilds found in the cache for cleanup",
       );
       return;
     }
     const guildsToRemove = guildsInDb.filter(
-      (guild) => client.guilds.cache.get(guild.guildId) === undefined
+      (guild) => client.guilds.cache.get(guild.guildId) === undefined,
     );
 
     if (guildsToRemove.length === 0) {
       logger.info(
         "Discord Event Logger",
-        "No guilds to remove from the database"
+        "No guilds to remove from the database",
       );
       return;
     }
@@ -75,13 +73,13 @@ export async function pruneGuilds(client: Client) {
           err,
           {
             guildId: guild.guildId,
-          }
+          },
         );
       }
     });
     logger.info(
       "Discord Event Logger",
-      "Finished cleaning up guilds in the database"
+      "Finished cleaning up guilds in the database",
     );
   } catch (err) {
     logger.error(
@@ -90,7 +88,7 @@ export async function pruneGuilds(client: Client) {
       err,
       {
         operation: "pruneGuilds",
-      }
+      },
     );
   }
 }
@@ -100,13 +98,13 @@ export async function ensureGuildExists(client: Client) {
     const currentGuilds = await prisma.guild.findMany({});
     const guildsToAdd = client.guilds.cache.filter(
       (guild) =>
-        !currentGuilds.some((currentGuild) => currentGuild.guildId === guild.id)
+        !currentGuilds.some((currentGuild) => currentGuild.guildId === guild.id),
     );
 
     if (guildsToAdd.size === 0) {
       logger.info(
         "Discord Event Logger",
-        "No new guilds to add to the database"
+        "No new guilds to add to the database",
       );
       return;
     }
@@ -146,13 +144,13 @@ export async function ensureGuildExists(client: Client) {
             operation: "ensureGuildExists",
             guildId: guild.id,
             guildName: guild.name,
-          }
+          },
         );
       }
     });
     logger.info(
       "Discord Event Logger",
-      "Finished ensuring guilds exist in the database"
+      "Finished ensuring guilds exist in the database",
     );
   } catch (err) {
     logger.error(
@@ -161,7 +159,7 @@ export async function ensureGuildExists(client: Client) {
       err,
       {
         operation: "ensureGuildExists",
-      }
+      },
     );
   }
 }

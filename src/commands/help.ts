@@ -2,9 +2,8 @@ import type { Client, CommandInteraction } from "discord.js";
 
 import { SlashCommandBuilder, MessageFlags } from "discord.js";
 
-import { info, success, error } from "../utils/commandLogger";
-import posthog from "../utils/posthog";
 import logger from "../utils/logger";
+import posthog from "../utils/posthog";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("help")
@@ -12,7 +11,11 @@ export const slashCommand = new SlashCommandBuilder()
 
 export function execute(client: Client, interaction: CommandInteraction) {
   try {
-    info("help", interaction.user.username, interaction.user.id);
+    logger.commands.executing(
+      "help",
+      interaction.user.username,
+      interaction.user.id,
+    );
 
     interaction.reply({
       content: `**Commands**\n
@@ -24,7 +27,11 @@ export function execute(client: Client, interaction: CommandInteraction) {
       flags: MessageFlags.Ephemeral,
     });
 
-    success("help", interaction.user.username, interaction.user.id);
+    logger.commands.success(
+      "help",
+      interaction.user.username,
+      interaction.user.id,
+    );
 
     posthog.capture({
       distinctId: interaction.user.id,
@@ -36,7 +43,12 @@ export function execute(client: Client, interaction: CommandInteraction) {
       },
     });
   } catch (err) {
-    error("help", interaction.user.username, interaction.user.id);
+    logger.commands.error(
+      "help",
+      interaction.user.username,
+      interaction.user.id,
+      err,
+    );
     logger.error("Command", "Error executing help command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "help",
