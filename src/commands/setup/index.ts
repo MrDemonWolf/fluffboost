@@ -26,26 +26,28 @@ export const slashCommand = new SlashCommandBuilder()
     return subCommand
       .setName("channel")
       .setDescription(
-        "Setup the channel in which the bot will send the message to every day at 8am CST"
+        "Setup the channel in which the bot will send the message to every day at 8am CST",
       )
       .addChannelOption((option) =>
         option
           .setName("channel")
           .setDescription("Where the bot will send the message to")
           .addChannelTypes(ChannelType.GuildText)
-          .setRequired(true)
+          .setRequired(true),
       );
   })
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 export async function execute(client: Client, interaction: CommandInteraction) {
   try {
-    if (!interaction.isChatInputCommand()) return;
+    if (!interaction.isChatInputCommand()) {
+return;
+}
 
     logger.commands.executing(
       "setup",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
     );
 
     const options = interaction.options as CommandInteractionOptionResolver;
@@ -68,7 +70,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       "setup",
       interaction.user.username,
       interaction.user.id,
-      err
+      err,
     );
     logger.error("Command", "Error executing setup command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },

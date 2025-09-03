@@ -18,27 +18,31 @@ import setup from "../commands/setup";
 
 export async function interactionCreateEvent(
   client: Client,
-  interaction: Interaction
+  interaction: Interaction,
 ) {
   try {
-    if (!interaction.isCommand()) return;
+    if (!interaction.isCommand()) {
+return;
+}
 
     logger.commands.executing(
       "interactionCreate",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
     );
 
     const { commandName } = interaction;
 
-    if (!commandName) return;
+    if (!commandName) {
+return;
+}
 
     switch (commandName) {
       case "help":
         logger.commands.success(
           "interactionCreate - help",
           interaction.user.username,
-          interaction.user.id
+          interaction.user.id,
         );
         help.execute(client, interaction);
         break;
@@ -47,7 +51,7 @@ export async function interactionCreateEvent(
         logger.commands.success(
           "interactionCreate - about",
           interaction.user.username,
-          interaction.user.id
+          interaction.user.id,
         );
         about.execute(client, interaction);
         break;
@@ -56,7 +60,7 @@ export async function interactionCreateEvent(
         logger.commands.success(
           "interactionCreate - changelog",
           interaction.user.username,
-          interaction.user.id
+          interaction.user.id,
         );
         changelog.execute(client, interaction);
         break;
@@ -64,7 +68,7 @@ export async function interactionCreateEvent(
         logger.commands.success(
           "interactionCreate - quote",
           interaction.user.username,
-          interaction.user.id
+          interaction.user.id,
         );
         quote.execute(client, interaction);
         break;
@@ -72,7 +76,7 @@ export async function interactionCreateEvent(
         logger.commands.success(
           "interactionCreate - invite",
           interaction.user.username,
-          interaction.user.id
+          interaction.user.id,
         );
         invite.execute(client, interaction);
         break;
@@ -80,7 +84,7 @@ export async function interactionCreateEvent(
         logger.commands.success(
           "interactionCreate - suggestion",
           interaction.user.username,
-          interaction.user.id
+          interaction.user.id,
         );
         suggestion.execute(client, interaction);
         break;
@@ -88,7 +92,7 @@ export async function interactionCreateEvent(
         logger.commands.success(
           "interactionCreate - admin",
           interaction.user.username,
-          interaction.user.id
+          interaction.user.id,
         );
         admin.execute(client, interaction);
         break;
@@ -96,7 +100,7 @@ export async function interactionCreateEvent(
         logger.commands.success(
           "interactionCreate - setup",
           interaction.user.username,
-          interaction.user.id
+          interaction.user.id,
         );
         setup.execute(client, interaction);
         break;
@@ -105,7 +109,7 @@ export async function interactionCreateEvent(
           "interactionCreate",
           interaction.user.username,
           interaction.user.id,
-          "Command not found"
+          "Command not found",
         );
     }
   } catch (err) {

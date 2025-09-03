@@ -16,24 +16,30 @@ import logger from "../../../utils/logger";
 export default async function (
   client: Client,
   interaction: CommandInteraction,
-  options: CommandInteractionOptionResolver
+  options: CommandInteractionOptionResolver,
 ) {
   try {
     logger.commands.executing(
       "admin quote create",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
     );
 
     const isAllowed = isUserPermitted(interaction);
 
-    if (!isAllowed) return;
+    if (!isAllowed) {
+return;
+}
 
     const quote = options.getString("quote");
     const quoteAuthor = options.getString("quote_author");
 
-    if (!quote) return interaction.reply("Please provide a quote");
-    if (!quoteAuthor) return interaction.reply("Please provide an author");
+    if (!quote) {
+return interaction.reply("Please provide a quote");
+}
+    if (!quoteAuthor) {
+return interaction.reply("Please provide an author");
+}
 
     const newQuote = await prisma.motivationQuote.create({
       data: {
@@ -57,7 +63,7 @@ export default async function (
       })
       .addFields(
         { name: "Quote", value: newQuote.quote },
-        { name: "Author", value: newQuote.author }
+        { name: "Author", value: newQuote.author },
       )
       .setFooter({
         text: `Quote ID: ${newQuote.id}`,
@@ -66,7 +72,7 @@ export default async function (
 
     if (env.MAIN_CHANNEL_ID) {
       const channel = client.channels.cache.get(
-        env.MAIN_CHANNEL_ID
+        env.MAIN_CHANNEL_ID,
       ) as TextChannel;
       if (channel?.isTextBased()) {
         await channel.send({ embeds: [embed] });
@@ -87,14 +93,14 @@ export default async function (
     logger.commands.success(
       "admin quote create",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
     );
   } catch (err) {
     logger.commands.error(
       "admin quote create",
       interaction.user.username,
       interaction.user.id,
-      err
+      err,
     );
     logger.error("Command", "Error executing admin quote create command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },

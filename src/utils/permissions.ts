@@ -13,7 +13,7 @@ export function isUserPermitted(interaction: CommandInteraction) {
       "admin command",
       interaction.user.username,
       interaction.user.id,
-      interaction.guildId || undefined
+      interaction.guildId || undefined,
     );
     interaction.reply({
       content: "You are not allowed to use this command",

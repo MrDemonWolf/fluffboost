@@ -23,7 +23,7 @@ app.use(
       env.NODE_ENV === "production"
         ? env.CORS_ORIGIN // e.g. "https://app.example.com"
         : "*",
-  })
+  }),
 );
 app.set("x-powered-by", "Fluffboost");
 

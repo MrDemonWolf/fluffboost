@@ -14,26 +14,29 @@ import { trimArray } from "../../../utils/trimArray";
 
 export default async function (
   client: Client,
-  interaction: CommandInteraction
+  interaction: CommandInteraction,
 ) {
   try {
     logger.commands.executing(
       "admin activity list",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
     );
 
     const isAllowed = isUserPermitted(interaction);
 
-    if (!isAllowed) return;
+    if (!isAllowed) {
+return;
+}
 
     const activities = await prisma.discordActivity.findMany();
 
-    if (activities.length === 0)
-      return interaction.reply({
+    if (activities.length === 0) {
+return interaction.reply({
         content: "No activities found at the moment. Feel free to add some!",
         flags: MessageFlags.Ephemeral,
       });
+}
 
     let text = "ID - Activity - Type - URL\n";
     activities.forEach((activity: DiscordActivity) => {
@@ -54,14 +57,14 @@ export default async function (
     logger.commands.success(
       "admin activity list",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
     );
   } catch (err) {
     logger.commands.error(
       "admin activity list",
       interaction.user.username,
       interaction.user.id,
-      err
+      err,
     );
     logger.error("Command", "Error in admin activity list", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
