@@ -2,7 +2,6 @@ import { MessageFlags } from "discord.js";
 
 import type { Client, Interaction, CommandInteraction } from "discord.js";
 
-import { info, success, warn } from "../utils/commandLogger";
 import logger from "../utils/logger";
 
 /**
@@ -24,7 +23,11 @@ export async function interactionCreateEvent(
   try {
     if (!interaction.isCommand()) return;
 
-    info("interactionCreate", interaction.user.username, interaction.user.id);
+    logger.commands.executing(
+      "interactionCreate",
+      interaction.user.username,
+      interaction.user.id
+    );
 
     const { commandName } = interaction;
 
@@ -32,7 +35,7 @@ export async function interactionCreateEvent(
 
     switch (commandName) {
       case "help":
-        success(
+        logger.commands.success(
           "interactionCreate - help",
           interaction.user.username,
           interaction.user.id
@@ -41,7 +44,7 @@ export async function interactionCreateEvent(
         break;
 
       case "about":
-        success(
+        logger.commands.success(
           "interactionCreate - about",
           interaction.user.username,
           interaction.user.id
@@ -50,7 +53,7 @@ export async function interactionCreateEvent(
         break;
 
       case "changelog":
-        success(
+        logger.commands.success(
           "interactionCreate - changelog",
           interaction.user.username,
           interaction.user.id
@@ -58,7 +61,7 @@ export async function interactionCreateEvent(
         changelog.execute(client, interaction);
         break;
       case "quote":
-        success(
+        logger.commands.success(
           "interactionCreate - quote",
           interaction.user.username,
           interaction.user.id
@@ -66,7 +69,7 @@ export async function interactionCreateEvent(
         quote.execute(client, interaction);
         break;
       case "invite":
-        success(
+        logger.commands.success(
           "interactionCreate - invite",
           interaction.user.username,
           interaction.user.id
@@ -74,7 +77,7 @@ export async function interactionCreateEvent(
         invite.execute(client, interaction);
         break;
       case "suggestion":
-        success(
+        logger.commands.success(
           "interactionCreate - suggestion",
           interaction.user.username,
           interaction.user.id
@@ -82,7 +85,7 @@ export async function interactionCreateEvent(
         suggestion.execute(client, interaction);
         break;
       case "admin":
-        success(
+        logger.commands.success(
           "interactionCreate - admin",
           interaction.user.username,
           interaction.user.id
@@ -90,7 +93,7 @@ export async function interactionCreateEvent(
         admin.execute(client, interaction);
         break;
       case "setup":
-        success(
+        logger.commands.success(
           "interactionCreate - setup",
           interaction.user.username,
           interaction.user.id
@@ -98,10 +101,11 @@ export async function interactionCreateEvent(
         setup.execute(client, interaction);
         break;
       default:
-        warn(
-          "interactionCreate - Command not found",
+        logger.commands.warn(
+          "interactionCreate",
           interaction.user.username,
-          interaction.user.id
+          interaction.user.id,
+          "Command not found"
         );
     }
   } catch (err) {

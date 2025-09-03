@@ -9,7 +9,6 @@ import type {
   CommandInteraction,
   CommandInteractionOptionResolver,
 } from "discord.js";
-import { info, error } from "../../utils/commandLogger";
 import logger from "../../utils/logger";
 
 /**
@@ -119,7 +118,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
   try {
     if (!interaction.isChatInputCommand()) return;
 
-    info("admin", interaction.user.username, interaction.user.id);
+    logger.commands.executing(
+      "admin",
+      interaction.user.username,
+      interaction.user.id
+    );
 
     const options = interaction.options;
 
@@ -187,7 +190,12 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         });
     }
   } catch (err) {
-    error("admin", interaction.user.username, interaction.user.id);
+    logger.commands.error(
+      "admin",
+      interaction.user.username,
+      interaction.user.id,
+      err
+    );
     logger.error("Command", "Error executing admin command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "admin",
