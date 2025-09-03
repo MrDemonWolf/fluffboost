@@ -9,11 +9,10 @@ import {
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 
-import { info, success, error } from "../utils/commandLogger";
+import logger from "../utils/logger";
 import { prisma } from "../database";
 import env from "../utils/env";
 import posthog from "../utils/posthog";
-import logger from "../utils/logger";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("suggestion")
@@ -35,7 +34,11 @@ export const slashCommand = new SlashCommandBuilder()
 
 export async function execute(client: Client, interaction: CommandInteraction) {
   try {
-    info("suggestion", interaction.user.username, interaction.user.id);
+    logger.commands.executing(
+      "suggestion",
+      interaction.user.username,
+      interaction.user.id
+    );
 
     const options = interaction.options as CommandInteractionOptionResolver;
 
@@ -114,7 +117,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       embeds: [embed],
     });
 
-    success("suggestion", interaction.user.username, interaction.user.id);
+    logger.commands.success(
+      "suggestion",
+      interaction.user.username,
+      interaction.user.id
+    );
 
     posthog.capture({
       distinctId: interaction.user.id,
