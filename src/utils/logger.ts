@@ -107,7 +107,7 @@ consola.level = isProduction ? 1 : isDevelopment ? 4 : 3; // Error only in prod,
 /**
  * Application logger with consistent formatting
  */
-export const logger = {
+export const logger: Logger = {
   /**
    * Log successful operations
    */
