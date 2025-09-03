@@ -1,11 +1,17 @@
-import { Client, CommandInteraction, MessageFlags } from "discord.js";
-import consola from "consola";
+import {
+  Client,
+  CommandInteraction,
+  EmbedBuilder,
+  MessageFlags,
+} from "discord.js";
 
 import type { DiscordActivity } from "@prisma/client";
 
 import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
+import { trimArray } from "../../../utils/trimArray";
+import logger from "../../../utils/logger";
 
 export default async function (
   client: Client,
@@ -53,6 +59,9 @@ export default async function (
       interaction.user.username,
       interaction.user.id
     );
-    console.error("admin activity list error:", err);
+    logger.error("Command", "Error in admin activity list", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: "admin activity list",
+    });
   }
 }

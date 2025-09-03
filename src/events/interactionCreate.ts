@@ -3,6 +3,7 @@ import { MessageFlags } from "discord.js";
 import type { Client, Interaction, CommandInteraction } from "discord.js";
 
 import { info, success, warn } from "../utils/commandLogger";
+import logger from "../utils/logger";
 
 /**
  * Import slash commands from the commands folder.
@@ -104,7 +105,10 @@ export async function interactionCreateEvent(
         );
     }
   } catch (err) {
-    console.log("Error executing command: ", err);
+    logger.error("Command", "Error executing command", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: interaction.isCommand() ? interaction.commandName : "unknown",
+    });
 
     const interactionWithError = interaction as CommandInteraction;
 

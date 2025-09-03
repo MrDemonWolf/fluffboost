@@ -4,6 +4,7 @@ import type { Client } from "discord.js";
 
 import posthog from "../utils/posthog";
 import { prisma } from "../database";
+import logger from "./logger";
 
 export async function pruneGuilds(client: Client) {
   try {
@@ -16,20 +17,18 @@ export async function pruneGuilds(client: Client) {
      * This is to prevent issues if cache is empty or database is empty.
      */
     if (guildsInDb.length === 0) {
-      consola.info({
-        message: `[Discord Event Logger - Clean up Guild Database] No guilds found in the database.`,
-        badge: true,
-        timestamp: new Date(),
-      });
+      logger.info(
+        "Discord Event Logger",
+        "No guilds found in the database for cleanup"
+      );
       return;
     }
 
     if (guildsInCache.length === 0) {
-      consola.info({
-        message: `[Discord Event Logger - Clean up Guild Database] No guilds found in the cache.`,
-        badge: true,
-        timestamp: new Date(),
-      });
+      logger.info(
+        "Discord Event Logger",
+        "No guilds found in the cache for cleanup"
+      );
       return;
     }
     const guildsToRemove = guildsInDb.filter(
@@ -37,18 +36,15 @@ export async function pruneGuilds(client: Client) {
     );
 
     if (guildsToRemove.length === 0) {
-      consola.info({
-        message: `[Discord Event Logger - Clean up Guild Database] No guilds to remove from the database.`,
-        badge: true,
-        timestamp: new Date(),
-      });
+      logger.info(
+        "Discord Event Logger",
+        "No guilds to remove from the database"
+      );
       return;
     }
 
-    consola.info({
-      message: `[Discord Event Logger - Clean up Guild Database] Found ${guildsToRemove.length} guilds to remove from the database.`,
-      badge: true,
-      timestamp: new Date(),
+    logger.info("Discord Event Logger", "Starting guild cleanup", {
+      guildsToRemove: guildsToRemove.length,
     });
 
     guildsToRemove.forEach(async (guild) => {
@@ -59,10 +55,8 @@ export async function pruneGuilds(client: Client) {
           },
         });
 
-        consola.success({
-          message: `[Discord Event Logger - Clean up Guild Database] Removed guild ${guild.guildId} from the database`,
-          badge: true,
-          timestamp: new Date(),
+        logger.success("Discord Event Logger", "Removed guild from database", {
+          guildId: guild.guildId,
         });
 
         posthog.capture({
@@ -75,24 +69,29 @@ export async function pruneGuilds(client: Client) {
           },
         });
       } catch (err) {
-        consola.error({
-          message: `[Discord Event Logger - Clean up Guild Database] Error removing guild from database: ${err}`,
-          badge: true,
-          timestamp: new Date(),
-        });
+        logger.error(
+          "Discord Event Logger",
+          "Error removing guild from database",
+          err,
+          {
+            guildId: guild.guildId,
+          }
+        );
       }
     });
-    consola.info({
-      message: `[Discord Event Logger - Clean up Guild Database] Finished cleaning up guilds in the database.`,
-      badge: true,
-      timestamp: new Date(),
-    });
+    logger.info(
+      "Discord Event Logger",
+      "Finished cleaning up guilds in the database"
+    );
   } catch (err) {
-    console.error({
-      message: `[Discord Event Logger - Clean up Guild Dataqbase] Error during cleaning of the database of guild: ${err}`,
-      badge: true,
-      timestamp: new Date(),
-    });
+    logger.error(
+      "Discord Event Logger",
+      "Error during cleaning of the database",
+      err,
+      {
+        operation: "pruneGuilds",
+      }
+    );
   }
 }
 
@@ -105,18 +104,15 @@ export async function ensureGuildExists(client: Client) {
     );
 
     if (guildsToAdd.size === 0) {
-      consola.info({
-        message: `[Discord Event Logger - Ensure Guild Exists] No new guilds to add to the database.`,
-        badge: true,
-        timestamp: new Date(),
-      });
+      logger.info(
+        "Discord Event Logger",
+        "No new guilds to add to the database"
+      );
       return;
     }
 
-    consola.info({
-      message: `[Discord Event Logger - Ensure Guild Exists] Found ${guildsToAdd.size} guilds to add to the database.`,
-      badge: true,
-      timestamp: new Date(),
+    logger.info("Discord Event Logger", "Adding new guilds to database", {
+      guildsToAdd: guildsToAdd.size,
     });
 
     guildsToAdd.forEach(async (guild) => {
@@ -127,10 +123,9 @@ export async function ensureGuildExists(client: Client) {
           },
         });
 
-        consola.success({
-          message: `[Discord Event Logger - ReadyEvt] Created guild ${guild.name} (ID: ${guild.id}) in the database`,
-          badge: true,
-          timestamp: new Date(),
+        logger.success("Discord Event Logger", "Created guild in database", {
+          guildId: guild.id,
+          guildName: guild.name,
         });
 
         posthog.capture({
@@ -143,24 +138,31 @@ export async function ensureGuildExists(client: Client) {
           },
         });
       } catch (err) {
-        console.error({
-          message: `[Discord Event Logger - Ensure Guild Exists] Error adding guild to the database: ${err}`,
-          badge: true,
-          timestamp: new Date(),
-        });
+        logger.error(
+          "Discord Event Logger",
+          "Error adding guild to the database",
+          err,
+          {
+            operation: "ensureGuildExists",
+            guildId: guild.id,
+            guildName: guild.name,
+          }
+        );
       }
     });
-    consola.info({
-      message: `[Discord Event Logger - ReadyEvt] Finished ensuring guilds exist in the database.`,
-      badge: true,
-      timestamp: new Date(),
-    });
+    logger.info(
+      "Discord Event Logger",
+      "Finished ensuring guilds exist in the database"
+    );
   } catch (err) {
-    console.error({
-      message: `[Discord Event Logger - Ensure Guild Exists] Error during ensuring guild exists in the database: ${err}`,
-      badge: true,
-      timestamp: new Date(),
-    });
+    logger.error(
+      "Discord Event Logger",
+      "Error during ensuring guild exists in the database",
+      err,
+      {
+        operation: "ensureGuildExists",
+      }
+    );
   }
 }
 
