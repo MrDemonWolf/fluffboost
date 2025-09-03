@@ -99,8 +99,8 @@ interface Logger {
 const isDevelopment = env.NODE_ENV === "development";
 const isProduction = env.NODE_ENV === "production";
 
-// Set log level based on environment
-consola.level = isProduction ? 1 : isDevelopment ? 4 : 3; // Error only in prod, Debug in dev, Info otherwise
+// Set log level based on environment - more verbose in production for monitoring
+consola.level = isProduction ? 3 : isDevelopment ? 4 : 3; // Info level in prod, Debug in dev
 
 /**
  * Application logger with consistent formatting
@@ -204,7 +204,9 @@ export const logger: Logger = {
       id: string,
       guildId?: string,
     ) => {
-      logger.info("Command", `Executing ${command}`, {
+      // Always log command execution in production for monitoring
+      const logMethod = isProduction ? logger.info : logger.debug;
+      logMethod("Command", `Executing ${command}`, {
         command,
         user: { username, id },
         ...(guildId && { guild: guildId }),
@@ -216,6 +218,7 @@ export const logger: Logger = {
       id: string,
       guildId?: string,
     ) => {
+      // Always log successful commands in production
       logger.success("Command", `Successfully executed ${command}`, {
         command,
         user: { username, id },
@@ -270,8 +273,11 @@ export const logger: Logger = {
       logger.success("Database", `${service} connected`),
     error: (service: string, error: LogError) =>
       logger.error("Database", `${service} connection failed`, error),
-    operation: (operation: string, details?: LogMetadata) =>
-      logger.debug("Database", operation, details),
+    operation: (operation: string, details?: LogMetadata) => {
+      // Log important database operations in production
+      const logMethod = isProduction ? logger.info : logger.debug;
+      logMethod("Database", operation, details);
+    },
   },
 
   /**
@@ -281,8 +287,16 @@ export const logger: Logger = {
     started: (host: string, port: number) =>
       logger.ready("API", `Server listening on http://${host}:${port}`),
     error: (error: LogError) => logger.error("API", "Server error", error),
-    request: (method: string, path: string, status: number) =>
-      logger.debug("API", `${method} ${path} - ${status}`),
+    request: (method: string, path: string, status: number) => {
+      // Log all API requests in production for monitoring
+      const logMethod = isProduction ? logger.info : logger.debug;
+      logMethod("API", `${method} ${path} - ${status}`, {
+        method,
+        path,
+        status,
+        timestamp: new Date().toISOString(),
+      });
+    },
   },
 
   /**
@@ -297,14 +311,27 @@ export const logger: Logger = {
       logger.ready(
         "Discord",
         `Bot ready as ${username} in ${guildCount} guilds`,
+        {
+          botUsername: username,
+          guildCount,
+          timestamp: new Date().toISOString(),
+        },
       ),
     guildJoined: (guildName: string, guildId: string, memberCount: number) =>
       logger.info("Discord", `Joined guild: ${guildName}`, {
         guildId,
+        guildName,
         memberCount,
+        action: "guild_joined",
+        timestamp: new Date().toISOString(),
       }),
     guildLeft: (guildName: string, guildId: string) =>
-      logger.info("Discord", `Left guild: ${guildName}`, { guildId }),
+      logger.info("Discord", `Left guild: ${guildName}`, {
+        guildId,
+        guildName,
+        action: "guild_left",
+        timestamp: new Date().toISOString(),
+      }),
   },
 };
 
