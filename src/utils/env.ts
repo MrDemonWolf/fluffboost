@@ -53,8 +53,12 @@ const envSchema = z.object({
       try {
         const parts = cron.split(" ");
         // Must be 5 or 6 fields, none empty
-        if (parts.length !== 5 && parts.length !== 6) return false;
-        if (parts.some((part) => part === "")) return false;
+        if (parts.length !== 5 && parts.length !== 6) {
+return false;
+}
+        if (parts.some((part) => part === "")) {
+return false;
+}
 
         // Basic validation for each of the first five fields
         const ranges = [
@@ -68,9 +72,13 @@ const envSchema = z.object({
         for (let i = 0; i < Math.min(parts.length, 5); i++) {
           const part = parts[i];
           // Allow wildcards and step values
-          if (part === "*" || part.includes("*/")) continue;
+          if (part === "*" || part.includes("*/")) {
+continue;
+}
           // Allow ranges and lists
-          if (part.includes("-") || part.includes(",")) continue;
+          if (part.includes("-") || part.includes(",")) {
+continue;
+}
           // Otherwise it must be a valid integer within range
           const num = parseInt(part, 10);
           if (isNaN(num) || num < ranges[i][0] || num > ranges[i][1]) {

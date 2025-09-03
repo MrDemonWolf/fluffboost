@@ -2,19 +2,22 @@ import { SlashCommandBuilder, OAuth2Scopes, MessageFlags } from "discord.js";
 
 import type { Client, CommandInteraction } from "discord.js";
 
-import { info, success, error } from "../utils/commandLogger";
-import posthog from "../utils/posthog";
 import logger from "../utils/logger";
+import posthog from "../utils/posthog";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("invite")
   .setDescription(
-    "Invite me to your server! Let's keep spreading paw-sitivity 🐾"
+    "Invite me to your server! Let's keep spreading paw-sitivity 🐾",
   );
 
 export function execute(client: Client, interaction: CommandInteraction) {
   try {
-    info("invite", interaction.user.username, interaction.user.id);
+    logger.commands.executing(
+      "invite",
+      interaction.user.username,
+      interaction.user.id,
+    );
 
     // generate invite link
     const inviteLink = client.generateInvite({
@@ -27,7 +30,11 @@ export function execute(client: Client, interaction: CommandInteraction) {
       flags: MessageFlags.Ephemeral,
     });
 
-    success("invite", interaction.user.username, interaction.user.id);
+    logger.commands.success(
+      "invite",
+      interaction.user.username,
+      interaction.user.id,
+    );
 
     posthog.capture({
       distinctId: interaction.user.id,
@@ -39,7 +46,12 @@ export function execute(client: Client, interaction: CommandInteraction) {
       },
     });
   } catch (err) {
-    error("invite", interaction.user.username, interaction.user.id);
+    logger.commands.error(
+      "invite",
+      interaction.user.username,
+      interaction.user.id,
+      err,
+    );
     logger.error("Command", "Error executing invite command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "invite",

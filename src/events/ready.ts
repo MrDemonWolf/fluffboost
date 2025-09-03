@@ -60,7 +60,7 @@ export async function readyEvent(client: Client) {
       `Registered ${commandNames.length} commands`,
       {
         commands: commandNames,
-      }
+      },
     );
   } catch (err) {
     logger.error("Discord", "Error during ready event", err);

@@ -37,7 +37,7 @@ export default async (client: Client) => {
     if (!activity) {
       logger.warn(
         "Discord",
-        "No custom discord activity found, using default activity"
+        "No custom discord activity found, using default activity",
       );
       return client.user?.setActivity(defaultActivity, {
         type: ActivityType[defaultActivityType],

@@ -23,7 +23,7 @@ prisma
     await prisma.$disconnect();
     logger.database.connected("Prisma");
   })
-  .catch(async (err: any) => {
+  .catch(async (err: Error) => {
     logger.database.error("Prisma", err);
     process.exit(1);
   });
@@ -35,7 +35,7 @@ redisClient
   .on("connect", () => {
     logger.database.connected("Redis");
   })
-  .on("error", (err: any) => {
+  .on("error", (err: Error) => {
     logger.database.error("Redis", err);
     process.exit(1);
   });
@@ -48,7 +48,7 @@ api.listen(api.get("port"), () => {
   logger.api.started(api.get("host"), api.get("port"));
 });
 
-api.on("error", (err) => {
+api.on("error", (err: unknown) => {
   logger.api.error(err);
   process.exit(1);
 });
@@ -64,7 +64,7 @@ const manager = new ShardingManager("./src/bot.ts", {
 manager.on("shardCreate", (shard) => {
   try {
     logger.discord.shardLaunched(shard.id);
-  } catch (err) {
+  } catch (err: unknown) {
     logger.discord.shardError(shard.id, err);
   }
 });

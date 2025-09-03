@@ -38,7 +38,9 @@ export default async function sendMotivation() {
    */
   const addedBy = await client.users.fetch(motivationQuote[0].addedBy);
 
-  if (!addedBy) return "Uknown User";
+  if (!addedBy) {
+return "Uknown User";
+}
 
   guilds.map(async (g: Guild) => {
     /**
@@ -55,7 +57,7 @@ export default async function sendMotivation() {
      * Get the motivation channel from the guild.
      */
     const motivationChannel = client.channels.cache.get(
-      g.motivationChannelId
+      g.motivationChannelId,
     ) as TextChannel;
 
     /**
@@ -66,7 +68,7 @@ export default async function sendMotivation() {
       .setColor(0xfadb7f)
       .setTitle("Motivation quote of the day 📅")
       .setDescription(
-        `**"${motivationQuote[0].quote}"**\n by ${motivationQuote[0].author}`
+        `**"${motivationQuote[0].quote}"**\n by ${motivationQuote[0].author}`,
       )
       .setAuthor({
         name: addedBy.username,

@@ -9,43 +9,51 @@ import {
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 
-import { info, success, error } from "../utils/commandLogger";
+import logger from "../utils/logger";
 import { prisma } from "../database";
 import env from "../utils/env";
 import posthog from "../utils/posthog";
-import logger from "../utils/logger";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("suggestion")
   .setDescription(
-    "Make a quote suggestion which will be reviewed by a the owner of the bot"
+    "Make a quote suggestion which will be reviewed by a the owner of the bot",
   )
   .addStringOption((option) =>
     option
       .setName("quote")
       .setDescription("The quote to be suggested")
-      .setRequired(true)
+      .setRequired(true),
   )
   .addStringOption((option) =>
     option
       .setName("author")
       .setDescription("The author of the quote")
-      .setRequired(true)
+      .setRequired(true),
   );
 
 export async function execute(client: Client, interaction: CommandInteraction) {
   try {
-    info("suggestion", interaction.user.username, interaction.user.id);
+    logger.commands.executing(
+      "suggestion",
+      interaction.user.username,
+      interaction.user.id,
+    );
 
     const options = interaction.options as CommandInteractionOptionResolver;
 
     const quote = options.getString("quote");
     const author = options.getString("author");
 
-    if (!quote) return interaction.reply("Please provide a quote");
-    if (!author) return interaction.reply("Please provide an author");
-    if (!interaction.guildId)
-      return interaction.reply("This command can only be used in a server");
+    if (!quote) {
+return interaction.reply("Please provide a quote");
+}
+    if (!author) {
+return interaction.reply("Please provide an author");
+}
+    if (!interaction.guildId) {
+return interaction.reply("This command can only be used in a server");
+}
 
     /**
      * Get the guild from the database
@@ -58,10 +66,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       },
     });
 
-    if (!guild)
-      return interaction.reply(
-        "This server is not setup yet. Please setup the bot first."
+    if (!guild) {
+return interaction.reply(
+        "This server is not setup yet. Please setup the bot first.",
       );
+}
 
     const newQuote = await prisma.suggestionQuote.create({
       data: {
@@ -69,12 +78,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         author,
         addedBy: interaction.user.id,
         status: "Pending",
-        guildId: guild.id,
       },
     });
 
     interaction.reply({
-      content: `Quote suggestion created owner will review it soon!`,
+      content: "Quote suggestion created owner will review it soon!",
       flags: MessageFlags.Ephemeral,
     });
 
@@ -82,7 +90,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
      * Send the quote suggestion to the main channel for review
      */
     const mainChannel = client.channels.cache.get(
-      env.MAIN_CHANNEL_ID as string
+      env.MAIN_CHANNEL_ID as string,
     ) as TextChannel;
 
     const embed = new EmbedBuilder()
@@ -104,7 +112,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         {
           name: "Status",
           value: newQuote.status,
-        }
+        },
       )
       .setTimestamp()
       .setFooter({
@@ -115,7 +123,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       embeds: [embed],
     });
 
-    success("suggestion", interaction.user.username, interaction.user.id);
+    logger.commands.success(
+      "suggestion",
+      interaction.user.username,
+      interaction.user.id,
+    );
 
     posthog.capture({
       distinctId: interaction.user.id,
@@ -130,7 +142,12 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       },
     });
   } catch (err) {
-    error("suggestion", interaction.user.username, interaction.user.id);
+    logger.commands.error(
+      "suggestion",
+      interaction.user.username,
+      interaction.user.id,
+      err,
+    );
     logger.error("Command", "Error executing suggestion command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "suggestion",
