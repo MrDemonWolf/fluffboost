@@ -2,17 +2,20 @@ import { Client, CommandInteraction, MessageFlags } from "discord.js";
 
 import type { MotivationQuote } from "@prisma/client";
 
-import { info, success, error } from "../../../utils/commandLogger";
+import logger from "../../../utils/logger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
-import logger from "../../../utils/logger";
 
 export default async function (
   client: Client,
   interaction: CommandInteraction
 ) {
   try {
-    info("admin quote list", interaction.user.username, interaction.user.id);
+    logger.commands.executing(
+      "admin quote list",
+      interaction.user.username,
+      interaction.user.id
+    );
 
     const isAllowed = isUserPermitted(interaction);
 
@@ -41,9 +44,18 @@ export default async function (
       flags: MessageFlags.Ephemeral,
     });
 
-    success("admin quote list", interaction.user.username, interaction.user.id);
+    logger.commands.success(
+      "admin quote list",
+      interaction.user.username,
+      interaction.user.id
+    );
   } catch (err) {
-    error("admin quote list", interaction.user.username, interaction.user.id);
+    logger.commands.error(
+      "admin quote list",
+      interaction.user.username,
+      interaction.user.id,
+      err
+    );
     logger.error("Command", "Error executing admin quote list command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "admin quote list",

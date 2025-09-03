@@ -2,10 +2,9 @@ import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 
 import type { Client, CommandInteraction } from "discord.js";
 
-import { info, success, error } from "../utils/commandLogger";
+import logger from "../utils/logger";
 import { prisma } from "../database";
 import posthog from "../utils/posthog";
-import logger from "../utils/logger";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("quote")
@@ -13,7 +12,11 @@ export const slashCommand = new SlashCommandBuilder()
 
 export async function execute(client: Client, interaction: CommandInteraction) {
   try {
-    info("quote", interaction.user.username, interaction.user.id);
+    logger.commands.executing(
+      "quote",
+      interaction.user.username,
+      interaction.user.id
+    );
 
     /**
      * Find a random motivation quote from the database.
@@ -72,7 +75,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       embeds: [motivationEmbed],
     });
 
-    success("quote", interaction.user.username, interaction.user.id);
+    logger.commands.success(
+      "quote",
+      interaction.user.username,
+      interaction.user.id
+    );
 
     posthog.capture({
       distinctId: interaction.user.id,
@@ -85,7 +92,12 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       },
     });
   } catch (err) {
-    error("quote", interaction.user.username, interaction.user.id);
+    logger.commands.error(
+      "quote",
+      interaction.user.username,
+      interaction.user.id,
+      err
+    );
     logger.error("Command", "Error executing quote command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "quote",

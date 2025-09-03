@@ -7,11 +7,10 @@ import {
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 
-import { info, success, error } from "../../../utils/commandLogger";
+import logger from "../../../utils/logger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
 import env from "../../../utils/env";
-import logger from "../../../utils/logger";
 
 export default async function (
   client: Client,
@@ -19,7 +18,11 @@ export default async function (
   options: CommandInteractionOptionResolver
 ) {
   try {
-    info("admin quote remove", interaction.user.username, interaction.user.id);
+    logger.commands.executing(
+      "admin quote remove",
+      interaction.user.username,
+      interaction.user.id
+    );
 
     const isAllowed = isUserPermitted(interaction);
 
@@ -55,13 +58,18 @@ export default async function (
       flags: MessageFlags.Ephemeral,
     });
 
-    success(
-      `admin quote remove with ${quoteId} `,
+    logger.commands.success(
+      `admin quote remove with ${quoteId}`,
       interaction.user.username,
       interaction.user.id
     );
   } catch (err) {
-    error("admin quote remove", interaction.user.username, interaction.user.id);
+    logger.commands.error(
+      "admin quote remove",
+      interaction.user.username,
+      interaction.user.id,
+      err
+    );
     logger.error("Command", "Error executing admin quote remove command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "admin quote remove",
