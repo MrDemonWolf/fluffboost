@@ -29,7 +29,7 @@ app.set("x-powered-by", "Fluffboost");
 
 /**
  * Use verbose logs in development, concise logs in production
- * Skip logging for health check requests from Coolify (curl/*) and localhost IPs
+ * Skip logging for health check requests from Coolify (curl/*), Pulsetic monitoring, and localhost IPs
  */
 const skipHealthChecks = (req: express.Request) => {
   const userAgent = req.get("User-Agent") || "";
@@ -37,6 +37,11 @@ const skipHealthChecks = (req: express.Request) => {
 
   // Skip if User-Agent starts with curl/ (Coolify health checks)
   if (userAgent.startsWith("curl/")) {
+    return true;
+  }
+
+  // Skip if User-Agent contains pulsetic (Pulsetic monitoring)
+  if (userAgent.toLowerCase().includes("pulsetic")) {
     return true;
   }
 
