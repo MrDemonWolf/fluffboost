@@ -33,6 +33,29 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 
 # Change Log
 
+## Version 1.8.0 Released (on September 3, 2025)
+
+### New Features
+
+- **Enhanced Quote Command Embeds:** Improved quote command embeds with author avatar and footer for a more engaging user experience.
+- **Updated Invite Link Generation:** Invite links now include all required OAuth scopes for seamless bot integration.
+
+### Documentation
+
+- **Migration Guides:** Added comprehensive Queue and Worker Migration Guides to assist with system transitions.
+- **Enhanced README:** Expanded README with detailed development setup instructions, available scripts, and CI pipeline information.
+
+### Refactor
+
+- **Unified Logging System:** Implemented structured logging across API, bot commands, events, and workers for better monitoring and debugging.
+
+### Chores
+
+- **CI Workflow Implementation:** Introduced comprehensive CI workflow with automated tests, security checks, and Docker build verification.
+- **ESLint Configuration:** Added ESLint configuration and updated lint/type-check scripts for improved code quality standards.
+- **Database Schema Updates:** Updated database schema for suggestions to track updates and simplified field structures.
+- **Code Cleanup:** Removed unused queue utility and legacy command logger to streamline the codebase.
+
 ## Version 1.7.0 Released (on July 28, 2025)
 
 ### New Features
