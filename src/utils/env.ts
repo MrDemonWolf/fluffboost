@@ -100,7 +100,7 @@ continue;
   HOST: z.string().optional(),
   PORT: z.string().optional(),
   CORS_ORIGIN: z.string().default("*"),
-  VERSION: z.string().default("unknown"),
+  VERSION: z.string().default("1.8.0"),
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
