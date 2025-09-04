@@ -67,7 +67,7 @@ const worker = new Worker("motivation", async (job) => {
 **Key Benefits**: Jobs survive server restarts, automatic retries, better error handling, and you can scale workers independently.
 
 - ✅ **Function-based approach** (no classes)
-- ✅ **No environment variables** (permanent migration)
+- ✅ **No temporary feature flags** (eliminates ephemeral runtime toggles while retaining necessary environment configuration like Redis URLs, concurrency settings, and backoff parameters)
 - ✅ **Separate queues and workers** into different folders
 - ✅ **Per-server scheduling** for motivation messages
 - ✅ **Clean file organization** with dedicated folders
@@ -126,7 +126,6 @@ export const createWorker = (
   processor: (job: any) => Promise<void>,
   options: {
     concurrency?: number;
-    attempts?: number;
   } = {}
 ) => {
   const worker = new Worker(queueName, processor, {
@@ -154,6 +153,8 @@ export const createWorker = (
   return worker;
 };
 ```
+
+**Note**: Retry configuration (attempts, backoff, removeOnComplete, removeOnFail) should be configured on the Queue via `defaultJobOptions` when creating the queue, not on the Worker. Workers only handle processing and concurrency settings.
 
 ## Step 2: Create Individual Workers
 
@@ -361,7 +362,7 @@ export const startWorkerSystem = () => {
     logger.info("BullMQ worker system started successfully");
   } catch (error) {
     logger.error("Failed to start worker system:", error);
-    process.exit(1);
+    throw new Error(`Worker system startup failed: ${error.message}`);
   }
 };
 
@@ -400,7 +401,12 @@ process.on("SIGTERM", async () => {
 
 // Start the system if this file is run directly
 if (require.main === module) {
-  startWorkerSystem();
+  try {
+    startWorkerSystem();
+  } catch (error) {
+    logger.error("Failed to start worker system from CLI:", error);
+    process.exit(1);
+  }
 }
 ```
 
@@ -496,51 +502,48 @@ Add worker monitoring to your health endpoint:
 // Add to your existing API routes (likely in src/api/routes/)
 app.get("/health/workers", async (req, res) => {
   try {
-    const [
-      motivationWaiting,
-      motivationActive,
-      motivationCompleted,
-      motivationFailed,
-    ] = await Promise.all([
-      motivationQueue.getWaiting(),
-      motivationQueue.getActive(),
-      motivationQueue.getCompleted(),
-      motivationQueue.getFailed(),
+    // Use efficient getJobCounts() instead of materializing full job arrays
+    const [motivationCounts, activityCounts] = await Promise.all([
+      motivationQueue.getJobCounts(),
+      activityQueue.getJobCounts(),
     ]);
 
-    const [activityWaiting, activityActive, activityCompleted, activityFailed] =
+    // Calculate throughput efficiently by sampling recent completed jobs
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+
+    const [motivationRecentCompleted, activityRecentCompleted] =
       await Promise.all([
-        activityQueue.getWaiting(),
-        activityQueue.getActive(),
-        activityQueue.getCompleted(),
-        activityQueue.getFailed(),
+        // Get last 1000 completed jobs efficiently (most recent first)
+        motivationQueue.getJobs(["completed"], -1000, -1),
+        activityQueue.getJobs(["completed"], -1000, -1),
       ]);
+
+    // Count jobs completed in the last hour
+    const motivationLastHour = motivationRecentCompleted.filter(
+      (job) => (job.finishedOn || 0) > oneHourAgo
+    ).length;
+
+    const activityLastHour = activityRecentCompleted.filter(
+      (job) => (job.finishedOn || 0) > oneHourAgo
+    ).length;
 
     const workerHealth = {
       motivation: {
-        waiting: motivationWaiting.length,
-        active: motivationActive.length,
-        completed: motivationCompleted.length,
-        failed: motivationFailed.length,
+        waiting: motivationCounts.waiting,
+        active: motivationCounts.active,
+        completed: motivationCounts.completed,
+        failed: motivationCounts.failed,
         throughput: {
-          lastHour: motivationCompleted.filter(
-            (job) =>
-              new Date(job.finishedOn || 0) >
-              new Date(Date.now() - 60 * 60 * 1000)
-          ).length,
+          lastHour: motivationLastHour,
         },
       },
       activity: {
-        waiting: activityWaiting.length,
-        active: activityActive.length,
-        completed: activityCompleted.length,
-        failed: activityFailed.length,
+        waiting: activityCounts.waiting,
+        active: activityCounts.active,
+        completed: activityCounts.completed,
+        failed: activityCounts.failed,
         throughput: {
-          lastHour: activityCompleted.filter(
-            (job) =>
-              new Date(job.finishedOn || 0) >
-              new Date(Date.now() - 60 * 60 * 1000)
-          ).length,
+          lastHour: activityLastHour,
         },
       },
     };
