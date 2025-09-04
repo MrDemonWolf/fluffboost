@@ -36,11 +36,16 @@ export default async function sendMotivation() {
   /**
    * Get the user who added the motivation quote.
    */
-  const addedBy = await client.users.fetch(motivationQuote[0].addedBy);
-
-  if (!addedBy) {
-return "Uknown User";
-}
+  let addedBy;
+  try {
+    addedBy = await client.users.fetch(motivationQuote[0].addedBy);
+  } catch (error) {
+    logger.error("Worker", "Failed to fetch user who added the quote", error, {
+      userId: motivationQuote[0].addedBy,
+      quoteId: motivationQuote[0].id,
+    });
+    addedBy = null;
+  }
 
   guilds.map(async (g: Guild) => {
     /**
@@ -71,9 +76,9 @@ return "Uknown User";
         `**"${motivationQuote[0].quote}"**\n by ${motivationQuote[0].author}`,
       )
       .setAuthor({
-        name: addedBy.username,
-        url: addedBy.displayAvatarURL(),
-        iconURL: addedBy.displayAvatarURL(),
+        name: addedBy ? addedBy.username : "Unknown User",
+        url: addedBy ? addedBy.displayAvatarURL() : undefined,
+        iconURL: addedBy ? addedBy.displayAvatarURL() : undefined,
       })
       .setFooter({
         text: "Powered by MrDemonWolf, Inc.",
