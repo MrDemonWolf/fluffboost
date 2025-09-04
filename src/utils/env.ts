@@ -1,6 +1,5 @@
 import { z } from "zod";
 import dotenv from "dotenv";
-import consola from "consola";
 
 dotenv.config();
 
@@ -53,8 +52,12 @@ const envSchema = z.object({
       try {
         const parts = cron.split(" ");
         // Must be 5 or 6 fields, none empty
-        if (parts.length !== 5 && parts.length !== 6) return false;
-        if (parts.some((part) => part === "")) return false;
+        if (parts.length !== 5 && parts.length !== 6) {
+return false;
+}
+        if (parts.some((part) => part === "")) {
+return false;
+}
 
         // Basic validation for each of the first five fields
         const ranges = [
@@ -68,9 +71,13 @@ const envSchema = z.object({
         for (let i = 0; i < Math.min(parts.length, 5); i++) {
           const part = parts[i];
           // Allow wildcards and step values
-          if (part === "*" || part.includes("*/")) continue;
+          if (part === "*" || part.includes("*/")) {
+continue;
+}
           // Allow ranges and lists
-          if (part.includes("-") || part.includes(",")) continue;
+          if (part.includes("-") || part.includes(",")) {
+continue;
+}
           // Otherwise it must be a valid integer within range
           const num = parseInt(part, 10);
           if (isNaN(num) || num < ranges[i][0] || num > ranges[i][1]) {
@@ -93,6 +100,7 @@ const envSchema = z.object({
   HOST: z.string().optional(),
   PORT: z.string().optional(),
   CORS_ORIGIN: z.string().default("*"),
+  VERSION: z.string().default("1.8.0"),
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
@@ -102,12 +110,8 @@ type EnvSchema = z.infer<typeof envSchema>;
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
-  consola.error({
-    message: "Invalid environment variables found",
-    additional: JSON.stringify(parsed.error.format(), null, 4),
-    badge: true,
-    timestamp: new Date(),
-  });
+  console.error("❌ Invalid environment variables found");
+  console.error(JSON.stringify(parsed.error.format(), null, 4));
   process.exit(1);
 }
 

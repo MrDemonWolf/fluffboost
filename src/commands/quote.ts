@@ -1,9 +1,8 @@
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
-import consola from "consola";
 
 import type { Client, CommandInteraction } from "discord.js";
 
-import { info, success, error } from "../utils/commandLogger";
+import logger from "../utils/logger";
 import { prisma } from "../database";
 import posthog from "../utils/posthog";
 
@@ -13,7 +12,11 @@ export const slashCommand = new SlashCommandBuilder()
 
 export async function execute(client: Client, interaction: CommandInteraction) {
   try {
-    info("quote", interaction.user.username, interaction.user.id);
+    logger.commands.executing(
+      "quote",
+      interaction.user.username,
+      interaction.user.id,
+    );
 
     /**
      * Find a random motivation quote from the database.
@@ -25,23 +28,28 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       take: 1,
     });
 
-    if (!motivationQuote[0])
-      return interaction.reply(
-        "No motivation quote found.  Please try again later!"
+    if (!motivationQuote[0]) {
+return interaction.reply(
+        "No motivation quote found.  Please try again later!",
       );
+}
 
     /**
      * Create a custom embed for the motivation message.
      */
     const addedBy = await client.users.fetch(motivationQuote[0].addedBy);
     if (!addedBy) {
-      consola.error({
-        message: `[Quote Command] Could not fetch user with ID ${motivationQuote[0].addedBy}`,
-        badge: true,
-        timestamp: new Date(),
-      });
+      logger.error(
+        "Command",
+        "Could not fetch user for quote",
+        new Error(`User ID not found: ${motivationQuote[0].addedBy}`),
+        {
+          userId: motivationQuote[0].addedBy,
+          command: "quote",
+        },
+      );
       return interaction.reply(
-        "Failed to fetch quote information. Please try again later!"
+        "Failed to fetch quote information. Please try again later!",
       );
     }
 
@@ -49,7 +57,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       .setColor(0xfadb7f)
       .setTitle("Motivation quote of the day 📅")
       .setDescription(
-        `**"${motivationQuote[0].quote}"**\n by ${motivationQuote[0].author}`
+        `**"${motivationQuote[0].quote}"**\n by ${motivationQuote[0].author}`,
       )
       .setAuthor({
         name: addedBy.username,
@@ -68,7 +76,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       embeds: [motivationEmbed],
     });
 
-    success("quote", interaction.user.username, interaction.user.id);
+    logger.commands.success(
+      "quote",
+      interaction.user.username,
+      interaction.user.id,
+    );
 
     posthog.capture({
       distinctId: interaction.user.id,
@@ -81,11 +93,15 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       },
     });
   } catch (err) {
-    error("quote", interaction.user.username, interaction.user.id);
-    consola.error({
-      message: `[Quote Command] Error executing command: ${err}`,
-      badge: true,
-      timestamp: new Date(),
+    logger.commands.error(
+      "quote",
+      interaction.user.username,
+      interaction.user.id,
+      err,
+    );
+    logger.error("Command", "Error executing quote command", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: "quote",
     });
   }
 }

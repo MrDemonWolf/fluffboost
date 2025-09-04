@@ -5,32 +5,47 @@ import {
   TextChannel,
   MessageFlags,
 } from "discord.js";
-import consola from "consola";
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 
-import { info, success, error } from "../../../utils/commandLogger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
 import env from "../../../utils/env";
+import logger from "../../../utils/logger";
 
 export default async function (
   client: Client,
   interaction: CommandInteraction,
-  options: CommandInteractionOptionResolver
+  options: CommandInteractionOptionResolver,
 ) {
   try {
-    info("admin quote create", interaction.user.username, interaction.user.id);
+    logger.commands.executing(
+      "admin quote create",
+      interaction.user.username,
+      interaction.user.id,
+    );
 
     const isAllowed = isUserPermitted(interaction);
 
-    if (!isAllowed) return;
+    if (!isAllowed) {
+return;
+}
 
     const quote = options.getString("quote");
     const quoteAuthor = options.getString("quote_author");
 
-    if (!quote) return interaction.reply("Please provide a quote");
-    if (!quoteAuthor) return interaction.reply("Please provide an author");
+    if (!quote) {
+      return interaction.reply({
+        content: "Please provide a quote",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+    if (!quoteAuthor) {
+      return interaction.reply({
+        content: "Please provide an author",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
 
     const newQuote = await prisma.motivationQuote.create({
       data: {
@@ -54,7 +69,7 @@ export default async function (
       })
       .addFields(
         { name: "Quote", value: newQuote.quote },
-        { name: "Author", value: newQuote.author }
+        { name: "Author", value: newQuote.author },
       )
       .setFooter({
         text: `Quote ID: ${newQuote.id}`,
@@ -63,17 +78,17 @@ export default async function (
 
     if (env.MAIN_CHANNEL_ID) {
       const channel = client.channels.cache.get(
-        env.MAIN_CHANNEL_ID
+        env.MAIN_CHANNEL_ID,
       ) as TextChannel;
       if (channel?.isTextBased()) {
         await channel.send({ embeds: [embed] });
       } else {
-        consola.warn(
-          `Main channel not found or not text-based. ID: ${env.MAIN_CHANNEL_ID}`
-        );
+        logger.warn("Admin", "Main channel not found or not text-based", {
+          channelId: env.MAIN_CHANNEL_ID,
+        });
       }
     } else {
-      consola.warn("MAIN_CHANNEL_ID not configured");
+      logger.warn("Admin", "MAIN_CHANNEL_ID not configured");
     }
 
     await interaction.reply({
@@ -81,17 +96,21 @@ export default async function (
       flags: MessageFlags.Ephemeral,
     });
 
-    success(
+    logger.commands.success(
       "admin quote create",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
     );
   } catch (err) {
-    error("admin quote create", interaction.user.username, interaction.user.id);
-    consola.error({
-      message: `[Admin Quote Create Command] Error executing command: ${err}`,
-      badge: true,
-      timestamp: new Date(),
+    logger.commands.error(
+      "admin quote create",
+      interaction.user.username,
+      interaction.user.id,
+      err,
+    );
+    logger.error("Command", "Error executing admin quote create command", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: "admin quote create",
     });
   }
 }

@@ -1,9 +1,9 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
-import consola from "consola";
 
 import type { Client, CommandInteraction, User } from "discord.js";
 
-import { info, success, error } from "../utils/commandLogger";
+import env from "../utils/env";
+import logger from "../utils/logger";
 import posthog from "../utils/posthog";
 
 export const slashCommand = new SlashCommandBuilder()
@@ -12,7 +12,11 @@ export const slashCommand = new SlashCommandBuilder()
 
 export async function execute(client: Client, interaction: CommandInteraction) {
   try {
-    info("about", interaction.user.username, interaction.user.id);
+    logger.commands.executing(
+      "about",
+      interaction.user.username,
+      interaction.user.id,
+    );
 
     const { username } = client.user as User;
 
@@ -20,7 +24,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       .setColor(0xfadb7f)
       .setTitle(`About ${username} 🐾`)
       .setDescription(
-        `Hi! I'm ${username}, a discord bot created by MrDemonWolf, Inc. I was created to help you with your daily tasks and to make your life easier. I'm currently in ${client.guilds.cache.size} guilds.`
+        `Hi! I'm ${username}, a discord bot created by MrDemonWolf, Inc. I was created to help you with your daily tasks and to make your life easier. I'm currently in ${client.guilds.cache.size} guilds.`,
       )
       .addFields(
         {
@@ -45,9 +49,9 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         },
         {
           name: "Version",
-          value: "1.4.0",
+          value: env.VERSION || process.env.npm_package_version || "unknown",
           inline: true,
-        }
+        },
       )
       .setFooter({
         text: "Made with ❤️ by MrDemonWolf, Inc.",
@@ -56,7 +60,11 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       embeds: [embed],
     });
 
-    success("about", interaction.user.username, interaction.user.id);
+    logger.commands.success(
+      "about",
+      interaction.user.username,
+      interaction.user.id,
+    );
 
     posthog.capture({
       distinctId: interaction.user.id,
@@ -68,10 +76,15 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       },
     });
   } catch (err) {
-    error("about", interaction.user.username, interaction.user.id);
-    consola.error(`[About Command] Error executing command: ${err}`, {
-      badge: true,
-      timestamp: new Date(),
+    logger.commands.error(
+      "about",
+      interaction.user.username,
+      interaction.user.id,
+      err,
+    );
+    logger.error("Command", "Error executing about command", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: "about",
     });
   }
 }

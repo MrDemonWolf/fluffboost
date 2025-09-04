@@ -4,8 +4,7 @@ import type { Client } from "discord.js";
 
 import { prisma } from "../../database";
 import env from "../../utils/env";
-
-import consola from "consola";
+import logger from "../../utils/logger";
 
 export default async (client: Client) => {
   try {
@@ -36,12 +35,10 @@ export default async (client: Client) => {
     const activity = await randomActivity();
 
     if (!activity) {
-      consola.warn({
-        message:
-          "[Discord] No custom discord activity found, using default activity.",
-        badge: true,
-        timestamp: new Date(),
-      });
+      logger.warn(
+        "Discord",
+        "No custom discord activity found, using default activity",
+      );
       return client.user?.setActivity(defaultActivity, {
         type: ActivityType[defaultActivityType],
         url: defaultActivityUrl,
@@ -53,16 +50,11 @@ export default async (client: Client) => {
       url: activity.url || undefined,
     });
 
-    consola.success({
-      message: "[Discord] Activity has been set",
-      badge: true,
-      timestamp: new Date(),
+    logger.success("Discord", "Activity has been set", {
+      activity: activity.activity,
+      type: activity.type,
     });
   } catch (err) {
-    consola.error({
-      message: `[Discord] Error setting custom discord activity: ${err}`,
-      badge: true,
-      timestamp: new Date(),
-    });
+    logger.error("Discord", "Error setting custom discord activity", err);
   }
 };

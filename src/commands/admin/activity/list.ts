@@ -1,30 +1,40 @@
-import { Client, CommandInteraction, MessageFlags } from "discord.js";
-import consola from "consola";
+import {
+  Client,
+  CommandInteraction,
+  MessageFlags,
+} from "discord.js";
 
 import type { DiscordActivity } from "@prisma/client";
 
-import { info, success, error } from "../../../utils/commandLogger";
+import logger from "../../../utils/logger";
 import { isUserPermitted } from "../../../utils/permissions";
 import { prisma } from "../../../database";
 
 export default async function (
   client: Client,
-  interaction: CommandInteraction
+  interaction: CommandInteraction,
 ) {
   try {
-    info("admin activity list", interaction.user.username, interaction.user.id);
+    logger.commands.executing(
+      "admin activity list",
+      interaction.user.username,
+      interaction.user.id,
+    );
 
     const isAllowed = isUserPermitted(interaction);
 
-    if (!isAllowed) return;
+    if (!isAllowed) {
+return;
+}
 
     const activities = await prisma.discordActivity.findMany();
 
-    if (activities.length === 0)
-      return interaction.reply({
+    if (activities.length === 0) {
+return interaction.reply({
         content: "No activities found at the moment. Feel free to add some!",
         flags: MessageFlags.Ephemeral,
       });
+}
 
     let text = "ID - Activity - Type - URL\n";
     activities.forEach((activity: DiscordActivity) => {
@@ -42,17 +52,21 @@ export default async function (
       ],
     });
 
-    success(
+    logger.commands.success(
       "admin activity list",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
     );
   } catch (err) {
-    error(
+    logger.commands.error(
       "admin activity list",
       interaction.user.username,
-      interaction.user.id
+      interaction.user.id,
+      err,
     );
-    console.error("admin activity list error:", err);
+    logger.error("Command", "Error in admin activity list", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: "admin activity list",
+    });
   }
 }

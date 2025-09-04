@@ -2,7 +2,7 @@ import { MessageFlags } from "discord.js";
 
 import type { Client, Interaction, CommandInteraction } from "discord.js";
 
-import { info, success, warn } from "../utils/commandLogger";
+import logger from "../utils/logger";
 
 /**
  * Import slash commands from the commands folder.
@@ -18,93 +18,105 @@ import setup from "../commands/setup";
 
 export async function interactionCreateEvent(
   client: Client,
-  interaction: Interaction
+  interaction: Interaction,
 ) {
   try {
-    if (!interaction.isCommand()) return;
+    if (!interaction.isCommand()) {
+return;
+}
 
-    info("interactionCreate", interaction.user.username, interaction.user.id);
+    logger.commands.executing(
+      "interactionCreate",
+      interaction.user.username,
+      interaction.user.id,
+    );
 
     const { commandName } = interaction;
 
-    if (!commandName) return;
+    if (!commandName) {
+return;
+}
 
     switch (commandName) {
       case "help":
-        success(
+        logger.commands.success(
           "interactionCreate - help",
           interaction.user.username,
-          interaction.user.id
+          interaction.user.id,
         );
         help.execute(client, interaction);
         break;
 
       case "about":
-        success(
+        logger.commands.success(
           "interactionCreate - about",
           interaction.user.username,
-          interaction.user.id
+          interaction.user.id,
         );
         about.execute(client, interaction);
         break;
 
       case "changelog":
-        success(
+        logger.commands.success(
           "interactionCreate - changelog",
           interaction.user.username,
-          interaction.user.id
+          interaction.user.id,
         );
         changelog.execute(client, interaction);
         break;
       case "quote":
-        success(
+        logger.commands.success(
           "interactionCreate - quote",
           interaction.user.username,
-          interaction.user.id
+          interaction.user.id,
         );
         quote.execute(client, interaction);
         break;
       case "invite":
-        success(
+        logger.commands.success(
           "interactionCreate - invite",
           interaction.user.username,
-          interaction.user.id
+          interaction.user.id,
         );
         invite.execute(client, interaction);
         break;
       case "suggestion":
-        success(
+        logger.commands.success(
           "interactionCreate - suggestion",
           interaction.user.username,
-          interaction.user.id
+          interaction.user.id,
         );
         suggestion.execute(client, interaction);
         break;
       case "admin":
-        success(
+        logger.commands.success(
           "interactionCreate - admin",
           interaction.user.username,
-          interaction.user.id
+          interaction.user.id,
         );
         admin.execute(client, interaction);
         break;
       case "setup":
-        success(
+        logger.commands.success(
           "interactionCreate - setup",
           interaction.user.username,
-          interaction.user.id
+          interaction.user.id,
         );
         setup.execute(client, interaction);
         break;
       default:
-        warn(
-          "interactionCreate - Command not found",
+        logger.commands.warn(
+          "interactionCreate",
           interaction.user.username,
-          interaction.user.id
+          interaction.user.id,
+          "Command not found",
         );
     }
   } catch (err) {
-    console.log("Error executing command: ", err);
+    logger.error("Command", "Error executing command", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: interaction.isCommand() ? interaction.commandName : "unknown",
+    });
 
     const interactionWithError = interaction as CommandInteraction;
 

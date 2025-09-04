@@ -1,8 +1,8 @@
-import consola from "consola";
 import cron from "node-cron";
 
 import client from "../bot";
 import env from "../utils/env";
+import logger from "../utils/logger";
 
 /**
  * Worker Jobs
@@ -20,7 +20,7 @@ export default function worker() {
       },
       {
         timezone: "America/Chicago",
-      }
+      },
     );
 
     cron.schedule(
@@ -30,12 +30,10 @@ export default function worker() {
       },
       {
         timezone: "America/Chicago",
-      }
+      },
     );
-    return consola.info({
-      message: `[Worker] Running in Development Mode`,
-      badge: true,
-      timestamp: new Date(),
+    return logger.info("Worker", "Running in Development Mode", {
+      activityCron: env.DISCORD_ACTIVITY_CRON || "*/5 * * * *",
     });
   }
 
@@ -47,7 +45,7 @@ export default function worker() {
     },
     {
       timezone: "America/Chicago",
-    }
+    },
   );
 
   cron.schedule(
@@ -57,11 +55,10 @@ export default function worker() {
     },
     {
       timezone: "America/Chicago",
-    }
+    },
   );
-  consola.success({
-    message: "[Worker] Running in Production Mode",
-    badge: true,
-    timestamp: new Date(),
+  logger.success("Worker", "Running in Production Mode", {
+    motivationCron: "0 8 * * *",
+    activityCron: env.DISCORD_ACTIVITY_CRON || "*/30 * * * *",
   });
 }
