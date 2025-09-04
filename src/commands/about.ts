@@ -2,6 +2,7 @@ import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 
 import type { Client, CommandInteraction, User } from "discord.js";
 
+import env from "../utils/env";
 import logger from "../utils/logger";
 import posthog from "../utils/posthog";
 
@@ -48,7 +49,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         },
         {
           name: "Version",
-          value: "1.4.0",
+          value: env.VERSION || process.env.npm_package_version || "unknown",
           inline: true,
         },
       )
