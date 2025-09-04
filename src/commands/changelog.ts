@@ -18,74 +18,61 @@ export function execute(client: Client, interaction: CommandInteraction) {
     );
     const embed = new EmbedBuilder()
       .setColor(0xfadb7f)
-      .setTitle("✨ FluffBoost Changelog - Version 1.7.0! ✨")
+      .setTitle("✨ FluffBoost Changelog - Version 1.8.0! ✨")
       .setDescription(
         "Check out the latest enhancements and new features in FluffBoost!",
       )
       .addFields(
         // New Features
         {
-          name: "🚀 New Feature: Activity Deletion Command",
-          value: "You can now delete user activities using a new command!",
+          name: "🚀 New Feature: Enhanced Quote Command Embeds",
+          value: "Quote embeds now include author avatars and improved footer styling for a more engaging experience!",
         },
         {
-          name: "🚀 New Feature: Ephemeral Messages",
+          name: "🚀 New Feature: Updated Invite Link Generation",
           value:
-            "Commands can now respond with private messages visible only to you, ensuring less chat clutter.",
-        },
-        {
-          name: "🚀 New Feature: Quote Creation Notifications",
-          value:
-            "Get notified directly when a new quote is successfully created.",
+            "Invite links now properly include all required OAuth scopes for seamless bot integration.",
         },
 
-        // Core System Improvements
+        // Documentation
         {
-          name: "⚙️ Improved: Database & Cache Stability",
+          name: "📚 Documentation: Migration Guides",
           value:
-            "Enhanced pre-pruning checks prevent errors if the database or cache is unexpectedly empty.",
+            "Added comprehensive Queue and Worker Migration Guides to help with system transitions.",
         },
         {
-          name: "⚙️ Improved: Task Scheduling",
+          name: "📚 Documentation: Enhanced README",
           value:
-            "Adjusted the frequencies of various background tasks for better performance.",
-        },
-        {
-          name: "⚙️ Improved: Environment Variable Handling",
-          value:
-            "Better validation for environment variables at bot startup ensures smoother deployment.",
-        },
-        {
-          name: "⚙️ Improved: Internal Logging",
-          value:
-            "Switched to a more robust and structured logging system, aiding in better debugging and monitoring.",
+            "Expanded README with detailed development setup instructions, available scripts, and CI pipeline details.",
         },
 
-        // Command & User Experience Enhancements
+        // Refactor & System Improvements
         {
-          name: "✨ Enhanced: Quote Management",
+          name: "⚙️ Refactor: Unified Logging System",
           value:
-            "Both the quote removal command and the internal logic for creating quotes have been improved.",
+            "Implemented structured logging across all components including API, bot commands, events, and workers for better monitoring.",
         },
         {
-          name: "✨ Enhanced: Admin Command Handling",
+          name: "⚙️ Improved: Database Schema Updates",
           value:
-            "Better management and more informative error reporting for all administrative commands.",
+            "Updated database schema for suggestions to track updates and simplified field structures for better performance.",
+        },
+
+        // Development & CI Improvements
+        {
+          name: "🔧 Chores: CI Workflow Implementation",
+          value:
+            "Introduced comprehensive CI workflow with automated tests, security checks, and Docker build verification.",
         },
         {
-          name: "✨ Enhanced: Input Validation & Error Handling",
+          name: "🔧 Chores: ESLint Configuration",
           value:
-            "Significant improvements to how user input is validated, leading to clearer error messages for you.",
+            "Added ESLint configuration and updated lint/type-check scripts for improved code quality standards.",
         },
         {
-          name: "✨ Enhanced: User Feedback",
+          name: "🔧 Chores: Code Cleanup",
           value:
-            "Updated success messages for setting activities and refined the visual appearance of suggestion embeds.",
-        },
-        {
-          name: "✨ Enhanced: Code Quality",
-          value:
-            "General improvements in code readability and consistency across the entire bot's codebase.",
+            "Removed unused queue utility and legacy command logger to streamline the codebase and reduce technical debt.",
         },
       )
       .setTimestamp()
