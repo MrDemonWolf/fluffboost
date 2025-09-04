@@ -1,9 +1,8 @@
-import consola from "consola";
-
 import type { Guild } from "discord.js";
 
 import { prisma } from "../database";
 import posthog from "../utils/posthog";
+import logger from "../utils/logger";
 
 export async function guildDeleteEvent(guild: Guild): Promise<void> {
   try {
@@ -19,10 +18,9 @@ export async function guildDeleteEvent(guild: Guild): Promise<void> {
     /**
      * Show the bot has left a guild in the console.
      */
-    consola.success({
-      message: `[Discord] Left a guild ${guild.name} | Guild ID: ${guild.id}. Removed guild from database.`,
-      badge: true,
-      timestamp: new Date(),
+    logger.discord.guildLeft(guild.name, guild.id);
+    logger.database.operation("Guild removed from database", {
+      guildId: guild.id,
     });
 
     posthog.capture({
@@ -35,10 +33,9 @@ export async function guildDeleteEvent(guild: Guild): Promise<void> {
       },
     });
   } catch (err) {
-    consola.error({
-      message: `[Discord] Error leaving guild: ${err}`,
-      badge: true,
-      timestamp: new Date(),
+    logger.error("Discord", "Error leaving guild", err, {
+      guildId: guild.id,
+      guildName: guild.name,
     });
   }
 }

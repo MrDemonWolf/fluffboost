@@ -72,6 +72,76 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 - **Activity Type Replacement:** Replaced `WATCHING` activity type with `STREAMING` where appropriate for better clarity and Discord's current activity types.
 - **Quote Command Clarity:** Renamed quote-related commands for improved clarity and user understanding.
 
+## Development
+
+### Prerequisites
+
+- Node.js 20.x or 22.x
+- pnpm 9.x
+- PostgreSQL database
+- Redis server
+
+### Setup
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/MrDemonWolf/fluffboost.git
+   cd fluffboost
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   pnpm install
+   ```
+
+3. Copy environment variables:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+4. Configure your environment variables in `.env`
+
+5. Generate Prisma client:
+
+   ```bash
+   pnpm db:generate
+   ```
+
+6. Run database migrations:
+   ```bash
+   pnpm db:push
+   ```
+
+### Development Scripts
+
+- `pnpm dev` - Start development server with hot reload
+- `pnpm build` - Build the project for production
+- `pnpm start` - Start production server
+- `pnpm lint` - Run ESLint and auto-fix issues
+- `pnpm lint:check` - Check code style without fixing
+- `pnpm tsc` - Run TypeScript type checking
+- `pnpm db:studio` - Open Prisma Studio to view/edit database
+
+### Code Quality
+
+This project uses:
+
+- **ESLint** with TypeScript support for code linting
+- **TypeScript** for type safety
+- **Prisma** for database management
+- **Consola** for centralized logging
+
+The CI pipeline automatically runs:
+
+- TypeScript type checking
+- ESLint linting
+- Build verification
+- Security audits
+- Docker build tests
+
 ## License
 
 ![GitHub license](https://img.shields.io/github/license/MrDemonWolf/fluffboost.svg?style=for-the-badge&logo=github)

@@ -40,7 +40,7 @@ model SuggestionQuote {
   addedBy   String
   status    String   @default("pending")
   createdAt DateTime @default(now())
-  guildId   String
+  updatedAt DateTime @updatedAt
 }
 
 model DiscordActivity {

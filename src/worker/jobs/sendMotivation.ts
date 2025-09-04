@@ -1,10 +1,10 @@
-import consola from "consola";
 import { TextChannel, EmbedBuilder } from "discord.js";
 
 import { prisma } from "../../database";
 import client from "../../bot";
 import type { Guild } from "@prisma/client";
 import posthog from "../../utils/posthog";
+import logger from "../../utils/logger";
 
 export default async function sendMotivation() {
   /**
@@ -28,19 +28,24 @@ export default async function sendMotivation() {
     take: 1,
   });
 
-  if (!motivationQuote[0])
-    return consola.error({
-      message: "No motivation quote found in the database.",
-      badge: true,
-      timestamp: new Date(),
-    });
+  if (!motivationQuote[0]) {
+    logger.error("Worker", "No motivation quote found in the database");
+    return;
+  }
 
   /**
    * Get the user who added the motivation quote.
    */
-  const addedBy = await client.users.fetch(motivationQuote[0].addedBy);
-
-  if (!addedBy) return "Uknown User";
+  let addedBy;
+  try {
+    addedBy = await client.users.fetch(motivationQuote[0].addedBy);
+  } catch (error) {
+    logger.error("Worker", "Failed to fetch user who added the quote", error, {
+      userId: motivationQuote[0].addedBy,
+      quoteId: motivationQuote[0].id,
+    });
+    addedBy = null;
+  }
 
   guilds.map(async (g: Guild) => {
     /**
@@ -48,17 +53,16 @@ export default async function sendMotivation() {
      * We are filtering out guilds that don't have the motivation channel set.
      */
     if (!g.motivationChannelId) {
-      return consola.error({
-        message: `[Discord Event Logger - Send Motivation] Guild ${g.guildId} does not have a motivation channel set.`,
-        badge: true,
-        timestamp: new Date(),
+      logger.warn("Worker", "Guild does not have a motivation channel set", {
+        guildId: g.guildId,
       });
+      return;
     }
     /**
      * Get the motivation channel from the guild.
      */
     const motivationChannel = client.channels.cache.get(
-      g.motivationChannelId
+      g.motivationChannelId,
     ) as TextChannel;
 
     /**
@@ -69,12 +73,12 @@ export default async function sendMotivation() {
       .setColor(0xfadb7f)
       .setTitle("Motivation quote of the day 📅")
       .setDescription(
-        `**"${motivationQuote[0].quote}"**\n by ${motivationQuote[0].author}`
+        `**"${motivationQuote[0].quote}"**\n by ${motivationQuote[0].author}`,
       )
       .setAuthor({
-        name: addedBy.username,
-        url: addedBy.displayAvatarURL(),
-        iconURL: addedBy.displayAvatarURL(),
+        name: addedBy ? addedBy.username : "Unknown User",
+        url: addedBy ? addedBy.displayAvatarURL() : undefined,
+        iconURL: addedBy ? addedBy.displayAvatarURL() : undefined,
       })
       .setFooter({
         text: "Powered by MrDemonWolf, Inc.",
