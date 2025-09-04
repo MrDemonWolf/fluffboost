@@ -35,11 +35,17 @@ return;
     const quoteAuthor = options.getString("quote_author");
 
     if (!quote) {
-return interaction.reply("Please provide a quote");
-}
+      return interaction.reply({
+        content: "Please provide a quote",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
     if (!quoteAuthor) {
-return interaction.reply("Please provide an author");
-}
+      return interaction.reply({
+        content: "Please provide an author",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
 
     const newQuote = await prisma.motivationQuote.create({
       data: {
