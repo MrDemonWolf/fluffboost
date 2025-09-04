@@ -1,9 +1,8 @@
-import consola from "consola";
-
 import type { Guild } from "discord.js";
 
 import { prisma } from "../database";
 import posthog from "../utils/posthog";
+import logger from "../utils/logger";
 
 export async function guildCreateEvent(guild: Guild): Promise<void> {
   try {
@@ -11,11 +10,7 @@ export async function guildCreateEvent(guild: Guild): Promise<void> {
      * Show the bot has joined a new guild in the console.
      * This is shared across all shards.
      */
-    consola.success({
-      message: `[Discord] Joined a new guild: ${guild.name} | Guild ID: ${guild.id}`,
-      badge: true,
-      timestamp: new Date(),
-    });
+    logger.discord.guildJoined(guild.name, guild.id, guild.memberCount);
 
     /**
      * Add the guild to the database.
@@ -26,10 +21,8 @@ export async function guildCreateEvent(guild: Guild): Promise<void> {
       },
     });
 
-    consola.success({
-      message: `[Discord] Added guild ${guildData.guildId} to the database.`,
-      badge: true,
-      timestamp: new Date(),
+    logger.database.operation("Guild added to database", {
+      guildId: guildData.guildId,
     });
 
     posthog.capture({
@@ -42,10 +35,9 @@ export async function guildCreateEvent(guild: Guild): Promise<void> {
       },
     });
   } catch (err) {
-    consola.error({
-      message: `[Discord] Error joining a new guild: ${err}`,
-      badge: true,
-      timestamp: new Date(),
+    logger.error("Discord", "Error joining a new guild", err, {
+      guildId: guild.id,
+      guildName: guild.name,
     });
   }
 }

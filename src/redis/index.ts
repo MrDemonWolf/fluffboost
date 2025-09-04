@@ -1,5 +1,4 @@
 import Redis from "ioredis";
-import consola from "consola";
 
 import env from "../utils/env";
 

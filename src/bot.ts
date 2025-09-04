@@ -1,7 +1,7 @@
 import { Client, Events, GatewayIntentBits } from "discord.js";
-import consola from "consola";
 
 import env from "./utils/env";
+import logger from "./utils/logger";
 
 /**
  * Import events from the events folder.
@@ -29,11 +29,7 @@ client.on(Events.ClientReady, async () => {
     readyEvent(client);
     worker();
   } catch (err) {
-    consola.error({
-      message: `[Discord Client Ready] Error during client ready event: ${err}`,
-      badge: true,
-      timestamp: new Date(),
-    });
+    logger.error("Discord", "Error during client ready event", err);
     process.exit(1);
   }
 });

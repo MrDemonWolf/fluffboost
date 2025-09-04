@@ -1,9 +1,8 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
-import consola from "consola";
 
 import type { Client, CommandInteraction } from "discord.js";
 
-import { info, success, error } from "../utils/commandLogger";
+import logger from "../utils/logger";
 import posthog from "../utils/posthog";
 
 export const slashCommand = new SlashCommandBuilder()
@@ -12,12 +11,16 @@ export const slashCommand = new SlashCommandBuilder()
 
 export function execute(client: Client, interaction: CommandInteraction) {
   try {
-    info("changelog", interaction.user.username, interaction.user.id);
+    logger.commands.executing(
+      "changelog",
+      interaction.user.username,
+      interaction.user.id,
+    );
     const embed = new EmbedBuilder()
       .setColor(0xfadb7f)
       .setTitle("✨ FluffBoost Changelog - Version 1.7.0! ✨")
       .setDescription(
-        "Check out the latest enhancements and new features in FluffBoost!"
+        "Check out the latest enhancements and new features in FluffBoost!",
       )
       .addFields(
         // New Features
@@ -83,7 +86,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
           name: "✨ Enhanced: Code Quality",
           value:
             "General improvements in code readability and consistency across the entire bot's codebase.",
-        }
+        },
       )
       .setTimestamp()
       .setFooter({
@@ -95,7 +98,11 @@ export function execute(client: Client, interaction: CommandInteraction) {
       flags: MessageFlags.Ephemeral,
     });
 
-    success("changelog", interaction.user.username, interaction.user.id);
+    logger.commands.success(
+      "changelog",
+      interaction.user.username,
+      interaction.user.id,
+    );
 
     posthog.capture({
       distinctId: interaction.user.id,
@@ -107,11 +114,15 @@ export function execute(client: Client, interaction: CommandInteraction) {
       },
     });
   } catch (err) {
-    error("changelog", interaction.user.username, interaction.user.id);
-    consola.error({
-      message: `[Changelog Command] Error executing command: ${err}`,
-      badge: true,
-      timestamp: new Date(),
+    logger.commands.error(
+      "changelog",
+      interaction.user.username,
+      interaction.user.id,
+      err,
+    );
+    logger.error("Command", "Error executing changelog command", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: "changelog",
     });
   }
 }

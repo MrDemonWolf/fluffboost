@@ -4,7 +4,6 @@ import {
   ChannelType,
   MessageFlags,
 } from "discord.js";
-import consola from "consola";
 
 import type {
   SlashCommandSubcommandBuilder,
@@ -13,7 +12,7 @@ import type {
   CommandInteractionOptionResolver,
 } from "discord.js";
 
-import { info, error } from "../../utils/commandLogger";
+import logger from "../../utils/logger";
 
 /**
  * Import subcommands
@@ -27,23 +26,29 @@ export const slashCommand = new SlashCommandBuilder()
     return subCommand
       .setName("channel")
       .setDescription(
-        "Setup the channel in which the bot will send the message to every day at 8am CST"
+        "Setup the channel in which the bot will send the message to every day at 8am CST",
       )
       .addChannelOption((option) =>
         option
           .setName("channel")
           .setDescription("Where the bot will send the message to")
           .addChannelTypes(ChannelType.GuildText)
-          .setRequired(true)
+          .setRequired(true),
       );
   })
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 export async function execute(client: Client, interaction: CommandInteraction) {
   try {
-    if (!interaction.isChatInputCommand()) return;
+    if (!interaction.isChatInputCommand()) {
+return;
+}
 
-    info("setup", interaction.user.username, interaction.user.id);
+    logger.commands.executing(
+      "setup",
+      interaction.user.username,
+      interaction.user.id,
+    );
 
     const options = interaction.options as CommandInteractionOptionResolver;
 
@@ -61,11 +66,15 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         break;
     }
   } catch (err) {
-    error("setup", interaction.user.username, interaction.user.id);
-    consola.error({
-      message: `[Setup Command] Error executing command: ${err}`,
-      badge: true,
-      timestamp: new Date(),
+    logger.commands.error(
+      "setup",
+      interaction.user.username,
+      interaction.user.id,
+      err,
+    );
+    logger.error("Command", "Error executing setup command", err, {
+      user: { username: interaction.user.username, id: interaction.user.id },
+      command: "setup",
     });
   }
 }
