@@ -142,7 +142,12 @@ export const logger: Logger = {
   /**
    * Log errors with proper error handling
    */
-  error: (component: string, message: string, error?: LogError, metadata?: LogMetadata) => {
+  error: (
+    component: string,
+    message: string,
+    error?: LogError,
+    metadata?: LogMetadata
+  ) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorStack = error instanceof Error ? error.stack : undefined;
 
@@ -186,7 +191,7 @@ export const logger: Logger = {
     operation: string,
     username: string,
     userId: string,
-    guildId?: string,
+    guildId?: string
   ) => {
     logger.warn("Security", `Unauthorized ${operation} attempt`, {
       user: { username, id: userId },
@@ -202,7 +207,7 @@ export const logger: Logger = {
       command: string,
       username: string,
       id: string,
-      guildId?: string,
+      guildId?: string
     ) => {
       // Always log command execution in production for monitoring
       const logMethod = isProduction ? logger.info : logger.debug;
@@ -216,7 +221,7 @@ export const logger: Logger = {
       command: string,
       username: string,
       id: string,
-      guildId?: string,
+      guildId?: string
     ) => {
       // Always log successful commands in production
       logger.success("Discord - Command", `Successfully executed ${command}`, {
@@ -230,7 +235,7 @@ export const logger: Logger = {
       username: string,
       id: string,
       error?: LogError,
-      guildId?: string,
+      guildId?: string
     ) => {
       logger.error("Discord - Command", `Error executing ${command}`, error, {
         command,
@@ -243,19 +248,23 @@ export const logger: Logger = {
       username: string,
       id: string,
       message?: string,
-      guildId?: string,
+      guildId?: string
     ) => {
-      logger.warn("Discord - Command", message || `Warning executing ${command}`, {
-        command,
-        user: { username, id },
-        ...(guildId && { guild: guildId }),
-      });
+      logger.warn(
+        "Discord - Command",
+        message || `Warning executing ${command}`,
+        {
+          command,
+          user: { username, id },
+          ...(guildId && { guild: guildId }),
+        }
+      );
     },
     unauthorized: (
       command: string,
       username: string,
       id: string,
-      guildId?: string,
+      guildId?: string
     ) => {
       logger.warn("Discord - Command", `Unauthorized access to ${command}`, {
         command,
@@ -304,9 +313,16 @@ export const logger: Logger = {
    */
   discord: {
     shardLaunched: (shardId: number) =>
-      logger.success("Discord - Event (Shard Launched)", `Shard ${shardId} launched`),
+      logger.success(
+        "Discord - Event (Shard Launched)",
+        `Shard ${shardId} launched`
+      ),
     shardError: (shardId: number, error: LogError) =>
-      logger.error("Discord - Event (Shard Error)", `Shard ${shardId} error`, error),
+      logger.error(
+        "Discord - Event (Shard Error)",
+        `Shard ${shardId} error`,
+        error
+      ),
     ready: (username: string, guildCount: number) =>
       logger.ready(
         "Discord - Event (Ready)",
@@ -315,7 +331,7 @@ export const logger: Logger = {
           botUsername: username,
           guildCount,
           timestamp: new Date().toISOString(),
-        },
+        }
       ),
     guildJoined: (guildName: string, guildId: string, memberCount: number) =>
       logger.info("Discord", `Joined guild: ${guildName}`, {

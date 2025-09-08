@@ -9,13 +9,13 @@ import { prisma } from "../../../database";
 export default async function (
   client: Client,
   interaction: CommandInteraction,
-  options: CommandInteractionOptionResolver,
+  options: CommandInteractionOptionResolver
 ) {
   try {
     logger.commands.executing(
       "admin activity delete",
       interaction.user.username,
-      interaction.user.id,
+      interaction.user.id
     );
 
     const isAllowed = isUserPermitted(interaction);
@@ -59,14 +59,14 @@ export default async function (
     logger.commands.success(
       "admin activity delete",
       interaction.user.username,
-      interaction.user.id,
+      interaction.user.id
     );
   } catch (err) {
     logger.commands.error(
       "admin activity delete",
       interaction.user.username,
       interaction.user.id,
-      err,
+      err
     );
     logger.error("Discord - Command", "Error in admin activity delete", err, {
       user: { username: interaction.user.username, id: interaction.user.id },

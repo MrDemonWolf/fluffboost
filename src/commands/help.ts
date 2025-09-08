@@ -14,7 +14,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
     logger.commands.executing(
       "help",
       interaction.user.username,
-      interaction.user.id,
+      interaction.user.id
     );
 
     interaction.reply({
@@ -30,7 +30,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
     logger.commands.success(
       "help",
       interaction.user.username,
-      interaction.user.id,
+      interaction.user.id
     );
 
     posthog.capture({
@@ -47,7 +47,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
       "help",
       interaction.user.username,
       interaction.user.id,
-      err,
+      err
     );
     logger.error("Discord - Command", "Error executing help command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
