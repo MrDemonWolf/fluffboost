@@ -198,7 +198,7 @@ return;
       interaction.user.id,
       err,
     );
-    logger.error("Command", "Error executing admin command", err, {
+    logger.error("Discord - Command", "Error executing admin command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "admin",
     });

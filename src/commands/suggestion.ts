@@ -148,7 +148,7 @@ return interaction.reply(
       interaction.user.id,
       err,
     );
-    logger.error("Command", "Error executing suggestion command", err, {
+    logger.error("Discord - Command", "Error executing suggestion command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "suggestion",
     });

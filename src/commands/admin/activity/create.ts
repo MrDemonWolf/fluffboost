@@ -61,7 +61,7 @@ return interaction.reply("Please provide a type");
       interaction.user.id,
       err,
     );
-    logger.error("Command", "Error executing admin activity add command", err, {
+    logger.error("Discord - Command", "Error executing admin activity add command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "admin activity add",
     });

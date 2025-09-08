@@ -41,7 +41,7 @@ export async function pruneGuilds(client: Client) {
       return;
     }
 
-    logger.info("Discord Event Logger", "Starting guild cleanup", {
+    logger.info("Discord - Guild Database", "Starting guild cleanup", {
       guildsToRemove: guildsToRemove.length,
     });
 
@@ -53,7 +53,7 @@ export async function pruneGuilds(client: Client) {
           },
         });
 
-        logger.success("Discord Event Logger", "Removed guild from database", {
+        logger.success("Discord - Guild Database", "Removed guild from database", {
           guildId: guild.guildId,
         });
 
@@ -109,7 +109,7 @@ export async function ensureGuildExists(client: Client) {
       return;
     }
 
-    logger.info("Discord Event Logger", "Adding new guilds to database", {
+    logger.info("Discord - Guild Database", "Adding new guilds to database", {
       guildsToAdd: guildsToAdd.size,
     });
 
@@ -121,7 +121,7 @@ export async function ensureGuildExists(client: Client) {
           },
         });
 
-        logger.success("Discord Event Logger", "Created guild in database", {
+        logger.success("Discord - Guild Database", "Created guild in database", {
           guildId: guild.id,
           guildName: guild.name,
         });
