@@ -68,7 +68,7 @@ export default async function (
       interaction.user.id,
       err,
     );
-    logger.error("Command", "Error in admin activity delete", err, {
+    logger.error("Discord - Command", "Error in admin activity delete", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "admin activity delete",
       activityId: options.getString("id"),

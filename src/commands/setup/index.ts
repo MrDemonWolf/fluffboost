@@ -72,7 +72,7 @@ return;
       interaction.user.id,
       err,
     );
-    logger.error("Command", "Error executing setup command", err, {
+    logger.error("Discord - Command", "Error executing setup command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "setup",
     });

@@ -64,7 +64,7 @@ return interaction.reply({
       interaction.user.id,
       err,
     );
-    logger.error("Command", "Error in admin activity list", err, {
+    logger.error("Discord - Command", "Error in admin activity list", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "admin activity list",
     });

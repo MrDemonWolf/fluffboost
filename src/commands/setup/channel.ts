@@ -61,7 +61,7 @@ return;
       interaction.user.id,
       err,
     );
-    logger.error("Command", "Error executing setup channel command", err, {
+    logger.error("Discord - Command", "Error executing setup channel command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "setup channel",
     });

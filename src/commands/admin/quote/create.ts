@@ -108,7 +108,7 @@ return;
       interaction.user.id,
       err,
     );
-    logger.error("Command", "Error executing admin quote create command", err, {
+    logger.error("Discord - Command", "Error executing admin quote create command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "admin quote create",
     });

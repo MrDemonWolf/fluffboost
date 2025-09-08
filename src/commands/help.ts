@@ -49,7 +49,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
       interaction.user.id,
       err,
     );
-    logger.error("Command", "Error executing help command", err, {
+    logger.error("Discord - Command", "Error executing help command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "help",
     });

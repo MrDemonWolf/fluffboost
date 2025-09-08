@@ -36,8 +36,8 @@ export default async (client: Client) => {
 
     if (!activity) {
       logger.warn(
-        "Discord",
-        "No custom discord activity found, using default activity",
+        "Discord - Activity",
+        "No custom discord activity found, using default activity"
       );
       return client.user?.setActivity(defaultActivity, {
         type: ActivityType[defaultActivityType],
@@ -50,11 +50,11 @@ export default async (client: Client) => {
       url: activity.url || undefined,
     });
 
-    logger.success("Discord", "Activity has been set", {
+    logger.success("Discord - Activity", "Activity has been set", {
       activity: activity.activity,
       type: activity.type,
     });
   } catch (err) {
-    logger.error("Discord", "Error setting custom discord activity", err);
+    logger.error("Discord - Activity", "Error setting custom discord activity", err);
   }
 };

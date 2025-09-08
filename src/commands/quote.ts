@@ -99,7 +99,7 @@ return interaction.reply(
       interaction.user.id,
       err,
     );
-    logger.error("Command", "Error executing quote command", err, {
+    logger.error("Discord - Command", "Error executing quote command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "quote",
     });

@@ -113,7 +113,7 @@ return;
         );
     }
   } catch (err) {
-    logger.error("Command", "Error executing command", err, {
+    logger.error("Discord - Command", "Error executing command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: interaction.isCommand() ? interaction.commandName : "unknown",
     });

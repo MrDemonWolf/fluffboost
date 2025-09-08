@@ -76,7 +76,7 @@ return interaction.reply(`Quote with id ${quoteId} not found`);
       interaction.user.id,
       err,
     );
-    logger.error("Command", "Error executing admin quote remove command", err, {
+    logger.error("Discord - Command", "Error executing admin quote remove command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "admin quote remove",
       quoteId: options.getString("quote_id"),
