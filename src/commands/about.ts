@@ -15,7 +15,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     logger.commands.executing(
       "about",
       interaction.user.username,
-      interaction.user.id,
+      interaction.user.id
     );
 
     const { username } = client.user as User;
@@ -24,7 +24,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       .setColor(0xfadb7f)
       .setTitle(`About ${username} 🐾`)
       .setDescription(
-        `Hi! I'm ${username}, a discord bot created by MrDemonWolf, Inc. I was created to help you with your daily tasks and to make your life easier. I'm currently in ${client.guilds.cache.size} guilds.`,
+        `Hi! I'm ${username}, a discord bot created by MrDemonWolf, Inc. I was created to help you with your daily tasks and to make your life easier. I'm currently in ${client.guilds.cache.size} guilds.`
       )
       .addFields(
         {
@@ -51,7 +51,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
           name: "Version",
           value: env.VERSION || process.env.npm_package_version || "unknown",
           inline: true,
-        },
+        }
       )
       .setFooter({
         text: "Made with ❤️ by MrDemonWolf, Inc.",
@@ -63,7 +63,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     logger.commands.success(
       "about",
       interaction.user.username,
-      interaction.user.id,
+      interaction.user.id
     );
 
     posthog.capture({
@@ -80,7 +80,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       "about",
       interaction.user.username,
       interaction.user.id,
-      err,
+      err
     );
     logger.error("Discord - Command", "Error executing about command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
