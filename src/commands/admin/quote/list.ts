@@ -59,7 +59,7 @@ return interaction.reply({
       interaction.user.id,
       err,
     );
-    logger.error("Command", "Error executing admin quote list command", err, {
+    logger.error("Discord - Command", "Error executing admin quote list command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "admin quote list",
     });

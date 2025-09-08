@@ -35,7 +35,7 @@ export async function guildCreateEvent(guild: Guild): Promise<void> {
       },
     });
   } catch (err) {
-    logger.error("Discord", "Error joining a new guild", err, {
+    logger.error("Discord - Event (Guild Create)", "Error joining a new guild", err, {
       guildId: guild.id,
       guildName: guild.name,
     });
