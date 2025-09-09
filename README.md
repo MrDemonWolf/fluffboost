@@ -127,6 +127,8 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 
 4. Configure your environment variables in `.env`
 
+   - Optional: enable Redis debug logging by adding `DEBUG=ioredis:*` to your `.env` (the `.env.example` includes this line commented out).
+
 5. Generate Prisma client:
 
    ```bash
