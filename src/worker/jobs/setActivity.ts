@@ -45,10 +45,16 @@ export default async (client: Client) => {
         "Discord - Activity",
         "No custom discord activity found, using default activity"
       );
-      return client.user.setActivity(defaultActivity, {
+      client.user.setActivity(defaultActivity, {
         type: ActivityType[defaultActivityType],
         url: defaultActivityUrl,
       });
+      logger.success("Discord - Activity", "Activity has been set", {
+        activity: defaultActivity,
+        type: defaultActivityType,
+        url: defaultActivityUrl,
+      });
+      return true;
     }
 
     client.user.setActivity(activity.activity, {
