@@ -12,11 +12,6 @@ import { guildDeleteEvent } from "./events/guildDelete";
 import { interactionCreateEvent } from "./events/interactionCreate";
 import { shardDisconnectEvent } from "./events/shardDisconnect";
 
-/**
- * Import worker main function.
- */
-import worker from "./worker";
-
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
@@ -27,9 +22,12 @@ const client = new Client({
 client.on(Events.ClientReady, async () => {
   try {
     readyEvent(client);
-    worker();
   } catch (err) {
-    logger.error("Discord", "Error during client ready event", err);
+    logger.error(
+      "Discord - Event (Ready)",
+      "Error during client ready event",
+      err
+    );
     process.exit(1);
   }
 });
@@ -63,5 +61,21 @@ client.on(Events.ShardError, () => {
 });
 
 client.login(env.DISCORD_APPLICATION_BOT_TOKEN);
+
+/**
+ * Initialize BullMQ worker to handle background jobs.
+ */
+import { Queue } from "bullmq";
+import worker from "./worker";
+
+const queueName = "fluffboost-jobs";
+
+const queue = new Queue(queueName, {
+  connection: env.REDIS_URL
+    ? { url: env.REDIS_URL }
+    : { host: "localhost", port: 6379 },
+});
+
+worker(queue);
 
 export default client;
