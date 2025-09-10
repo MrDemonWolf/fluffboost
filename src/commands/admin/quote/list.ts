@@ -37,7 +37,7 @@ export default async function (
       text += `${quote.id} - ${quote.quote} - ${quote.author}\n`;
     });
 
-    interaction.reply({
+    await interaction.reply({
       files: [
         {
           attachment: Buffer.from(text),
