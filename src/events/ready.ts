@@ -66,9 +66,4 @@ export async function readyEvent(client: Client) {
   } catch (err) {
     logger.error("Discord - Event (Ready)", "Error during ready event", err);
   }
-
-  /**
-   * Apply the bot's activity status on first run and every 60 minutes.
-   */
-  await setActivity(client);
 }
