@@ -45,7 +45,7 @@ export async function pruneGuilds(client: Client) {
       guildsToRemove: guildsToRemove.length,
     });
 
-    guildsToRemove.forEach(async (guild) => {
+    for (const guild of guildsToRemove) {
       try {
         await prisma.guild.delete({
           where: {
@@ -80,7 +80,7 @@ export async function pruneGuilds(client: Client) {
           }
         );
       }
-    });
+    }
     logger.info(
       "Discord Event Logger",
       "Finished cleaning up guilds in the database"
@@ -117,7 +117,7 @@ export async function ensureGuildExists(client: Client) {
       guildsToAdd: guildsToAdd.size,
     });
 
-    guildsToAdd.forEach(async (guild) => {
+    for (const guild of guildsToAdd.values()) {
       try {
         await prisma.guild.create({
           data: {
@@ -155,7 +155,7 @@ export async function ensureGuildExists(client: Client) {
           }
         );
       }
-    });
+    }
     logger.info(
       "Discord Event Logger",
       "Finished ensuring guilds exist in the database"
