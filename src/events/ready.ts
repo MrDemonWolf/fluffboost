@@ -68,7 +68,7 @@ export async function readyEvent(client: Client) {
   }
 
   /**
-   * Apply the bot's activity status on first run and every 60 minutes.
+   * Apply the bot's activity status on first run then the worker will handle it every configured interval.
    */
   await setActivity(client);
 }
