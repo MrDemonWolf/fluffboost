@@ -11,7 +11,7 @@ export const slashCommand = new SlashCommandBuilder()
     "Invite me to your server! Let's keep spreading paw-sitivity 🐾"
   );
 
-export function execute(client: Client, interaction: CommandInteraction) {
+export async function execute(client: Client, interaction: CommandInteraction) {
   try {
     logger.commands.executing(
       "invite",

@@ -9,7 +9,7 @@ export const slashCommand = new SlashCommandBuilder()
   .setName("changelog")
   .setDescription("See the latest changes to the bot");
 
-export function execute(client: Client, interaction: CommandInteraction) {
+export async function execute(client: Client, interaction: CommandInteraction) {
   try {
     logger.commands.executing(
       "changelog",

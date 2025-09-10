@@ -29,11 +29,17 @@ export default async function (
     const activityType = options.getString("type", true);
     const activityUrl = options.getString("url");
 
-    if (!activity) {
-      return interaction.reply("Please provide an activity");
+    if (!activity.trim()) {
+      return await interaction.reply({
+        content: "Please provide an activity",
+        ephemeral: true,
+      });
     }
-    if (!activityType) {
-      return interaction.reply("Please provide a type");
+    if (!activityType.trim()) {
+      return await interaction.reply({
+        content: "Please provide a type",
+        ephemeral: true,
+      });
     }
 
     const newActivity = await prisma.discordActivity.create({
