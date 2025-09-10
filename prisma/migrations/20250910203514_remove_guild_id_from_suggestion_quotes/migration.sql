@@ -6,9 +6,5 @@
 
 */
 -- AlterTable
-ALTER TABLE "Guild" ADD COLUMN     "motivationTime" TEXT DEFAULT '08:00',
-ADD COLUMN     "timezone" TEXT DEFAULT 'America/Chicago';
-
--- AlterTable
 ALTER TABLE "SuggestionQuote" DROP COLUMN "guildId",
 ADD COLUMN     "updatedAt" TIMESTAMP(3) NOT NULL;
