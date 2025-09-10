@@ -10,31 +10,31 @@ import { prisma } from "../../../database";
 export default async function (
   client: Client,
   interaction: CommandInteraction,
-  options: CommandInteractionOptionResolver,
+  options: CommandInteractionOptionResolver
 ) {
   try {
     logger.commands.executing(
       "admin activity add",
       interaction.user.username,
-      interaction.user.id,
+      interaction.user.id
     );
 
     const isAllowed = isUserPermitted(interaction);
 
     if (!isAllowed) {
-return;
-}
+      return;
+    }
 
     const activity = options.getString("activity", true);
     const activityType = options.getString("type", true);
     const activityUrl = options.getString("url");
 
     if (!activity) {
-return interaction.reply("Please provide an activity");
-}
+      return interaction.reply("Please provide an activity");
+    }
     if (!activityType) {
-return interaction.reply("Please provide a type");
-}
+      return interaction.reply("Please provide a type");
+    }
 
     const newActivity = await prisma.discordActivity.create({
       data: {
@@ -52,18 +52,23 @@ return interaction.reply("Please provide a type");
     logger.commands.success(
       "admin activity add",
       interaction.user.username,
-      interaction.user.id,
+      interaction.user.id
     );
   } catch (err) {
     logger.commands.error(
       "admin activity add",
       interaction.user.username,
       interaction.user.id,
-      err,
+      err
     );
-    logger.error("Command", "Error executing admin activity add command", err, {
-      user: { username: interaction.user.username, id: interaction.user.id },
-      command: "admin activity add",
-    });
+    logger.error(
+      "Discord - Command",
+      "Error executing admin activity add command",
+      err,
+      {
+        user: { username: interaction.user.username, id: interaction.user.id },
+        command: "admin activity add",
+      }
+    );
   }
 }

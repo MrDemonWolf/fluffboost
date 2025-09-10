@@ -16,20 +16,20 @@ import logger from "../../../utils/logger";
 export default async function (
   client: Client,
   interaction: CommandInteraction,
-  options: CommandInteractionOptionResolver,
+  options: CommandInteractionOptionResolver
 ) {
   try {
     logger.commands.executing(
       "admin quote create",
       interaction.user.username,
-      interaction.user.id,
+      interaction.user.id
     );
 
     const isAllowed = isUserPermitted(interaction);
 
     if (!isAllowed) {
-return;
-}
+      return;
+    }
 
     const quote = options.getString("quote");
     const quoteAuthor = options.getString("quote_author");
@@ -69,7 +69,7 @@ return;
       })
       .addFields(
         { name: "Quote", value: newQuote.quote },
-        { name: "Author", value: newQuote.author },
+        { name: "Author", value: newQuote.author }
       )
       .setFooter({
         text: `Quote ID: ${newQuote.id}`,
@@ -78,7 +78,7 @@ return;
 
     if (env.MAIN_CHANNEL_ID) {
       const channel = client.channels.cache.get(
-        env.MAIN_CHANNEL_ID,
+        env.MAIN_CHANNEL_ID
       ) as TextChannel;
       if (channel?.isTextBased()) {
         await channel.send({ embeds: [embed] });
@@ -99,18 +99,23 @@ return;
     logger.commands.success(
       "admin quote create",
       interaction.user.username,
-      interaction.user.id,
+      interaction.user.id
     );
   } catch (err) {
     logger.commands.error(
       "admin quote create",
       interaction.user.username,
       interaction.user.id,
-      err,
+      err
     );
-    logger.error("Command", "Error executing admin quote create command", err, {
-      user: { username: interaction.user.username, id: interaction.user.id },
-      command: "admin quote create",
-    });
+    logger.error(
+      "Discord - Command",
+      "Error executing admin quote create command",
+      err,
+      {
+        user: { username: interaction.user.username, id: interaction.user.id },
+        command: "admin quote create",
+      }
+    );
   }
 }
