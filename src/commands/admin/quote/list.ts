@@ -8,29 +8,29 @@ import { prisma } from "../../../database";
 
 export default async function (
   client: Client,
-  interaction: CommandInteraction,
+  interaction: CommandInteraction
 ) {
   try {
     logger.commands.executing(
       "admin quote list",
       interaction.user.username,
-      interaction.user.id,
+      interaction.user.id
     );
 
     const isAllowed = isUserPermitted(interaction);
 
     if (!isAllowed) {
-return;
-}
+      return;
+    }
 
     const quotes = await prisma.motivationQuote.findMany();
 
     if (quotes.length === 0) {
-return interaction.reply({
+      return interaction.reply({
         content: "No quotes found. Feel free to add some!",
         flags: MessageFlags.Ephemeral,
       });
-}
+    }
 
     let text = "ID - Quote - Author\n";
     quotes.forEach((quote: MotivationQuote) => {
@@ -50,18 +50,23 @@ return interaction.reply({
     logger.commands.success(
       "admin quote list",
       interaction.user.username,
-      interaction.user.id,
+      interaction.user.id
     );
   } catch (err) {
     logger.commands.error(
       "admin quote list",
       interaction.user.username,
       interaction.user.id,
-      err,
+      err
     );
-    logger.error("Command", "Error executing admin quote list command", err, {
-      user: { username: interaction.user.username, id: interaction.user.id },
-      command: "admin quote list",
-    });
+    logger.error(
+      "Discord - Command",
+      "Error executing admin quote list command",
+      err,
+      {
+        user: { username: interaction.user.username, id: interaction.user.id },
+        command: "admin quote list",
+      }
+    );
   }
 }

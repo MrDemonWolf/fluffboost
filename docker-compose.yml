@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: fluffboost
+      POSTGRES_DB: postgres
     ports:
       - '127.0.0.1:5432:5432'
     volumes:
@@ -18,7 +18,7 @@ services:
         - '-U'
         - postgres
         - '-d'
-        - fluffboost
+        - postgres
       interval: 5s
       timeout: 20s
       retries: 10
