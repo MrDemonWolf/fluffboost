@@ -10,6 +10,7 @@ import logger from "../utils/logger";
  * Import worker jobs
  */
 import setActivity from "./jobs/setActivity";
+import sendMotivation from "./jobs/sendMotivation";
 
 const worker = new Worker(
   "fluffboost-jobs",
@@ -17,6 +18,8 @@ const worker = new Worker(
     switch (job.name) {
       case "set-activity":
         return setActivity(client);
+      case "send-motivation":
+        return sendMotivation();
       default:
         throw new Error(`No job found with name ${job.name}`);
     }
@@ -55,9 +58,23 @@ export default (queue: Queue) => {
     }
   );
 
+  queue.add(
+    "send-motivation",
+    {},
+    {
+      repeat: {
+        pattern: "0 8 * * *", // Every day at 8:00 AM CST
+        tz: "America/Chicago", // CST timezone
+      },
+      removeOnComplete: true,
+      removeOnFail: false,
+    }
+  );
+
   logger.info("Worker", "Jobs have been added to the queue", {
     activityCron: `Every ${
       Number(process.env.DISCORD_ACTIVITY_INTERVAL_MINUTES) || 15
     } minutes`,
+    motivationCron: "Daily at 8:00 AM CST",
   });
 };
