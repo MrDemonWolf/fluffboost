@@ -18,62 +18,64 @@ export function execute(client: Client, interaction: CommandInteraction) {
     );
     const embed = new EmbedBuilder()
       .setColor(0xfadb7f)
-      .setTitle("✨ FluffBoost Changelog - Version 1.8.0! ✨")
+      .setTitle("✨ FluffBoost Changelog - Version 1.9.0! ✨")
       .setDescription(
         "Check out the latest enhancements and new features in FluffBoost!"
       )
       .addFields(
         // New Features
         {
-          name: "🚀 New Feature: Enhanced Quote Command Embeds",
+          name: "🚀 New Feature: Reliable Background Jobs",
           value:
-            "Quote embeds now include author avatars and improved footer styling for a more engaging experience!",
+            "Switched to reliable background jobs for Discord activity and daily motivation, ensuring consistent delivery!",
         },
         {
-          name: "🚀 New Feature: Updated Invite Link Generation",
+          name: "🚀 New Feature: Per-Guild Motivation Timing",
           value:
-            "Invite links now properly include all required OAuth scopes for seamless bot integration.",
+            "Added per-guild motivation timing and timezone support with sensible defaults for personalized scheduling.",
+        },
+        {
+          name: "� New Feature: Configurable Activity Updates",
+          value:
+            "Activity update interval is now configurable via DISCORD_ACTIVITY_INTERVAL_MINUTES environment variable.",
+        },
+
+        // Bug Fixes
+        {
+          name: "� Bug Fix: Discord Status Quoting",
+          value:
+            "Corrected default Discord status quoting for proper display formatting.",
         },
 
         // Documentation
         {
-          name: "📚 Documentation: Migration Guides",
+          name: "📚 Documentation: Prisma Migration Guide",
           value:
-            "Added comprehensive Queue and Worker Migration Guides to help with system transitions.",
+            "Added comprehensive Prisma migration comparison guide to assist with database schema changes.",
         },
         {
-          name: "📚 Documentation: Enhanced README",
+          name: "📚 Documentation: Redis Debug Logging",
           value:
-            "Expanded README with detailed development setup instructions, available scripts, and CI pipeline details.",
-        },
-
-        // Refactor & System Improvements
-        {
-          name: "⚙️ Refactor: Unified Logging System",
-          value:
-            "Implemented structured logging across all components including API, bot commands, events, and workers for better monitoring.",
-        },
-        {
-          name: "⚙️ Improved: Database Schema Updates",
-          value:
-            "Updated database schema for suggestions to track updates and simplified field structures for better performance.",
+            "Documented Redis debug logging configuration in README and .env example for better troubleshooting.",
         },
 
-        // Development & CI Improvements
+        // System Improvements
         {
-          name: "🔧 Chores: CI Workflow Implementation",
+          name: "⚙️ Improved: Redis Client Stability",
           value:
-            "Introduced comprehensive CI workflow with automated tests, security checks, and Docker build verification.",
+            "Enhanced Redis client stability settings for more reliable connection handling and performance.",
         },
         {
-          name: "🔧 Chores: ESLint Configuration",
+          name: "⚙️ Improved: Database Schema Alignment",
           value:
-            "Added ESLint configuration and updated lint/type-check scripts for improved code quality standards.",
+            "Database migrations to align schema including SuggestionQuote and Guild field updates for better data consistency.",
         },
+
+        // Development Improvements
         {
-          name: "🔧 Chores: Code Cleanup",
+          name: "🔧 Chores: Docker Configuration Updates",
           value:
-            "Removed unused queue utility and legacy command logger to streamline the codebase and reduce technical debt.",
+            "Updated docker-compose default database name for improved development environment consistency.",
         }
       )
       .setTimestamp()
