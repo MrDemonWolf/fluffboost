@@ -26,7 +26,7 @@ export default async function (
     const quotes = await prisma.motivationQuote.findMany();
 
     if (quotes.length === 0) {
-      return interaction.reply({
+      return await interaction.reply({
         content: "No quotes found. Feel free to add some!",
         flags: MessageFlags.Ephemeral,
       });
