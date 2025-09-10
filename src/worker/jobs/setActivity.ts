@@ -6,6 +6,13 @@ import { prisma } from "../../database";
 import env from "../../utils/env";
 import logger from "../../utils/logger";
 
+// Safe lookup for ActivityType enum with fallback to Playing
+const getActivityType = (activityTypeString: string): ActivityType => {
+  const activityType =
+    ActivityType[activityTypeString as keyof typeof ActivityType];
+  return activityType !== undefined ? activityType : ActivityType.Playing;
+};
+
 export default async (client: Client) => {
   try {
     const defaultActivity = env.DISCORD_DEFAULT_STATUS;
@@ -45,26 +52,28 @@ export default async (client: Client) => {
         "Discord - Activity",
         "No custom discord activity found, using default activity"
       );
+      const safeActivityType = getActivityType(defaultActivityType);
       client.user.setActivity(defaultActivity, {
-        type: ActivityType[defaultActivityType],
+        type: safeActivityType,
         url: defaultActivityUrl,
       });
       logger.success("Discord - Activity", "Activity has been set", {
         activity: defaultActivity,
-        type: defaultActivityType,
+        type: safeActivityType,
         url: defaultActivityUrl,
       });
       return true;
     }
 
+    const safeActivityType = getActivityType(activity.type);
     client.user.setActivity(activity.activity, {
-      type: ActivityType[activity.type],
+      type: safeActivityType,
       url: activity.url ? activity.url : undefined,
     });
 
     logger.success("Discord - Activity", "Activity has been set", {
       activity: activity.activity,
-      type: activity.type,
+      type: safeActivityType,
     });
     return true;
   } catch (err) {
