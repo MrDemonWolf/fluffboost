@@ -4,6 +4,7 @@ import { Worker, Job } from "bullmq";
 
 import client from "../bot";
 import redisClient from "../redis";
+import env from "../utils/env";
 import logger from "../utils/logger";
 import { cronToText } from "../utils/cronParser";
 
@@ -75,10 +76,10 @@ export default (queue: Queue) => {
 
   logger.info("Worker", "Jobs have been added to the queue", {
     activityCron: `Every ${
-      Number(process.env.DISCORD_ACTIVITY_INTERVAL_MINUTES) || 15
+      Number(env.DISCORD_ACTIVITY_INTERVAL_MINUTES) || 15
     } minutes`,
     motivationCron: cronToText(
-      process.env.DISCORD_DEFAULT_MOTIVATIONAL_DAILY_TIME || "0 8 * * *"
+      env.DISCORD_DEFAULT_MOTIVATIONAL_DAILY_TIME || "0 8 * * *"
     ),
   });
 };
