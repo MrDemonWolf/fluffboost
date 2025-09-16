@@ -47,6 +47,7 @@ const envSchema = z.object({
     .default("Custom"),
   DEFAULT_ACTIVITY_URL: z.string().optional(),
   DISCORD_ACTIVITY_INTERVAL_MINUTES: z.string().min(1).default("15"),
+  DISCORD_DEFAULT_MOTIVATIONAL_DAILY_TIME: z.string().default("0 8 * * *"),
   ALLOWED_USERS: z.string().optional(),
   OWNER_ID: z.string().min(1, "Owner ID is required"),
   MAIN_GUILD_ID: z.string().min(1, "Main guild ID is required"),
