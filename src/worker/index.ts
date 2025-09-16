@@ -50,10 +50,7 @@ export default (queue: Queue) => {
     { client: null }, // client will be set in the job processor
     {
       repeat: {
-        every:
-          (Number(process.env.DISCORD_ACTIVITY_INTERVAL_MINUTES) || 15) *
-          60 *
-          1000, // Default to every 15 minutes
+        every: env.DISCORD_ACTIVITY_INTERVAL_MINUTES * 60 * 1000, // minutes to ms
       },
       removeOnComplete: true,
       removeOnFail: false,
@@ -75,9 +72,7 @@ export default (queue: Queue) => {
   );
 
   logger.info("Worker", "Jobs have been added to the queue", {
-    activityCron: `Every ${
-      Number(env.DISCORD_ACTIVITY_INTERVAL_MINUTES) || 15
-    } minutes`,
+    activityCron: `Every ${env.DISCORD_ACTIVITY_INTERVAL_MINUTES} minutes`,
     motivationCron: cronToText(
       env.DISCORD_DEFAULT_MOTIVATIONAL_DAILY_TIME || "0 8 * * *"
     ),
