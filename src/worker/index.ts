@@ -1,64 +1,80 @@
-import cron from "node-cron";
+import type { Queue } from "bullmq";
+
+import { Worker, Job } from "bullmq";
 
 import client from "../bot";
+import redisClient from "../redis";
 import env from "../utils/env";
 import logger from "../utils/logger";
+import { cronToText } from "../utils/cronParser";
 
 /**
- * Worker Jobs
+ * Import worker jobs
  */
-import sendMotivation from "./jobs/sendMotivation";
 import setActivity from "./jobs/setActivity";
+import sendMotivation from "./jobs/sendMotivation";
 
-export default function worker() {
-  if (env.NODE_ENV === "development") {
-    // run it every 5 mins for development purposes.
-    cron.schedule(
-      "*/5 * * * *",
-      () => {
-        sendMotivation();
-      },
-      {
-        timezone: "America/Chicago",
-      },
-    );
-
-    cron.schedule(
-      env.DISCORD_ACTIVITY_CRON || "*/5 * * * *",
-      () => {
-        setActivity(client);
-      },
-      {
-        timezone: "America/Chicago",
-      },
-    );
-    return logger.info("Worker", "Running in Development Mode", {
-      activityCron: env.DISCORD_ACTIVITY_CRON || "*/5 * * * *",
-    });
+const worker = new Worker(
+  "fluffboost-jobs",
+  async (job: Job) => {
+    switch (job.name) {
+      case "set-activity":
+        return setActivity(client);
+      case "send-motivation":
+        return sendMotivation(client);
+      default:
+        throw new Error(`No job found with name ${job.name}`);
+    }
+  },
+  {
+    connection: redisClient,
   }
+);
 
-  // Production cron jobs
-  cron.schedule(
-    "0 8 * * *",
-    () => {
-      sendMotivation();
-    },
+worker.on("completed", (job) => {
+  logger.success("Worker", `Job ${job.id} of type ${job.name} has completed`);
+});
+
+worker.on("failed", (job, err) => {
+  logger.error(
+    "Worker",
+    `Job ${job?.id} of type ${job?.name} has failed with error ${err.message}`,
+    err
+  );
+});
+
+export default (queue: Queue) => {
+  // Add jobs to the queue
+  queue.add(
+    "set-activity",
+    { client: null }, // client will be set in the job processor
     {
-      timezone: "America/Chicago",
-    },
+      repeat: {
+        every: env.DISCORD_ACTIVITY_INTERVAL_MINUTES * 60 * 1000, // minutes to ms
+      },
+      removeOnComplete: true,
+      removeOnFail: false,
+    }
   );
 
-  cron.schedule(
-    env.DISCORD_ACTIVITY_CRON || "*/30 * * * *",
-    () => {
-      setActivity(client);
-    },
+  queue.add(
+    "send-motivation",
+    {},
     {
-      timezone: "America/Chicago",
-    },
+      repeat: {
+        pattern:
+          process.env.DISCORD_DEFAULT_MOTIVATIONAL_DAILY_TIME || "0 8 * * *", // Default to every day at 8:00 AM
+        tz: "America/Chicago", // CST timezone
+      },
+      removeOnComplete: true,
+      removeOnFail: false,
+    }
   );
-  logger.success("Worker", "Running in Production Mode", {
-    motivationCron: "0 8 * * *",
-    activityCron: env.DISCORD_ACTIVITY_CRON || "*/30 * * * *",
+
+  logger.info("Worker", "Jobs have been added to the queue", {
+    activityCron: `Every ${env.DISCORD_ACTIVITY_INTERVAL_MINUTES} minutes`,
+    motivationCron: cronToText(
+      env.DISCORD_DEFAULT_MOTIVATIONAL_DAILY_TIME || "0 8 * * *"
+    ),
   });
-}
+};

@@ -33,6 +33,29 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 
 # Change Log
 
+## Version 1.9.0 Released (on September 10, 2025)
+
+### New Features
+
+- **Reliable Background Jobs:** Switched to reliable background jobs for Discord activity and daily motivation, ensuring consistent delivery.
+- **Per-Guild Motivation Timing:** Added per-guild motivation timing and timezone support with sensible defaults for personalized scheduling.
+- **Configurable Activity Updates:** Activity update interval is now configurable via DISCORD_ACTIVITY_INTERVAL_MINUTES environment variable.
+
+### Bug Fixes
+
+- **Discord Status Quoting:** Corrected default Discord status quoting for proper display formatting.
+
+### Documentation
+
+- **Prisma Migration Guide:** Added comprehensive Prisma migration comparison guide to assist with database schema changes.
+- **Redis Debug Logging:** Documented Redis debug logging configuration in README and .env example for better troubleshooting.
+
+### Chores
+
+- **Redis Client Stability:** Enhanced Redis client stability settings for more reliable connection handling and performance.
+- **Docker Configuration Updates:** Updated docker-compose default database name for improved development environment consistency.
+- **Database Schema Alignment:** Database migrations to align schema including SuggestionQuote and Guild field updates for better data consistency.
+
 ## Version 1.8.0 Released (on September 3, 2025)
 
 ### New Features
@@ -78,23 +101,6 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 - **User Feedback:** Updated success messages for setting activities and refined the appearance of suggestion embeds.
 - **Internal Logging:** Migrated from basic `console.log` to a more structured and robust logging system.
 
-## Version 1.6.0 Released (on July 17, 2025)
-
-**New Features & Enhancements:**
-
-- **Configurable Bot Status:** The bot's Discord activity status is now configurable and managed, allowing for dynamic and engaging presence messages.
-  - Includes a default activity and a development delay for smooth startup.
-  - Activities are now fetched from the database for persistent and flexible status management.
-  - Activity status updates have been refactored to a dedicated worker for improved efficiency.
-- **Enhanced Activity Management:** Added new commands for managing bot activities.
-- **Improved Environment Configuration:** Configured default environment variables for easier setup and deployment.
-
-**Improvements & Fixes:**
-
-- **Discord Activity Enum Updates:** Updated internal Discord activity enum values for better compatibility and accuracy.
-- **Activity Type Replacement:** Replaced `WATCHING` activity type with `STREAMING` where appropriate for better clarity and Discord's current activity types.
-- **Quote Command Clarity:** Renamed quote-related commands for improved clarity and user understanding.
-
 ## Development
 
 ### Prerequisites
@@ -126,6 +132,8 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
    ```
 
 4. Configure your environment variables in `.env`
+
+   - Optional: enable Redis debug logging by adding `DEBUG=ioredis:*` to your `.env` (the `.env.example` includes this line commented out).
 
 5. Generate Prisma client:
 

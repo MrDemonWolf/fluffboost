@@ -17,19 +17,19 @@ import posthog from "../utils/posthog";
 export const slashCommand = new SlashCommandBuilder()
   .setName("suggestion")
   .setDescription(
-    "Make a quote suggestion which will be reviewed by a the owner of the bot",
+    "Make a quote suggestion which will be reviewed by a the owner of the bot"
   )
   .addStringOption((option) =>
     option
       .setName("quote")
       .setDescription("The quote to be suggested")
-      .setRequired(true),
+      .setRequired(true)
   )
   .addStringOption((option) =>
     option
       .setName("author")
       .setDescription("The author of the quote")
-      .setRequired(true),
+      .setRequired(true)
   );
 
 export async function execute(client: Client, interaction: CommandInteraction) {
@@ -37,7 +37,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     logger.commands.executing(
       "suggestion",
       interaction.user.username,
-      interaction.user.id,
+      interaction.user.id
     );
 
     const options = interaction.options as CommandInteractionOptionResolver;
@@ -46,14 +46,14 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     const author = options.getString("author");
 
     if (!quote) {
-return interaction.reply("Please provide a quote");
-}
+      return interaction.reply("Please provide a quote");
+    }
     if (!author) {
-return interaction.reply("Please provide an author");
-}
+      return interaction.reply("Please provide an author");
+    }
     if (!interaction.guildId) {
-return interaction.reply("This command can only be used in a server");
-}
+      return interaction.reply("This command can only be used in a server");
+    }
 
     /**
      * Get the guild from the database
@@ -67,10 +67,10 @@ return interaction.reply("This command can only be used in a server");
     });
 
     if (!guild) {
-return interaction.reply(
-        "This server is not setup yet. Please setup the bot first.",
+      return interaction.reply(
+        "This server is not setup yet. Please setup the bot first."
       );
-}
+    }
 
     const newQuote = await prisma.suggestionQuote.create({
       data: {
@@ -90,7 +90,7 @@ return interaction.reply(
      * Send the quote suggestion to the main channel for review
      */
     const mainChannel = client.channels.cache.get(
-      env.MAIN_CHANNEL_ID as string,
+      env.MAIN_CHANNEL_ID as string
     ) as TextChannel;
 
     const embed = new EmbedBuilder()
@@ -112,7 +112,7 @@ return interaction.reply(
         {
           name: "Status",
           value: newQuote.status,
-        },
+        }
       )
       .setTimestamp()
       .setFooter({
@@ -126,7 +126,7 @@ return interaction.reply(
     logger.commands.success(
       "suggestion",
       interaction.user.username,
-      interaction.user.id,
+      interaction.user.id
     );
 
     posthog.capture({
@@ -146,12 +146,17 @@ return interaction.reply(
       "suggestion",
       interaction.user.username,
       interaction.user.id,
-      err,
+      err
     );
-    logger.error("Command", "Error executing suggestion command", err, {
-      user: { username: interaction.user.username, id: interaction.user.id },
-      command: "suggestion",
-    });
+    logger.error(
+      "Discord - Command",
+      "Error executing suggestion command",
+      err,
+      {
+        user: { username: interaction.user.username, id: interaction.user.id },
+        command: "suggestion",
+      }
+    );
   }
 }
 

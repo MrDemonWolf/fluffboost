@@ -39,7 +39,7 @@ export async function readyEvent(client: Client) {
     /**
      * Register slash commands.
      */
-    logger.info("Slash Commands", "Registering commands");
+    logger.info("Discord - Slash Commands", "Registering commands");
 
     await client.application?.commands.set([
       help.slashCommand,
@@ -56,18 +56,19 @@ export async function readyEvent(client: Client) {
     const commandNames = commands?.map((command) => command.name) || [];
 
     logger.success(
-      "Slash Commands",
+      "Discord - Slash Commands",
       `Registered ${commandNames.length} commands`,
       {
         commands: commandNames,
-      },
+        timestamp: new Date().toISOString(),
+      }
     );
   } catch (err) {
-    logger.error("Discord", "Error during ready event", err);
+    logger.error("Discord - Event (Ready)", "Error during ready event", err);
   }
 
   /**
-   * Apply the bot's activity status on first run and every 60 minutes.
+   * Apply the bot's activity status on first run then the worker will handle it every configured interval.
    */
   await setActivity(client);
 }

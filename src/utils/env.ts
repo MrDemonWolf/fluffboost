@@ -46,51 +46,14 @@ const envSchema = z.object({
     .enum(["Playing", "Streaming", "Listening", "Custom"])
     .default("Custom"),
   DEFAULT_ACTIVITY_URL: z.string().optional(),
-  DISCORD_ACTIVITY_CRON: z
-    .string()
-    .refine((cron) => {
-      try {
-        const parts = cron.split(" ");
-        // Must be 5 or 6 fields, none empty
-        if (parts.length !== 5 && parts.length !== 6) {
-return false;
-}
-        if (parts.some((part) => part === "")) {
-return false;
-}
-
-        // Basic validation for each of the first five fields
-        const ranges = [
-          [0, 59], // minute
-          [0, 23], // hour
-          [1, 31], // day of month
-          [1, 12], // month
-          [0, 7], // day of week
-        ];
-
-        for (let i = 0; i < Math.min(parts.length, 5); i++) {
-          const part = parts[i];
-          // Allow wildcards and step values
-          if (part === "*" || part.includes("*/")) {
-continue;
-}
-          // Allow ranges and lists
-          if (part.includes("-") || part.includes(",")) {
-continue;
-}
-          // Otherwise it must be a valid integer within range
-          const num = parseInt(part, 10);
-          if (isNaN(num) || num < ranges[i][0] || num > ranges[i][1]) {
-            return false;
-          }
-        }
-
-        return true;
-      } catch {
-        return false;
-      }
-    }, "Invalid cron expression for Discord activity")
-    .default("0 * * * *"), // Default to every hour
+  DISCORD_ACTIVITY_INTERVAL_MINUTES: z
+    .coerce
+    .number()
+    .int()
+    .min(1)
+    .max(1440)
+    .default(15),
+  DISCORD_DEFAULT_MOTIVATIONAL_DAILY_TIME: z.string().default("0 8 * * *"),
   ALLOWED_USERS: z.string().optional(),
   OWNER_ID: z.string().min(1, "Owner ID is required"),
   MAIN_GUILD_ID: z.string().min(1, "Main guild ID is required"),
@@ -100,7 +63,7 @@ continue;
   HOST: z.string().optional(),
   PORT: z.string().optional(),
   CORS_ORIGIN: z.string().default("*"),
-  VERSION: z.string().default("1.8.0"),
+  VERSION: z.string().default("1.9.0"),
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
