@@ -21,7 +21,7 @@ const worker = new Worker(
       case "set-activity":
         return setActivity(client);
       case "send-motivation":
-        return sendMotivation();
+        return sendMotivation(client);
       default:
         throw new Error(`No job found with name ${job.name}`);
     }
