@@ -1,12 +1,12 @@
 import { TextChannel, EmbedBuilder } from "discord.js";
+import type { Client } from "discord.js";
 
 import { prisma } from "../../database";
-import client from "../../bot";
 import type { Guild } from "@prisma/client";
 import posthog from "../../utils/posthog";
 import logger from "../../utils/logger";
 
-export default async function sendMotivation() {
+export default async function sendMotivation(client: Client) {
   /**
    * Get all guilds from the database that have the motivation channel set.
    */
@@ -62,7 +62,7 @@ export default async function sendMotivation() {
      * Get the motivation channel from the guild.
      */
     const motivationChannel = client.channels.cache.get(
-      g.motivationChannelId,
+      g.motivationChannelId
     ) as TextChannel;
 
     /**
@@ -73,7 +73,7 @@ export default async function sendMotivation() {
       .setColor(0xfadb7f)
       .setTitle("Motivation quote of the day 📅")
       .setDescription(
-        `**"${motivationQuote[0].quote}"**\n by ${motivationQuote[0].author}`,
+        `**"${motivationQuote[0].quote}"**\n by ${motivationQuote[0].author}`
       )
       .setAuthor({
         name: addedBy ? addedBy.username : "Unknown User",
