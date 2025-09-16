@@ -21,7 +21,7 @@ model Guild {
   id                  String   @id @default(uuid())
   guildId             String   @unique
   motivationChannelId String?
-  motivationTime      String   @default("08:00") // Format: "HH:MM" (24-hour format)
+  motivationTime      String   @default("0 8 * * *") // Default to 8 AM daily
   timezone            String   @default("America/Chicago") // IANA timezone identifier (CST)
   joinedAt            DateTime @default(now())
   updatedAt           DateTime @updatedAt
