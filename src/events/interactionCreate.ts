@@ -18,102 +18,102 @@ import setup from "../commands/setup";
 
 export async function interactionCreateEvent(
   client: Client,
-  interaction: Interaction,
+  interaction: Interaction
 ) {
   try {
     if (!interaction.isCommand()) {
-return;
-}
+      return;
+    }
 
     logger.commands.executing(
       "interactionCreate",
       interaction.user.username,
-      interaction.user.id,
+      interaction.user.id
     );
 
     const { commandName } = interaction;
 
     if (!commandName) {
-return;
-}
+      return;
+    }
 
     switch (commandName) {
       case "help":
+        await help.execute(client, interaction);
         logger.commands.success(
           "interactionCreate - help",
           interaction.user.username,
-          interaction.user.id,
+          interaction.user.id
         );
-        help.execute(client, interaction);
         break;
 
       case "about":
+        await about.execute(client, interaction);
         logger.commands.success(
           "interactionCreate - about",
           interaction.user.username,
-          interaction.user.id,
+          interaction.user.id
         );
-        about.execute(client, interaction);
         break;
 
       case "changelog":
+        await changelog.execute(client, interaction);
         logger.commands.success(
           "interactionCreate - changelog",
           interaction.user.username,
-          interaction.user.id,
+          interaction.user.id
         );
-        changelog.execute(client, interaction);
         break;
       case "quote":
+        await quote.execute(client, interaction);
         logger.commands.success(
           "interactionCreate - quote",
           interaction.user.username,
-          interaction.user.id,
+          interaction.user.id
         );
-        quote.execute(client, interaction);
         break;
       case "invite":
+        await invite.execute(client, interaction);
         logger.commands.success(
           "interactionCreate - invite",
           interaction.user.username,
-          interaction.user.id,
+          interaction.user.id
         );
-        invite.execute(client, interaction);
         break;
       case "suggestion":
+        await suggestion.execute(client, interaction);
         logger.commands.success(
           "interactionCreate - suggestion",
           interaction.user.username,
-          interaction.user.id,
+          interaction.user.id
         );
-        suggestion.execute(client, interaction);
         break;
       case "admin":
+        await admin.execute(client, interaction);
         logger.commands.success(
           "interactionCreate - admin",
           interaction.user.username,
-          interaction.user.id,
+          interaction.user.id
         );
-        admin.execute(client, interaction);
         break;
       case "setup":
+        await setup.execute(client, interaction);
         logger.commands.success(
           "interactionCreate - setup",
           interaction.user.username,
-          interaction.user.id,
+          interaction.user.id
         );
-        setup.execute(client, interaction);
         break;
       default:
         logger.commands.warn(
           "interactionCreate",
           interaction.user.username,
           interaction.user.id,
-          "Command not found",
+          "Command not found"
         );
     }
   } catch (err) {
-    logger.error("Command", "Error executing command", err, {
+    logger.error("Discord - Command", "Error executing command", err, {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: interaction.isCommand() ? interaction.commandName : "unknown",
     });

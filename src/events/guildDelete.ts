@@ -33,7 +33,7 @@ export async function guildDeleteEvent(guild: Guild): Promise<void> {
       },
     });
   } catch (err) {
-    logger.error("Discord", "Error leaving guild", err, {
+    logger.error("Discord - Event (Guild Delete)", "Error leaving guild", err, {
       guildId: guild.id,
       guildName: guild.name,
     });
