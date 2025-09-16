@@ -35,14 +35,14 @@ export async function execute(client: Client, interaction: CommandInteraction) {
             "Added per-guild motivation timing and timezone support with sensible defaults for personalized scheduling.",
         },
         {
-          name: "� New Feature: Configurable Activity Updates",
+          name: "✨ New Feature: Configurable Activity Updates",
           value:
             "Activity update interval is now configurable via DISCORD_ACTIVITY_INTERVAL_MINUTES environment variable.",
         },
 
         // Bug Fixes
         {
-          name: "� Bug Fix: Discord Status Quoting",
+          name: "🐛 Bug Fix: Discord Status Quoting",
           value:
             "Corrected default Discord status quoting for proper display formatting.",
         },
