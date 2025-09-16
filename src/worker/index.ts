@@ -5,6 +5,7 @@ import { Worker, Job } from "bullmq";
 import client from "../bot";
 import redisClient from "../redis";
 import logger from "../utils/logger";
+import { cronToText } from "../utils/cronParser";
 
 /**
  * Import worker jobs
@@ -63,7 +64,8 @@ export default (queue: Queue) => {
     {},
     {
       repeat: {
-        pattern: "0 8 * * *", // Every day at 8:00 AM CST
+        pattern:
+          process.env.DISCORD_DEFAULT_MOTIVATIONAL_DAILY_TIME || "0 8 * * *", // Default to every day at 8:00 AM
         tz: "America/Chicago", // CST timezone
       },
       removeOnComplete: true,
@@ -75,6 +77,8 @@ export default (queue: Queue) => {
     activityCron: `Every ${
       Number(process.env.DISCORD_ACTIVITY_INTERVAL_MINUTES) || 15
     } minutes`,
-    motivationCron: "Daily at 8:00 AM CST",
+    motivationCron: cronToText(
+      process.env.DISCORD_DEFAULT_MOTIVATIONAL_DAILY_TIME || "0 8 * * *"
+    ),
   });
 };
