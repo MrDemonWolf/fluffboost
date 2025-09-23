@@ -7,4 +7,4 @@
 */
 -- AlterTable
 ALTER TABLE "SuggestionQuote" DROP COLUMN "guildId",
-ADD COLUMN     "updatedAt" TIMESTAMP(3) NOT NULL;
+ADD COLUMN     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
