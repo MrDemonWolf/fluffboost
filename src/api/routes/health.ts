@@ -4,7 +4,7 @@ import logger from "../../utils/logger.js";
 const router: express.Router = express.Router();
 
 /**
- * GET /heatlh
+ * GET /health
  * Returns the heatlh of the bot
  */
 router.get("/", async (_req, res) => {
@@ -14,7 +14,7 @@ router.get("/", async (_req, res) => {
       uptime: process.uptime(),
       version: process.env["npm_package_version"] || "1.7.0",
       timestamp: new Date().toISOString(),
-      path: "/api/heatlh",
+      path: "/api/health",
       method: "GET",
     });
   } catch (err) {
