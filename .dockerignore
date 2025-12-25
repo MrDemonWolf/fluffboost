@@ -1,8 +1,6 @@
 node_modules
-src
-tests
+dist
 .git
 .gitignore
-.env
 Dockerfile
-README.md
+.env
