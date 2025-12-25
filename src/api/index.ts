@@ -3,14 +3,14 @@ import morgan from "morgan";
 import helmet from "helmet";
 import cors from "cors";
 
-import env from "../utils/env";
+import env from "../utils/env.js";
 
 /**
  * Import all routes
  */
-import statusRoute from "./routes/status";
+import heatlhRoute from "./routes/health.js";
 
-const app = express();
+const app: express.Application = express();
 /**
  * Express configuration (express.json, express.urlencoded, helmet, morgan, cors)
  */
@@ -25,7 +25,7 @@ app.use(
         : "*",
   })
 );
-app.set("x-powered-by", "Fluffboost");
+app.set("x-powered-by", "MrDemonWolf, Inc., Community Bot");
 
 /**
  * Use verbose logs in development, concise logs in production
@@ -33,7 +33,7 @@ app.set("x-powered-by", "Fluffboost");
  */
 const skipHealthChecks = (req: express.Request) => {
   const userAgent = req.get("User-Agent") || "";
-  const clientIP = req.ip || req.connection.remoteAddress || "";
+  const clientIP = req.ip || req.socket.remoteAddress || "";
 
   // Skip if User-Agent starts with curl/ (Coolify health checks)
   if (userAgent.startsWith("curl/")) {
@@ -69,11 +69,11 @@ if (env.NODE_ENV === "production") {
  * @param {number} port - Port
  */
 app.set("host", env.HOST || "localhost");
-app.set("port", env.PORT || 8080);
+app.set("port", env.PORT || 3000);
 
 /**
  * Initialize routes
  */
-app.use("/api/status", statusRoute);
+app.use("/api/heatlh", heatlhRoute);
 
 export default app;
