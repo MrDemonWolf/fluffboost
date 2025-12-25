@@ -1,11 +1,11 @@
 import { ShardingManager } from "discord.js";
 import { config } from "dotenv";
 import { PrismaClient } from "./generated/prisma/client.js";
-
-import api from "./api";
-import redisClient from "./redis";
-import env from "./utils/env";
-import logger from "./utils/logger";
+import { PrismaPg } from "@prisma/adapter-pg";
+import api from "./api/index.js";
+import redis from "./redis/index.js";
+import env from "./utils/env.js";
+import logger from "./utils/logger.js";
 
 /**
  * Load environment variables from .env file.
@@ -15,7 +15,11 @@ config();
 /**
  * Load Prsima Client and connect to Prisma Server if failed to connect, throw error.
  */
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({
+  connectionString: env.DATABASE_URL,
+});
+
+const prisma = new PrismaClient({ adapter });
 
 prisma
   .$connect()
@@ -31,7 +35,7 @@ prisma
 /**
  * Load Redis connection and connect to Redis Server if failed to connect, throw error.
  */
-redisClient
+redis
   .on("connect", () => {
     logger.database.connected("Redis");
   })
@@ -40,15 +44,11 @@ redisClient
     process.exit(1);
   });
 
-/**
- * Start API server.
- */
-
-api.listen(api.get("port"), () => {
+const server = api.listen(api.get("port"), () => {
   logger.api.started(api.get("host"), api.get("port"));
 });
 
-api.on("error", (err: unknown) => {
+server.on("error", (err: unknown) => {
   logger.api.error(err);
   process.exit(1);
 });
@@ -56,10 +56,19 @@ api.on("error", (err: unknown) => {
 /**
  * Discord.js Sharding Manager
  */
-const manager = new ShardingManager("./src/bot.ts", {
-  token: env.DISCORD_APPLICATION_BOT_TOKEN,
-  execArgv: ["-r", "ts-node/register"],
-});
+const manager = new ShardingManager(
+  env.NODE_ENV === "production" ? "./dist/bot.js" : "./src/bot.ts",
+  env.NODE_ENV === "production"
+    ? {
+        token: env.DISCORD_APPLICATION_BOT_TOKEN,
+        totalShards: "auto",
+      }
+    : {
+        token: env.DISCORD_APPLICATION_BOT_TOKEN,
+        totalShards: "auto",
+        execArgv: ["--import", "tsx"],
+      }
+);
 
 manager.on("shardCreate", (shard) => {
   try {

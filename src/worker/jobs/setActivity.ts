@@ -2,9 +2,9 @@ import { ActivityType } from "discord.js";
 
 import type { Client } from "discord.js";
 
-import { prisma } from "../../database";
-import env from "../../utils/env";
-import logger from "../../utils/logger";
+import { prisma } from "../../database/index.js";
+import env from "../../utils/env.js";
+import logger from "../../utils/logger.js";
 
 // Safe lookup for ActivityType enum with fallback to Playing
 const getActivityType = (activityTypeString: string): ActivityType => {

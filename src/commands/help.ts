@@ -2,14 +2,14 @@ import type { Client, CommandInteraction } from "discord.js";
 
 import { SlashCommandBuilder, MessageFlags } from "discord.js";
 
-import logger from "../utils/logger";
-import posthog from "../utils/posthog";
+import logger from "../utils/logger.js";
+import posthog from "../utils/posthog.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("help")
   .setDescription("Get help with using the bot");
 
-export function execute(client: Client, interaction: CommandInteraction) {
+export function execute(_client: Client, interaction: CommandInteraction) {
   try {
     logger.commands.executing(
       "help",
@@ -37,7 +37,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
       distinctId: interaction.user.id,
       event: "help command used",
       properties: {
-        environment: process.env.NODE_ENV,
+        environment: process.env["NODE_ENV"],
         userId: interaction.user.id,
         username: interaction.user.username,
       },

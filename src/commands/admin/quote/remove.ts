@@ -7,16 +7,16 @@ import {
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 
-import logger from "../../../utils/logger";
-import { isUserPermitted } from "../../../utils/permissions";
-import { prisma } from "../../../database";
-import env from "../../../utils/env";
+import logger from "../../../utils/logger.js";
+import { isUserPermitted } from "../../../utils/permissions.js";
+import { prisma } from "../../../database/index.js";
+import env from "../../../utils/env.js";
 
 export default async function (
   client: Client,
   interaction: CommandInteraction,
   options: CommandInteractionOptionResolver
-) {
+): Promise<any> {
   try {
     logger.commands.executing(
       "admin quote remove",
@@ -87,4 +87,5 @@ export default async function (
       }
     );
   }
+  return undefined;
 }
