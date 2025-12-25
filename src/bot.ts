@@ -1,16 +1,16 @@
 import { Client, Events, GatewayIntentBits } from "discord.js";
 
-import env from "./utils/env";
-import logger from "./utils/logger";
+import env from "./utils/env.js";
+import logger from "./utils/logger.js";
 
 /**
  * Import events from the events folder.
  */
-import { readyEvent } from "./events/ready";
-import { guildCreateEvent } from "./events/guildCreate";
-import { guildDeleteEvent } from "./events/guildDelete";
-import { interactionCreateEvent } from "./events/interactionCreate";
-import { shardDisconnectEvent } from "./events/shardDisconnect";
+import { readyEvent } from "./events/ready.js";
+import { guildCreateEvent } from "./events/guildCreate.js";
+import { guildDeleteEvent } from "./events/guildDelete.js";
+import { interactionCreateEvent } from "./events/interactionCreate.js";
+import { shardDisconnectEvent } from "./events/shardDisconnect.js";
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
@@ -66,7 +66,7 @@ client.login(env.DISCORD_APPLICATION_BOT_TOKEN);
  * Initialize BullMQ worker to handle background jobs.
  */
 import { Queue } from "bullmq";
-import worker from "./worker";
+import worker from "./worker/index.js";
 
 const queueName = "fluffboost-jobs";
 
