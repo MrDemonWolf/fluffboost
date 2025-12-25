@@ -8,7 +8,7 @@ import env from "../utils/env.js";
 /**
  * Import all routes
  */
-import statusRoute from "./routes/status.js";
+import heatlhRoute from "./routes/health.js";
 
 const app: express.Application = express();
 /**
@@ -74,6 +74,6 @@ app.set("port", env.PORT || 3000);
 /**
  * Initialize routes
  */
-app.use("/api/status", statusRoute);
+app.use("/api/heatlh", heatlhRoute);
 
 export default app;

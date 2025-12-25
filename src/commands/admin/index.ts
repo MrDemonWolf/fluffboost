@@ -9,17 +9,17 @@ import type {
   CommandInteraction,
   CommandInteractionOptionResolver,
 } from "discord.js";
-import logger from "../../utils/logger";
+import logger from "../../utils/logger.js";
 
 /**
  * Import subcommands
  */
-import quoteCreate from "./quote/create";
-import quoteList from "./quote/list";
-import quoteRemove from "./quote/remove";
-import activityAdd from "./activity/create";
-import activityList from "./activity/list";
-import activityRemove from "./activity/remove";
+import quoteCreate from "./quote/create.js";
+import quoteList from "./quote/list.js";
+import quoteRemove from "./quote/remove.js";
+import activityAdd from "./activity/create.js";
+import activityList from "./activity/list.js";
+import activityRemove from "./activity/remove.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("admin")

@@ -2,17 +2,17 @@ import type { Queue } from "bullmq";
 
 import { Worker, Job } from "bullmq";
 
-import client from "../bot";
-import redisClient from "../redis";
-import env from "../utils/env";
-import logger from "../utils/logger";
-import { cronToText } from "../utils/cronParser";
+import client from "../bot.js";
+import redisClient from "../redis/index.js";
+import env from "../utils/env.js";
+import logger from "../utils/logger.js";
+import { cronToText } from "../utils/cronParser.js";
 
 /**
  * Import worker jobs
  */
-import setActivity from "./jobs/setActivity";
-import sendMotivation from "./jobs/sendMotivation";
+import setActivity from "./jobs/setActivity.js";
+import sendMotivation from "./jobs/sendMotivation.js";
 
 const worker = new Worker(
   "fluffboost-jobs",
@@ -63,7 +63,7 @@ export default (queue: Queue) => {
     {
       repeat: {
         pattern:
-          process.env.DISCORD_DEFAULT_MOTIVATIONAL_DAILY_TIME || "0 8 * * *", // Default to every day at 8:00 AM
+          process.env["DISCORD_DEFAULT_MOTIVATIONAL_DAILY_TIME"] || "0 8 * * *", // Default to every day at 8:00 AM
         tz: "America/Chicago", // CST timezone
       },
       removeOnComplete: true,
