@@ -1,5 +1,5 @@
 import consola from "consola";
-import env from "./env";
+import env from "./env.js";
 
 /**
  * Type definitions for logger methods

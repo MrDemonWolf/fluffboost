@@ -2,14 +2,14 @@ import { Client, CommandInteraction, MessageFlags } from "discord.js";
 
 import type { DiscordActivity } from "../../../generated/prisma/client.js";
 
-import logger from "../../../utils/logger";
-import { isUserPermitted } from "../../../utils/permissions";
-import { prisma } from "../../../database";
+import logger from "../../../utils/logger.js";
+import { isUserPermitted } from "../../../utils/permissions.js";
+import { prisma } from "../../../database/index.js";
 
 export default async function (
-  client: Client,
+  _client: Client,
   interaction: CommandInteraction
-) {
+): Promise<any> {
   try {
     logger.commands.executing(
       "admin activity list",
@@ -65,4 +65,5 @@ export default async function (
       command: "admin activity list",
     });
   }
+  return undefined;
 }

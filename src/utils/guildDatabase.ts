@@ -1,8 +1,8 @@
 import type { Client } from "discord.js";
 
-import posthog from "../utils/posthog";
-import { prisma } from "../database";
-import logger from "./logger";
+import posthog from "../utils/posthog.js";
+import { prisma } from "../database/index.js";
+import logger from "./logger.js";
 
 export async function pruneGuilds(client: Client) {
   try {
@@ -30,7 +30,7 @@ export async function pruneGuilds(client: Client) {
       return;
     }
     const guildsToRemove = guildsInDb.filter(
-      (guild) => client.guilds.cache.get(guild.guildId) === undefined
+      (guild: { guildId: string }) => client.guilds.cache.get(guild.guildId) === undefined
     );
 
     if (guildsToRemove.length === 0) {
@@ -65,7 +65,7 @@ export async function pruneGuilds(client: Client) {
           distinctId: guild.guildId,
           event: "guild left",
           properties: {
-            environment: process.env.NODE_ENV,
+            environment: process.env["NODE_ENV"],
             guildName: guild.guildId,
             guildId: guild.guildId,
           },
@@ -102,7 +102,7 @@ export async function ensureGuildExists(client: Client) {
     const currentGuilds = await prisma.guild.findMany({});
     const guildsToAdd = client.guilds.cache.filter(
       (guild) =>
-        !currentGuilds.some((currentGuild) => currentGuild.guildId === guild.id)
+        !currentGuilds.some((currentGuild: { guildId: string }) => currentGuild.guildId === guild.id)
     );
 
     if (guildsToAdd.size === 0) {
@@ -138,7 +138,7 @@ export async function ensureGuildExists(client: Client) {
           distinctId: guild.id,
           event: "guild joined",
           properties: {
-            environment: process.env.NODE_ENV,
+            environment: process.env["NODE_ENV"],
             guildName: guild.name,
             guildId: guild.id,
           },

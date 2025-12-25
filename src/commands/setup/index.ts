@@ -12,12 +12,12 @@ import type {
   CommandInteractionOptionResolver,
 } from "discord.js";
 
-import logger from "../../utils/logger";
+import logger from "../../utils/logger.js";
 
 /**
  * Import subcommands
  */
-import channel from "./channel";
+import channel from "./channel.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("setup")

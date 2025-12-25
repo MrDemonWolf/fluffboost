@@ -4,17 +4,17 @@ import logger from "../../utils/logger.js";
 const router: express.Router = express.Router();
 
 /**
- * GET /status
- * Returns the status of the API
+ * GET /heatlh
+ * Returns the heatlh of the bot
  */
 router.get("/", async (_req, res) => {
   try {
     res.json({
-      status: "online",
+      status: "ok",
       uptime: process.uptime(),
       version: process.env["npm_package_version"] || "1.7.0",
       timestamp: new Date().toISOString(),
-      path: "/api/status",
+      path: "/api/heatlh",
       method: "GET",
     });
   } catch (err) {
