@@ -74,6 +74,6 @@ app.set("port", env.PORT || 3000);
 /**
  * Initialize routes
  */
-app.use("/api/heatlh", heatlhRoute);
+app.use("/api/health", heatlhRoute);
 
 export default app;
