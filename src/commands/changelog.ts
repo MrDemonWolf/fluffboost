@@ -2,14 +2,14 @@ import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
 
 import type { Client, CommandInteraction } from "discord.js";
 
-import logger from "../utils/logger";
-import posthog from "../utils/posthog";
+import logger from "../utils/logger.js";
+import posthog from "../utils/posthog.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("changelog")
   .setDescription("See the latest changes to the bot");
 
-export async function execute(client: Client, interaction: CommandInteraction) {
+export async function execute(_client: Client, interaction: CommandInteraction) {
   try {
     logger.commands.executing(
       "changelog",
@@ -18,9 +18,9 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     );
     const embed = new EmbedBuilder()
       .setColor(0xfadb7f)
-      .setTitle("✨ FluffBoost Changelog - Version 1.9.0! ✨")
+      .setTitle("✨ FluffBoost Changelog - Version 2.0.0! ✨")
       .setDescription(
-        "Check out the latest enhancements and new features in FluffBoost!"
+        "Major upgrade with Prisma 7 and improved TypeScript support!"
       )
       .addFields(
         // New Features
@@ -98,7 +98,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       distinctId: interaction.user.id,
       event: "changelog command used",
       properties: {
-        environment: process.env.NODE_ENV,
+        environment: process.env["NODE_ENV"],
         userId: interaction.user.id,
         username: interaction.user.username,
       },
