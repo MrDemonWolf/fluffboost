@@ -1,10 +1,10 @@
 import { TextChannel, EmbedBuilder } from "discord.js";
 import type { Client } from "discord.js";
 
-import { prisma } from "../../database";
-import type { Guild } from "@prisma/client";
-import posthog from "../../utils/posthog";
-import logger from "../../utils/logger";
+import { prisma } from "../../database/index.js";
+import type { Guild } from "../../generated/prisma/client.js";
+import posthog from "../../utils/posthog.js";
+import logger from "../../utils/logger.js";
 
 export default async function sendMotivation(client: Client) {
   /**
@@ -73,7 +73,7 @@ export default async function sendMotivation(client: Client) {
       .setColor(0xfadb7f)
       .setTitle("Motivation quote of the day 📅")
       .setDescription(
-        `**"${motivationQuote[0].quote}"**\n by ${motivationQuote[0].author}`
+        `**"${motivationQuote[0]!.quote}"**\n by ${motivationQuote[0]!.author}`
       )
       .setAuthor({
         name: addedBy ? addedBy.username : "Unknown User",
@@ -94,7 +94,7 @@ export default async function sendMotivation(client: Client) {
     distinctId: "motivation-job",
     event: "motivation job executed",
     properties: {
-      environment: process.env.NODE_ENV,
+      environment: process.env["NODE_ENV"],
       quote: motivationQuote[0].id,
     },
   });

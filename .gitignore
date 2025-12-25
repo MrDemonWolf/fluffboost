@@ -102,6 +102,7 @@ dist
 
 # vuepress v2.x temp and cache directory
 .temp
+.cache
 
 # Docusaurus cache and generated files
 .docusaurus
@@ -128,20 +129,8 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-### Node Patch ###
-# Serverless Webpack directories
-.webpack/
-
-# Optional stylelint cache
-
-# SvelteKit build / generate output
-.svelte-kit
-
-# OS generated files
+# macOS Files
 .DS_Store
-Thumbs.db
 
-src/old
-
-# Docker DB Data
-db
+# Prisma ORM files generated in src (see prisma/schema.prisma)
+src/generated/prisma/

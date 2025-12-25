@@ -1,18 +1,17 @@
 import {
   Client,
-  CommandInteraction,
+  ChatInputCommandInteraction,
   TextChannel,
   SlashCommandBuilder,
   EmbedBuilder,
   MessageFlags,
 } from "discord.js";
 
-import type { CommandInteractionOptionResolver } from "discord.js";
 
-import logger from "../utils/logger";
-import { prisma } from "../database";
-import env from "../utils/env";
-import posthog from "../utils/posthog";
+import logger from "../utils/logger.js";
+import { prisma } from "../database/index.js";
+import env from "../utils/env.js";
+import posthog from "../utils/posthog.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("suggestion")
@@ -32,7 +31,7 @@ export const slashCommand = new SlashCommandBuilder()
       .setRequired(true)
   );
 
-export async function execute(client: Client, interaction: CommandInteraction) {
+export async function execute(client: Client, interaction: ChatInputCommandInteraction): Promise<any> {
   try {
     logger.commands.executing(
       "suggestion",
@@ -40,7 +39,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       interaction.user.id
     );
 
-    const options = interaction.options as CommandInteractionOptionResolver;
+    const options = interaction.options;
 
     const quote = options.getString("quote");
     const author = options.getString("author");
@@ -136,7 +135,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         quote,
         author,
         guildId: interaction.guildId,
-        environment: process.env.NODE_ENV,
+        environment: process.env["NODE_ENV"],
         userId: interaction.user.id,
         username: interaction.user.username,
       },

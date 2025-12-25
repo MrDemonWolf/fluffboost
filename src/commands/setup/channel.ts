@@ -2,18 +2,17 @@ import { MessageFlags } from "discord.js";
 
 import type {
   Client,
-  CommandInteraction,
-  CommandInteractionOptionResolver,
+  ChatInputCommandInteraction,
   TextChannel,
 } from "discord.js";
 
-import logger from "../../utils/logger";
-import { prisma } from "../../database";
-import { guildExists } from "../../utils/guildDatabase";
+import logger from "../../utils/logger.js";
+import { prisma } from "../../database/index.js";
+import { guildExists } from "../../utils/guildDatabase.js";
 
 export default async function (
-  client: Client,
-  interaction: CommandInteraction
+  _client: Client,
+  interaction: ChatInputCommandInteraction
 ) {
   try {
     logger.commands.executing(
@@ -26,7 +25,7 @@ export default async function (
       return;
     }
 
-    const options = interaction.options as CommandInteractionOptionResolver;
+    const options = interaction.options;
 
     const motivationChannel = options.getChannel(
       "channel",

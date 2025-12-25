@@ -1,24 +1,68 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "rootDir": "./src/",
-    "outDir": "./dist/",
+    // Target and module settings
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+
+    // Output settings
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"],
+      "@commands/*": ["src/commands/*"],
+      "@events/*": ["src/events/*"],
+      "@utils/*": ["src/utils/*"],
+      "@database/*": ["src/database/*"],
+      "@api/*": ["src/api/*"]
+    },
+
+    // TypeScript features
     "strict": true,
-    "importHelpers": true,
-    "experimentalDecorators": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+
+    // Additional checks
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+
+    // Module and import settings
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true,
     "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowJs": false,
+    "checkJs": false,
+
+    // Output options
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "removeComments": false,
+    "importHelpers": true,
+
+    // Advanced settings
+    "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "removeComments": true,
-    "typeRoots": ["node_modules/@types"],
-    "sourceMap": false,
-    "baseUrl": "./"
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+    // Type definitions
+    "types": ["node"],
+    "typeRoots": ["node_modules/@types"]
   },
-  "files": ["src/app.ts"],
-  "include": ["./**/*.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }
