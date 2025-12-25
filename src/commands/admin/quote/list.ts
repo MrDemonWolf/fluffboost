@@ -1,6 +1,6 @@
 import { Client, CommandInteraction, MessageFlags } from "discord.js";
 
-import type { MotivationQuote } from "@prisma/client";
+import type { MotivationQuote } from "../../../generated/prisma/client.js";
 
 import logger from "../../../utils/logger";
 import { isUserPermitted } from "../../../utils/permissions";

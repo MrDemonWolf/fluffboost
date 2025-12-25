@@ -1,7 +1,7 @@
 import { Client, CommandInteraction, MessageFlags } from "discord.js";
 
 import type { CommandInteractionOptionResolver } from "discord.js";
-import type { DiscordActivityType } from "@prisma/client";
+import type { DiscordActivityType } from "../../../generated/prisma/client.js";
 
 import logger from "../../../utils/logger";
 import { isUserPermitted } from "../../../utils/permissions";
