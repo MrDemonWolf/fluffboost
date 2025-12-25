@@ -20,9 +20,21 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
       .setColor(0xfadb7f)
       .setTitle("✨ FluffBoost Changelog - Version 2.0.0! ✨")
       .setDescription(
-        "Major upgrade with Prisma 7 and improved TypeScript support!"
+        "Major upgrade with Prisma 7 and improved API endpoints!"
       )
       .addFields(
+        // Major Upgrades
+        {
+          name: "🚀 Major: Prisma 7 Upgrade",
+          value:
+            "Upgraded to Prisma 7 with enhanced TypeScript support and improved performance!",
+        },
+        {
+          name: "🔄 Updated: Health Check API",
+          value:
+            "Renamed status API endpoint from /status to /api/health for better REST conventions.",
+        },
+
         // New Features
         {
           name: "🚀 New Feature: Reliable Background Jobs",
@@ -54,7 +66,7 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
             "Added comprehensive Prisma migration comparison guide to assist with database schema changes.",
         },
         {
-          name: "📚 Documentation: Redis Debug Logging",
+          name: "�� Documentation: Redis Debug Logging",
           value:
             "Documented Redis debug logging configuration in README and .env example for better troubleshooting.",
         },
