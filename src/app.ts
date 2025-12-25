@@ -1,6 +1,6 @@
 import { ShardingManager } from "discord.js";
 import { config } from "dotenv";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "./generated/prisma/client.js";
 
 import api from "./api";
 import redisClient from "./redis";
