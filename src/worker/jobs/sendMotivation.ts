@@ -2,7 +2,7 @@ import { TextChannel, EmbedBuilder } from "discord.js";
 import type { Client } from "discord.js";
 
 import { prisma } from "../../database";
-import type { Guild } from "@prisma/client";
+import type { Guild } from "../../generated/prisma/client.js";
 import posthog from "../../utils/posthog";
 import logger from "../../utils/logger";
 
