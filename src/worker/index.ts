@@ -32,15 +32,11 @@ const worker = new Worker(
 );
 
 worker.on("completed", (job) => {
-  logger.success("Worker", `Job ${job.id} of type ${job.name} has completed`);
+  logger.success("Worker", `Job "${job.name}" completed (${job.id})`);
 });
 
 worker.on("failed", (job, err) => {
-  logger.error(
-    "Worker",
-    `Job ${job?.id} of type ${job?.name} has failed with error ${err.message}`,
-    err
-  );
+  logger.error("Worker", `Job "${job?.name}" failed (${job?.id}): ${err.message}`, err);
 });
 
 export default (queue: Queue) => {
@@ -71,10 +67,8 @@ export default (queue: Queue) => {
     }
   );
 
-  logger.info("Worker", "Jobs have been added to the queue", {
-    activityCron: `Every ${env.DISCORD_ACTIVITY_INTERVAL_MINUTES} minutes`,
-    motivationCron: cronToText(
-      env.DISCORD_DEFAULT_MOTIVATIONAL_DAILY_TIME || "0 8 * * *"
-    ),
+  logger.info("Worker", "Jobs registered", {
+    activityInterval: `${env.DISCORD_ACTIVITY_INTERVAL_MINUTES}m`,
+    motivationCron: cronToText(env.DISCORD_DEFAULT_MOTIVATIONAL_DAILY_TIME || "0 8 * * *"),
   });
 };
