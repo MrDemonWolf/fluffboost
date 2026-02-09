@@ -66,9 +66,6 @@ COPY --from=build /usr/src/app/package.json ./
 # Copy generated Prisma client into production node_modules
 COPY --from=build /usr/src/app/src/generated ./src/generated
 
-# Copy prisma package so prisma.config.ts can resolve "prisma/config"
-COPY --from=build /usr/src/app/node_modules/prisma ./node_modules/prisma
-
 # Copy prisma schema, config, and migrations for runtime migrate deploy
 COPY --from=build /usr/src/app/prisma ./prisma
 COPY --from=build /usr/src/app/prisma.config.ts ./
@@ -82,6 +79,8 @@ RUN chown -R fluffboost:fluffboost /usr/src/app
 USER fluffboost
 
 ENV NODE_ENV=production
+# Allow prisma.config.ts to resolve prisma/config from global install
+ENV NODE_PATH=/usr/local/lib/node_modules
 
 EXPOSE 3000
 
