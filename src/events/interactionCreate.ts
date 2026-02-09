@@ -15,6 +15,7 @@ import suggestion from "../commands/suggestion.js";
 import invite from "../commands/invite.js";
 import admin from "../commands/admin/index.js";
 import setup from "../commands/setup/index.js";
+import premium from "../commands/premium.js";
 
 export async function interactionCreateEvent(
   client: Client,
@@ -100,6 +101,14 @@ export async function interactionCreateEvent(
         await setup.execute(client, interaction);
         logger.commands.success(
           "interactionCreate - setup",
+          interaction.user.username,
+          interaction.user.id
+        );
+        break;
+      case "premium":
+        await premium.execute(client, interaction);
+        logger.commands.success(
+          "interactionCreate - premium",
           interaction.user.username,
           interaction.user.id
         );

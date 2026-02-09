@@ -23,7 +23,8 @@ export function execute(_client: Client, interaction: CommandInteraction) {
             \`/invite\` - Invite me to your server!
             \`/quote\` - Get a random quote
             \`/setup\` - Setup the bot for your server such as the channel to send quotes to. (admin only)
-            \`/admin\` - Admin commands (selected users only)`,
+            \`/admin\` - Admin commands (selected users only)
+            \`/premium\` - View premium subscription info and status`,
       flags: MessageFlags.Ephemeral,
     });
 
