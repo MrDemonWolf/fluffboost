@@ -1,15 +1,12 @@
-import { TextChannel, EmbedBuilder } from "discord.js";
+import { EmbedBuilder } from "discord.js";
 import type { Client } from "discord.js";
 
 import { prisma } from "../../database/index.js";
-import type { Guild } from "../../generated/prisma/client.js";
+import { isGuildDueForMotivation } from "../../utils/scheduleEvaluator.js";
 import posthog from "../../utils/posthog.js";
 import logger from "../../utils/logger.js";
 
 export default async function sendMotivation(client: Client) {
-  /**
-   * Get all guilds from the database that have the motivation channel set.
-   */
   const guilds = await prisma.guild.findMany({
     where: {
       motivationChannelId: {
@@ -18,9 +15,19 @@ export default async function sendMotivation(client: Client) {
     },
   });
 
-  /**
-   * Find a random motivation quote from the database.
-   */
+  if (guilds.length === 0) {
+    return;
+  }
+
+  // Filter to only guilds that are due for a motivation quote right now
+  const dueGuilds = guilds.filter((g) => isGuildDueForMotivation(g));
+
+  if (dueGuilds.length === 0) {
+    return;
+  }
+
+  logger.info("Worker", `${dueGuilds.length} guild(s) due for motivation out of ${guilds.length} total`);
+
   const motivationQuoteCount = await prisma.motivationQuote.count();
   const skip = Math.floor(Math.random() * motivationQuoteCount);
   const motivationQuote = await prisma.motivationQuote.findMany({
@@ -33,9 +40,6 @@ export default async function sendMotivation(client: Client) {
     return;
   }
 
-  /**
-   * Get the user who added the motivation quote.
-   */
   let addedBy;
   try {
     addedBy = await client.users.fetch(motivationQuote[0].addedBy);
@@ -47,55 +51,72 @@ export default async function sendMotivation(client: Client) {
     addedBy = null;
   }
 
-  guilds.map(async (g: Guild) => {
-    /**
-     * This is to keep typescript happy. As in the query above.
-     * We are filtering out guilds that don't have the motivation channel set.
-     */
-    if (!g.motivationChannelId) {
-      logger.warn("Worker", "Guild does not have a motivation channel set", {
-        guildId: g.guildId,
+  const motivationEmbed = new EmbedBuilder()
+    .setColor(0xfadb7f)
+    .setTitle("Motivation quote of the day \u{1F4C5}")
+    .setDescription(
+      `**"${motivationQuote[0].quote}"**\n by ${motivationQuote[0].author}`
+    )
+    .setAuthor({
+      name: addedBy ? addedBy.username : "Unknown User",
+      iconURL: addedBy ? addedBy.displayAvatarURL() : undefined,
+    })
+    .setFooter({
+      text: "Powered by MrDemonWolf, Inc.",
+      iconURL: client.user?.displayAvatarURL(),
+    });
+
+  const results = await Promise.allSettled(
+    dueGuilds.map(async (g): Promise<"sent" | "skipped"> => {
+      if (!g.motivationChannelId) {
+        return "skipped";
+      }
+
+      const channel = await client.channels.fetch(g.motivationChannelId);
+
+      if (!channel || !channel.isTextBased() || channel.isDMBased()) {
+        logger.warn("Worker", "Motivation channel is not a valid text channel", {
+          guildId: g.guildId,
+          channelId: g.motivationChannelId,
+        });
+        return "skipped";
+      }
+
+      await channel.send({ embeds: [motivationEmbed] });
+
+      // Update lastMotivationSentAt after successful send
+      await prisma.guild.update({
+        where: { guildId: g.guildId },
+        data: { lastMotivationSentAt: new Date() },
       });
-      return;
+
+      return "sent";
+    })
+  );
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const result of results) {
+    if (result.status === "rejected") {
+      failed++;
+      logger.error("Worker", "Failed to send motivation to a guild", result.reason);
+    } else if (result.value === "sent") {
+      sent++;
     }
-    /**
-     * Get the motivation channel from the guild.
-     */
-    const motivationChannel = client.channels.cache.get(
-      g.motivationChannelId
-    ) as TextChannel;
+  }
 
-    /**
-     * Create a custom embed for the motivation message.
-     */
+  logger.success("Worker", `Motivation sent to ${sent} guild(s), ${failed} failed`);
 
-    const motivationEmbed = new EmbedBuilder()
-      .setColor(0xfadb7f)
-      .setTitle("Motivation quote of the day 📅")
-      .setDescription(
-        `**"${motivationQuote[0]!.quote}"**\n by ${motivationQuote[0]!.author}`
-      )
-      .setAuthor({
-        name: addedBy ? addedBy.username : "Unknown User",
-        url: addedBy ? addedBy.displayAvatarURL() : undefined,
-        iconURL: addedBy ? addedBy.displayAvatarURL() : undefined,
-      })
-      .setFooter({
-        text: "Powered by MrDemonWolf, Inc.",
-        iconURL: client.user?.displayAvatarURL(),
-      });
-
-    /**
-     * Send the motivation message.
-     */
-    motivationChannel.send({ embeds: [motivationEmbed] });
-  });
   posthog.capture({
     distinctId: "motivation-job",
     event: "motivation job executed",
     properties: {
       environment: process.env["NODE_ENV"],
       quote: motivationQuote[0].id,
+      sent,
+      failed,
+      total: dueGuilds.length,
     },
   });
 }

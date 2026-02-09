@@ -1,9 +1,8 @@
-// @ts-check
-const js = require("@eslint/js");
-const tseslint = require("@typescript-eslint/eslint-plugin");
-const tseslintParser = require("@typescript-eslint/parser");
+import js from "@eslint/js";
+import tseslint from "@typescript-eslint/eslint-plugin";
+import tseslintParser from "@typescript-eslint/parser";
 
-module.exports = [
+export default [
   // Base configuration
   js.configs.recommended,
 
@@ -114,6 +113,8 @@ module.exports = [
       "ecosystem.config.js",
       "prisma/migrations/**",
       "pnpm-lock.yaml",
+      "tests/**",
+      "src/generated/**",
     ],
   },
 ];
