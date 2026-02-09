@@ -126,15 +126,15 @@ Discord provides test entitlements so you can verify your subscription flow with
 - Use `/premium` — you'll see the premium info embed with a purchase button
 
 **Testing the subscribed flow (with test entitlement):**
-- Use `/admin premium test-create` to grant yourself a test entitlement (optionally pass `user:` to target another user)
+- Use `/owner premium test-create` to grant yourself a test entitlement (optionally pass `user:` to target another user)
 - Use `/premium` again — you'll now see the "Premium Active" embed
-- Use `/admin premium test-delete entitlement_id:<id>` to remove the test entitlement when done
+- Use `/owner premium test-delete entitlement_id:<id>` to remove the test entitlement when done
 
-**Admin commands for test entitlements:**
-- `/admin premium test-create [user]` — Creates a test entitlement via `client.application.entitlements.createTest()`. Returns the entitlement ID.
-- `/admin premium test-delete <entitlement_id>` — Deletes a test entitlement via `client.application.entitlements.deleteTest()`.
+**Owner commands for test entitlements:**
+- `/owner premium test-create [user]` — Creates a test entitlement via `client.application.entitlements.createTest()`. Returns the entitlement ID.
+- `/owner premium test-delete <entitlement_id>` — Deletes a test entitlement via `client.application.entitlements.deleteTest()`.
 
-These commands are restricted to permitted users (same as other admin commands).
+These commands are restricted to the bot owner only (`OWNER_ID` env var).
 
 ### Gating Future Commands Behind Premium
 

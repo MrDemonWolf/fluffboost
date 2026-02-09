@@ -16,6 +16,7 @@ import setup from "../commands/setup/index.js";
 import admin from "../commands/admin/index.js";
 import changelog from "../commands/changelog.js";
 import premium from "../commands/premium.js";
+import owner from "../commands/owner/index.js";
 
 export async function readyEvent(client: Client) {
   try {
@@ -52,6 +53,7 @@ export async function readyEvent(client: Client) {
       admin.slashCommand,
       changelog.slashCommand,
       premium.slashCommand,
+      owner.slashCommand,
     ]);
 
     const commands = await client.application?.commands.fetch();

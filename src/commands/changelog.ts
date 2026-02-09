@@ -18,81 +18,38 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
     );
     const embed = new EmbedBuilder()
       .setColor(0xfadb7f)
-      .setTitle("✨ FluffBoost Changelog - Version 2.0.0! ✨")
+      .setTitle("\u2728 FluffBoost Changelog - Version 2.1.0! \u2728")
       .setDescription(
-        "Major upgrade with Prisma 7, improved API endpoints, and faster Docker builds!"
+        "Premium subscriptions, new owner commands, and monetization support!"
       )
       .addFields(
-        // Major Upgrades
-        {
-          name: "🚀 Major: Prisma 7 Upgrade",
-          value:
-            "Upgraded to Prisma 7 with enhanced TypeScript support and improved performance!",
-        },
-        {
-          name: "�� Updated: Health Check API",
-          value:
-            "Renamed status API endpoint from /status to /api/health for better REST conventions.",
-        },
-        {
-          name: "⚡ Performance: Optimized Docker Builds",
-          value:
-            "Enhanced Dockerfile with better layer caching and multi-stage builds for significantly faster build times!",
-        },
-
         // New Features
         {
-          name: "🚀 New Feature: Reliable Background Jobs",
+          name: "\uD83D\uDE80 New Feature: Premium Subscriptions",
           value:
-            "Switched to reliable background jobs for Discord activity and daily motivation, ensuring consistent delivery!",
+            "Added `/premium` command for users to view premium info, check subscription status, and subscribe via Discord's native purchase flow.",
         },
         {
-          name: "🚀 New Feature: Per-Guild Motivation Timing",
+          name: "\uD83D\uDE80 New Feature: Owner Commands",
           value:
-            "Added per-guild motivation timing and timezone support with sensible defaults for personalized scheduling.",
+            "Added `/owner` command restricted to the bot owner. Includes `/owner premium test-create` and `/owner premium test-delete` for managing Discord test entitlements.",
         },
         {
-          name: "✨ New Feature: Configurable Activity Updates",
+          name: "\u2728 New Feature: Entitlement Event Tracking",
           value:
-            "Activity update interval is now configurable via DISCORD_ACTIVITY_INTERVAL_MINUTES environment variable.",
-        },
-
-        // Bug Fixes
-        {
-          name: "🐛 Bug Fix: Discord Status Quoting",
-          value:
-            "Corrected default Discord status quoting for proper display formatting.",
-        },
-
-        // Documentation
-        {
-          name: "📚 Documentation: Prisma Migration Guide",
-          value:
-            "Added comprehensive Prisma migration comparison guide to assist with database schema changes.",
+            "Bot now listens for subscription events (create, update, delete) with logging and PostHog analytics tracking.",
         },
         {
-          name: "📚 Documentation: Redis Debug Logging",
+          name: "\u2728 New Feature: Premium Toggle",
           value:
-            "Documented Redis debug logging configuration in README and .env example for better troubleshooting.",
+            "Premium features can be enabled/disabled via `PREMIUM_ENABLED` environment variable with SKU ID configuration.",
         },
 
         // System Improvements
         {
-          name: "⚙️ Improved: Redis Client Stability",
+          name: "\u2699\uFE0F Improved: Environment Validation",
           value:
-            "Enhanced Redis client stability settings for more reliable connection handling and performance.",
-        },
-        {
-          name: "⚙️ Improved: Database Schema Alignment",
-          value:
-            "Database migrations to align schema including SuggestionQuote and Guild field updates for better data consistency.",
-        },
-
-        // Development Improvements
-        {
-          name: "🔧 Chores: Docker Configuration Updates",
-          value:
-            "Updated docker-compose default database name for improved development environment consistency.",
+            "Added cross-field validation ensuring `DISCORD_PREMIUM_SKU_ID` is set when `PREMIUM_ENABLED` is true.",
         }
       )
       .setTimestamp()

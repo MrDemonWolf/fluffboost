@@ -3,7 +3,7 @@ import { MessageFlags } from "discord.js";
 import type { Client, CommandInteraction, CommandInteractionOptionResolver } from "discord.js";
 
 import logger from "../../../utils/logger.js";
-import { isUserPermitted } from "../../../utils/permissions.js";
+import env from "../../../utils/env.js";
 import { getPremiumSkuId } from "../../../utils/premium.js";
 
 export default async function (
@@ -13,13 +13,23 @@ export default async function (
 ): Promise<void> {
   try {
     logger.commands.executing(
-      "admin premium test-create",
+      "owner premium test-create",
       interaction.user.username,
       interaction.user.id
     );
 
-    const isAllowed = isUserPermitted(interaction);
-    if (!isAllowed) return;
+    if (interaction.user.id !== env.OWNER_ID) {
+      logger.commands.unauthorized(
+        "owner premium test-create",
+        interaction.user.username,
+        interaction.user.id
+      );
+      await interaction.reply({
+        content: "Only the bot owner can use this command.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
 
     const skuId = getPremiumSkuId();
     if (!skuId) {
@@ -46,24 +56,24 @@ export default async function (
     });
 
     logger.commands.success(
-      "admin premium test-create",
+      "owner premium test-create",
       interaction.user.username,
       interaction.user.id
     );
   } catch (err) {
     logger.commands.error(
-      "admin premium test-create",
+      "owner premium test-create",
       interaction.user.username,
       interaction.user.id,
       err
     );
     logger.error(
       "Discord - Command",
-      "Error executing admin premium test-create command",
+      "Error executing owner premium test-create command",
       err,
       {
         user: { username: interaction.user.username, id: interaction.user.id },
-        command: "admin premium test-create",
+        command: "owner premium test-create",
       }
     );
 

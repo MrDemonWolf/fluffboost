@@ -24,7 +24,8 @@ export function execute(_client: Client, interaction: CommandInteraction) {
             \`/quote\` - Get a random quote
             \`/setup\` - Setup the bot for your server such as the channel to send quotes to. (admin only)
             \`/admin\` - Admin commands (selected users only)
-            \`/premium\` - View premium subscription info and status`,
+            \`/premium\` - View premium subscription info and status
+            \`/owner\` - Bot owner commands (owner only)`,
       flags: MessageFlags.Ephemeral,
     });
 

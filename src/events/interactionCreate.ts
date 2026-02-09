@@ -16,6 +16,7 @@ import invite from "../commands/invite.js";
 import admin from "../commands/admin/index.js";
 import setup from "../commands/setup/index.js";
 import premium from "../commands/premium.js";
+import owner from "../commands/owner/index.js";
 
 export async function interactionCreateEvent(
   client: Client,
@@ -109,6 +110,14 @@ export async function interactionCreateEvent(
         await premium.execute(client, interaction);
         logger.commands.success(
           "interactionCreate - premium",
+          interaction.user.username,
+          interaction.user.id
+        );
+        break;
+      case "owner":
+        await owner.execute(client, interaction);
+        logger.commands.success(
+          "interactionCreate - owner",
           interaction.user.username,
           interaction.user.id
         );

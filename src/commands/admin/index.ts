@@ -20,8 +20,6 @@ import quoteRemove from "./quote/remove.js";
 import activityAdd from "./activity/create.js";
 import activityList from "./activity/list.js";
 import activityRemove from "./activity/remove.js";
-import premiumTestCreate from "./premium/testCreate.js";
-import premiumTestDelete from "./premium/testDelete.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("admin")
@@ -114,33 +112,6 @@ export const slashCommand = new SlashCommandBuilder()
           .setDescription("List all available activities");
       });
   })
-  .addSubcommandGroup((subCommandGroup) => {
-    return subCommandGroup
-      .setName("premium")
-      .setDescription("Manage premium test entitlements")
-      .addSubcommand((subCommand) => {
-        return subCommand
-          .setName("test-create")
-          .setDescription("Create a test entitlement for a user")
-          .addUserOption((option) =>
-            option
-              .setName("user")
-              .setDescription("User to grant the test entitlement to (defaults to you)")
-              .setRequired(false)
-          );
-      })
-      .addSubcommand((subCommand) => {
-        return subCommand
-          .setName("test-delete")
-          .setDescription("Delete a test entitlement")
-          .addStringOption((option) =>
-            option
-              .setName("entitlement_id")
-              .setDescription("The entitlement ID to delete")
-              .setRequired(true)
-          );
-      });
-  })
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 export async function execute(client: Client, interaction: CommandInteraction) {
@@ -205,30 +176,6 @@ export async function execute(client: Client, interaction: CommandInteraction) {
             break;
           case "list":
             activityList(client, interaction);
-            break;
-          default:
-            interaction.reply({
-              content: "Invalid subcommand",
-              flags: MessageFlags.Ephemeral,
-            });
-        }
-        break;
-
-      case "premium":
-        switch (subCommand) {
-          case "test-create":
-            premiumTestCreate(
-              client,
-              interaction,
-              options as CommandInteractionOptionResolver
-            );
-            break;
-          case "test-delete":
-            premiumTestDelete(
-              client,
-              interaction,
-              options as CommandInteractionOptionResolver
-            );
             break;
           default:
             interaction.reply({
