@@ -66,11 +66,13 @@ COPY --from=build /usr/src/app/package.json ./
 # Copy generated Prisma client into production node_modules
 COPY --from=build /usr/src/app/src/generated ./src/generated
 
-# Copy prisma schema + migrations for runtime migrate deploy
+# Copy prisma schema, config, and migrations for runtime migrate deploy
 COPY --from=build /usr/src/app/prisma ./prisma
+COPY --from=build /usr/src/app/prisma.config.ts ./
 
 # Copy entrypoint script
 COPY --from=build /usr/src/app/docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
 
 # Set ownership and switch to non-root user
 RUN chown -R fluffboost:fluffboost /usr/src/app
