@@ -1,7 +1,7 @@
 # ----------------------------
 # 1️⃣ Base image (shared)
 # ----------------------------
-FROM node:24-alpine AS base
+FROM node:22-alpine AS base
 
 WORKDIR /usr/src/app
 
@@ -46,7 +46,7 @@ RUN pnpm install --frozen-lockfile --prod
 # ----------------------------
 # 5️⃣ Production runtime (small)
 # ----------------------------
-FROM node:24-alpine AS production
+FROM node:22-alpine AS production
 
 WORKDIR /usr/src/app
 
