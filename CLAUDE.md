@@ -111,24 +111,30 @@ Premium subscriptions use Discord's App Subscriptions (SKUs, Entitlements). Mana
 ### Environment Variables
 
 - `PREMIUM_ENABLED` — Master toggle for premium features (default: `false`)
-- `PREMIUM_TEST_MODE` — Enables premium command without a real SKU ID for local testing (default: `false`)
-- `DISCORD_PREMIUM_SKU_ID` — SKU ID from Discord Developer Portal (required when `PREMIUM_ENABLED=true` unless test mode is on)
+- `DISCORD_PREMIUM_SKU_ID` — SKU ID from Discord Developer Portal (required when `PREMIUM_ENABLED=true`)
 
-### Testing Premium Locally
+### Testing Premium with Test Entitlements
 
-To test the `/premium` command without a real Discord SKU:
+Discord provides test entitlements so you can verify your subscription flow without real payments. This uses Discord's official testing mechanism via the API.
 
-1. Set `PREMIUM_TEST_MODE=true` in your `.env` (no SKU ID needed)
-2. Run `pnpm dev`
-3. Use `/premium` in Discord — you'll see the upsell embed with "(Test Mode)" label and no purchase button
-4. In test mode, `hasEntitlement()` always returns `false` so you always see the upsell flow
+**Setup:**
+1. Create a subscription SKU in the [Discord Developer Portal](https://discord.com/developers/applications) under your app's Monetization settings
+2. Set `PREMIUM_ENABLED=true` and `DISCORD_PREMIUM_SKU_ID=<your_sku_id>` in your `.env`
+3. Run `pnpm dev`
 
-To test with a real SKU (after configuring monetization in Discord Developer Portal):
+**Testing the upsell flow (no entitlement):**
+- Use `/premium` — you'll see the premium info embed with a purchase button
 
-1. Set `PREMIUM_ENABLED=true` and `DISCORD_PREMIUM_SKU_ID=<your_sku_id>` in your `.env`
-2. Run `pnpm dev`
-3. Use `/premium` — you'll see the real purchase button
-4. Use `client.application.entitlements.createTest({ sku: '<sku_id>', owner: { id: '<user_id>', type: 2 } })` to create a test entitlement and verify the "subscribed" flow
+**Testing the subscribed flow (with test entitlement):**
+- Use `/admin premium test-create` to grant yourself a test entitlement (optionally pass `user:` to target another user)
+- Use `/premium` again — you'll now see the "Premium Active" embed
+- Use `/admin premium test-delete entitlement_id:<id>` to remove the test entitlement when done
+
+**Admin commands for test entitlements:**
+- `/admin premium test-create [user]` — Creates a test entitlement via `client.application.entitlements.createTest()`. Returns the entitlement ID.
+- `/admin premium test-delete <entitlement_id>` — Deletes a test entitlement via `client.application.entitlements.deleteTest()`.
+
+These commands are restricted to permitted users (same as other admin commands).
 
 ### Gating Future Commands Behind Premium
 

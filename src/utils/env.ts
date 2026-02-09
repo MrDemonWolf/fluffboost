@@ -68,14 +68,12 @@ const envSchema = z.object({
     .enum(["development", "production", "test"])
     .default("development"),
   PREMIUM_ENABLED: z.coerce.boolean().default(false),
-  PREMIUM_TEST_MODE: z.coerce.boolean().default(false),
   DISCORD_PREMIUM_SKU_ID: z.string().optional(),
 })
   .refine(
-    (data) =>
-      !(data.PREMIUM_ENABLED && !data.PREMIUM_TEST_MODE) || data.DISCORD_PREMIUM_SKU_ID,
+    (data) => !data.PREMIUM_ENABLED || data.DISCORD_PREMIUM_SKU_ID,
     {
-      message: "DISCORD_PREMIUM_SKU_ID is required when PREMIUM_ENABLED is true (unless PREMIUM_TEST_MODE is enabled)",
+      message: "DISCORD_PREMIUM_SKU_ID is required when PREMIUM_ENABLED is true",
       path: ["DISCORD_PREMIUM_SKU_ID"],
     }
   );

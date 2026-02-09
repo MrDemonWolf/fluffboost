@@ -11,7 +11,7 @@ import type { Client, CommandInteraction } from "discord.js";
 
 import logger from "../utils/logger.js";
 import posthog from "../utils/posthog.js";
-import { isPremiumEnabled, isPremiumTestMode, hasEntitlement, getPremiumSkuId } from "../utils/premium.js";
+import { isPremiumEnabled, hasEntitlement, getPremiumSkuId } from "../utils/premium.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("premium")
@@ -30,8 +30,6 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
       logger.commands.success("premium", interaction.user.username, interaction.user.id);
       return;
     }
-
-    const testMode = isPremiumTestMode();
 
     if (hasEntitlement(interaction)) {
       const embed = new EmbedBuilder()
@@ -54,7 +52,7 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
 
       const embed = new EmbedBuilder()
         .setColor(0xfadb7f)
-        .setTitle(testMode ? "FluffBoost Premium (Test Mode)" : "FluffBoost Premium")
+        .setTitle("FluffBoost Premium")
         .setDescription("Upgrade to Premium to unlock exclusive features!")
         .addFields(
           { name: "Price", value: "$1.99/month", inline: true },
@@ -67,28 +65,17 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
             ].join("\n"),
           }
         )
-        .setFooter({
-          text: testMode
-            ? "Test Mode - Purchase button disabled (no SKU configured)"
-            : "Subscribe to support FluffBoost development!",
-        });
+        .setFooter({ text: "Subscribe to support FluffBoost development!" });
 
-      if (skuId && !testMode) {
-        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-          new ButtonBuilder().setStyle(ButtonStyle.Premium).setSKUId(skuId)
-        );
+      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder().setStyle(ButtonStyle.Premium).setSKUId(skuId!)
+      );
 
-        await interaction.reply({
-          embeds: [embed],
-          components: [row],
-          flags: MessageFlags.Ephemeral,
-        });
-      } else {
-        await interaction.reply({
-          embeds: [embed],
-          flags: MessageFlags.Ephemeral,
-        });
-      }
+      await interaction.reply({
+        embeds: [embed],
+        components: [row],
+        flags: MessageFlags.Ephemeral,
+      });
     }
 
     logger.commands.success("premium", interaction.user.username, interaction.user.id);
@@ -101,7 +88,6 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
         userId: interaction.user.id,
         username: interaction.user.username,
         hasPremium: hasEntitlement(interaction),
-        testMode,
       },
     });
   } catch (err) {
