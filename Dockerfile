@@ -1,7 +1,7 @@
 # ----------------------------
 # 1️⃣ Base image (shared)
 # ----------------------------
-FROM node:22-alpine AS base
+FROM node:24-alpine AS base
 
 WORKDIR /usr/src/app
 
@@ -46,14 +46,14 @@ RUN pnpm install --frozen-lockfile --prod
 # ----------------------------
 # 5️⃣ Production runtime (small)
 # ----------------------------
-FROM node:22-alpine AS production
+FROM node:24-alpine AS production
 
 WORKDIR /usr/src/app
 
 RUN apk add --no-cache openssl curl
 
 # Install prisma CLI globally for runtime migrations
-RUN npm install -g prisma@7
+RUN npm install -g prisma@7.2.0
 
 # Create non-root user
 RUN addgroup -S fluffboost && adduser -S fluffboost -G fluffboost
