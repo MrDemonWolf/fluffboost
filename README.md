@@ -117,7 +117,7 @@ The CI pipeline automatically runs:
 
 If you have any questions, suggestions, or feedback, feel free to reach out to us on Discord!
 
-- Discord: [Join my server](https://mrdwolf.com/discord)
+- Discord: [Join my server](https://mrdwolf.net/discord)
 
 Thank you for choosing FluffBoost to add motivation and positivity to your Discord server!
 
