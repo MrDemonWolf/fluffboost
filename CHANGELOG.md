@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Daily Motivation Delivery:** Fixed critical bug where daily motivation messages silently failed to deliver to most guilds. Replaced `client.channels.cache.get()` with `client.channels.fetch()` so channels are fetched from the API when not cached (e.g., after restarts or across shards). All guild sends are now properly awaited using `Promise.allSettled()` with per-guild error handling and sent/failed summary logging.
+- **Worker Logging:** Standardized worker log component names and improved job completion/failure log messages for better readability.
 - Discord Status Quoting: Corrected default Discord status quoting for proper display formatting.
 
 ### Documentation

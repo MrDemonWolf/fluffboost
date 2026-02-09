@@ -66,7 +66,9 @@ To add a new slash command:
 
 BullMQ processes two recurring jobs:
 - `set-activity` — Rotates bot presence every N minutes (configurable via `DISCORD_ACTIVITY_INTERVAL_MINUTES`).
-- `send-motivation` — Sends daily motivational quotes to configured guild channels on a cron schedule.
+- `send-motivation` — Sends daily motivational quotes to configured guild channels on a cron schedule. Uses `client.channels.fetch()` (not `.cache.get()`) so channels are resolved even after restarts or across shards. Sends to all guilds concurrently via `Promise.allSettled()` with per-guild error handling — Discord.js handles rate limiting internally.
+
+Worker log component names use `"Worker"` consistently.
 
 ### Database Models
 
