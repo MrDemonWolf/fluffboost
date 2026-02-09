@@ -17,14 +17,24 @@ enum DiscordActivityType {
   Playing
 }
 
+enum MotivationFrequency {
+  Daily
+  Weekly
+  Monthly
+}
+
 model Guild {
-  id                  String   @id @default(uuid())
-  guildId             String   @unique
-  motivationChannelId String?
-  motivationTime      String   @default("0 8 * * *") // Default to 8 AM daily
-  timezone            String   @default("America/Chicago") // IANA timezone identifier (CST)
-  joinedAt            DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                   String              @id @default(uuid())
+  guildId              String              @unique
+  motivationChannelId  String?
+  motivationFrequency  MotivationFrequency @default(Daily)
+  motivationTime       String              @default("08:00") // HH:mm format
+  motivationDay        Int? // Day of week (0-6, Sun-Sat) for Weekly, day of month (1-28) for Monthly
+  timezone             String              @default("America/Chicago") // IANA timezone identifier
+  lastMotivationSentAt DateTime? // Track when last quote was sent
+  isPremium            Boolean             @default(false) // Cache premium status at guild level
+  joinedAt             DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
 }
 
 model MotivationQuote {

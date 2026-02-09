@@ -2,6 +2,7 @@ import { Client, Events, GatewayIntentBits } from "discord.js";
 
 import env from "./utils/env.js";
 import logger from "./utils/logger.js";
+import { isPremiumEnabled } from "./utils/premium.js";
 
 /**
  * Import events from the events folder.
@@ -11,6 +12,9 @@ import { guildCreateEvent } from "./events/guildCreate.js";
 import { guildDeleteEvent } from "./events/guildDelete.js";
 import { interactionCreateEvent } from "./events/interactionCreate.js";
 import { shardDisconnectEvent } from "./events/shardDisconnect.js";
+import { entitlementCreateEvent } from "./events/entitlementCreate.js";
+import { entitlementUpdateEvent } from "./events/entitlementUpdate.js";
+import { entitlementDeleteEvent } from "./events/entitlementDelete.js";
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
@@ -59,6 +63,23 @@ client.on(Events.InteractionCreate, (interaction) => {
 client.on(Events.ShardError, () => {
   shardDisconnectEvent();
 });
+
+/**
+ * Handle entitlement events for premium subscriptions.
+ */
+if (isPremiumEnabled()) {
+  client.on(Events.EntitlementCreate, (entitlement) => {
+    entitlementCreateEvent(entitlement);
+  });
+
+  client.on(Events.EntitlementUpdate, (oldEntitlement, newEntitlement) => {
+    entitlementUpdateEvent(oldEntitlement, newEntitlement);
+  });
+
+  client.on(Events.EntitlementDelete, (entitlement) => {
+    entitlementDeleteEvent(entitlement);
+  });
+}
 
 client.login(env.DISCORD_APPLICATION_BOT_TOKEN);
 
