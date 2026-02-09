@@ -21,6 +21,8 @@ export function getPremiumSkuId(): string | undefined {
  */
 export function hasEntitlement(interaction: CommandInteraction | ChatInputCommandInteraction): boolean {
   const skuId = getPremiumSkuId();
-  if (!skuId) return false;
+  if (!skuId) {
+    return false;
+  }
   return interaction.entitlements.some((entitlement) => entitlement.skuId === skuId);
 }

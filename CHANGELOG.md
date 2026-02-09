@@ -5,6 +5,28 @@ All notable changes to FluffBoost will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-02-09
+
+### Added
+
+- **Premium Subscriptions:** Added support for Discord App Subscriptions (SKUs & Entitlements) with `/premium` command to view subscription info and status.
+- **Custom Quote Scheduling (Premium):** Premium servers can customize their quote delivery schedule via `/setup schedule` — choose daily, weekly, or monthly frequency with a custom time and timezone.
+- **Per-Guild Scheduling:** Each server now has its own independent motivation schedule. Non-premium servers keep the default daily 8:00 AM (America/Chicago) delivery.
+- **Timezone Autocomplete:** The `/setup schedule` command includes autocomplete for IANA timezones for easy selection.
+- **Owner Commands:** Added `/owner` command group with premium test entitlement management (`test-create` / `test-delete`).
+- **Entitlement Event Handlers:** Bot now listens for entitlement create, update, and delete events from Discord.
+- **Unit Tests:** Added Mocha + Chai + Sinon test suite with 35 tests covering timezone utilities and the schedule evaluator.
+
+### Improved
+
+- **Motivation Worker:** Rewritten to evaluate per-guild schedules every minute using dayjs with timezone support, replacing the single global cron approach.
+- **ESLint Config:** Fixed ESLint configuration to work with ESM (`import`/`export` instead of `require`/`module.exports`).
+- **CI Pipeline:** Fixed Prisma generate step, added test step, and ESLint now passes in CI.
+
+### Changed
+
+- **Script Names:** Renamed `prisma:*` scripts to `db:*` (e.g., `pnpm db:generate`, `pnpm db:push`).
+
 ## [2.0.0] - 2025-12-25
 
 ### Major Upgrades
@@ -99,6 +121,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - User Feedback: Updated success messages for setting activities and refined the appearance of suggestion embeds.
 - Internal Logging: Migrated from basic `console.log` to a more structured and robust logging system.
 
+[2.2.0]: https://github.com/mrdemonwolf/fluffboost/compare/v2.0.0...v2.2.0
 [2.0.0]: https://github.com/mrdemonwolf/fluffboost/compare/v1.9.0...v2.0.0
 [1.9.0]: https://github.com/mrdemonwolf/fluffboost/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/mrdemonwolf/fluffboost/compare/v1.7.0...v1.8.0

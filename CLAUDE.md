@@ -20,10 +20,10 @@ pnpm lint:check           # ESLint check only (used in CI)
 pnpm format               # Prettier formatting
 
 # Database
-pnpm prisma:generate      # Generate Prisma client (outputs to src/generated/prisma/)
-pnpm prisma:push          # Sync schema to database (dev)
-pnpm prisma:migrate       # Run migrations (production)
-pnpm prisma:studio        # Open Prisma Studio UI
+pnpm db:generate          # Generate Prisma client (outputs to src/generated/prisma/)
+pnpm db:push              # Sync schema to database (dev)
+pnpm db:migrate           # Run migrations (production)
+pnpm db:studio            # Open Prisma Studio UI
 
 # Type checking
 pnpm tsc --noEmit         # TypeScript check without emitting
@@ -35,7 +35,7 @@ pnpm test                 # Mocha tests (cross-env NODE_ENV=test)
 docker-compose up         # Start PostgreSQL 16 + Redis 7 locally
 ```
 
-**After changing `prisma/schema.prisma`**, always run `pnpm prisma:generate` to regenerate the client, then `pnpm prisma:push` (dev) or `pnpm prisma:migrate` (prod) to sync the database.
+**After changing `prisma/schema.prisma`**, always run `pnpm db:generate` to regenerate the client, then `pnpm db:push` (dev) or `pnpm db:migrate` (prod) to sync the database.
 
 ## Architecture
 
@@ -66,13 +66,13 @@ To add a new slash command:
 
 BullMQ processes two recurring jobs:
 - `set-activity` — Rotates bot presence every N minutes (configurable via `DISCORD_ACTIVITY_INTERVAL_MINUTES`).
-- `send-motivation` — Sends daily motivational quotes to configured guild channels on a cron schedule. Uses `client.channels.fetch()` (not `.cache.get()`) so channels are resolved even after restarts or across shards. Sends to all guilds concurrently via `Promise.allSettled()` with per-guild error handling — Discord.js handles rate limiting internally.
+- `send-motivation` — Runs every minute to evaluate per-guild schedules. Each guild has its own `motivationFrequency` (Daily/Weekly/Monthly), `motivationTime` (HH:mm), `timezone`, and `motivationDay`. The worker uses `isGuildDueForMotivation()` from `src/utils/scheduleEvaluator.ts` (powered by dayjs with timezone support) to determine which guilds are due, then sends only to those guilds. Uses `client.channels.fetch()` (not `.cache.get()`) and `Promise.allSettled()` with per-guild error handling. After each successful send, `lastMotivationSentAt` is updated to prevent duplicate deliveries.
 
 Worker log component names use `"Worker"` consistently.
 
 ### Database Models
 
-Four Prisma models: `Guild` (server config with per-guild motivation time/timezone), `MotivationQuote`, `SuggestionQuote` (user-submitted, pending approval), `DiscordActivity` (bot status entries with type enum).
+Four Prisma models: `Guild` (server config with per-guild motivation schedule including frequency, time, timezone, day, and `lastMotivationSentAt`), `MotivationQuote`, `SuggestionQuote` (user-submitted, pending approval), `DiscordActivity` (bot status entries with type enum). The `MotivationFrequency` enum (Daily/Weekly/Monthly) controls delivery cadence.
 
 ### Discord.js Patterns
 
@@ -136,6 +136,16 @@ Discord provides test entitlements so you can verify your subscription flow with
 
 These commands are restricted to the bot owner only (`OWNER_ID` env var).
 
+### Custom Quote Timing (Premium)
+
+Premium guilds can customize their quote delivery schedule via `/setup schedule`:
+- **Frequency**: Daily (default), Weekly, or Monthly
+- **Time**: HH:mm format (default: `08:00`)
+- **Timezone**: Any IANA timezone with autocomplete (default: `America/Chicago`)
+- **Day**: Day of week (0-6) for weekly, day of month (1-28) for monthly
+
+Non-premium guilds keep the default daily 8:00 AM America/Chicago schedule. The schedule evaluator (`src/utils/scheduleEvaluator.ts`) uses dayjs with timezone support to determine when each guild is due. If a premium subscription lapses, the custom schedule is retained (no automatic reset).
+
 ### Gating Future Commands Behind Premium
 
 ```typescript
@@ -148,10 +158,13 @@ if (isPremiumEnabled() && !hasEntitlement(interaction)) {
 }
 ```
 
-## Known Issues
+## Testing
 
-- **ESLint config** — `eslint.config.js` uses `require()` in an ESM project, so `pnpm lint:check` currently fails with `ReferenceError: require is not defined`. TypeScript checking (`pnpm tsc --noEmit`) and build (`pnpm build`) work fine.
+Tests use **Mocha** + **Chai** + **Sinon**, configured in `.mocharc.yml` with `tsx` as the loader. Test files live in `tests/` (mirroring `src/` structure) and use `.test.ts` suffix. Time-dependent tests use `sinon.useFakeTimers()` to control `dayjs()`.
+
+- `tests/utils/timezones.test.ts` — Unit tests for timezone utilities (ALL_TIMEZONES, isValidTimezone, filterTimezones)
+- `tests/utils/scheduleEvaluator.test.ts` — Unit tests for schedule evaluator (getCurrentTimeInTimezone, isGuildDueForMotivation across Daily/Weekly/Monthly frequencies)
 
 ## Setup Notes
 
-If `node_modules` is missing, run `pnpm install` then `pnpm prisma:generate` before building or type-checking.
+If `node_modules` is missing, run `pnpm install` then `pnpm db:generate` before building or type-checking.

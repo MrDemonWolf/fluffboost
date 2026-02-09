@@ -2,6 +2,7 @@ import { EmbedBuilder } from "discord.js";
 import type { Client } from "discord.js";
 
 import { prisma } from "../../database/index.js";
+import { isGuildDueForMotivation } from "../../utils/scheduleEvaluator.js";
 import posthog from "../../utils/posthog.js";
 import logger from "../../utils/logger.js";
 
@@ -15,9 +16,17 @@ export default async function sendMotivation(client: Client) {
   });
 
   if (guilds.length === 0) {
-    logger.warn("Worker", "No guilds with motivation channels configured");
     return;
   }
+
+  // Filter to only guilds that are due for a motivation quote right now
+  const dueGuilds = guilds.filter((g) => isGuildDueForMotivation(g));
+
+  if (dueGuilds.length === 0) {
+    return;
+  }
+
+  logger.info("Worker", `${dueGuilds.length} guild(s) due for motivation out of ${guilds.length} total`);
 
   const motivationQuoteCount = await prisma.motivationQuote.count();
   const skip = Math.floor(Math.random() * motivationQuoteCount);
@@ -44,7 +53,7 @@ export default async function sendMotivation(client: Client) {
 
   const motivationEmbed = new EmbedBuilder()
     .setColor(0xfadb7f)
-    .setTitle("Motivation quote of the day 📅")
+    .setTitle("Motivation quote of the day \u{1F4C5}")
     .setDescription(
       `**"${motivationQuote[0].quote}"**\n by ${motivationQuote[0].author}`
     )
@@ -59,8 +68,10 @@ export default async function sendMotivation(client: Client) {
     });
 
   const results = await Promise.allSettled(
-    guilds.map(async (g) => {
-      if (!g.motivationChannelId) return;
+    dueGuilds.map(async (g) => {
+      if (!g.motivationChannelId) {
+        return;
+      }
 
       const channel = await client.channels.fetch(g.motivationChannelId);
 
@@ -73,6 +84,12 @@ export default async function sendMotivation(client: Client) {
       }
 
       await channel.send({ embeds: [motivationEmbed] });
+
+      // Update lastMotivationSentAt after successful send
+      await prisma.guild.update({
+        where: { guildId: g.guildId },
+        data: { lastMotivationSentAt: new Date() },
+      });
     })
   );
 
@@ -95,7 +112,7 @@ export default async function sendMotivation(client: Client) {
       quote: motivationQuote[0].id,
       sent,
       failed,
-      total: guilds.length,
+      total: dueGuilds.length,
     },
   });
 }

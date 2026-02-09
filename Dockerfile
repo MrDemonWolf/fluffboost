@@ -30,7 +30,7 @@ COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY . .
 
 # Generate Prisma client
-RUN pnpm prisma:generate
+RUN pnpm db:generate
 
 # Build TypeScript → JS
 RUN pnpm build

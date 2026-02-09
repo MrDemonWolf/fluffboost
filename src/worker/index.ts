@@ -6,7 +6,6 @@ import client from "../bot.js";
 import redisClient from "../redis/index.js";
 import env from "../utils/env.js";
 import logger from "../utils/logger.js";
-import { cronToText } from "../utils/cronParser.js";
 
 /**
  * Import worker jobs
@@ -53,14 +52,13 @@ export default (queue: Queue) => {
     }
   );
 
+  // Run every minute to evaluate per-guild schedules
   queue.add(
     "send-motivation",
     {},
     {
       repeat: {
-        pattern:
-          process.env["DISCORD_DEFAULT_MOTIVATIONAL_DAILY_TIME"] || "0 8 * * *", // Default to every day at 8:00 AM
-        tz: "America/Chicago", // CST timezone
+        every: 60 * 1000, // every minute
       },
       removeOnComplete: true,
       removeOnFail: false,
@@ -69,6 +67,6 @@ export default (queue: Queue) => {
 
   logger.info("Worker", "Jobs registered", {
     activityInterval: `${env.DISCORD_ACTIVITY_INTERVAL_MINUTES}m`,
-    motivationCron: cronToText(env.DISCORD_DEFAULT_MOTIVATIONAL_DAILY_TIME || "0 8 * * *"),
+    motivationCheck: "every 1m (per-guild schedule evaluation)",
   });
 };

@@ -18,38 +18,34 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
     );
     const embed = new EmbedBuilder()
       .setColor(0xfadb7f)
-      .setTitle("\u2728 FluffBoost Changelog - Version 2.1.0! \u2728")
-      .setDescription(
-        "Premium subscriptions, new owner commands, and monetization support!"
-      )
+      .setTitle("FluffBoost Changelog - v2.2.0")
+      .setDescription("Premium subscriptions and custom quote scheduling are here!")
       .addFields(
-        // New Features
         {
-          name: "\uD83D\uDE80 New Feature: Premium Subscriptions",
+          name: "Premium Subscriptions",
           value:
-            "Added `/premium` command for users to view premium info, check subscription status, and subscribe via Discord's native purchase flow.",
+            "FluffBoost now offers premium subscriptions! " +
+            "Use `/premium` to view subscription info and unlock premium features for your server.",
         },
         {
-          name: "\uD83D\uDE80 New Feature: Owner Commands",
+          name: "Custom Quote Scheduling (Premium)",
           value:
-            "Added `/owner` command restricted to the bot owner. Includes `/owner premium test-create` and `/owner premium test-delete` for managing Discord test entitlements.",
+            "Premium servers can customize their quote delivery with `/setup schedule`.\n" +
+            "- Choose **daily**, **weekly**, or **monthly** delivery\n" +
+            "- Pick your preferred **time** and **timezone**\n" +
+            "- Select which **day** for weekly or monthly schedules",
         },
         {
-          name: "\u2728 New Feature: Entitlement Event Tracking",
+          name: "Per-Server Schedules",
           value:
-            "Bot now listens for subscription events (create, update, delete) with logging and PostHog analytics tracking.",
+            "Every server now has its own independent quote schedule. " +
+            "Free servers keep the default daily 8:00 AM (America/Chicago) delivery.",
         },
         {
-          name: "\u2728 New Feature: Premium Toggle",
+          name: "New Commands",
           value:
-            "Premium features can be enabled/disabled via `PREMIUM_ENABLED` environment variable with SKU ID configuration.",
-        },
-
-        // System Improvements
-        {
-          name: "\u2699\uFE0F Improved: Environment Validation",
-          value:
-            "Added cross-field validation ensuring `DISCORD_PREMIUM_SKU_ID` is set when `PREMIUM_ENABLED` is true.",
+            "`/premium` - View your premium subscription status\n" +
+            "`/setup schedule` - Customize quote delivery (premium)",
         }
       )
       .setTimestamp()

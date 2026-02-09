@@ -73,12 +73,12 @@ For detailed changelog information, see [CHANGELOG.md](CHANGELOG.md).
 5. Generate Prisma client:
 
    ```bash
-   pnpm prisma:generate
+   pnpm db:generate
    ```
 
 6. Run database migrations:
    ```bash
-   pnpm prisma:push
+   pnpm db:push
    ```
 
 ### Development Scripts
@@ -89,7 +89,7 @@ For detailed changelog information, see [CHANGELOG.md](CHANGELOG.md).
 - `pnpm lint` - Run ESLint and auto-fix issues
 - `pnpm lint:check` - Check code style without fixing
 - `pnpm tsc --noEmit` - Run TypeScript type checking
-- `pnpm prisma:studio` - Open Prisma Studio to view/edit database
+- `pnpm db:studio` - Open Prisma Studio to view/edit database
 - `pnpm test` - Run tests
 
 ### Code Quality

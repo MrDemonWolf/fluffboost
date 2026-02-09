@@ -22,7 +22,8 @@ export function execute(_client: Client, interaction: CommandInteraction) {
             \`/about\` - Learn more about the bot
             \`/invite\` - Invite me to your server!
             \`/quote\` - Get a random quote
-            \`/setup\` - Setup the bot for your server such as the channel to send quotes to. (admin only)
+            \`/setup channel\` - Set the channel for quotes (admin only)
+            \`/setup schedule\` - Customize quote delivery schedule (premium)
             \`/admin\` - Admin commands (selected users only)
             \`/premium\` - View premium subscription info and status
             \`/owner\` - Bot owner commands (owner only)`,
