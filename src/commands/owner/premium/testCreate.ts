@@ -87,7 +87,7 @@ export default async function (
 
     if (!interaction.replied) {
       await interaction.reply({
-        content: "Failed to create test entitlement. Check bot logs for details.",
+        content: `Failed to create test entitlement: ${err instanceof Error ? err.message : String(err)}`,
         flags: MessageFlags.Ephemeral,
       });
     }
