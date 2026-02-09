@@ -50,7 +50,10 @@ FROM node:23-alpine AS production
 
 WORKDIR /usr/src/app
 
-RUN apk add --no-cache openssl
+RUN apk add --no-cache openssl curl
+
+# Install prisma CLI globally for runtime migrations
+RUN npm install -g prisma@7
 
 # Create non-root user
 RUN addgroup -S fluffboost && adduser -S fluffboost -G fluffboost
@@ -63,6 +66,12 @@ COPY --from=build /usr/src/app/package.json ./
 # Copy generated Prisma client into production node_modules
 COPY --from=build /usr/src/app/src/generated ./src/generated
 
+# Copy prisma schema + migrations for runtime migrate deploy
+COPY --from=build /usr/src/app/prisma ./prisma
+
+# Copy entrypoint script
+COPY --from=build /usr/src/app/docker-entrypoint.sh ./
+
 # Set ownership and switch to non-root user
 RUN chown -R fluffboost:fluffboost /usr/src/app
 USER fluffboost
@@ -71,4 +80,4 @@ ENV NODE_ENV=production
 
 EXPOSE 3000
 
-CMD ["node", "dist/app.js"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
