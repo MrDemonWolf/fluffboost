@@ -14,13 +14,23 @@ import quote from "../commands/quote.js";
 import suggestion from "../commands/suggestion.js";
 import invite from "../commands/invite.js";
 import admin from "../commands/admin/index.js";
-import setup from "../commands/setup/index.js";
+import setup, { setupAutocomplete } from "../commands/setup/index.js";
+import premium from "../commands/premium.js";
+import owner from "../commands/owner/index.js";
 
 export async function interactionCreateEvent(
   client: Client,
   interaction: Interaction
 ) {
   try {
+    // Handle autocomplete interactions
+    if (interaction.isAutocomplete()) {
+      if (interaction.commandName === "setup") {
+        await setupAutocomplete(interaction);
+      }
+      return;
+    }
+
     if (!interaction.isCommand()) {
       return;
     }
@@ -65,7 +75,9 @@ export async function interactionCreateEvent(
         );
         break;
       case "quote":
-        if (interaction.isChatInputCommand()) await quote.execute(client, interaction);
+        if (interaction.isChatInputCommand()) {
+          await quote.execute(client, interaction);
+        }
         logger.commands.success(
           "interactionCreate - quote",
           interaction.user.username,
@@ -81,7 +93,9 @@ export async function interactionCreateEvent(
         );
         break;
       case "suggestion":
-        if (interaction.isChatInputCommand()) await suggestion.execute(client, interaction);
+        if (interaction.isChatInputCommand()) {
+          await suggestion.execute(client, interaction);
+        }
         logger.commands.success(
           "interactionCreate - suggestion",
           interaction.user.username,
@@ -100,6 +114,22 @@ export async function interactionCreateEvent(
         await setup.execute(client, interaction);
         logger.commands.success(
           "interactionCreate - setup",
+          interaction.user.username,
+          interaction.user.id
+        );
+        break;
+      case "premium":
+        await premium.execute(client, interaction);
+        logger.commands.success(
+          "interactionCreate - premium",
+          interaction.user.username,
+          interaction.user.id
+        );
+        break;
+      case "owner":
+        await owner.execute(client, interaction);
+        logger.commands.success(
+          "interactionCreate - owner",
           interaction.user.username,
           interaction.user.id
         );

@@ -18,81 +18,34 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
     );
     const embed = new EmbedBuilder()
       .setColor(0xfadb7f)
-      .setTitle("✨ FluffBoost Changelog - Version 2.0.0! ✨")
-      .setDescription(
-        "Major upgrade with Prisma 7, improved API endpoints, and faster Docker builds!"
-      )
+      .setTitle("FluffBoost Changelog - v2.2.0")
+      .setDescription("Premium subscriptions and custom quote scheduling are here!")
       .addFields(
-        // Major Upgrades
         {
-          name: "🚀 Major: Prisma 7 Upgrade",
+          name: "Premium Subscriptions",
           value:
-            "Upgraded to Prisma 7 with enhanced TypeScript support and improved performance!",
+            "FluffBoost now offers premium subscriptions! " +
+            "Use `/premium` to view subscription info and unlock premium features for your server.",
         },
         {
-          name: "�� Updated: Health Check API",
+          name: "Custom Quote Scheduling (Premium)",
           value:
-            "Renamed status API endpoint from /status to /api/health for better REST conventions.",
+            "Premium servers can customize their quote delivery with `/setup schedule`.\n" +
+            "- Choose **daily**, **weekly**, or **monthly** delivery\n" +
+            "- Pick your preferred **time** and **timezone**\n" +
+            "- Select which **day** for weekly or monthly schedules",
         },
         {
-          name: "⚡ Performance: Optimized Docker Builds",
+          name: "Per-Server Schedules",
           value:
-            "Enhanced Dockerfile with better layer caching and multi-stage builds for significantly faster build times!",
-        },
-
-        // New Features
-        {
-          name: "🚀 New Feature: Reliable Background Jobs",
-          value:
-            "Switched to reliable background jobs for Discord activity and daily motivation, ensuring consistent delivery!",
+            "Every server now has its own independent quote schedule. " +
+            "Free servers keep the default daily 8:00 AM (America/Chicago) delivery.",
         },
         {
-          name: "🚀 New Feature: Per-Guild Motivation Timing",
+          name: "New Commands",
           value:
-            "Added per-guild motivation timing and timezone support with sensible defaults for personalized scheduling.",
-        },
-        {
-          name: "✨ New Feature: Configurable Activity Updates",
-          value:
-            "Activity update interval is now configurable via DISCORD_ACTIVITY_INTERVAL_MINUTES environment variable.",
-        },
-
-        // Bug Fixes
-        {
-          name: "🐛 Bug Fix: Discord Status Quoting",
-          value:
-            "Corrected default Discord status quoting for proper display formatting.",
-        },
-
-        // Documentation
-        {
-          name: "📚 Documentation: Prisma Migration Guide",
-          value:
-            "Added comprehensive Prisma migration comparison guide to assist with database schema changes.",
-        },
-        {
-          name: "📚 Documentation: Redis Debug Logging",
-          value:
-            "Documented Redis debug logging configuration in README and .env example for better troubleshooting.",
-        },
-
-        // System Improvements
-        {
-          name: "⚙️ Improved: Redis Client Stability",
-          value:
-            "Enhanced Redis client stability settings for more reliable connection handling and performance.",
-        },
-        {
-          name: "⚙️ Improved: Database Schema Alignment",
-          value:
-            "Database migrations to align schema including SuggestionQuote and Guild field updates for better data consistency.",
-        },
-
-        // Development Improvements
-        {
-          name: "🔧 Chores: Docker Configuration Updates",
-          value:
-            "Updated docker-compose default database name for improved development environment consistency.",
+            "`/premium` - View your premium subscription status\n" +
+            "`/setup schedule` - Customize quote delivery (premium)",
         }
       )
       .setTimestamp()

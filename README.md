@@ -10,7 +10,9 @@ Start your day with a smile or find encouragement when you need it most. Let’s
 
 ## Features
 
-- **Daily Motivational Quotes**: Automatically delivered to your server.
+- **Daily Motivational Quotes**: Automatically delivered to all configured server channels, with reliable delivery across shards.
+- **Per-Guild Scheduling**: Each server can set its own motivation time and timezone.
+- **Rotating Bot Status**: Customizable bot presence that cycles through activities on a configurable interval.
 - **Easy Integration**: Simple setup for any Discord server.
 - **Community-Driven**: Open-source development powered by furries, for furries! 🐺🐾
 
@@ -86,8 +88,9 @@ For detailed changelog information, see [CHANGELOG.md](CHANGELOG.md).
 - `pnpm start` - Start production server
 - `pnpm lint` - Run ESLint and auto-fix issues
 - `pnpm lint:check` - Check code style without fixing
-- `pnpm tsc` - Run TypeScript type checking
+- `pnpm tsc --noEmit` - Run TypeScript type checking
 - `pnpm db:studio` - Open Prisma Studio to view/edit database
+- `pnpm test` - Run tests
 
 ### Code Quality
 
@@ -114,7 +117,7 @@ The CI pipeline automatically runs:
 
 If you have any questions, suggestions, or feedback, feel free to reach out to us on Discord!
 
-- Discord: [Join my server](https://mrdwolf.com/discord)
+- Discord: [Join my server](https://mrdwolf.net/discord)
 
 Thank you for choosing FluffBoost to add motivation and positivity to your Discord server!
 
