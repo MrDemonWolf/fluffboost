@@ -50,7 +50,7 @@ FROM node:23-alpine AS production
 
 WORKDIR /usr/src/app
 
-RUN apk add --no-cache openssl
+RUN apk add --no-cache openssl curl
 
 # Create non-root user
 RUN addgroup -S fluffboost && adduser -S fluffboost -G fluffboost
