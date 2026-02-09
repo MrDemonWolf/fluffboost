@@ -104,6 +104,44 @@ GitHub Actions runs on push/PR to `main` and `dev`: ESLint check, TypeScript typ
 - `dev` — Development integration branch
 - Feature branches follow pattern `FLUFF-{number}-description`
 
+## Premium / Subscription Support
+
+Premium subscriptions use Discord's App Subscriptions (SKUs, Entitlements). Managed in `src/utils/premium.ts` with `/premium` command in `src/commands/premium.ts`.
+
+### Environment Variables
+
+- `PREMIUM_ENABLED` — Master toggle for premium features (default: `false`)
+- `PREMIUM_TEST_MODE` — Enables premium command without a real SKU ID for local testing (default: `false`)
+- `DISCORD_PREMIUM_SKU_ID` — SKU ID from Discord Developer Portal (required when `PREMIUM_ENABLED=true` unless test mode is on)
+
+### Testing Premium Locally
+
+To test the `/premium` command without a real Discord SKU:
+
+1. Set `PREMIUM_TEST_MODE=true` in your `.env` (no SKU ID needed)
+2. Run `pnpm dev`
+3. Use `/premium` in Discord — you'll see the upsell embed with "(Test Mode)" label and no purchase button
+4. In test mode, `hasEntitlement()` always returns `false` so you always see the upsell flow
+
+To test with a real SKU (after configuring monetization in Discord Developer Portal):
+
+1. Set `PREMIUM_ENABLED=true` and `DISCORD_PREMIUM_SKU_ID=<your_sku_id>` in your `.env`
+2. Run `pnpm dev`
+3. Use `/premium` — you'll see the real purchase button
+4. Use `client.application.entitlements.createTest({ sku: '<sku_id>', owner: { id: '<user_id>', type: 2 } })` to create a test entitlement and verify the "subscribed" flow
+
+### Gating Future Commands Behind Premium
+
+```typescript
+import { hasEntitlement, isPremiumEnabled } from "../utils/premium.js";
+
+// In any command execute function:
+if (isPremiumEnabled() && !hasEntitlement(interaction)) {
+  // Show premium upsell
+  return;
+}
+```
+
 ## Known Issues
 
 - **ESLint config** — `eslint.config.js` uses `require()` in an ESM project, so `pnpm lint:check` currently fails with `ReferenceError: require is not defined`. TypeScript checking (`pnpm tsc --noEmit`) and build (`pnpm build`) work fine.
