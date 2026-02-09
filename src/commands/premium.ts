@@ -67,13 +67,18 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
         )
         .setFooter({ text: "Subscribe to support FluffBoost development!" });
 
-      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder().setStyle(ButtonStyle.Premium).setSKUId(skuId!)
-      );
+      const components: ActionRowBuilder<ButtonBuilder>[] = [];
+      if (skuId) {
+        components.push(
+          new ActionRowBuilder<ButtonBuilder>().addComponents(
+            new ButtonBuilder().setStyle(ButtonStyle.Premium).setSKUId(skuId)
+          )
+        );
+      }
 
       await interaction.reply({
         embeds: [embed],
-        components: [row],
+        components,
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -96,6 +101,13 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "premium",
     });
+
+    if (!interaction.replied) {
+      await interaction.reply({
+        content: "An error occurred while processing your request. Please try again later.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
 }
 

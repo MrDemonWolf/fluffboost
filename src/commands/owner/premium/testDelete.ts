@@ -32,7 +32,15 @@ export default async function (
 
     const entitlementId = options.getString("entitlement_id", true);
 
-    await client.application!.entitlements.deleteTest(entitlementId);
+    if (!client.application) {
+      await interaction.reply({
+        content: "Bot application is not ready. Please try again in a moment.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    await client.application.entitlements.deleteTest(entitlementId);
 
     await interaction.reply({
       content: `Test entitlement \`${entitlementId}\` deleted.`,

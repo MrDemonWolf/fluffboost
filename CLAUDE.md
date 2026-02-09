@@ -96,7 +96,7 @@ All env vars are validated by Zod in `src/utils/env.ts`. Required variables incl
 
 ## CI
 
-GitHub Actions runs on push/PR to `main` and `dev`: ESLint check, TypeScript type check, build, security audit, and Docker build test. Tested on Node 20.x and 22.x.
+GitHub Actions runs on push/PR to `main` and `dev`: Prisma client generation, test execution, ESLint check, TypeScript type check, build, security audit, and Docker build test. Tested on Node 20.x and 22.x.
 
 ## Git Branching
 

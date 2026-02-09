@@ -62,24 +62,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Reliable Background Jobs: Switched to reliable background jobs for Discord activity and daily motivation, ensuring consistent delivery.
-- Per-Guild Motivation Timing: Added per-guild motivation timing and timezone support with sensible defaults for personalized scheduling.
-- Configurable Activity Updates: Activity update interval is now configurable via DISCORD_ACTIVITY_INTERVAL_MINUTES environment variable.
+- BullMQ Worker System: Replaced node-cron with BullMQ for reliable background job processing with Redis-backed queues.
+- Configurable Activity Interval: Bot activity rotation interval is now configurable via `DISCORD_ACTIVITY_INTERVAL_MINUTES` environment variable.
 
 ### Fixed
 
 - Discord Status Quoting: Corrected default Discord status quoting for proper display formatting.
 
-### Documentation
-
-- Prisma Migration Guide: Added comprehensive Prisma migration comparison guide to assist with database schema changes.
-- Redis Debug Logging: Documented Redis debug logging configuration in README and .env example for better troubleshooting.
-
 ### Changed
 
 - Redis Client Stability: Enhanced Redis client stability settings for more reliable connection handling and performance.
 - Docker Configuration Updates: Updated docker-compose default database name for improved development environment consistency.
-- Database Schema Alignment: Database migrations to align schema including SuggestionQuote and Guild field updates for better data consistency.
 
 ## [1.8.0] - 2025-09-03
 

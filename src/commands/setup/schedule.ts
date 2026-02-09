@@ -137,6 +137,18 @@ export default async function schedule(_client: Client, interaction: ChatInputCo
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "setup schedule",
     });
+
+    if (interaction.replied || interaction.deferred) {
+      await interaction.followUp({
+        content: "An error occurred while setting up the schedule.",
+        flags: MessageFlags.Ephemeral,
+      });
+    } else {
+      await interaction.reply({
+        content: "An error occurred while setting up the schedule.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
 }
 

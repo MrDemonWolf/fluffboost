@@ -59,7 +59,6 @@ export default async function sendMotivation(client: Client) {
     )
     .setAuthor({
       name: addedBy ? addedBy.username : "Unknown User",
-      url: addedBy ? addedBy.displayAvatarURL() : undefined,
       iconURL: addedBy ? addedBy.displayAvatarURL() : undefined,
     })
     .setFooter({
@@ -68,9 +67,9 @@ export default async function sendMotivation(client: Client) {
     });
 
   const results = await Promise.allSettled(
-    dueGuilds.map(async (g) => {
+    dueGuilds.map(async (g): Promise<"sent" | "skipped"> => {
       if (!g.motivationChannelId) {
-        return;
+        return "skipped";
       }
 
       const channel = await client.channels.fetch(g.motivationChannelId);
@@ -80,7 +79,7 @@ export default async function sendMotivation(client: Client) {
           guildId: g.guildId,
           channelId: g.motivationChannelId,
         });
-        return;
+        return "skipped";
       }
 
       await channel.send({ embeds: [motivationEmbed] });
@@ -90,15 +89,20 @@ export default async function sendMotivation(client: Client) {
         where: { guildId: g.guildId },
         data: { lastMotivationSentAt: new Date() },
       });
+
+      return "sent";
     })
   );
 
-  const sent = results.filter((r) => r.status === "fulfilled").length;
-  const failed = results.filter((r) => r.status === "rejected").length;
+  let sent = 0;
+  let failed = 0;
 
   for (const result of results) {
     if (result.status === "rejected") {
+      failed++;
       logger.error("Worker", "Failed to send motivation to a guild", result.reason);
+    } else if (result.value === "sent") {
+      sent++;
     }
   }
 

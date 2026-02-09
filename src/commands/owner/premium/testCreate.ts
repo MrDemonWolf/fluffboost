@@ -42,7 +42,15 @@ export default async function (
 
     const targetUser = options.getUser("user") ?? interaction.user;
 
-    const entitlement = await client.application!.entitlements.createTest({
+    if (!client.application) {
+      await interaction.reply({
+        content: "Bot application is not ready. Please try again in a moment.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    const entitlement = await client.application.entitlements.createTest({
       sku: skuId,
       user: targetUser.id,
     });

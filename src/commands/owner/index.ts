@@ -79,21 +79,21 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       case "premium":
         switch (subCommand) {
           case "test-create":
-            premiumTestCreate(
+            await premiumTestCreate(
               client,
               interaction,
               options as CommandInteractionOptionResolver
             );
             break;
           case "test-delete":
-            premiumTestDelete(
+            await premiumTestDelete(
               client,
               interaction,
               options as CommandInteractionOptionResolver
             );
             break;
           default:
-            interaction.reply({
+            await interaction.reply({
               content: "Invalid subcommand",
               flags: MessageFlags.Ephemeral,
             });
@@ -101,7 +101,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         break;
 
       default:
-        interaction.reply({
+        await interaction.reply({
           content: "Invalid subcommand group",
           flags: MessageFlags.Ephemeral,
         });

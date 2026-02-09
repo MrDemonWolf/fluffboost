@@ -8,7 +8,7 @@ import env from "../utils/env.js";
 /**
  * Import all routes
  */
-import heatlhRoute from "./routes/health.js";
+import healthRoute from "./routes/health.js";
 
 const app: express.Application = express();
 /**
@@ -25,7 +25,6 @@ app.use(
         : "*",
   })
 );
-app.set("x-powered-by", "MrDemonWolf, Inc., Community Bot");
 
 /**
  * Use verbose logs in development, concise logs in production
@@ -74,6 +73,6 @@ app.set("port", env.PORT || 3000);
 /**
  * Initialize routes
  */
-app.use("/api/health", heatlhRoute);
+app.use("/api/health", healthRoute);
 
 export default app;

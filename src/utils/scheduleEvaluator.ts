@@ -79,7 +79,7 @@ export function isGuildDueForMotivation(guild: Pick<Guild, keyof GuildSchedule>)
         }
         break;
       case "Weekly":
-        // Already sent this week (same ISO week)
+        // Already sent this week (locale-aware, Sunday-start week)
         if (lastSent.isSame(now, "week")) {
           return false;
         }

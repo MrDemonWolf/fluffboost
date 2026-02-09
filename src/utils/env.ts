@@ -67,7 +67,10 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
-  PREMIUM_ENABLED: z.coerce.boolean().default(false),
+  PREMIUM_ENABLED: z
+    .string()
+    .default("false")
+    .transform((val) => val.toLowerCase() === "true"),
   DISCORD_PREMIUM_SKU_ID: z.string().optional(),
 })
   .refine(
