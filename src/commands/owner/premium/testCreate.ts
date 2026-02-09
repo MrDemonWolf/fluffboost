@@ -40,7 +40,15 @@ export default async function (
       return;
     }
 
-    const targetUser = options.getUser("user") ?? interaction.user;
+    const guildId = options.getString("guild") ?? interaction.guildId;
+
+    if (!guildId) {
+      await interaction.reply({
+        content: "Could not determine guild. Run this in a server or pass a guild ID.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
 
     if (!client.application) {
       await interaction.reply({
@@ -52,12 +60,12 @@ export default async function (
 
     const entitlement = await client.application.entitlements.createTest({
       sku: skuId,
-      user: targetUser.id,
+      guild: guildId,
     });
 
     await interaction.reply({
       content:
-        `Test entitlement created for **${targetUser.username}** (${targetUser.id})\n` +
+        `Test entitlement created for guild \`${guildId}\`\n` +
         `Entitlement ID: \`${entitlement.id}\`\n` +
         `SKU: \`${entitlement.skuId}\``,
       flags: MessageFlags.Ephemeral,
@@ -87,7 +95,7 @@ export default async function (
 
     if (!interaction.replied) {
       await interaction.reply({
-        content: "Failed to create test entitlement. Check bot logs for details.",
+        content: `Failed to create test entitlement: ${err instanceof Error ? err.message : String(err)}`,
         flags: MessageFlags.Ephemeral,
       });
     }
