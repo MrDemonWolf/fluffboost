@@ -1,6 +1,12 @@
 node_modules
 dist
 .git
-.gitignore
-Dockerfile
+.github
+.vscode
+.claude
 .env
+.env.*
+*.md
+tests
+.mocharc.yml
+eslint.config.js
