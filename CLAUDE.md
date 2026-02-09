@@ -74,6 +74,13 @@ Worker log component names use `"Worker"` consistently.
 
 Four Prisma models: `Guild` (server config with per-guild motivation time/timezone), `MotivationQuote`, `SuggestionQuote` (user-submitted, pending approval), `DiscordActivity` (bot status entries with type enum).
 
+### Discord.js Patterns
+
+- **Always use `client.channels.fetch(id)`** instead of `client.channels.cache.get(id)`. After restarts or with sharding, most channels aren't in cache and `.cache.get()` returns `undefined`.
+- **Channel type guards** — Before sending to a channel, check `channel.isTextBased() && !channel.isDMBased()`. See `src/commands/admin/quote/create.ts` for the pattern.
+- **Discord.js handles rate limiting internally** — Its REST client respects `X-RateLimit-*` headers and queues requests automatically. No manual staggering is needed.
+- **Batch operations across guilds** — Use `Promise.allSettled()` so one guild's failure doesn't block others. Always `await` `.send()` calls.
+
 ## Code Conventions
 
 - **ESM modules** — The project uses `"type": "module"`. All local imports must use `.js` extensions (e.g., `import env from "./utils/env.js"`), even for TypeScript source files.
@@ -96,3 +103,11 @@ GitHub Actions runs on push/PR to `main` and `dev`: ESLint check, TypeScript typ
 - `main` — Production branch
 - `dev` — Development integration branch
 - Feature branches follow pattern `FLUFF-{number}-description`
+
+## Known Issues
+
+- **ESLint config** — `eslint.config.js` uses `require()` in an ESM project, so `pnpm lint:check` currently fails with `ReferenceError: require is not defined`. TypeScript checking (`pnpm tsc --noEmit`) and build (`pnpm build`) work fine.
+
+## Setup Notes
+
+If `node_modules` is missing, run `pnpm install` then `pnpm prisma:generate` before building or type-checking.
