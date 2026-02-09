@@ -67,7 +67,16 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
-});
+  PREMIUM_ENABLED: z.coerce.boolean().default(false),
+  DISCORD_PREMIUM_SKU_ID: z.string().optional(),
+})
+  .refine(
+    (data) => !data.PREMIUM_ENABLED || data.DISCORD_PREMIUM_SKU_ID,
+    {
+      message: "DISCORD_PREMIUM_SKU_ID is required when PREMIUM_ENABLED is true",
+      path: ["DISCORD_PREMIUM_SKU_ID"],
+    }
+  );
 
 type EnvSchema = z.infer<typeof envSchema>;
 const parsed = envSchema.safeParse(process.env);
