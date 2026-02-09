@@ -45,7 +45,9 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
           name: "New Commands",
           value:
             "`/premium` - View your premium subscription status\n" +
-            "`/setup schedule` - Customize quote delivery (premium)",
+            "`/setup schedule` - Customize quote delivery (premium)\n" +
+            "`/owner premium test-create` - Create a test entitlement (owner only)\n" +
+            "`/owner premium test-delete` - Delete a test entitlement (owner only)",
         }
       )
       .setTimestamp()
