@@ -8,16 +8,16 @@ import {
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 
-import { isUserPermitted } from "../../../utils/permissions";
-import { prisma } from "../../../database";
-import env from "../../../utils/env";
-import logger from "../../../utils/logger";
+import { isUserPermitted } from "../../../utils/permissions.js";
+import { prisma } from "../../../database/index.js";
+import env from "../../../utils/env.js";
+import logger from "../../../utils/logger.js";
 
 export default async function (
-  client: Client,
+  _client: Client,
   interaction: CommandInteraction,
   options: CommandInteractionOptionResolver
-) {
+): Promise<any> {
   try {
     logger.commands.executing(
       "admin quote create",
@@ -77,7 +77,7 @@ export default async function (
       .setTimestamp();
 
     if (env.MAIN_CHANNEL_ID) {
-      const channel = client.channels.cache.get(
+      const channel = _client.channels.cache.get(
         env.MAIN_CHANNEL_ID
       ) as TextChannel;
       if (channel?.isTextBased()) {
@@ -118,4 +118,5 @@ export default async function (
       }
     );
   }
+  return undefined;
 }
