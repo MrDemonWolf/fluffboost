@@ -2,14 +2,14 @@ import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
 
 import type { Client, CommandInteraction } from "discord.js";
 
-import logger from "../utils/logger";
-import posthog from "../utils/posthog";
+import logger from "../utils/logger.js";
+import posthog from "../utils/posthog.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("changelog")
   .setDescription("See the latest changes to the bot");
 
-export async function execute(client: Client, interaction: CommandInteraction) {
+export async function execute(_client: Client, interaction: CommandInteraction) {
   try {
     logger.commands.executing(
       "changelog",
@@ -18,64 +18,34 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     );
     const embed = new EmbedBuilder()
       .setColor(0xfadb7f)
-      .setTitle("✨ FluffBoost Changelog - Version 1.9.0! ✨")
-      .setDescription(
-        "Check out the latest enhancements and new features in FluffBoost!"
-      )
+      .setTitle("FluffBoost Changelog - v2.2.0")
+      .setDescription("Premium subscriptions and custom quote scheduling are here!")
       .addFields(
-        // New Features
         {
-          name: "🚀 New Feature: Reliable Background Jobs",
+          name: "Premium Subscriptions",
           value:
-            "Switched to reliable background jobs for Discord activity and daily motivation, ensuring consistent delivery!",
+            "FluffBoost now offers premium subscriptions! " +
+            "Use `/premium` to view subscription info and unlock premium features for your server.",
         },
         {
-          name: "🚀 New Feature: Per-Guild Motivation Timing",
+          name: "Custom Quote Scheduling (Premium)",
           value:
-            "Added per-guild motivation timing and timezone support with sensible defaults for personalized scheduling.",
+            "Premium servers can customize their quote delivery with `/setup schedule`.\n" +
+            "- Choose **daily**, **weekly**, or **monthly** delivery\n" +
+            "- Pick your preferred **time** and **timezone**\n" +
+            "- Select which **day** for weekly or monthly schedules",
         },
         {
-          name: "✨ New Feature: Configurable Activity Updates",
+          name: "Per-Server Schedules",
           value:
-            "Activity update interval is now configurable via DISCORD_ACTIVITY_INTERVAL_MINUTES environment variable.",
-        },
-
-        // Bug Fixes
-        {
-          name: "🐛 Bug Fix: Discord Status Quoting",
-          value:
-            "Corrected default Discord status quoting for proper display formatting.",
-        },
-
-        // Documentation
-        {
-          name: "📚 Documentation: Prisma Migration Guide",
-          value:
-            "Added comprehensive Prisma migration comparison guide to assist with database schema changes.",
+            "Every server now has its own independent quote schedule. " +
+            "Free servers keep the default daily 8:00 AM (America/Chicago) delivery.",
         },
         {
-          name: "📚 Documentation: Redis Debug Logging",
+          name: "New Commands",
           value:
-            "Documented Redis debug logging configuration in README and .env example for better troubleshooting.",
-        },
-
-        // System Improvements
-        {
-          name: "⚙️ Improved: Redis Client Stability",
-          value:
-            "Enhanced Redis client stability settings for more reliable connection handling and performance.",
-        },
-        {
-          name: "⚙️ Improved: Database Schema Alignment",
-          value:
-            "Database migrations to align schema including SuggestionQuote and Guild field updates for better data consistency.",
-        },
-
-        // Development Improvements
-        {
-          name: "🔧 Chores: Docker Configuration Updates",
-          value:
-            "Updated docker-compose default database name for improved development environment consistency.",
+            "`/premium` - View your premium subscription status\n" +
+            "`/setup schedule` - Customize quote delivery (premium)",
         }
       )
       .setTimestamp()
@@ -98,7 +68,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       distinctId: interaction.user.id,
       event: "changelog command used",
       properties: {
-        environment: process.env.NODE_ENV,
+        environment: process.env["NODE_ENV"],
         userId: interaction.user.id,
         username: interaction.user.username,
       },

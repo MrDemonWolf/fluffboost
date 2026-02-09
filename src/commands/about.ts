@@ -2,9 +2,9 @@ import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 
 import type { Client, CommandInteraction, User } from "discord.js";
 
-import env from "../utils/env";
-import logger from "../utils/logger";
-import posthog from "../utils/posthog";
+import env from "../utils/env.js";
+import logger from "../utils/logger.js";
+import posthog from "../utils/posthog.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("about")
@@ -49,7 +49,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         },
         {
           name: "Version",
-          value: env.VERSION || process.env.npm_package_version || "unknown",
+          value: env.VERSION || process.env["npm_package_version"] || "unknown",
           inline: true,
         }
       )
@@ -70,7 +70,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       distinctId: interaction.user.id,
       event: "about command used",
       properties: {
-        environment: process.env.NODE_ENV,
+        environment: process.env["NODE_ENV"],
         userId: interaction.user.id,
         username: interaction.user.username,
       },

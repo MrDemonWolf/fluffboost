@@ -1,8 +1,8 @@
 import type { Guild } from "discord.js";
 
-import { prisma } from "../database";
-import posthog from "../utils/posthog";
-import logger from "../utils/logger";
+import { prisma } from "../database/index.js";
+import posthog from "../utils/posthog.js";
+import logger from "../utils/logger.js";
 
 export async function guildDeleteEvent(guild: Guild): Promise<void> {
   try {
@@ -27,7 +27,7 @@ export async function guildDeleteEvent(guild: Guild): Promise<void> {
       distinctId: guild.id,
       event: "guild left",
       properties: {
-        environment: process.env.NODE_ENV,
+        environment: process.env["NODE_ENV"],
         guildName: guild.name,
         guildId: guild.id,
       },

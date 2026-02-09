@@ -2,9 +2,9 @@ import { ActivityType } from "discord.js";
 
 import type { Client } from "discord.js";
 
-import { prisma } from "../../database";
-import env from "../../utils/env";
-import logger from "../../utils/logger";
+import { prisma } from "../../database/index.js";
+import env from "../../utils/env.js";
+import logger from "../../utils/logger.js";
 
 // Safe lookup for ActivityType enum with fallback to Playing
 const getActivityType = (activityTypeString: string): ActivityType => {
@@ -21,7 +21,7 @@ export default async (client: Client) => {
 
     if (!client.user) {
       return logger.warn(
-        "Discord - Activity",
+        "Worker",
         "Client user is not defined, cannot set activity"
       );
     }
@@ -49,7 +49,7 @@ export default async (client: Client) => {
 
     if (!activity) {
       logger.warn(
-        "Discord - Activity",
+        "Worker",
         "No custom discord activity found, using default activity"
       );
       const safeActivityType = getActivityType(defaultActivityType);
@@ -57,7 +57,7 @@ export default async (client: Client) => {
         type: safeActivityType,
         url: defaultActivityUrl,
       });
-      logger.success("Discord - Activity", "Activity has been set", {
+      logger.success("Worker", "Activity has been set", {
         activity: defaultActivity,
         type: safeActivityType,
         url: defaultActivityUrl,
@@ -71,14 +71,14 @@ export default async (client: Client) => {
       url: activity.url ? activity.url : undefined,
     });
 
-    logger.success("Discord - Activity", "Activity has been set", {
+    logger.success("Worker", "Activity has been set", {
       activity: activity.activity,
       type: safeActivityType,
     });
     return true;
   } catch (err) {
     logger.error(
-      "Discord - Activity",
+      "Worker",
       "Error setting custom discord activity",
       err
     );

@@ -10,7 +10,9 @@ Start your day with a smile or find encouragement when you need it most. Let’s
 
 ## Features
 
-- **Daily Motivational Quotes**: Automatically delivered to your server.
+- **Daily Motivational Quotes**: Automatically delivered to all configured server channels, with reliable delivery across shards.
+- **Per-Guild Scheduling**: Each server can set its own motivation time and timezone.
+- **Rotating Bot Status**: Customizable bot presence that cycles through activities on a configurable interval.
 - **Easy Integration**: Simple setup for any Discord server.
 - **Community-Driven**: Open-source development powered by furries, for furries! 🐺🐾
 
@@ -32,74 +34,7 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 - `/setup` - Configure bot settings like the target channel for quotes (admin only).
 
 # Change Log
-
-## Version 1.9.0 Released (on September 10, 2025)
-
-### New Features
-
-- **Reliable Background Jobs:** Switched to reliable background jobs for Discord activity and daily motivation, ensuring consistent delivery.
-- **Per-Guild Motivation Timing:** Added per-guild motivation timing and timezone support with sensible defaults for personalized scheduling.
-- **Configurable Activity Updates:** Activity update interval is now configurable via DISCORD_ACTIVITY_INTERVAL_MINUTES environment variable.
-
-### Bug Fixes
-
-- **Discord Status Quoting:** Corrected default Discord status quoting for proper display formatting.
-
-### Documentation
-
-- **Prisma Migration Guide:** Added comprehensive Prisma migration comparison guide to assist with database schema changes.
-- **Redis Debug Logging:** Documented Redis debug logging configuration in README and .env example for better troubleshooting.
-
-### Chores
-
-- **Redis Client Stability:** Enhanced Redis client stability settings for more reliable connection handling and performance.
-- **Docker Configuration Updates:** Updated docker-compose default database name for improved development environment consistency.
-- **Database Schema Alignment:** Database migrations to align schema including SuggestionQuote and Guild field updates for better data consistency.
-
-## Version 1.8.0 Released (on September 3, 2025)
-
-### New Features
-
-- **Enhanced Quote Command Embeds:** Improved quote command embeds with author avatar and footer for a more engaging user experience.
-- **Updated Invite Link Generation:** Invite links now include all required OAuth scopes for seamless bot integration.
-
-### Documentation
-
-- **Migration Guides:** Added comprehensive Queue and Worker Migration Guides to assist with system transitions.
-- **Enhanced README:** Expanded README with detailed development setup instructions, available scripts, and CI pipeline information.
-
-### Refactor
-
-- **Unified Logging System:** Implemented structured logging across API, bot commands, events, and workers for better monitoring and debugging.
-
-### Chores
-
-- **CI Workflow Implementation:** Introduced comprehensive CI workflow with automated tests, security checks, and Docker build verification.
-- **ESLint Configuration:** Added ESLint configuration and updated lint/type-check scripts for improved code quality standards.
-- **Database Schema Updates:** Updated database schema for suggestions to track updates and simplified field structures.
-- **Code Cleanup:** Removed unused queue utility and legacy command logger to streamline the codebase.
-
-## Version 1.7.0 Released (on July 28, 2025)
-
-### New Features
-
-- **Activity Deletion Command:** Added a command to delete user activities.
-- **Ephemeral Messages:** Implemented support for ephemeral (private) responses using flags.
-- **New Quote Creation Notifications:** Introduced notifications when a new quote is successfully created.
-
-### Improvements & Refinements
-
-- **Database & Cache Stability:** Enhanced pre-pruning checks to ensure the guild cache or database is not empty, preventing potential errors.
-- **Task Scheduling:** Adjusted the frequencies of various scheduled tasks.
-- **Environment Variable Handling:** Improved validation for environment variables at startup.
-- **Quote Management:**
-  - Enhanced the quote removal command.
-  - Refactored the internal logic for quote creation.
-- **Code Quality:** Significant improvements in code readability and consistency across the codebase.
-- **Admin Command Experience:** Better handling and more informative error reporting for administrative commands.
-- **User Input & Error Handling:** Strengthened input validation and improved error messaging for a smoother user experience.
-- **User Feedback:** Updated success messages for setting activities and refined the appearance of suggestion embeds.
-- **Internal Logging:** Migrated from basic `console.log` to a more structured and robust logging system.
+For detailed changelog information, see [CHANGELOG.md](CHANGELOG.md).
 
 ## Development
 
@@ -153,8 +88,9 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 - `pnpm start` - Start production server
 - `pnpm lint` - Run ESLint and auto-fix issues
 - `pnpm lint:check` - Check code style without fixing
-- `pnpm tsc` - Run TypeScript type checking
+- `pnpm tsc --noEmit` - Run TypeScript type checking
 - `pnpm db:studio` - Open Prisma Studio to view/edit database
+- `pnpm test` - Run tests
 
 ### Code Quality
 
@@ -181,7 +117,7 @@ The CI pipeline automatically runs:
 
 If you have any questions, suggestions, or feedback, feel free to reach out to us on Discord!
 
-- Discord: [Join my server](https://mrdwolf.com/discord)
+- Discord: [Join my server](https://mrdwolf.net/discord)
 
 Thank you for choosing FluffBoost to add motivation and positivity to your Discord server!
 

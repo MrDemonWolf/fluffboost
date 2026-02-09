@@ -1,46 +1,74 @@
-# Use a base image suitable for both development and production
+# ----------------------------
+# 1️⃣ Base image (shared)
+# ----------------------------
 FROM node:23-alpine AS base
 
-# Set app directory
 WORKDIR /usr/src/app
 
-# Install pnpm and openssl globally
-RUN npm install -g pnpm
-RUN apk add --no-cache openssl curl
+# Needed for Prisma + TLS
+RUN apk add --no-cache openssl
 
-# Copy package.json and pnpm files
-COPY package*.json ./
-COPY pnpm-lock.yaml ./
+# Enable pnpm via corepack (faster, no global install)
+RUN corepack enable
 
-# Install dependencies
-RUN pnpm install
+# ----------------------------
+# 2️⃣ Dependencies (cached)
+# ----------------------------
+FROM base AS deps
 
-# Use the base image for serving the application in production
-FROM base AS production
+COPY package.json pnpm-lock.yaml ./
 
-# Set environment variables
-ENV PORT=3000
+# Install ALL deps (dev + prod) for build
+RUN pnpm install --frozen-lockfile
 
-# Copy the entire application
+# ----------------------------
+# 3️⃣ Build stage
+# ----------------------------
+FROM base AS build
+
+COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY . .
 
-# Run Prisma Generate to generate the Prisma Client
+# Generate Prisma client
 RUN pnpm db:generate
 
-# Build the application
+# Build TypeScript → JS
 RUN pnpm build
 
-# Expose server port for production (default to 3000, can be overridden)
-EXPOSE ${PORT}
+# ----------------------------
+# 4️⃣ Production deps only
+# ----------------------------
+FROM base AS prod-deps
 
-# Copy the entrypoint script
-COPY entrypoint.sh .
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --prod
 
-# Make the entrypoint script executable
-RUN chmod +x entrypoint.sh
+# ----------------------------
+# 5️⃣ Production runtime (small)
+# ----------------------------
+FROM node:23-alpine AS production
 
-# Set the entrypoint to our script
-ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
+WORKDIR /usr/src/app
 
-# Command to start the application
+RUN apk add --no-cache openssl
+
+# Create non-root user
+RUN addgroup -S fluffboost && adduser -S fluffboost -G fluffboost
+
+# Copy ONLY what runtime needs
+COPY --from=build /usr/src/app/dist ./dist
+COPY --from=prod-deps /usr/src/app/node_modules ./node_modules
+COPY --from=build /usr/src/app/package.json ./
+
+# Copy generated Prisma client into production node_modules
+COPY --from=build /usr/src/app/src/generated ./src/generated
+
+# Set ownership and switch to non-root user
+RUN chown -R fluffboost:fluffboost /usr/src/app
+USER fluffboost
+
+ENV NODE_ENV=production
+
+EXPOSE 3000
+
 CMD ["node", "dist/app.js"]

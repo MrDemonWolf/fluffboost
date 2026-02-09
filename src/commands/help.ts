@@ -2,14 +2,14 @@ import type { Client, CommandInteraction } from "discord.js";
 
 import { SlashCommandBuilder, MessageFlags } from "discord.js";
 
-import logger from "../utils/logger";
-import posthog from "../utils/posthog";
+import logger from "../utils/logger.js";
+import posthog from "../utils/posthog.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("help")
   .setDescription("Get help with using the bot");
 
-export function execute(client: Client, interaction: CommandInteraction) {
+export function execute(_client: Client, interaction: CommandInteraction) {
   try {
     logger.commands.executing(
       "help",
@@ -22,8 +22,11 @@ export function execute(client: Client, interaction: CommandInteraction) {
             \`/about\` - Learn more about the bot
             \`/invite\` - Invite me to your server!
             \`/quote\` - Get a random quote
-            \`/setup\` - Setup the bot for your server such as the channel to send quotes to. (admin only)
-            \`/admin\` - Admin commands (selected users only)`,
+            \`/setup channel\` - Set the channel for quotes (admin only)
+            \`/setup schedule\` - Customize quote delivery schedule (premium)
+            \`/admin\` - Admin commands (selected users only)
+            \`/premium\` - View premium subscription info and status
+            \`/owner\` - Bot owner commands (owner only)`,
       flags: MessageFlags.Ephemeral,
     });
 
@@ -37,7 +40,7 @@ export function execute(client: Client, interaction: CommandInteraction) {
       distinctId: interaction.user.id,
       event: "help command used",
       properties: {
-        environment: process.env.NODE_ENV,
+        environment: process.env["NODE_ENV"],
         userId: interaction.user.id,
         username: interaction.user.username,
       },

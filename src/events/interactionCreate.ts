@@ -2,25 +2,35 @@ import { MessageFlags } from "discord.js";
 
 import type { Client, Interaction, CommandInteraction } from "discord.js";
 
-import logger from "../utils/logger";
+import logger from "../utils/logger.js";
 
 /**
  * Import slash commands from the commands folder.
  */
-import help from "../commands/help";
-import about from "../commands/about";
-import changelog from "../commands/changelog";
-import quote from "../commands/quote";
-import suggestion from "../commands/suggestion";
-import invite from "../commands/invite";
-import admin from "../commands/admin";
-import setup from "../commands/setup";
+import help from "../commands/help.js";
+import about from "../commands/about.js";
+import changelog from "../commands/changelog.js";
+import quote from "../commands/quote.js";
+import suggestion from "../commands/suggestion.js";
+import invite from "../commands/invite.js";
+import admin from "../commands/admin/index.js";
+import setup, { setupAutocomplete } from "../commands/setup/index.js";
+import premium from "../commands/premium.js";
+import owner from "../commands/owner/index.js";
 
 export async function interactionCreateEvent(
   client: Client,
   interaction: Interaction
 ) {
   try {
+    // Handle autocomplete interactions
+    if (interaction.isAutocomplete()) {
+      if (interaction.commandName === "setup") {
+        await setupAutocomplete(interaction);
+      }
+      return;
+    }
+
     if (!interaction.isCommand()) {
       return;
     }
@@ -65,7 +75,9 @@ export async function interactionCreateEvent(
         );
         break;
       case "quote":
-        await quote.execute(client, interaction);
+        if (interaction.isChatInputCommand()) {
+          await quote.execute(client, interaction);
+        }
         logger.commands.success(
           "interactionCreate - quote",
           interaction.user.username,
@@ -81,7 +93,9 @@ export async function interactionCreateEvent(
         );
         break;
       case "suggestion":
-        await suggestion.execute(client, interaction);
+        if (interaction.isChatInputCommand()) {
+          await suggestion.execute(client, interaction);
+        }
         logger.commands.success(
           "interactionCreate - suggestion",
           interaction.user.username,
@@ -100,6 +114,22 @@ export async function interactionCreateEvent(
         await setup.execute(client, interaction);
         logger.commands.success(
           "interactionCreate - setup",
+          interaction.user.username,
+          interaction.user.id
+        );
+        break;
+      case "premium":
+        await premium.execute(client, interaction);
+        logger.commands.success(
+          "interactionCreate - premium",
+          interaction.user.username,
+          interaction.user.id
+        );
+        break;
+      case "owner":
+        await owner.execute(client, interaction);
+        logger.commands.success(
+          "interactionCreate - owner",
           interaction.user.username,
           interaction.user.id
         );
