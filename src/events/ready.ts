@@ -1,20 +1,22 @@
 import type { Client } from "discord.js";
 
-import setActivity from "../worker/jobs/setActivity";
-import { pruneGuilds, ensureGuildExists } from "../utils/guildDatabase";
-import logger from "../utils/logger";
+import setActivity from "../worker/jobs/setActivity.js";
+import { pruneGuilds, ensureGuildExists } from "../utils/guildDatabase.js";
+import logger from "../utils/logger.js";
 
 /**
  * Import slash commands from the commands folder.
  */
-import help from "../commands/help";
-import about from "../commands/about";
-import quote from "../commands/quote";
-import suggestion from "../commands/suggestion";
-import invite from "../commands/invite";
-import setup from "../commands/setup";
-import admin from "../commands/admin";
-import changelog from "../commands/changelog";
+import help from "../commands/help.js";
+import about from "../commands/about.js";
+import quote from "../commands/quote.js";
+import suggestion from "../commands/suggestion.js";
+import invite from "../commands/invite.js";
+import setup from "../commands/setup/index.js";
+import admin from "../commands/admin/index.js";
+import changelog from "../commands/changelog.js";
+import premium from "../commands/premium.js";
+import owner from "../commands/owner/index.js";
 
 export async function readyEvent(client: Client) {
   try {
@@ -50,6 +52,8 @@ export async function readyEvent(client: Client) {
       setup.slashCommand,
       admin.slashCommand,
       changelog.slashCommand,
+      premium.slashCommand,
+      owner.slashCommand,
     ]);
 
     const commands = await client.application?.commands.fetch();

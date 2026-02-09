@@ -1,8 +1,8 @@
 import { CommandInteraction, MessageFlags } from "discord.js";
 
-import { trimArray } from "./trimArray";
-import env from "./env";
-import logger from "./logger";
+import { trimArray } from "./trimArray.js";
+import env from "./env.js";
+import logger from "./logger.js";
 
 export function isUserPermitted(interaction: CommandInteraction) {
   const allowedUsersArray = env.ALLOWED_USERS?.split(",") as string[];

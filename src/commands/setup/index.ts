@@ -10,14 +10,16 @@ import type {
   Client,
   CommandInteraction,
   CommandInteractionOptionResolver,
+  AutocompleteInteraction,
 } from "discord.js";
 
-import logger from "../../utils/logger";
+import logger from "../../utils/logger.js";
 
 /**
  * Import subcommands
  */
-import channel from "./channel";
+import channel from "./channel.js";
+import schedule, { autocomplete as scheduleAutocomplete } from "./schedule.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("setup")
@@ -34,6 +36,35 @@ export const slashCommand = new SlashCommandBuilder()
           .setDescription("Where the bot will send the message to")
           .addChannelTypes(ChannelType.GuildText)
           .setRequired(true)
+      );
+  })
+  .addSubcommand((subCommand: SlashCommandSubcommandBuilder) => {
+    return subCommand
+      .setName("schedule")
+      .setDescription("Customize your quote delivery schedule (premium)")
+      .addStringOption((option) =>
+        option
+          .setName("frequency")
+          .setDescription("How often to send quotes")
+          .addChoices(
+            { name: "Daily", value: "Daily" },
+            { name: "Weekly", value: "Weekly" },
+            { name: "Monthly", value: "Monthly" }
+          )
+      )
+      .addStringOption((option) =>
+        option.setName("time").setDescription("Time to send quotes in HH:mm format (e.g., 09:00)")
+      )
+      .addStringOption((option) =>
+        option
+          .setName("timezone")
+          .setDescription("IANA timezone (e.g., America/New_York)")
+          .setAutocomplete(true)
+      )
+      .addIntegerOption((option) =>
+        option
+          .setName("day")
+          .setDescription("Day of week (0=Sun-6=Sat) for weekly, or day of month (1-28) for monthly")
       );
   })
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
@@ -58,6 +89,9 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       case "channel":
         await channel(client, interaction);
         break;
+      case "schedule":
+        await schedule(client, interaction);
+        break;
       default:
         interaction.reply({
           content: "Invalid subcommand",
@@ -79,7 +113,15 @@ export async function execute(client: Client, interaction: CommandInteraction) {
   }
 }
 
+export async function setupAutocomplete(interaction: AutocompleteInteraction) {
+  const subcommand = interaction.options.getSubcommand();
+  if (subcommand === "schedule") {
+    await scheduleAutocomplete(interaction);
+  }
+}
+
 export default {
   slashCommand,
   execute,
+  setupAutocomplete,
 };

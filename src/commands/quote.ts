@@ -1,16 +1,16 @@
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 
-import type { Client, CommandInteraction } from "discord.js";
+import type { Client, ChatInputCommandInteraction } from "discord.js";
 
-import logger from "../utils/logger";
-import { prisma } from "../database";
-import posthog from "../utils/posthog";
+import logger from "../utils/logger.js";
+import { prisma } from "../database/index.js";
+import posthog from "../utils/posthog.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("quote")
   .setDescription("Get an instant dose of motivation");
 
-export async function execute(client: Client, interaction: CommandInteraction) {
+export async function execute(client: Client, interaction: ChatInputCommandInteraction): Promise<any> {
   try {
     logger.commands.executing(
       "quote",
@@ -87,7 +87,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       event: "quote command used",
       properties: {
         quote: motivationQuote[0].id,
-        environment: process.env.NODE_ENV,
+        environment: process.env["NODE_ENV"],
         userId: interaction.user.id,
         username: interaction.user.username,
       },
