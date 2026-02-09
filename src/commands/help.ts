@@ -26,7 +26,8 @@ export function execute(_client: Client, interaction: CommandInteraction) {
             \`/setup schedule\` - Customize quote delivery schedule (premium)
             \`/admin\` - Admin commands (selected users only)
             \`/premium\` - View premium subscription info and status
-            \`/owner\` - Bot owner commands (owner only)`,
+            \`/owner premium test-create\` - Create a test entitlement (owner only)
+            \`/owner premium test-delete\` - Delete a test entitlement (owner only)`,
       flags: MessageFlags.Ephemeral,
     });
 
