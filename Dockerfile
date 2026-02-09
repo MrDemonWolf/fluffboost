@@ -66,6 +66,9 @@ COPY --from=build /usr/src/app/package.json ./
 # Copy generated Prisma client into production node_modules
 COPY --from=build /usr/src/app/src/generated ./src/generated
 
+# Copy prisma package so prisma.config.ts can resolve "prisma/config"
+COPY --from=build /usr/src/app/node_modules/prisma ./node_modules/prisma
+
 # Copy prisma schema, config, and migrations for runtime migrate deploy
 COPY --from=build /usr/src/app/prisma ./prisma
 COPY --from=build /usr/src/app/prisma.config.ts ./
