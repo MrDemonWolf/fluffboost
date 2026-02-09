@@ -25,11 +25,11 @@ export const slashCommand = new SlashCommandBuilder()
       .addSubcommand((subCommand) => {
         return subCommand
           .setName("test-create")
-          .setDescription("Create a test entitlement for a user")
-          .addUserOption((option) =>
+          .setDescription("Create a test entitlement for a server")
+          .addStringOption((option) =>
             option
-              .setName("user")
-              .setDescription("User to grant the test entitlement to (defaults to you)")
+              .setName("guild")
+              .setDescription("Guild ID (defaults to current server)")
               .setRequired(false)
           );
       })
