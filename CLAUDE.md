@@ -98,6 +98,29 @@ All env vars are validated by Zod in `src/utils/env.ts`. Required variables incl
 
 GitHub Actions runs on push/PR to `main` and `dev`: Prisma client generation, test execution, ESLint check, TypeScript type check, build, security audit, and Docker build test. Tested on Node 20.x and 22.x.
 
+## Docker / Deployment
+
+The app is deployed via **Coolify** using a multi-stage Dockerfile (Node 24 Alpine). The production image runs migrations at container startup via `docker-entrypoint.sh`.
+
+### Key files
+
+- `Dockerfile` — Multi-stage build: base → deps → prod-deps → build → production runtime
+- `docker-entrypoint.sh` — Runs `prisma migrate deploy` then starts the app. Set `SKIP_MIGRATIONS=true` to skip.
+- `prisma.config.ts` — Provides `DATABASE_URL` to Prisma CLI tools (required in Prisma 7 since `url` was removed from the schema datasource block). Does not affect runtime — the app uses `@prisma/adapter-pg`.
+- `.dockerignore` — Excludes tests, docs, CI config from build context
+
+### Prisma 7 notes
+
+- The `datasource` block in `prisma/schema.prisma` has **no `url` property** — this is intentional for Prisma 7 with driver adapters.
+- CLI tools (`prisma migrate deploy`, `prisma generate`, etc.) get the database URL from `prisma.config.ts` instead.
+- Prisma is installed globally in the production image (`npm install -g prisma@7.2.0`) for migrations. `NODE_PATH=/usr/local/lib/node_modules` is set so `prisma.config.ts` can resolve `prisma/config` from the global install.
+
+### Build optimizations
+
+- `COPY --chown=fluffboost:fluffboost` is used instead of `RUN chown -R` to avoid a slow recursive ownership change
+- `deps` and `prod-deps` stages run in parallel during Docker build
+- `db:generate` and `build` are combined into a single RUN layer
+
 ## Git Branching
 
 - `main` — Production branch
