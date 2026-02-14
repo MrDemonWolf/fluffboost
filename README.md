@@ -12,6 +12,7 @@ Start your day with a smile or find encouragement when you need it most. Let’s
 
 - **Daily Motivational Quotes**: Automatically delivered to all configured server channels, with reliable delivery across shards.
 - **Per-Guild Scheduling**: Each server can set its own motivation time and timezone.
+- **Premium Subscriptions**: Optional premium tier via Discord App Subscriptions with custom quote scheduling (daily, weekly, or monthly), custom times, and timezone selection.
 - **Rotating Bot Status**: Customizable bot presence that cycles through activities on a configurable interval.
 - **Easy Integration**: Simple setup for any Discord server.
 - **Community-Driven**: Open-source development powered by furries, for furries! 🐺🐾
@@ -32,6 +33,8 @@ FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the ba
 - `/quote` - Receive an instant motivational quote.
 - `/suggestion` - Make a quote suggestion for the owner to review.
 - `/setup` - Configure bot settings like the target channel for quotes (admin only).
+- `/setup schedule` - Customize quote delivery frequency, time, and timezone (premium).
+- `/premium` - View premium subscription info and status.
 
 # Change Log
 For detailed changelog information, see [CHANGELOG.md](CHANGELOG.md).
@@ -40,7 +43,7 @@ For detailed changelog information, see [CHANGELOG.md](CHANGELOG.md).
 
 ### Prerequisites
 
-- Node.js 20.x or 22.x
+- Node.js 20.x, 22.x, or 24.x
 - pnpm 9.x
 - PostgreSQL database
 - Redis server
@@ -90,7 +93,8 @@ For detailed changelog information, see [CHANGELOG.md](CHANGELOG.md).
 - `pnpm lint:check` - Check code style without fixing
 - `pnpm tsc --noEmit` - Run TypeScript type checking
 - `pnpm db:studio` - Open Prisma Studio to view/edit database
-- `pnpm test` - Run tests
+- `pnpm test` - Run tests (131 tests across 20 files)
+- `pnpm test:coverage` - Run tests with c8 coverage report
 
 ### Code Quality
 
@@ -100,9 +104,13 @@ This project uses:
 - **TypeScript** for type safety
 - **Prisma** for database management
 - **Consola** for centralized logging
+- **Mocha** + **Chai** + **Sinon** + **esmock** for testing (131 tests)
+- **c8** for V8-based code coverage
+- **supertest** for HTTP endpoint testing
 
-The CI pipeline automatically runs:
+The CI pipeline automatically runs (on Node 20.x, 22.x, and 24.x):
 
+- Test execution with coverage reporting
 - TypeScript type checking
 - ESLint linting
 - Build verification

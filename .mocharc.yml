@@ -1,5 +1,6 @@
-import:
-  - tsx
+node-option:
+  - import=tsx/esm
+  - loader=esmock
 spec: "tests/**/*.test.ts"
 timeout: 5000
 exit: true
