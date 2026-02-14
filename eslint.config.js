@@ -110,7 +110,6 @@ export default [
       "dist/**",
       "build/**",
       "*.config.js",
-      "*.config.ts",
       "ecosystem.config.js",
       "prisma/migrations/**",
       "pnpm-lock.yaml",
