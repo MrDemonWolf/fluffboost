@@ -42,6 +42,17 @@ jobs:
 
       - name: Run tests with coverage
         run: pnpm test:coverage
+        env:
+          DATABASE_URL: postgres://ci:ci@localhost:5432/fluffboost
+          REDIS_URL: redis://localhost:6379
+          DISCORD_APPLICATION_ID: ci-test-app-id
+          DISCORD_APPLICATION_PUBLIC_KEY: ci-test-public-key
+          DISCORD_APPLICATION_BOT_TOKEN: ci-test-bot-token
+          OWNER_ID: ci-test-owner-id
+          MAIN_GUILD_ID: ci-test-guild-id
+          MAIN_CHANNEL_ID: ci-test-channel-id
+          POSTHOG_API_KEY: ci-test-posthog-key
+          POSTHOG_HOST: https://ci-test-posthog.example.com
 
       - name: Run ESLint
         run: pnpm lint:check
