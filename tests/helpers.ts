@@ -59,13 +59,17 @@ export function mockPrisma() {
     motivationQuote: {
       findMany: sinon.stub().resolves([]),
       count: sinon.stub().resolves(0),
+      create: sinon.stub().resolves({}),
     },
     discordActivity: {
       findMany: sinon.stub().resolves([]),
     },
     suggestionQuote: {
       findMany: sinon.stub().resolves([]),
+      findUnique: sinon.stub().resolves(null),
       create: sinon.stub().resolves({}),
+      update: sinon.stub().resolves({}),
+      count: sinon.stub().resolves(0),
     },
   };
 }
