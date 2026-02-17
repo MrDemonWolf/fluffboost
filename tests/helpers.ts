@@ -94,6 +94,7 @@ export function mockInteraction(overrides: Record<string, unknown> = {}) {
     user: {
       id: "user-123",
       username: "testuser",
+      displayAvatarURL: sinon.stub().returns("https://example.com/avatar.png"),
     },
     guildId: "guild-123",
     replied: false,
