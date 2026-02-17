@@ -1,7 +1,6 @@
 import {
   Client,
   ChatInputCommandInteraction,
-  TextChannel,
   SlashCommandBuilder,
   EmbedBuilder,
   MessageFlags,
@@ -88,10 +87,6 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
     /**
      * Send the quote suggestion to the main channel for review
      */
-    const mainChannel = client.channels.cache.get(
-      env.MAIN_CHANNEL_ID as string
-    ) as TextChannel;
-
     const embed = new EmbedBuilder()
       .setColor(0xfadb7f)
       .setTitle("New Quote Suggestion")
@@ -118,9 +113,12 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
         text: `Created with ID ${newQuote.id}`,
       });
 
-    mainChannel?.send({
-      embeds: [embed],
-    });
+    if (env.MAIN_CHANNEL_ID) {
+      const mainChannel = await client.channels.fetch(env.MAIN_CHANNEL_ID);
+      if (mainChannel?.isTextBased() && !mainChannel.isDMBased()) {
+        await mainChannel.send({ embeds: [embed] });
+      }
+    }
 
     logger.commands.success(
       "suggestion",
