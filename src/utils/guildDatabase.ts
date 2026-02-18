@@ -6,7 +6,9 @@ import logger from "./logger.js";
 
 export async function pruneGuilds(client: Client) {
   try {
-    const guildsInDb = await prisma.guild.findMany({});
+    const guildsInDb = await prisma.guild.findMany({
+      orderBy: { guildId: "asc" },
+    });
 
     const guildsInCache = client.guilds.cache.map((guild) => guild.id);
 
@@ -99,7 +101,9 @@ export async function pruneGuilds(client: Client) {
 
 export async function ensureGuildExists(client: Client) {
   try {
-    const currentGuilds = await prisma.guild.findMany({});
+    const currentGuilds = await prisma.guild.findMany({
+      orderBy: { guildId: "asc" },
+    });
     const guildsToAdd = client.guilds.cache.filter(
       (guild) =>
         !currentGuilds.some((currentGuild: { guildId: string }) => currentGuild.guildId === guild.id)
@@ -173,19 +177,10 @@ export async function ensureGuildExists(client: Client) {
 }
 
 export async function guildExists(guildId: string) {
-  const guildExists = await prisma.guild.findUnique({
-    where: {
-      guildId,
-    },
+  const result = await prisma.guild.upsert({
+    where: { guildId },
+    create: { guildId },
+    update: {},
   });
-
-  if (!guildExists) {
-    await prisma.guild.create({
-      data: {
-        guildId,
-      },
-    });
-    return false;
-  }
-  return true;
+  return result !== null;
 }
