@@ -15,7 +15,7 @@ import posthog from "../utils/posthog.js";
 export const slashCommand = new SlashCommandBuilder()
   .setName("suggestion")
   .setDescription(
-    "Make a quote suggestion which will be reviewed by a the owner of the bot"
+    "Make a quote suggestion which will be reviewed by the owner of the bot"
   )
   .addStringOption((option) =>
     option

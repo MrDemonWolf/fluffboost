@@ -7,7 +7,7 @@ import logger from "../../../utils/logger.js";
 export default async function (
   _client: Client,
   interaction: CommandInteraction,
-): Promise<any> {
+): Promise<void> {
   try {
     logger.commands.executing(
       "admin suggestion stats",
@@ -68,6 +68,12 @@ export default async function (
         command: "admin suggestion stats",
       },
     );
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "An error occurred while processing your request.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
-  return undefined;
 }
