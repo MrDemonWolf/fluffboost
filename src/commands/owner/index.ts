@@ -117,6 +117,13 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "owner",
     });
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "An error occurred while processing your request.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
 }
 

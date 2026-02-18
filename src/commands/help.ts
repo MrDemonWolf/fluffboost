@@ -9,7 +9,7 @@ export const slashCommand = new SlashCommandBuilder()
   .setName("help")
   .setDescription("Get help with using the bot");
 
-export function execute(_client: Client, interaction: CommandInteraction) {
+export async function execute(_client: Client, interaction: CommandInteraction) {
   try {
     logger.commands.executing(
       "help",
@@ -17,7 +17,7 @@ export function execute(_client: Client, interaction: CommandInteraction) {
       interaction.user.id
     );
 
-    interaction.reply({
+    await interaction.reply({
       content: `**Commands**\n
             \`/about\` - Learn more about the bot
             \`/invite\` - Invite me to your server!
@@ -57,6 +57,13 @@ export function execute(_client: Client, interaction: CommandInteraction) {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "help",
     });
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "An error occurred while processing your request.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
 }
 
