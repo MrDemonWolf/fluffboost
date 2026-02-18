@@ -193,24 +193,24 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       case "quote":
         switch (subCommand) {
           case "create":
-            quoteCreate(
+            await quoteCreate(
               client,
               interaction,
               options as CommandInteractionOptionResolver
             );
             break;
           case "remove":
-            quoteRemove(
+            await quoteRemove(
               client,
               interaction,
               options as CommandInteractionOptionResolver
             );
             break;
           case "list":
-            quoteList(client, interaction);
+            await quoteList(client, interaction);
             break;
           default:
-            interaction.reply({
+            await interaction.reply({
               content: "Invalid subcommand",
               flags: MessageFlags.Ephemeral,
             });
@@ -219,24 +219,24 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       case "activity":
         switch (subCommand) {
           case "create":
-            activityAdd(
+            await activityAdd(
               client,
               interaction,
               options as CommandInteractionOptionResolver
             );
             break;
           case "remove":
-            activityRemove(
+            await activityRemove(
               client,
               interaction,
               options as CommandInteractionOptionResolver
             );
             break;
           case "list":
-            activityList(client, interaction);
+            await activityList(client, interaction);
             break;
           default:
-            interaction.reply({
+            await interaction.reply({
               content: "Invalid subcommand",
               flags: MessageFlags.Ephemeral,
             });
@@ -245,31 +245,31 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       case "suggestion":
         switch (subCommand) {
           case "list":
-            suggestionList(
+            await suggestionList(
               client,
               interaction,
               options as CommandInteractionOptionResolver,
             );
             break;
           case "approve":
-            suggestionApprove(
+            await suggestionApprove(
               client,
               interaction,
               options as CommandInteractionOptionResolver,
             );
             break;
           case "reject":
-            suggestionReject(
+            await suggestionReject(
               client,
               interaction,
               options as CommandInteractionOptionResolver,
             );
             break;
           case "stats":
-            suggestionStats(client, interaction);
+            await suggestionStats(client, interaction);
             break;
           default:
-            interaction.reply({
+            await interaction.reply({
               content: "Invalid subcommand",
               flags: MessageFlags.Ephemeral,
             });
@@ -277,7 +277,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         break;
 
       default:
-        interaction.reply({
+        await interaction.reply({
           content: "Invalid subcommand group",
           flags: MessageFlags.Ephemeral,
         });

@@ -11,7 +11,7 @@ export default async function (
   _client: Client,
   interaction: CommandInteraction,
   options: CommandInteractionOptionResolver,
-): Promise<any> {
+): Promise<void> {
   try {
     logger.commands.executing(
       "admin suggestion list",
@@ -28,15 +28,19 @@ export default async function (
     const status = options.getString("status");
 
     const where = status ? { status } : {};
-    const suggestions = await prisma.suggestionQuote.findMany({ where });
+    const suggestions = await prisma.suggestionQuote.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+    });
 
     if (suggestions.length === 0) {
-      return await interaction.reply({
+      await interaction.reply({
         content: status
           ? `No suggestions found with status: ${status}`
           : "No suggestions found.",
         flags: MessageFlags.Ephemeral,
       });
+      return;
     }
 
     let text = "ID - Quote - Author - Status - Submitted By\n";
@@ -75,6 +79,12 @@ export default async function (
         command: "admin suggestion list",
       },
     );
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "An error occurred while processing your request.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
-  return undefined;
 }
