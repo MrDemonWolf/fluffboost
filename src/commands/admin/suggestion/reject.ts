@@ -1,0 +1,152 @@
+import {
+  Client,
+  CommandInteraction,
+  EmbedBuilder,
+  MessageFlags,
+} from "discord.js";
+
+import type { CommandInteractionOptionResolver } from "discord.js";
+
+import { isUserPermitted } from "../../../utils/permissions.js";
+import { prisma } from "../../../database/index.js";
+import env from "../../../utils/env.js";
+import logger from "../../../utils/logger.js";
+
+export default async function (
+  client: Client,
+  interaction: CommandInteraction,
+  options: CommandInteractionOptionResolver,
+): Promise<void> {
+  try {
+    logger.commands.executing(
+      "admin suggestion reject",
+      interaction.user.username,
+      interaction.user.id,
+    );
+
+    const isAllowed = isUserPermitted(interaction);
+
+    if (!isAllowed) {
+      return;
+    }
+
+    const suggestionId = options.getString("suggestion_id", true);
+    const reason = options.getString("reason");
+
+    const suggestion = await prisma.suggestionQuote.findUnique({
+      where: { id: suggestionId },
+    });
+
+    if (!suggestion) {
+      await interaction.reply({
+        content: `Suggestion with ID ${suggestionId} not found.`,
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    if (suggestion.status !== "Pending") {
+      await interaction.reply({
+        content: `This suggestion has already been ${suggestion.status.toLowerCase()}.`,
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    await prisma.suggestionQuote.update({
+      where: { id: suggestionId },
+      data: {
+        status: "Rejected",
+        reviewedBy: interaction.user.id,
+        reviewedAt: new Date(),
+      },
+    });
+
+    const embedFields = [
+      { name: "Quote", value: suggestion.quote },
+      { name: "Author", value: suggestion.author },
+      { name: "Submitted By", value: `<@${suggestion.addedBy}>` },
+    ];
+
+    if (reason) {
+      embedFields.push({ name: "Reason", value: reason });
+    }
+
+    const embed = new EmbedBuilder()
+      .setColor(0xed4245)
+      .setTitle("Suggestion Rejected")
+      .setAuthor({
+        name: interaction.user.username,
+        iconURL: interaction.user.displayAvatarURL(),
+      })
+      .addFields(embedFields)
+      .setFooter({ text: `Suggestion ID: ${suggestionId}` })
+      .setTimestamp();
+
+    if (env.MAIN_CHANNEL_ID) {
+      const channel = await client.channels.fetch(env.MAIN_CHANNEL_ID);
+      if (channel?.isTextBased() && !channel.isDMBased()) {
+        await channel.send({ embeds: [embed] });
+      }
+    }
+
+    try {
+      const submitter = await client.users.fetch(suggestion.addedBy);
+      const dmDescription = reason
+        ? `Your quote suggestion was rejected.\n\n` +
+          `**Quote:** ${suggestion.quote}\n**Author:** ${suggestion.author}\n**Reason:** ${reason}`
+        : `Your quote suggestion was rejected.\n\n` +
+          `**Quote:** ${suggestion.quote}\n**Author:** ${suggestion.author}`;
+
+      await submitter.send({
+        embeds: [
+          new EmbedBuilder()
+            .setColor(0xed4245)
+            .setTitle("Your Suggestion Was Rejected")
+            .setDescription(dmDescription)
+            .setTimestamp(),
+        ],
+      });
+    } catch (err) {
+      logger.warn("Discord - Command", "Failed to DM submitter for rejected suggestion", {
+        suggestionId,
+        addedBy: suggestion.addedBy,
+        error: err,
+      });
+    }
+
+    await interaction.reply({
+      content: `Suggestion ${suggestionId} has been rejected.`,
+      flags: MessageFlags.Ephemeral,
+    });
+
+    logger.commands.success(
+      "admin suggestion reject",
+      interaction.user.username,
+      interaction.user.id,
+    );
+  } catch (err) {
+    logger.commands.error(
+      "admin suggestion reject",
+      interaction.user.username,
+      interaction.user.id,
+      err,
+    );
+    logger.error(
+      "Discord - Command",
+      "Error executing admin suggestion reject command",
+      err,
+      {
+        user: { username: interaction.user.username, id: interaction.user.id },
+        command: "admin suggestion reject",
+      },
+    );
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "An error occurred while processing your request.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+  }
+}

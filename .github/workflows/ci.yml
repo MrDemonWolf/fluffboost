@@ -1,5 +1,9 @@
 name: CI
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main, dev]
@@ -13,7 +17,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.x, 22.x]
+        node-version: [20.x, 22.x, 24.x]
 
     steps:
       - name: Checkout code
@@ -36,8 +40,19 @@ jobs:
       - name: Generate Prisma client
         run: pnpm db:generate
 
-      - name: Run tests
-        run: pnpm test
+      - name: Run tests with coverage
+        run: pnpm test:coverage
+        env:
+          DATABASE_URL: postgres://ci:ci@localhost:5432/fluffboost
+          REDIS_URL: redis://localhost:6379
+          DISCORD_APPLICATION_ID: ci-test-app-id
+          DISCORD_APPLICATION_PUBLIC_KEY: ci-test-public-key
+          DISCORD_APPLICATION_BOT_TOKEN: ci-test-bot-token
+          OWNER_ID: ci-test-owner-id
+          MAIN_GUILD_ID: ci-test-guild-id
+          MAIN_CHANNEL_ID: ci-test-channel-id
+          POSTHOG_API_KEY: ci-test-posthog-key
+          POSTHOG_HOST: https://ci-test-posthog.example.com
 
       - name: Run ESLint
         run: pnpm lint:check
@@ -48,8 +63,16 @@ jobs:
       - name: Build project
         run: pnpm build
 
+      - name: Upload coverage report
+        if: matrix.node-version == '22.x'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
+
       - name: Archive build artifacts
-        if: matrix.node-version == '20.x'
+        if: matrix.node-version == '22.x'
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
@@ -72,7 +95,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
+          node-version: "22.x"
           cache: "pnpm"
 
       - name: Install dependencies
