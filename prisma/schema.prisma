@@ -50,7 +50,7 @@ model SuggestionQuote {
   quote      String
   author     String
   addedBy    String
-  status     String    @default("pending")
+  status     String    @default("Pending")
   reviewedBy String?
   reviewedAt DateTime?
   createdAt  DateTime  @default(now())

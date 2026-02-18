@@ -16,7 +16,7 @@ export default async function (
   client: Client,
   interaction: CommandInteraction,
   options: CommandInteractionOptionResolver,
-): Promise<any> {
+): Promise<void> {
   try {
     logger.commands.executing(
       "admin suggestion approve",
@@ -37,35 +37,38 @@ export default async function (
     });
 
     if (!suggestion) {
-      return await interaction.reply({
+      await interaction.reply({
         content: `Suggestion with ID ${suggestionId} not found.`,
         flags: MessageFlags.Ephemeral,
       });
+      return;
     }
 
     if (suggestion.status !== "Pending") {
-      return await interaction.reply({
+      await interaction.reply({
         content: `This suggestion has already been ${suggestion.status.toLowerCase()}.`,
         flags: MessageFlags.Ephemeral,
       });
+      return;
     }
 
-    await prisma.motivationQuote.create({
-      data: {
-        quote: suggestion.quote,
-        author: suggestion.author,
-        addedBy: suggestion.addedBy,
-      },
-    });
-
-    await prisma.suggestionQuote.update({
-      where: { id: suggestionId },
-      data: {
-        status: "Approved",
-        reviewedBy: interaction.user.id,
-        reviewedAt: new Date(),
-      },
-    });
+    await prisma.$transaction([
+      prisma.motivationQuote.create({
+        data: {
+          quote: suggestion.quote,
+          author: suggestion.author,
+          addedBy: suggestion.addedBy,
+        },
+      }),
+      prisma.suggestionQuote.update({
+        where: { id: suggestionId },
+        data: {
+          status: "Approved",
+          reviewedBy: interaction.user.id,
+          reviewedAt: new Date(),
+        },
+      }),
+    ]);
 
     const embed = new EmbedBuilder()
       .setColor(0x57f287)
@@ -103,8 +106,12 @@ export default async function (
             .setTimestamp(),
         ],
       });
-    } catch {
-      // DMs may be disabled — this is expected
+    } catch (err) {
+      logger.warn("Discord - Command", "Failed to DM submitter for approved suggestion", {
+        suggestionId,
+        addedBy: suggestion.addedBy,
+        error: err,
+      });
     }
 
     await interaction.reply({
@@ -133,6 +140,12 @@ export default async function (
         command: "admin suggestion approve",
       },
     );
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "An error occurred while processing your request.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
-  return undefined;
 }

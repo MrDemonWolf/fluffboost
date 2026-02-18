@@ -48,6 +48,7 @@ export function mockLogger() {
 
 export function mockPrisma() {
   return {
+    $transaction: sinon.stub().callsFake((promises: Promise<unknown>[]) => Promise.all(promises)),
     guild: {
       findMany: sinon.stub().resolves([]),
       findUnique: sinon.stub().resolves(null),
