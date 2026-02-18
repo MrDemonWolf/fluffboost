@@ -24,8 +24,8 @@
   "dependencies": {
     "@discordjs/core": "^2.4.0",
     "@discordjs/rest": "^2.6.0",
-    "@prisma/adapter-pg": "^7.2.0",
-    "@prisma/client": "7.2.0",
+    "@prisma/adapter-pg": "^7.4.0",
+    "@prisma/client": "7.4.0",
     "bullmq": "^5.66.2",
     "consola": "^3.4.2",
     "cors": "^2.8.5",
@@ -41,6 +41,18 @@
     "node-cron": "^4.2.1",
     "posthog-node": "^5.18.0",
     "zod": "^3.25.76"
+  },
+  "pnpm": {
+    "overrides": {
+      "qs": ">=6.14.2",
+      "hono": ">=4.11.7",
+      "undici": ">=6.23.0",
+      "lodash": ">=4.17.23"
+    },
+    "onlyBuiltDependencies": [
+      "@prisma/engines",
+      "prisma"
+    ]
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
@@ -66,7 +78,7 @@
     "esmock": "^2.7.3",
     "mocha": "^11.7.5",
     "prettier-eslint-cli": "^8.0.1",
-    "prisma": "^7.2.0",
+    "prisma": "^7.4.0",
     "sinon": "^21.0.1",
     "supertest": "^7.2.2",
     "tslib": "^2.8.1",
