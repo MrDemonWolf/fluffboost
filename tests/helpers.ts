@@ -48,6 +48,7 @@ export function mockLogger() {
 
 export function mockPrisma() {
   return {
+    $transaction: sinon.stub().callsFake((promises: Promise<unknown>[]) => Promise.all(promises)),
     guild: {
       findMany: sinon.stub().resolves([]),
       findUnique: sinon.stub().resolves(null),
@@ -59,13 +60,17 @@ export function mockPrisma() {
     motivationQuote: {
       findMany: sinon.stub().resolves([]),
       count: sinon.stub().resolves(0),
+      create: sinon.stub().resolves({}),
     },
     discordActivity: {
       findMany: sinon.stub().resolves([]),
     },
     suggestionQuote: {
       findMany: sinon.stub().resolves([]),
+      findUnique: sinon.stub().resolves(null),
       create: sinon.stub().resolves({}),
+      update: sinon.stub().resolves({}),
+      count: sinon.stub().resolves(0),
     },
   };
 }
@@ -90,6 +95,7 @@ export function mockInteraction(overrides: Record<string, unknown> = {}) {
     user: {
       id: "user-123",
       username: "testuser",
+      displayAvatarURL: sinon.stub().returns("https://example.com/avatar.png"),
     },
     guildId: "guild-123",
     replied: false,

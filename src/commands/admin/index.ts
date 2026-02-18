@@ -20,6 +20,10 @@ import quoteRemove from "./quote/remove.js";
 import activityAdd from "./activity/create.js";
 import activityList from "./activity/list.js";
 import activityRemove from "./activity/remove.js";
+import suggestionList from "./suggestion/list.js";
+import suggestionApprove from "./suggestion/approve.js";
+import suggestionReject from "./suggestion/reject.js";
+import suggestionStats from "./suggestion/stats.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("admin")
@@ -112,6 +116,60 @@ export const slashCommand = new SlashCommandBuilder()
           .setDescription("List all available activities");
       });
   })
+  .addSubcommandGroup((subCommandGroup) => {
+    return subCommandGroup
+      .setName("suggestion")
+      .setDescription("Manage quote suggestions")
+      .addSubcommand((subCommand) => {
+        return subCommand
+          .setName("list")
+          .setDescription("List quote suggestions")
+          .addStringOption((option) =>
+            option
+              .setName("status")
+              .setDescription("Filter by status")
+              .setRequired(false)
+              .addChoices(
+                { name: "Pending", value: "Pending" },
+                { name: "Approved", value: "Approved" },
+                { name: "Rejected", value: "Rejected" },
+              ),
+          );
+      })
+      .addSubcommand((subCommand) => {
+        return subCommand
+          .setName("approve")
+          .setDescription("Approve a quote suggestion")
+          .addStringOption((option) =>
+            option
+              .setName("suggestion_id")
+              .setDescription("The ID of the suggestion to approve")
+              .setRequired(true),
+          );
+      })
+      .addSubcommand((subCommand) => {
+        return subCommand
+          .setName("reject")
+          .setDescription("Reject a quote suggestion")
+          .addStringOption((option) =>
+            option
+              .setName("suggestion_id")
+              .setDescription("The ID of the suggestion to reject")
+              .setRequired(true),
+          )
+          .addStringOption((option) =>
+            option
+              .setName("reason")
+              .setDescription("Reason for rejection")
+              .setRequired(false),
+          );
+      })
+      .addSubcommand((subCommand) => {
+        return subCommand
+          .setName("stats")
+          .setDescription("View suggestion statistics");
+      });
+  })
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 export async function execute(client: Client, interaction: CommandInteraction) {
@@ -135,24 +193,24 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       case "quote":
         switch (subCommand) {
           case "create":
-            quoteCreate(
+            await quoteCreate(
               client,
               interaction,
               options as CommandInteractionOptionResolver
             );
             break;
           case "remove":
-            quoteRemove(
+            await quoteRemove(
               client,
               interaction,
               options as CommandInteractionOptionResolver
             );
             break;
           case "list":
-            quoteList(client, interaction);
+            await quoteList(client, interaction);
             break;
           default:
-            interaction.reply({
+            await interaction.reply({
               content: "Invalid subcommand",
               flags: MessageFlags.Ephemeral,
             });
@@ -161,24 +219,57 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       case "activity":
         switch (subCommand) {
           case "create":
-            activityAdd(
+            await activityAdd(
               client,
               interaction,
               options as CommandInteractionOptionResolver
             );
             break;
           case "remove":
-            activityRemove(
+            await activityRemove(
               client,
               interaction,
               options as CommandInteractionOptionResolver
             );
             break;
           case "list":
-            activityList(client, interaction);
+            await activityList(client, interaction);
             break;
           default:
-            interaction.reply({
+            await interaction.reply({
+              content: "Invalid subcommand",
+              flags: MessageFlags.Ephemeral,
+            });
+        }
+        break;
+      case "suggestion":
+        switch (subCommand) {
+          case "list":
+            await suggestionList(
+              client,
+              interaction,
+              options as CommandInteractionOptionResolver,
+            );
+            break;
+          case "approve":
+            await suggestionApprove(
+              client,
+              interaction,
+              options as CommandInteractionOptionResolver,
+            );
+            break;
+          case "reject":
+            await suggestionReject(
+              client,
+              interaction,
+              options as CommandInteractionOptionResolver,
+            );
+            break;
+          case "stats":
+            await suggestionStats(client, interaction);
+            break;
+          default:
+            await interaction.reply({
               content: "Invalid subcommand",
               flags: MessageFlags.Ephemeral,
             });
@@ -186,7 +277,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         break;
 
       default:
-        interaction.reply({
+        await interaction.reply({
           content: "Invalid subcommand group",
           flags: MessageFlags.Ephemeral,
         });
