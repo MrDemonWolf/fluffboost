@@ -30,6 +30,7 @@ pnpm tsc --noEmit         # TypeScript check without emitting
 
 # Tests
 pnpm test                 # Mocha tests (cross-env NODE_ENV=test)
+pnpm test:coverage        # Tests with c8 coverage report
 
 # Infrastructure
 docker-compose up         # Start PostgreSQL 16 + Redis 7 locally
@@ -96,7 +97,7 @@ All env vars are validated by Zod in `src/utils/env.ts`. Required variables incl
 
 ## CI
 
-GitHub Actions runs on push/PR to `main` and `dev`: Prisma client generation, test execution, ESLint check, TypeScript type check, build, security audit, and Docker build test. Tested on Node 20.x and 22.x.
+GitHub Actions runs on push/PR to `main` and `dev`: Prisma client generation, test execution with c8 coverage, ESLint check, TypeScript type check, build, security audit, and Docker build test. Tested on Node 20.x, 22.x, and 24.x. Uses concurrency groups to cancel in-progress runs on new pushes. Coverage reports are uploaded as artifacts on the Node 22.x run.
 
 ## Docker / Deployment
 
@@ -149,12 +150,12 @@ Discord provides test entitlements so you can verify your subscription flow with
 - Use `/premium` — you'll see the premium info embed with a purchase button
 
 **Testing the subscribed flow (with test entitlement):**
-- Use `/owner premium test-create` to grant yourself a test entitlement (optionally pass `user:` to target another user)
+- Use `/owner premium test-create` to grant the current server a test entitlement (optionally pass `guild:` to target another server)
 - Use `/premium` again — you'll now see the "Premium Active" embed
 - Use `/owner premium test-delete entitlement_id:<id>` to remove the test entitlement when done
 
 **Owner commands for test entitlements:**
-- `/owner premium test-create [user]` — Creates a test entitlement via `client.application.entitlements.createTest()`. Returns the entitlement ID.
+- `/owner premium test-create [guild]` — Creates a guild-level test entitlement via `client.application.entitlements.createTest()`. Defaults to the current server. Returns the entitlement ID.
 - `/owner premium test-delete <entitlement_id>` — Deletes a test entitlement via `client.application.entitlements.deleteTest()`.
 
 These commands are restricted to the bot owner only (`OWNER_ID` env var).
@@ -183,10 +184,30 @@ if (isPremiumEnabled() && !hasEntitlement(interaction)) {
 
 ## Testing
 
-Tests use **Mocha** + **Chai** + **Sinon**, configured in `.mocharc.yml` with `tsx` as the loader. Test files live in `tests/` (mirroring `src/` structure) and use `.test.ts` suffix. Time-dependent tests use `sinon.useFakeTimers()` to control `dayjs()`.
+Tests use **Mocha** + **Chai** + **Sinon** + **esmock**, configured in `.mocharc.yml` with `tsx` and `esmock` loaders. Test files live in `tests/` (mirroring `src/` structure) and use `.test.ts` suffix. ESM module mocking uses `esmock` to replace imports at load time. Time-dependent tests use `sinon.useFakeTimers()` to control `dayjs()`.
 
-- `tests/utils/timezones.test.ts` — Unit tests for timezone utilities (ALL_TIMEZONES, isValidTimezone, filterTimezones)
-- `tests/utils/scheduleEvaluator.test.ts` — Unit tests for schedule evaluator (getCurrentTimeInTimezone, isGuildDueForMotivation across Daily/Weekly/Monthly frequencies)
+- `tests/helpers.ts` — Shared mock factories (mockLogger, mockPrisma, mockPosthog, mockInteraction, mockClient, mockEnv, etc.)
+- `tests/utils/timezones.test.ts` — Timezone utilities (ALL_TIMEZONES, isValidTimezone, filterTimezones)
+- `tests/utils/scheduleEvaluator.test.ts` — Schedule evaluator (getCurrentTimeInTimezone, isGuildDueForMotivation)
+- `tests/utils/cronParser.test.ts` — Cron parser utilities (cronToText, isValidCron, getCronDetails)
+- `tests/utils/trimArray.test.ts` — Array trimming utility
+- `tests/utils/premium.test.ts` — Premium utilities (isPremiumEnabled, getPremiumSkuId, hasEntitlement)
+- `tests/utils/permissions.test.ts` — Permission checks (isUserPermitted)
+- `tests/utils/guildDatabase.test.ts` — Guild database operations (pruneGuilds, ensureGuildExists, guildExists)
+- `tests/events/guildCreate.test.ts` — Guild join event handler
+- `tests/events/guildDelete.test.ts` — Guild leave event handler
+- `tests/events/entitlementCreate.test.ts` — Entitlement created event
+- `tests/events/entitlementDelete.test.ts` — Entitlement deleted event
+- `tests/events/entitlementUpdate.test.ts` — Entitlement updated event (cancellation/renewal)
+- `tests/events/interactionCreate.test.ts` — Command routing and error handling
+- `tests/worker/sendMotivation.test.ts` — Motivation job (schedule evaluation, embed sending, error isolation)
+- `tests/worker/setActivity.test.ts` — Activity rotation job
+- `tests/api/health.test.ts` — Health endpoint (supertest)
+- `tests/commands/premium.test.ts` — Premium command (upsell, active, disabled states)
+- `tests/commands/setup/schedule.test.ts` — Schedule command (validation, premium gate)
+- `tests/commands/owner/testCreate.test.ts` — Owner test-create command (owner check, SKU check)
+
+Run `pnpm test:coverage` to generate a coverage report with `c8`.
 
 ## Setup Notes
 
