@@ -46,13 +46,15 @@ model MotivationQuote {
 }
 
 model SuggestionQuote {
-  id        String   @id @default(uuid())
-  quote     String
-  author    String
-  addedBy   String
-  status    String   @default("pending")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  id         String    @id @default(uuid())
+  quote      String
+  author     String
+  addedBy    String
+  status     String    @default("Pending")
+  reviewedBy String?
+  reviewedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @default(now()) @updatedAt
 }
 
 model DiscordActivity {
