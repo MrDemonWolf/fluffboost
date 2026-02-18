@@ -1,43 +1,104 @@
-# FluffBoost - Furry Motivation Discord Bot 🐾
+# FluffBoost - Your Daily Dose of Furry Motivation
 
 ![FluffBoost Banner](banner.jpg)
 
-Your Daily Dose of Furry Motivation! Let my friendly community bot deliver daily uplifting quotes and heartwarming messages to brighten your day. Whether you need inspiration, a positivity boost, or just a reason to smile, it’s here to make every day better.
+A furry-friendly Discord bot that delivers scheduled
+motivational quotes and heartwarming messages to your server.
+Whether you need inspiration, a positivity boost, or just
+a reason to smile, FluffBoost is here to make every day
+better with per-guild scheduling, premium subscriptions,
+and community-driven quotes.
 
-Celebrate furry culture and positivity with messages that inspire kindness, growth, and happiness. Together, let’s create a supportive and welcoming atmosphere.
-
-Start your day with a smile or find encouragement when you need it most. Let’s spread joy, one quote at a time!
+Spread joy, one quote at a time.
 
 ## Features
 
-- **Daily Motivational Quotes**: Automatically delivered to all configured server channels, with reliable delivery across shards.
-- **Per-Guild Scheduling**: Each server can set its own motivation time and timezone.
-- **Premium Subscriptions**: Optional premium tier via Discord App Subscriptions with custom quote scheduling (daily, weekly, or monthly), custom times, and timezone selection.
-- **Rotating Bot Status**: Customizable bot presence that cycles through activities on a configurable interval.
-- **Easy Integration**: Simple setup for any Discord server.
-- **Community-Driven**: Open-source development powered by furries, for furries! 🐺🐾
+- **Scheduled Motivational Quotes** — Automatically delivered
+  to configured channels on a per-guild schedule with reliable
+  delivery across shards.
+- **Per-Guild Scheduling** — Each server sets its own delivery
+  time and timezone.
+- **Premium Subscriptions** — Optional premium tier via Discord
+  App Subscriptions with custom frequency (daily, weekly, or
+  monthly), time, and timezone selection.
+- **Community Suggestions** — Users can suggest quotes for
+  server admins to review, approve, or reject.
+- **Rotating Bot Status** — Customizable bot presence that
+  cycles through activities on a configurable interval.
+- **Admin Dashboard** — Manage quotes, activities, and
+  suggestion reviews through slash commands.
+- **Health Check API** — Express-based health endpoint for
+  monitoring and orchestration.
+- **Sharded Architecture** — Scales across multiple shards
+  with Discord.js ShardingManager.
 
 ## Getting Started
 
-To add FluffBoost to your Discord server, follow these simple steps:
-
-1. Invite FluffBoost to your server using [this link](https://discord.com/api/oauth2/authorize?client_id=1152416549261561856&permissions=2147551232&scope=bot).
-2. Enjoy daily motivation and inspiration delivered to your server! 🎉
+1. Invite FluffBoost to your server using
+   [this link](https://discord.com/api/oauth2/authorize?client_id=1152416549261561856&permissions=2147551232&scope=bot).
+2. Use `/setup channel` to configure which channel receives
+   quotes.
+3. Enjoy daily motivation delivered to your server.
 
 ## Usage
 
-FluffBoost is user-friendly and easy to set up. Here’s a quick guide to the basic commands:
+FluffBoost uses Discord slash commands grouped by role.
 
-- `/about` - Learn about the bot and its creators.
-- `/invite` - Invite FluffBoost to your server.
-- `/quote` - Receive an instant motivational quote.
-- `/suggestion` - Make a quote suggestion for the owner to review.
-- `/setup` - Configure bot settings like the target channel for quotes (admin only).
-- `/setup schedule` - Customize quote delivery frequency, time, and timezone (premium).
-- `/premium` - View premium subscription info and status.
+### General Commands
 
-# Change Log
-For detailed changelog information, see [CHANGELOG.md](CHANGELOG.md).
+| Command       | Description                              |
+| ------------- | ---------------------------------------- |
+| `/about`      | Learn about the bot and its creators     |
+| `/help`       | View available commands                  |
+| `/invite`     | Get the bot invite link                  |
+| `/quote`      | Receive an instant motivational quote    |
+| `/suggestion` | Suggest a quote for review               |
+| `/premium`    | View premium subscription info           |
+| `/changelog`  | View recent changes                      |
+
+### Admin Commands
+
+| Command                      | Description                        |
+| ---------------------------- | ---------------------------------- |
+| `/admin quote create`        | Add a new motivational quote       |
+| `/admin quote list`          | List all quotes                    |
+| `/admin quote remove`        | Remove a quote                     |
+| `/admin activity create`     | Add a bot status activity          |
+| `/admin activity list`       | List all activities                |
+| `/admin activity remove`     | Remove an activity                 |
+| `/admin suggestion approve`  | Approve a suggested quote          |
+| `/admin suggestion reject`   | Reject a suggested quote           |
+| `/admin suggestion list`     | List pending suggestions           |
+| `/admin suggestion stats`    | View suggestion statistics         |
+
+### Setup Commands
+
+| Command            | Description                              |
+| ------------------ | ---------------------------------------- |
+| `/setup channel`   | Set the quote delivery channel           |
+| `/setup schedule`  | Customize delivery frequency and time    |
+
+### Owner Commands
+
+| Command                      | Description                        |
+| ---------------------------- | ---------------------------------- |
+| `/owner premium test-create` | Create a test entitlement          |
+| `/owner premium test-delete` | Delete a test entitlement          |
+
+## Tech Stack
+
+| Layer            | Technology                               |
+| ---------------- | ---------------------------------------- |
+| Runtime          | Node.js 20.x / 22.x / 24.x             |
+| Language         | TypeScript 5.x (strict mode)            |
+| Discord Library  | Discord.js v14                           |
+| Database         | PostgreSQL 16 via Prisma 7               |
+| Job Queue        | BullMQ with Redis 7                      |
+| HTTP Server      | Express 5                                |
+| Analytics        | PostHog                                  |
+| Containerization | Docker (multi-stage, Node 24 Alpine)     |
+| CI/CD            | GitHub Actions                           |
+| Deployment       | Coolify                                  |
 
 ## Development
 
@@ -45,8 +106,9 @@ For detailed changelog information, see [CHANGELOG.md](CHANGELOG.md).
 
 - Node.js 20.x, 22.x, or 24.x
 - pnpm 9.x
-- PostgreSQL database
-- Redis server
+- PostgreSQL 16 (or use Docker Compose)
+- Redis 7 (or use Docker Compose)
+- A Discord application with bot token
 
 ### Setup
 
@@ -63,70 +125,105 @@ For detailed changelog information, see [CHANGELOG.md](CHANGELOG.md).
    pnpm install
    ```
 
-3. Copy environment variables:
+3. Start local infrastructure:
+
+   ```bash
+   docker-compose up -d
+   ```
+
+4. Copy and configure environment variables:
 
    ```bash
    cp .env.example .env
    ```
 
-4. Configure your environment variables in `.env`
-
-   - Optional: enable Redis debug logging by adding `DEBUG=ioredis:*` to your `.env` (the `.env.example` includes this line commented out).
-
-5. Generate Prisma client:
+5. Generate the Prisma client:
 
    ```bash
    pnpm db:generate
    ```
 
-6. Run database migrations:
+6. Sync the database schema:
+
    ```bash
    pnpm db:push
    ```
 
+7. Start the development server:
+
+   ```bash
+   pnpm dev
+   ```
+
 ### Development Scripts
 
-- `pnpm dev` - Start development server with hot reload
-- `pnpm build` - Build the project for production
-- `pnpm start` - Start production server
-- `pnpm lint` - Run ESLint and auto-fix issues
-- `pnpm lint:check` - Check code style without fixing
-- `pnpm tsc --noEmit` - Run TypeScript type checking
-- `pnpm db:studio` - Open Prisma Studio to view/edit database
-- `pnpm test` - Run tests (131 tests across 20 files)
-- `pnpm test:coverage` - Run tests with c8 coverage report
+- `pnpm dev` — Start development server with hot reload
+- `pnpm build` — Compile TypeScript to `dist/`
+- `pnpm start` — Run compiled production build
+- `pnpm lint` — Run ESLint with auto-fix
+- `pnpm lint:check` — Check linting without fixing
+- `pnpm format` — Format code with Prettier
+- `pnpm tsc --noEmit` — Run TypeScript type checking
+- `pnpm db:generate` — Regenerate Prisma client
+- `pnpm db:push` — Sync schema to database (dev)
+- `pnpm db:migrate` — Run migrations (production)
+- `pnpm db:studio` — Open Prisma Studio UI
+- `pnpm test` — Run test suite (147 tests)
+- `pnpm test:coverage` — Run tests with c8 coverage
 
 ### Code Quality
 
-This project uses:
+- ESLint with TypeScript and Airbnb base config
+- Strict TypeScript (`noUnusedLocals`,
+  `noUnusedParameters`, `noImplicitReturns`,
+  `noUncheckedIndexedAccess`)
+- Mocha + Chai + Sinon + esmock test framework
+- c8 V8-based code coverage
+- supertest for HTTP endpoint testing
+- CI runs on Node 20.x, 22.x, and 24.x
 
-- **ESLint** with TypeScript support for code linting
-- **TypeScript** for type safety
-- **Prisma** for database management
-- **Consola** for centralized logging
-- **Mocha** + **Chai** + **Sinon** + **esmock** for testing (131 tests)
-- **c8** for V8-based code coverage
-- **supertest** for HTTP endpoint testing
+## Project Structure
 
-The CI pipeline automatically runs (on Node 20.x, 22.x, and 24.x):
+```
+fluffboost/
+├── src/
+│   ├── api/              # Express health-check API
+│   │   └── routes/       # API route handlers
+│   ├── commands/         # Discord slash commands
+│   │   ├── admin/        # Admin command group
+│   │   │   ├── activity/ # Bot activity management
+│   │   │   ├── quote/    # Quote management
+│   │   │   └── suggestion/ # Suggestion review
+│   │   ├── owner/        # Owner-only commands
+│   │   │   └── premium/  # Test entitlement commands
+│   │   └── setup/        # Server setup commands
+│   ├── database/         # Prisma client singleton
+│   ├── events/           # Discord event handlers
+│   ├── generated/        # Auto-generated Prisma client
+│   ├── redis/            # Redis/IORedis connection
+│   ├── utils/            # Shared utilities
+│   └── worker/           # BullMQ worker and jobs
+│       └── jobs/         # Job handlers
+├── tests/                # Test suite (mirrors src/)
+├── prisma/               # Prisma schema and migrations
+├── Dockerfile            # Multi-stage production build
+├── docker-compose.yml    # Local PostgreSQL + Redis
+└── docker-entrypoint.sh  # Migration runner for deploy
+```
 
-- Test execution with coverage reporting
-- TypeScript type checking
-- ESLint linting
-- Build verification
-- Security audits
-- Docker build tests
+## Changelog
+
+For detailed changelog information, see
+[CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
-![GitHub license](https://img.shields.io/github/license/MrDemonWolf/fluffboost.svg?style=for-the-badge&logo=github)
+![GitHub license](https://img.shields.io/github/license/mrdemonwolf/fluffboost.svg?style=for-the-badge&logo=github)
 
 ## Contact
 
-If you have any questions, suggestions, or feedback, feel free to reach out to us on Discord!
+If you have any questions, suggestions, or feedback:
 
 - Discord: [Join my server](https://mrdwolf.net/discord)
 
-Thank you for choosing FluffBoost to add motivation and positivity to your Discord server!
-
-Made with ❤️ by <a href="https://www.mrdemonwolf.com">MrDemonWolf, Inc.</a>
+Made with love by [MrDemonWolf, Inc.](https://www.mrdemonwolf.com)
