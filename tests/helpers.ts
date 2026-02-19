@@ -54,16 +54,22 @@ export function mockPrisma() {
       findUnique: sinon.stub().resolves(null),
       create: sinon.stub().resolves({ guildId: "test-guild" }),
       update: sinon.stub().resolves({ guildId: "test-guild" }),
+      upsert: sinon.stub().resolves({ guildId: "test-guild" }),
       delete: sinon.stub().resolves({ guildId: "test-guild" }),
       count: sinon.stub().resolves(0),
     },
     motivationQuote: {
       findMany: sinon.stub().resolves([]),
+      findUnique: sinon.stub().resolves(null),
       count: sinon.stub().resolves(0),
       create: sinon.stub().resolves({}),
+      delete: sinon.stub().resolves({}),
     },
     discordActivity: {
       findMany: sinon.stub().resolves([]),
+      findUnique: sinon.stub().resolves(null),
+      create: sinon.stub().resolves({}),
+      delete: sinon.stub().resolves({}),
     },
     suggestionQuote: {
       findMany: sinon.stub().resolves([]),
@@ -110,6 +116,7 @@ export function mockInteraction(overrides: Record<string, unknown> = {}) {
     options: {
       getString: sinon.stub().returns(null),
       getInteger: sinon.stub().returns(null),
+      getChannel: sinon.stub().returns(null),
       getSubcommandGroup: sinon.stub().returns(null),
       getSubcommand: sinon.stub().returns(null),
       getFocused: sinon.stub().returns({ name: "", value: "" }),
