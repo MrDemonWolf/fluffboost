@@ -194,9 +194,9 @@ describe("guildDatabase", () => {
   });
 
   describe("guildExists", () => {
-    it("should return true when guild is found", async () => {
+    it("should upsert and return true for existing guild", async () => {
       const prisma = mockPrisma();
-      prisma.guild.findUnique.resolves({ guildId: "g1" });
+      prisma.guild.upsert.resolves({ guildId: "g1" });
 
       const { guildExists } = await esmock("../../src/utils/guildDatabase.js", {
         "../../src/database/index.js": { prisma },
@@ -206,12 +206,15 @@ describe("guildDatabase", () => {
 
       const result = await guildExists("g1");
       expect(result).to.be.true;
-      expect(prisma.guild.create.called).to.be.false;
+      expect(prisma.guild.upsert.calledOnce).to.be.true;
+      const args = prisma.guild.upsert.firstCall.args[0];
+      expect(args.where.guildId).to.equal("g1");
+      expect(args.create.guildId).to.equal("g1");
     });
 
-    it("should create guild and return false when not found", async () => {
+    it("should upsert and return true for new guild", async () => {
       const prisma = mockPrisma();
-      prisma.guild.findUnique.resolves(null);
+      prisma.guild.upsert.resolves({ guildId: "g-new" });
 
       const { guildExists } = await esmock("../../src/utils/guildDatabase.js", {
         "../../src/database/index.js": { prisma },
@@ -220,8 +223,8 @@ describe("guildDatabase", () => {
       });
 
       const result = await guildExists("g-new");
-      expect(result).to.be.false;
-      expect(prisma.guild.create.calledOnce).to.be.true;
+      expect(result).to.be.true;
+      expect(prisma.guild.upsert.calledOnce).to.be.true;
     });
   });
 });

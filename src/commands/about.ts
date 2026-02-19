@@ -1,4 +1,4 @@
-import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { EmbedBuilder, MessageFlags, SlashCommandBuilder } from "discord.js";
 
 import type { Client, CommandInteraction, User } from "discord.js";
 
@@ -86,6 +86,13 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "about",
     });
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "An error occurred while processing your request.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
 }
 
