@@ -25,7 +25,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
     });
 
     // send invite link
-    interaction.reply({
+    await interaction.reply({
       content: `Invite me to your server! Let's keep spreading paw-sitivity 🐾\n${inviteLink}`,
       flags: MessageFlags.Ephemeral,
     });
@@ -56,6 +56,13 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "invite",
     });
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "An error occurred while processing your request.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
 }
 

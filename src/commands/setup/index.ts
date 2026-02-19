@@ -93,7 +93,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         await schedule(client, interaction);
         break;
       default:
-        interaction.reply({
+        await interaction.reply({
           content: "Invalid subcommand",
           flags: MessageFlags.Ephemeral,
         });
@@ -110,6 +110,13 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "setup",
     });
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "An error occurred while processing your request.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
 }
 

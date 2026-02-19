@@ -134,3 +134,5 @@ dist
 
 # Prisma ORM files generated in src (see prisma/schema.prisma)
 src/generated/prisma/
+# Claude Code
+.claude

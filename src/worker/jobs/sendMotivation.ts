@@ -13,6 +13,7 @@ export default async function sendMotivation(client: Client) {
         not: null,
       },
     },
+    orderBy: { guildId: "asc" },
   });
 
   if (guilds.length === 0) {

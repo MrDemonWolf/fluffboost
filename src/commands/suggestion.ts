@@ -30,7 +30,7 @@ export const slashCommand = new SlashCommandBuilder()
       .setRequired(true)
   );
 
-export async function execute(client: Client, interaction: ChatInputCommandInteraction): Promise<any> {
+export async function execute(client: Client, interaction: ChatInputCommandInteraction): Promise<void> {
   try {
     logger.commands.executing(
       "suggestion",
@@ -44,13 +44,16 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
     const author = options.getString("author");
 
     if (!quote) {
-      return interaction.reply("Please provide a quote");
+      await interaction.reply("Please provide a quote");
+      return;
     }
     if (!author) {
-      return interaction.reply("Please provide an author");
+      await interaction.reply("Please provide an author");
+      return;
     }
     if (!interaction.guildId) {
-      return interaction.reply("This command can only be used in a server");
+      await interaction.reply("This command can only be used in a server");
+      return;
     }
 
     /**
@@ -65,9 +68,10 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
     });
 
     if (!guild) {
-      return interaction.reply(
+      await interaction.reply(
         "This server is not setup yet. Please setup the bot first."
       );
+      return;
     }
 
     const newQuote = await prisma.suggestionQuote.create({
@@ -79,7 +83,7 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
       },
     });
 
-    interaction.reply({
+    await interaction.reply({
       content: "Quote suggestion created owner will review it soon!",
       flags: MessageFlags.Ephemeral,
     });
@@ -154,6 +158,13 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
         command: "suggestion",
       }
     );
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "An error occurred while processing your request.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
 }
 

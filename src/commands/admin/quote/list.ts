@@ -9,7 +9,7 @@ import { prisma } from "../../../database/index.js";
 export default async function (
   _client: Client,
   interaction: CommandInteraction
-): Promise<any> {
+): Promise<void> {
   try {
     logger.commands.executing(
       "admin quote list",
@@ -23,13 +23,16 @@ export default async function (
       return;
     }
 
-    const quotes = await prisma.motivationQuote.findMany();
+    const quotes = await prisma.motivationQuote.findMany({
+      orderBy: { createdAt: "desc" },
+    });
 
     if (quotes.length === 0) {
-      return await interaction.reply({
+      await interaction.reply({
         content: "No quotes found. Feel free to add some!",
         flags: MessageFlags.Ephemeral,
       });
+      return;
     }
 
     let text = "ID - Quote - Author\n";
@@ -68,6 +71,12 @@ export default async function (
         command: "admin quote list",
       }
     );
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "An error occurred while processing your request.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
-  return undefined;
 }
