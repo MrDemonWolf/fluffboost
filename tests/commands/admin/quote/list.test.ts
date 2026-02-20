@@ -15,7 +15,7 @@ describe("admin quote list command", () => {
     const mod = await esmock("../../../../src/commands/admin/quote/list.js", {
       "../../../../src/utils/logger.js": { default: logger },
       "../../../../src/database/index.js": { prisma },
-      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().returns(true) },
+      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().resolves(true) },
     });
 
     return { handler: mod.default, logger, prisma };
@@ -28,7 +28,7 @@ describe("admin quote list command", () => {
     const mod = await esmock("../../../../src/commands/admin/quote/list.js", {
       "../../../../src/utils/logger.js": { default: logger },
       "../../../../src/database/index.js": { prisma },
-      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().returns(false) },
+      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().resolves(false) },
     });
 
     return { handler: mod.default, logger, prisma };

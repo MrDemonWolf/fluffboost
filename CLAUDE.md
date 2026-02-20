@@ -33,7 +33,7 @@ pnpm test                 # Mocha tests (cross-env NODE_ENV=test)
 pnpm test:coverage        # Tests with c8 coverage report
 
 # Infrastructure
-docker-compose up         # Start PostgreSQL 16 + Redis 7 locally
+docker compose up         # Start PostgreSQL 16 + Redis 7 locally
 ```
 
 **After changing `prisma/schema.prisma`**, always run `pnpm db:generate` to regenerate the client, then `pnpm db:push` (dev) or `pnpm db:migrate` (prod) to sync the database.

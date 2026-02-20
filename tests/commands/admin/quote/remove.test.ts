@@ -32,7 +32,7 @@ describe("admin quote remove command", () => {
       "../../../../src/utils/logger.js": { default: logger },
       "../../../../src/database/index.js": { prisma },
       "../../../../src/utils/env.js": { default: env },
-      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().returns(false) },
+      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().resolves(false) },
     });
 
     return { handler: mod.default, logger, prisma, env };
@@ -62,7 +62,7 @@ describe("admin quote remove command", () => {
     await handler(mockClient() as never, interaction as never, interaction.options as never);
 
     const replyArg = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArg).to.include("not found");
+    expect(replyArg.content).to.include("not found");
   });
 
   it("should delete quote and reply on success", async () => {

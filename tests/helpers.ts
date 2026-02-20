@@ -76,6 +76,7 @@ export function mockPrisma() {
       findUnique: sinon.stub().resolves(null),
       create: sinon.stub().resolves({}),
       update: sinon.stub().resolves({}),
+      updateMany: sinon.stub().resolves({ count: 0 }),
       count: sinon.stub().resolves(0),
     },
   };

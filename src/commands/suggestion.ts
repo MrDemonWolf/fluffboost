@@ -44,15 +44,24 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
     const author = options.getString("author");
 
     if (!quote) {
-      await interaction.reply("Please provide a quote");
+      await interaction.reply({
+        content: "Please provide a quote",
+        flags: MessageFlags.Ephemeral,
+      });
       return;
     }
     if (!author) {
-      await interaction.reply("Please provide an author");
+      await interaction.reply({
+        content: "Please provide an author",
+        flags: MessageFlags.Ephemeral,
+      });
       return;
     }
     if (!interaction.guildId) {
-      await interaction.reply("This command can only be used in a server");
+      await interaction.reply({
+        content: "This command can only be used in a server",
+        flags: MessageFlags.Ephemeral,
+      });
       return;
     }
 
@@ -68,9 +77,10 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
     });
 
     if (!guild) {
-      await interaction.reply(
-        "This server is not setup yet. Please setup the bot first."
-      );
+      await interaction.reply({
+        content: "This server is not setup yet. Please setup the bot first.",
+        flags: MessageFlags.Ephemeral,
+      });
       return;
     }
 
@@ -148,15 +158,6 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
       interaction.user.username,
       interaction.user.id,
       err
-    );
-    logger.error(
-      "Discord - Command",
-      "Error executing suggestion command",
-      err,
-      {
-        user: { username: interaction.user.username, id: interaction.user.id },
-        command: "suggestion",
-      }
     );
 
     if (!interaction.replied && !interaction.deferred) {
