@@ -33,7 +33,7 @@ pnpm test                 # Mocha tests (cross-env NODE_ENV=test)
 pnpm test:coverage        # Tests with c8 coverage report
 
 # Infrastructure
-docker-compose up         # Start PostgreSQL 16 + Redis 7 locally
+docker compose up         # Start PostgreSQL 16 + Redis 7 locally
 ```
 
 **After changing `prisma/schema.prisma`**, always run `pnpm db:generate` to regenerate the client, then `pnpm db:push` (dev) or `pnpm db:migrate` (prod) to sync the database.
@@ -114,7 +114,7 @@ The app is deployed via **Coolify** using a multi-stage Dockerfile (Node 24 Alpi
 
 - The `datasource` block in `prisma/schema.prisma` has **no `url` property** — this is intentional for Prisma 7 with driver adapters.
 - CLI tools (`prisma migrate deploy`, `prisma generate`, etc.) get the database URL from `prisma.config.ts` instead.
-- Prisma is installed globally in the production image (`npm install -g prisma@7.2.0`) for migrations. `NODE_PATH=/usr/local/lib/node_modules` is set so `prisma.config.ts` can resolve `prisma/config` from the global install.
+- Prisma is installed globally in the production image (`npm install -g prisma@7.4.0`) for migrations. `NODE_PATH=/usr/local/lib/node_modules` is set so `prisma.config.ts` can resolve `prisma/config` from the global install.
 
 ### Build optimizations
 

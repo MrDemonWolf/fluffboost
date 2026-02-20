@@ -9,7 +9,7 @@ import { prisma } from "../../../database/index.js";
 export default async function (
   _client: Client,
   interaction: CommandInteraction
-): Promise<any> {
+): Promise<void> {
   try {
     logger.commands.executing(
       "admin activity list",
@@ -17,19 +17,22 @@ export default async function (
       interaction.user.id
     );
 
-    const isAllowed = isUserPermitted(interaction);
+    const isAllowed = await isUserPermitted(interaction);
 
     if (!isAllowed) {
       return;
     }
 
-    const activities = await prisma.discordActivity.findMany();
+    const activities = await prisma.discordActivity.findMany({
+      orderBy: { createdAt: "desc" },
+    });
 
     if (activities.length === 0) {
-      return interaction.reply({
+      await interaction.reply({
         content: "No activities found at the moment. Feel free to add some!",
         flags: MessageFlags.Ephemeral,
       });
+      return;
     }
 
     let text = "ID - Activity - Type - URL\n";
@@ -39,7 +42,7 @@ export default async function (
       }\n`;
     });
 
-    interaction.reply({
+    await interaction.reply({
       files: [
         {
           attachment: Buffer.from(text),
@@ -60,10 +63,12 @@ export default async function (
       interaction.user.id,
       err
     );
-    logger.error("Discord - Command", "Error in admin activity list", err, {
-      user: { username: interaction.user.username, id: interaction.user.id },
-      command: "admin activity list",
-    });
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "An error occurred while processing your request.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
-  return undefined;
 }

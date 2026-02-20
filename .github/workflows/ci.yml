@@ -103,7 +103,6 @@ jobs:
 
       - name: Run security audit
         run: pnpm audit
-        continue-on-error: true
 
       - name: Check for outdated packages
         run: pnpm outdated

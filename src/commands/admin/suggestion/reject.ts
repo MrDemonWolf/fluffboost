@@ -24,7 +24,7 @@ export default async function (
       interaction.user.id,
     );
 
-    const isAllowed = isUserPermitted(interaction);
+    const isAllowed = await isUserPermitted(interaction);
 
     if (!isAllowed) {
       return;
@@ -33,34 +33,41 @@ export default async function (
     const suggestionId = options.getString("suggestion_id", true);
     const reason = options.getString("reason");
 
-    const suggestion = await prisma.suggestionQuote.findUnique({
-      where: { id: suggestionId },
-    });
-
-    if (!suggestion) {
-      await interaction.reply({
-        content: `Suggestion with ID ${suggestionId} not found.`,
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
-
-    if (suggestion.status !== "Pending") {
-      await interaction.reply({
-        content: `This suggestion has already been ${suggestion.status.toLowerCase()}.`,
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
-
-    await prisma.suggestionQuote.update({
-      where: { id: suggestionId },
+    const result = await prisma.suggestionQuote.updateMany({
+      where: { id: suggestionId, status: "Pending" },
       data: {
         status: "Rejected",
         reviewedBy: interaction.user.id,
         reviewedAt: new Date(),
       },
     });
+
+    if (result.count === 0) {
+      const existing = await prisma.suggestionQuote.findUnique({
+        where: { id: suggestionId },
+      });
+
+      if (!existing) {
+        await interaction.reply({
+          content: `Suggestion with ID ${suggestionId} not found.`,
+          flags: MessageFlags.Ephemeral,
+        });
+      } else {
+        await interaction.reply({
+          content: `This suggestion has already been ${existing.status.toLowerCase()}.`,
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+      return;
+    }
+
+    const suggestion = await prisma.suggestionQuote.findUnique({
+      where: { id: suggestionId },
+    });
+
+    if (!suggestion) {
+      return;
+    }
 
     const embedFields = [
       { name: "Quote", value: suggestion.quote },
@@ -131,15 +138,6 @@ export default async function (
       interaction.user.username,
       interaction.user.id,
       err,
-    );
-    logger.error(
-      "Discord - Command",
-      "Error executing admin suggestion reject command",
-      err,
-      {
-        user: { username: interaction.user.username, id: interaction.user.id },
-        command: "admin suggestion reject",
-      },
     );
 
     if (!interaction.replied && !interaction.deferred) {
