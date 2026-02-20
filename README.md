@@ -128,7 +128,7 @@ FluffBoost uses Discord slash commands grouped by role.
 3. Start local infrastructure:
 
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 4. Copy and configure environment variables:
@@ -168,7 +168,7 @@ FluffBoost uses Discord slash commands grouped by role.
 - `pnpm db:push` — Sync schema to database (dev)
 - `pnpm db:migrate` — Run migrations (production)
 - `pnpm db:studio` — Open Prisma Studio UI
-- `pnpm test` — Run test suite (147 tests)
+- `pnpm test` — Run test suite (216 tests)
 - `pnpm test:coverage` — Run tests with c8 coverage
 
 ### Code Quality

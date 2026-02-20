@@ -17,7 +17,7 @@ describe("admin suggestion approve command", () => {
       "../../../../src/utils/logger.js": { default: logger },
       "../../../../src/database/index.js": { prisma },
       "../../../../src/utils/env.js": { default: env },
-      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().returns(true) },
+      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().resolves(true) },
     });
 
     return { handler: mod.default, logger, prisma, env };

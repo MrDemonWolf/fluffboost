@@ -41,14 +41,13 @@ describe("admin activity remove command", () => {
     return interaction;
   }
 
-  it("should reply with permission denied when user is not permitted", async () => {
+  it("should return early when user is not permitted", async () => {
     const { handler } = await loadModuleNotPermitted();
     const interaction = makeInteraction("a1");
 
     await handler(mockClient() as never, interaction as never, interaction.options as never);
 
-    const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("permission");
+    expect((interaction.reply as sinon.SinonStub).called).to.be.false;
   });
 
   it("should reply when empty activity ID provided", async () => {

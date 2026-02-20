@@ -17,7 +17,7 @@ export default async function (
       interaction.user.id
     );
 
-    const isAllowed = isUserPermitted(interaction);
+    const isAllowed = await isUserPermitted(interaction);
 
     if (!isAllowed) {
       return;
@@ -61,15 +61,6 @@ export default async function (
       interaction.user.username,
       interaction.user.id,
       err
-    );
-    logger.error(
-      "Discord - Command",
-      "Error executing admin quote list command",
-      err,
-      {
-        user: { username: interaction.user.username, id: interaction.user.id },
-        command: "admin quote list",
-      }
     );
 
     if (!interaction.replied && !interaction.deferred) {
