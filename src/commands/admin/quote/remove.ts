@@ -1,7 +1,6 @@
 import {
   Client,
   CommandInteraction,
-  TextChannel,
   MessageFlags,
 } from "discord.js";
 
@@ -16,7 +15,7 @@ export default async function (
   client: Client,
   interaction: CommandInteraction,
   options: CommandInteractionOptionResolver
-): Promise<any> {
+): Promise<void> {
   try {
     logger.commands.executing(
       "admin quote remove",
@@ -24,7 +23,7 @@ export default async function (
       interaction.user.id
     );
 
-    const isAllowed = isUserPermitted(interaction);
+    const isAllowed = await isUserPermitted(interaction);
 
     if (!isAllowed) {
       return;
@@ -32,17 +31,17 @@ export default async function (
 
     const quoteId = options.getString("quote_id", true);
 
-    if (!quoteId) {
-      return interaction.reply("Quote ID is required");
-    }
-
     const quote = await prisma.motivationQuote.findUnique({
       where: {
         id: quoteId,
       },
     });
     if (!quote) {
-      return interaction.reply(`Quote with id ${quoteId} not found`);
+      await interaction.reply({
+        content: `Quote with id ${quoteId} not found`,
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
     }
 
     await prisma.motivationQuote.delete({
@@ -52,12 +51,14 @@ export default async function (
     });
 
     // send message to main channel
-    const mainChannel = client.channels.cache.get(
-      env.MAIN_CHANNEL_ID as string
-    ) as TextChannel;
-    mainChannel?.send(
-      `Quote deleted by ${interaction.user.username} with id: ${quoteId}`
-    );
+    if (env.MAIN_CHANNEL_ID) {
+      const mainChannel = await client.channels.fetch(env.MAIN_CHANNEL_ID);
+      if (mainChannel?.isTextBased() && !mainChannel.isDMBased()) {
+        await mainChannel.send(
+          `Quote deleted by ${interaction.user.username} with id: ${quoteId}`
+        );
+      }
+    }
 
     await interaction.reply({
       content: `Quote deleted with id: ${quoteId}`,
@@ -76,16 +77,12 @@ export default async function (
       interaction.user.id,
       err
     );
-    logger.error(
-      "Discord - Command",
-      "Error executing admin quote remove command",
-      err,
-      {
-        user: { username: interaction.user.username, id: interaction.user.id },
-        command: "admin quote remove",
-        quoteId: options.getString("quote_id"),
-      }
-    );
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "An error occurred while processing your request.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
-  return undefined;
 }

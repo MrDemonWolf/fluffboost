@@ -8,7 +8,7 @@ describe("admin suggestion stats command", () => {
     sinon.restore();
   });
 
-  async function loadModule() {
+  async function loadModule(permitted = true) {
     const logger = mockLogger();
     const prisma = mockPrisma();
 
@@ -16,28 +16,14 @@ describe("admin suggestion stats command", () => {
       "../../../../src/utils/logger.js": { default: logger },
       "../../../../src/database/index.js": { prisma },
       "../../../../src/utils/env.js": { default: mockEnv() },
-      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().returns(true) },
-    });
-
-    return { handler: mod.default, logger, prisma };
-  }
-
-  async function loadModuleUnauthorized() {
-    const logger = mockLogger();
-    const prisma = mockPrisma();
-
-    const mod = await esmock("../../../../src/commands/admin/suggestion/stats.js", {
-      "../../../../src/utils/logger.js": { default: logger },
-      "../../../../src/database/index.js": { prisma },
-      "../../../../src/utils/env.js": { default: mockEnv() },
-      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().returns(false) },
+      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().resolves(permitted) },
     });
 
     return { handler: mod.default, logger, prisma };
   }
 
   it("should deny unauthorized users", async () => {
-    const { handler, prisma } = await loadModuleUnauthorized();
+    const { handler, prisma } = await loadModule(false);
     const interaction = mockInteraction();
 
     await handler({} as never, interaction as never);

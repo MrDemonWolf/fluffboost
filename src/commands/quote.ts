@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
 
 import type { Client, ChatInputCommandInteraction } from "discord.js";
 
@@ -10,7 +10,7 @@ export const slashCommand = new SlashCommandBuilder()
   .setName("quote")
   .setDescription("Get an instant dose of motivation");
 
-export async function execute(client: Client, interaction: ChatInputCommandInteraction): Promise<any> {
+export async function execute(client: Client, interaction: ChatInputCommandInteraction): Promise<void> {
   try {
     logger.commands.executing(
       "quote",
@@ -29,9 +29,10 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
     });
 
     if (!motivationQuote[0]) {
-      return interaction.reply(
+      await interaction.reply(
         "No motivation quote found.  Please try again later!"
       );
+      return;
     }
 
     /**
@@ -48,9 +49,10 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
           command: "quote",
         }
       );
-      return interaction.reply(
+      await interaction.reply(
         "Failed to fetch quote information. Please try again later!"
       );
+      return;
     }
 
     const motivationEmbed = new EmbedBuilder()
@@ -103,6 +105,13 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
       user: { username: interaction.user.username, id: interaction.user.id },
       command: "quote",
     });
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "An error occurred while processing your request.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
 }
 

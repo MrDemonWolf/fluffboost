@@ -10,7 +10,7 @@ export default async function (
   _client: Client,
   interaction: CommandInteraction,
   options: CommandInteractionOptionResolver
-): Promise<any> {
+): Promise<void> {
   try {
     logger.commands.executing(
       "admin activity delete",
@@ -18,22 +18,20 @@ export default async function (
       interaction.user.id
     );
 
-    const isAllowed = isUserPermitted(interaction);
+    const isAllowed = await isUserPermitted(interaction);
 
     if (!isAllowed) {
-      return interaction.reply({
-        content: "You don't have permission to use this command.",
-        flags: MessageFlags.Ephemeral,
-      });
+      return;
     }
 
     const activityId = options.getString("activity_id", true);
 
     if (!activityId.trim()) {
-      return interaction.reply({
+      await interaction.reply({
         content: "Please provide a valid activity ID",
         flags: MessageFlags.Ephemeral,
       });
+      return;
     }
 
     const activity = await prisma.discordActivity.findUnique({
@@ -41,10 +39,11 @@ export default async function (
     });
 
     if (!activity) {
-      return interaction.reply({
+      await interaction.reply({
         content: `No activity found with ID: ${activityId}`,
         flags: MessageFlags.Ephemeral,
       });
+      return;
     }
 
     await prisma.discordActivity.delete({
@@ -68,13 +67,8 @@ export default async function (
       interaction.user.id,
       err
     );
-    logger.error("Discord - Command", "Error in admin activity delete", err, {
-      user: { username: interaction.user.username, id: interaction.user.id },
-      command: "admin activity delete",
-      activityId: options.getString("id"),
-    });
 
-    if (!interaction.replied) {
+    if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({
         content:
           "An error occurred while deleting the activity. Please try again.",
@@ -82,5 +76,4 @@ export default async function (
       });
     }
   }
-  return undefined;
 }
