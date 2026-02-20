@@ -50,6 +50,7 @@ describe("admin suggestion reject command", () => {
     const { handler, prisma } = await loadModule();
     const interaction = makeInteraction("nonexistent");
 
+    prisma.suggestionQuote.updateMany.resolves({ count: 0 });
     prisma.suggestionQuote.findUnique.resolves(null);
 
     await handler({} as never, interaction as never, interaction.options as never);
@@ -63,6 +64,7 @@ describe("admin suggestion reject command", () => {
     const { handler, prisma } = await loadModule();
     const interaction = makeInteraction("s1");
 
+    prisma.suggestionQuote.updateMany.resolves({ count: 0 });
     prisma.suggestionQuote.findUnique.resolves({
       id: "s1",
       quote: "Be kind",
@@ -83,19 +85,20 @@ describe("admin suggestion reject command", () => {
     const interaction = makeInteraction("s1", "Not appropriate");
     const { client, channel, submitter } = makeClient();
 
+    prisma.suggestionQuote.updateMany.resolves({ count: 1 });
     prisma.suggestionQuote.findUnique.resolves({
       id: "s1",
       quote: "Bad quote",
       author: "Anon",
       addedBy: "user-1",
-      status: "Pending",
+      status: "Rejected",
     });
 
     await handler(client as never, interaction as never, interaction.options as never);
 
-    // Updates suggestion status
-    expect(prisma.suggestionQuote.update.calledOnce).to.be.true;
-    const updateArgs = prisma.suggestionQuote.update.firstCall.args[0];
+    // Updates suggestion status via updateMany
+    expect(prisma.suggestionQuote.updateMany.calledOnce).to.be.true;
+    const updateArgs = prisma.suggestionQuote.updateMany.firstCall.args[0];
     expect(updateArgs.data.status).to.equal("Rejected");
     expect(updateArgs.data.reviewedBy).to.equal("user-123");
 
@@ -117,21 +120,26 @@ describe("admin suggestion reject command", () => {
     const interaction = makeInteraction("s1");
     const { client, submitter } = makeClient();
 
+    prisma.suggestionQuote.updateMany.resolves({ count: 1 });
     prisma.suggestionQuote.findUnique.resolves({
       id: "s1",
       quote: "Some quote",
       author: "Anon",
       addedBy: "user-1",
-      status: "Pending",
+      status: "Rejected",
     });
 
     await handler(client as never, interaction as never, interaction.options as never);
 
-    expect(prisma.suggestionQuote.update.calledOnce).to.be.true;
+    expect(prisma.suggestionQuote.updateMany.calledOnce).to.be.true;
 
     // DM should not include "Reason"
     const dmEmbed = submitter.send.firstCall.args[0].embeds[0];
     expect(dmEmbed.data.description).to.not.include("Reason");
+
+    // Reply should be ephemeral
+    const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
+    expect(replyArgs.content).to.include("rejected");
   });
 
   it("should not break if DM fails", async () => {
@@ -139,12 +147,13 @@ describe("admin suggestion reject command", () => {
     const interaction = makeInteraction("s1");
     const { client } = makeClient();
 
+    prisma.suggestionQuote.updateMany.resolves({ count: 1 });
     prisma.suggestionQuote.findUnique.resolves({
       id: "s1",
       quote: "Some quote",
       author: "Anon",
       addedBy: "user-1",
-      status: "Pending",
+      status: "Rejected",
     });
 
     (client.users.fetch as sinon.SinonStub).rejects(new Error("Cannot send DM"));

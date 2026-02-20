@@ -92,5 +92,11 @@ describe("admin suggestion list command", () => {
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
     expect(replyArgs.files).to.have.length(1);
     expect(replyArgs.files[0].name).to.equal("suggestions.txt");
+
+    const content = replyArgs.files[0].attachment.toString();
+    expect(content).to.include("s1");
+    expect(content).to.include("Be kind");
+    expect(content).to.include("s2");
+    expect(content).to.include("Stay strong");
   });
 });

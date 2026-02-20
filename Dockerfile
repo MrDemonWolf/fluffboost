@@ -35,7 +35,7 @@ FROM node:24-alpine
 WORKDIR /usr/src/app
 
 RUN apk add --no-cache openssl curl \
-    && npm install -g prisma@7.2.0 \
+    && npm install -g prisma@7.4.0 \
     && addgroup -S fluffboost && adduser -S fluffboost -G fluffboost
 
 COPY --from=prod-deps --chown=fluffboost:fluffboost /usr/src/app/node_modules ./node_modules

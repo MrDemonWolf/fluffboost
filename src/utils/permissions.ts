@@ -4,7 +4,7 @@ import { trimArray } from "./trimArray.js";
 import env from "./env.js";
 import logger from "./logger.js";
 
-export function isUserPermitted(interaction: CommandInteraction) {
+export async function isUserPermitted(interaction: CommandInteraction) {
   const allowedUsersArray = env.ALLOWED_USERS?.split(",") as string[];
   const allowedUsers = trimArray(allowedUsersArray);
 
@@ -15,7 +15,7 @@ export function isUserPermitted(interaction: CommandInteraction) {
       interaction.user.id,
       interaction.guildId || undefined,
     );
-    interaction.reply({
+    await interaction.reply({
       content: "You are not allowed to use this command",
       flags: MessageFlags.Ephemeral,
     });

@@ -11,7 +11,7 @@ export default async function (
   _client: Client,
   interaction: CommandInteraction,
   options: CommandInteractionOptionResolver
-): Promise<any> {
+): Promise<void> {
   try {
     logger.commands.executing(
       "admin activity add",
@@ -19,7 +19,7 @@ export default async function (
       interaction.user.id
     );
 
-    const isAllowed = isUserPermitted(interaction);
+    const isAllowed = await isUserPermitted(interaction);
 
     if (!isAllowed) {
       return;
@@ -30,16 +30,18 @@ export default async function (
     const activityUrl = options.getString("url");
 
     if (!activity.trim()) {
-      return await interaction.reply({
+      await interaction.reply({
         content: "Please provide an activity",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
+      return;
     }
     if (!activityType.trim()) {
-      return await interaction.reply({
+      await interaction.reply({
         content: "Please provide a type",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
+      return;
     }
 
     const newActivity = await prisma.discordActivity.create({
@@ -67,15 +69,12 @@ export default async function (
       interaction.user.id,
       err
     );
-    logger.error(
-      "Discord - Command",
-      "Error executing admin activity add command",
-      err,
-      {
-        user: { username: interaction.user.username, id: interaction.user.id },
-        command: "admin activity add",
-      }
-    );
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "An error occurred while processing your request.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
-  return undefined;
 }

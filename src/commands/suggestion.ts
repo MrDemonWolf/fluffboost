@@ -30,7 +30,7 @@ export const slashCommand = new SlashCommandBuilder()
       .setRequired(true)
   );
 
-export async function execute(client: Client, interaction: ChatInputCommandInteraction): Promise<any> {
+export async function execute(client: Client, interaction: ChatInputCommandInteraction): Promise<void> {
   try {
     logger.commands.executing(
       "suggestion",
@@ -44,13 +44,25 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
     const author = options.getString("author");
 
     if (!quote) {
-      return interaction.reply("Please provide a quote");
+      await interaction.reply({
+        content: "Please provide a quote",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
     }
     if (!author) {
-      return interaction.reply("Please provide an author");
+      await interaction.reply({
+        content: "Please provide an author",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
     }
     if (!interaction.guildId) {
-      return interaction.reply("This command can only be used in a server");
+      await interaction.reply({
+        content: "This command can only be used in a server",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
     }
 
     /**
@@ -65,9 +77,11 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
     });
 
     if (!guild) {
-      return interaction.reply(
-        "This server is not setup yet. Please setup the bot first."
-      );
+      await interaction.reply({
+        content: "This server is not setup yet. Please setup the bot first.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
     }
 
     const newQuote = await prisma.suggestionQuote.create({
@@ -79,7 +93,7 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
       },
     });
 
-    interaction.reply({
+    await interaction.reply({
       content: "Quote suggestion created owner will review it soon!",
       flags: MessageFlags.Ephemeral,
     });
@@ -145,15 +159,13 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
       interaction.user.id,
       err
     );
-    logger.error(
-      "Discord - Command",
-      "Error executing suggestion command",
-      err,
-      {
-        user: { username: interaction.user.username, id: interaction.user.id },
-        command: "suggestion",
-      }
-    );
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "An error occurred while processing your request.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
 }
 

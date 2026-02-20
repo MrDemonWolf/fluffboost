@@ -2,7 +2,6 @@ import {
   Client,
   CommandInteraction,
   EmbedBuilder,
-  TextChannel,
   MessageFlags,
 } from "discord.js";
 
@@ -14,10 +13,10 @@ import env from "../../../utils/env.js";
 import logger from "../../../utils/logger.js";
 
 export default async function (
-  _client: Client,
+  client: Client,
   interaction: CommandInteraction,
   options: CommandInteractionOptionResolver
-): Promise<any> {
+): Promise<void> {
   try {
     logger.commands.executing(
       "admin quote create",
@@ -25,7 +24,7 @@ export default async function (
       interaction.user.id
     );
 
-    const isAllowed = isUserPermitted(interaction);
+    const isAllowed = await isUserPermitted(interaction);
 
     if (!isAllowed) {
       return;
@@ -35,16 +34,18 @@ export default async function (
     const quoteAuthor = options.getString("quote_author");
 
     if (!quote) {
-      return interaction.reply({
+      await interaction.reply({
         content: "Please provide a quote",
         flags: MessageFlags.Ephemeral,
       });
+      return;
     }
     if (!quoteAuthor) {
-      return interaction.reply({
+      await interaction.reply({
         content: "Please provide an author",
         flags: MessageFlags.Ephemeral,
       });
+      return;
     }
 
     const newQuote = await prisma.motivationQuote.create({
@@ -77,10 +78,8 @@ export default async function (
       .setTimestamp();
 
     if (env.MAIN_CHANNEL_ID) {
-      const channel = _client.channels.cache.get(
-        env.MAIN_CHANNEL_ID
-      ) as TextChannel;
-      if (channel?.isTextBased()) {
+      const channel = await client.channels.fetch(env.MAIN_CHANNEL_ID);
+      if (channel?.isTextBased() && !channel.isDMBased()) {
         await channel.send({ embeds: [embed] });
       } else {
         logger.warn("Admin", "Main channel not found or not text-based", {
@@ -108,15 +107,12 @@ export default async function (
       interaction.user.id,
       err
     );
-    logger.error(
-      "Discord - Command",
-      "Error executing admin quote create command",
-      err,
-      {
-        user: { username: interaction.user.username, id: interaction.user.id },
-        command: "admin quote create",
-      }
-    );
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "An error occurred while processing your request.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
-  return undefined;
 }

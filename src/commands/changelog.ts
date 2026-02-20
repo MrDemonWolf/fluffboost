@@ -55,7 +55,7 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
         text: "Powered by MrDemonWolf, Inc.",
       });
 
-    interaction.reply({
+    await interaction.reply({
       embeds: [embed],
       flags: MessageFlags.Ephemeral,
     });
@@ -91,6 +91,13 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
         command: "changelog",
       }
     );
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: "An error occurred while processing your request.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
 }
 

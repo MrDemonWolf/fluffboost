@@ -26,7 +26,9 @@ export default async (client: Client) => {
       );
     }
     const randomActivity = async () => {
-      const activities = await prisma.discordActivity.findMany();
+      const activities = await prisma.discordActivity.findMany({
+        orderBy: { createdAt: "desc" },
+      });
 
       if (activities.length === 0) {
         return null;
