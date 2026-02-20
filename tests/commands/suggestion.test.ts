@@ -39,7 +39,7 @@ describe("suggestion command", () => {
     await execute(mockClient() as never, interaction as never);
 
     const arg = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(arg).to.equal("Please provide a quote");
+    expect(arg.content).to.equal("Please provide a quote");
   });
 
   it("should reply when no author provided", async () => {
@@ -49,7 +49,7 @@ describe("suggestion command", () => {
     await execute(mockClient() as never, interaction as never);
 
     const arg = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(arg).to.equal("Please provide an author");
+    expect(arg.content).to.equal("Please provide an author");
   });
 
   it("should reply when not in a guild", async () => {
@@ -60,7 +60,7 @@ describe("suggestion command", () => {
     await execute(mockClient() as never, interaction as never);
 
     const arg = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(arg).to.include("only be used in a server");
+    expect(arg.content).to.include("only be used in a server");
   });
 
   it("should reply when guild not setup", async () => {
@@ -71,7 +71,7 @@ describe("suggestion command", () => {
     await execute(mockClient() as never, interaction as never);
 
     const arg = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(arg).to.include("not setup");
+    expect(arg.content).to.include("not setup");
   });
 
   it("should create suggestion and reply on success", async () => {

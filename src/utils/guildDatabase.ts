@@ -177,10 +177,10 @@ export async function ensureGuildExists(client: Client) {
 }
 
 export async function guildExists(guildId: string) {
-  const result = await prisma.guild.upsert({
+  await prisma.guild.upsert({
     where: { guildId },
     create: { guildId },
     update: {},
   });
-  return result !== null;
+  return true;
 }

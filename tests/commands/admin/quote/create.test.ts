@@ -17,7 +17,7 @@ describe("admin quote create command", () => {
       "../../../../src/utils/logger.js": { default: logger },
       "../../../../src/database/index.js": { prisma },
       "../../../../src/utils/env.js": { default: env },
-      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().returns(true) },
+      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().resolves(true) },
     });
 
     return { handler: mod.default, logger, prisma, env };
@@ -32,7 +32,7 @@ describe("admin quote create command", () => {
       "../../../../src/utils/logger.js": { default: logger },
       "../../../../src/database/index.js": { prisma },
       "../../../../src/utils/env.js": { default: env },
-      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().returns(false) },
+      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().resolves(false) },
     });
 
     return { handler: mod.default, logger, prisma, env };

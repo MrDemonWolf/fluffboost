@@ -23,7 +23,7 @@ export default async function (
       interaction.user.id
     );
 
-    const isAllowed = isUserPermitted(interaction);
+    const isAllowed = await isUserPermitted(interaction);
 
     if (!isAllowed) {
       return;
@@ -31,18 +31,16 @@ export default async function (
 
     const quoteId = options.getString("quote_id", true);
 
-    if (!quoteId) {
-      await interaction.reply("Quote ID is required");
-      return;
-    }
-
     const quote = await prisma.motivationQuote.findUnique({
       where: {
         id: quoteId,
       },
     });
     if (!quote) {
-      await interaction.reply(`Quote with id ${quoteId} not found`);
+      await interaction.reply({
+        content: `Quote with id ${quoteId} not found`,
+        flags: MessageFlags.Ephemeral,
+      });
       return;
     }
 
@@ -78,16 +76,6 @@ export default async function (
       interaction.user.username,
       interaction.user.id,
       err
-    );
-    logger.error(
-      "Discord - Command",
-      "Error executing admin quote remove command",
-      err,
-      {
-        user: { username: interaction.user.username, id: interaction.user.id },
-        command: "admin quote remove",
-        quoteId: options.getString("quote_id"),
-      }
     );
 
     if (!interaction.replied && !interaction.deferred) {

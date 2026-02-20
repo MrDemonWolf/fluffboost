@@ -18,13 +18,9 @@ export default async function (
       interaction.user.id
     );
 
-    const isAllowed = isUserPermitted(interaction);
+    const isAllowed = await isUserPermitted(interaction);
 
     if (!isAllowed) {
-      await interaction.reply({
-        content: "You don't have permission to use this command.",
-        flags: MessageFlags.Ephemeral,
-      });
       return;
     }
 
@@ -71,13 +67,8 @@ export default async function (
       interaction.user.id,
       err
     );
-    logger.error("Discord - Command", "Error in admin activity delete", err, {
-      user: { username: interaction.user.username, id: interaction.user.id },
-      command: "admin activity delete",
-      activityId: options.getString("id"),
-    });
 
-    if (!interaction.replied) {
+    if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({
         content:
           "An error occurred while deleting the activity. Please try again.",

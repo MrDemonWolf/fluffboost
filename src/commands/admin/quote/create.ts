@@ -13,7 +13,7 @@ import env from "../../../utils/env.js";
 import logger from "../../../utils/logger.js";
 
 export default async function (
-  _client: Client,
+  client: Client,
   interaction: CommandInteraction,
   options: CommandInteractionOptionResolver
 ): Promise<void> {
@@ -24,7 +24,7 @@ export default async function (
       interaction.user.id
     );
 
-    const isAllowed = isUserPermitted(interaction);
+    const isAllowed = await isUserPermitted(interaction);
 
     if (!isAllowed) {
       return;
@@ -78,7 +78,7 @@ export default async function (
       .setTimestamp();
 
     if (env.MAIN_CHANNEL_ID) {
-      const channel = await _client.channels.fetch(env.MAIN_CHANNEL_ID);
+      const channel = await client.channels.fetch(env.MAIN_CHANNEL_ID);
       if (channel?.isTextBased() && !channel.isDMBased()) {
         await channel.send({ embeds: [embed] });
       } else {
@@ -106,15 +106,6 @@ export default async function (
       interaction.user.username,
       interaction.user.id,
       err
-    );
-    logger.error(
-      "Discord - Command",
-      "Error executing admin quote create command",
-      err,
-      {
-        user: { username: interaction.user.username, id: interaction.user.id },
-        command: "admin quote create",
-      }
     );
 
     if (!interaction.replied && !interaction.deferred) {

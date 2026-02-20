@@ -27,7 +27,7 @@ import suggestionStats from "./suggestion/stats.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("admin")
-  .setDescription("Mange the bot")
+  .setDescription("Manage the bot")
   .addSubcommandGroup((subCommandGroup) => {
     return subCommandGroup
       .setName("quote")
@@ -289,10 +289,6 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       interaction.user.id,
       err
     );
-    logger.error("Discord - Command", "Error executing admin command", err, {
-      user: { username: interaction.user.username, id: interaction.user.id },
-      command: "admin",
-    });
 
     if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({

@@ -16,7 +16,7 @@ describe("permissions", () => {
     });
 
     const interaction = mockInteraction({ user: { id: "user-123", username: "allowed" } });
-    const result = isUserPermitted(interaction as never);
+    const result = await isUserPermitted(interaction as never);
     expect(result).to.be.true;
   });
 
@@ -28,7 +28,7 @@ describe("permissions", () => {
     });
 
     const interaction = mockInteraction({ user: { id: "user-999", username: "denied" } });
-    const result = isUserPermitted(interaction as never);
+    const result = await isUserPermitted(interaction as never);
     expect(result).to.be.false;
     expect((interaction.reply as sinon.SinonStub).calledOnce).to.be.true;
   });
@@ -41,7 +41,7 @@ describe("permissions", () => {
     });
 
     const interaction = mockInteraction({ user: { id: "user-abc", username: "spaced" } });
-    const result = isUserPermitted(interaction as never);
+    const result = await isUserPermitted(interaction as never);
     expect(result).to.be.true;
   });
 
@@ -53,7 +53,7 @@ describe("permissions", () => {
     });
 
     const interaction = mockInteraction({ user: { id: "user-bad", username: "hacker" } });
-    isUserPermitted(interaction as never);
+    await isUserPermitted(interaction as never);
     expect(logger.unauthorized.calledOnce).to.be.true;
   });
 });

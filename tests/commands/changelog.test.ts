@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import esmock from "esmock";
+import { MessageFlags } from "discord.js";
 import { mockLogger, mockPosthog, mockClient, mockInteraction } from "../helpers.js";
 
 describe("changelog command", () => {
@@ -29,7 +30,7 @@ describe("changelog command", () => {
     expect((interaction.reply as sinon.SinonStub).calledOnce).to.be.true;
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
     expect(replyArgs.embeds).to.be.an("array").with.lengthOf(1);
-    expect(replyArgs.flags).to.exist;
+    expect(replyArgs.flags).to.equal(MessageFlags.Ephemeral);
   });
 
   it("should capture posthog event", async () => {
