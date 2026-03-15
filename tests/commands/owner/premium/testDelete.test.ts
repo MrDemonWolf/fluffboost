@@ -81,7 +81,7 @@ describe("owner premium test-delete command", () => {
 
     expect(logger.commands.error.calledOnce).to.be.true;
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("API Error: rate limited");
+    expect(replyArgs.content).to.include("Failed to delete test entitlement. Check bot logs for details.");
   });
 
   it("should log unauthorized access attempt", async () => {

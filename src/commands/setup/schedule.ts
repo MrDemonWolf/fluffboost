@@ -153,11 +153,16 @@ export default async function schedule(_client: Client, interaction: ChatInputCo
 }
 
 export async function autocomplete(interaction: AutocompleteInteraction) {
-  const focused = interaction.options.getFocused(true);
+  try {
+    const focused = interaction.options.getFocused(true);
 
-  if (focused.name === "timezone") {
-    const query = focused.value;
-    const matches = filterTimezones(query);
-    await interaction.respond(matches.map((tz) => ({ name: tz, value: tz })));
+    if (focused.name === "timezone") {
+      const query = focused.value;
+      const matches = filterTimezones(query);
+      await interaction.respond(matches.map((tz) => ({ name: tz, value: tz })));
+    }
+  } catch (err) {
+    logger.error("Discord - Command", "Error handling setup schedule autocomplete", err);
+    await interaction.respond([]).catch(() => {});
   }
 }

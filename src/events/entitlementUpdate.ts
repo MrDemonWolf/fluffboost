@@ -3,6 +3,7 @@ import type { Entitlement } from "discord.js";
 import logger from "../utils/logger.js";
 import posthog from "../utils/posthog.js";
 import { prisma } from "../database/index.js";
+import env from "../utils/env.js";
 
 export async function entitlementUpdateEvent(
   _oldEntitlement: Entitlement | null,
@@ -39,7 +40,7 @@ export async function entitlementUpdateEvent(
     distinctId: newEntitlement.userId ?? "unknown",
     event: "premium_updated",
     properties: {
-      environment: process.env["NODE_ENV"],
+      environment: env.NODE_ENV,
       userId: newEntitlement.userId,
       skuId: newEntitlement.skuId,
       guildId: newEntitlement.guildId,

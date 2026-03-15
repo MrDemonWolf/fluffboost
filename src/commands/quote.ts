@@ -5,6 +5,7 @@ import type { Client, ChatInputCommandInteraction } from "discord.js";
 import logger from "../utils/logger.js";
 import { prisma } from "../database/index.js";
 import posthog from "../utils/posthog.js";
+import env from "../utils/env.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("quote")
@@ -89,7 +90,7 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
       event: "quote command used",
       properties: {
         quote: motivationQuote[0].id,
-        environment: process.env["NODE_ENV"],
+        environment: env.NODE_ENV,
         userId: interaction.user.id,
         username: interaction.user.username,
       },
