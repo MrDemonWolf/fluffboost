@@ -148,11 +148,22 @@ export async function interactionCreateEvent(
       command: interaction.isCommand() ? interaction.commandName : "unknown",
     });
 
-    const interactionWithError = interaction as CommandInteraction;
+    try {
+      const interactionWithError = interaction as CommandInteraction;
 
-    await interactionWithError.reply({
-      content: "There was an error while executing this command!",
-      flags: MessageFlags.Ephemeral,
-    });
+      if (interactionWithError.replied || interactionWithError.deferred) {
+        await interactionWithError.followUp({
+          content: "There was an error while executing this command!",
+          flags: MessageFlags.Ephemeral,
+        });
+      } else {
+        await interactionWithError.reply({
+          content: "There was an error while executing this command!",
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+    } catch (replyErr) {
+      logger.error("Discord - Command", "Failed to send error response to user", replyErr);
+    }
   }
 }

@@ -5,6 +5,7 @@ import { prisma } from "../../database/index.js";
 import { isGuildDueForMotivation } from "../../utils/scheduleEvaluator.js";
 import posthog from "../../utils/posthog.js";
 import logger from "../../utils/logger.js";
+import env from "../../utils/env.js";
 
 export default async function sendMotivation(client: Client) {
   const guilds = await prisma.guild.findMany({
@@ -113,7 +114,7 @@ export default async function sendMotivation(client: Client) {
     distinctId: "motivation-job",
     event: "motivation job executed",
     properties: {
-      environment: process.env["NODE_ENV"],
+      environment: env.NODE_ENV,
       quote: motivationQuote[0].id,
       sent,
       failed,

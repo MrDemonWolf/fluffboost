@@ -12,10 +12,13 @@ describe("interactionCreateEvent", () => {
     return {
       user: { id: "u1", username: "testuser" },
       commandName,
+      replied: false,
+      deferred: false,
       isCommand: sinon.stub().returns(true),
       isChatInputCommand: sinon.stub().returns(true),
       isAutocomplete: sinon.stub().returns(false),
       reply: sinon.stub().resolves(),
+      followUp: sinon.stub().resolves(),
     };
   }
 
@@ -94,6 +97,76 @@ describe("interactionCreateEvent", () => {
     const interaction = makeCommandInteraction("nonexistent");
     await interactionCreateEvent(mockClient(), interaction);
     expect(logger.commands.warn.called).to.be.true;
+  });
+
+  it("should use followUp when interaction already replied and error occurs", async () => {
+    const logger = mockLogger();
+    const executeStub = sinon.stub().rejects(new Error("boom"));
+
+    const { interactionCreateEvent } = await esmock(
+      "../../src/events/interactionCreate.js",
+      {
+        "../../src/utils/logger.js": { default: logger },
+        "../../src/commands/help.js": { default: { execute: executeStub } },
+        "../../src/commands/about.js": { default: { execute: sinon.stub().resolves() } },
+        "../../src/commands/changelog.js": { default: { execute: sinon.stub().resolves() } },
+        "../../src/commands/quote.js": { default: { execute: sinon.stub().resolves() } },
+        "../../src/commands/suggestion.js": { default: { execute: sinon.stub().resolves() } },
+        "../../src/commands/invite.js": { default: { execute: sinon.stub().resolves() } },
+        "../../src/commands/admin/index.js": { default: { execute: sinon.stub().resolves() } },
+        "../../src/commands/setup/index.js": {
+          default: { execute: sinon.stub().resolves() },
+          setupAutocomplete: sinon.stub().resolves(),
+        },
+        "../../src/commands/premium.js": { default: { execute: sinon.stub().resolves() } },
+        "../../src/commands/owner/index.js": { default: { execute: sinon.stub().resolves() } },
+      },
+    );
+
+    const interaction = makeCommandInteraction("help");
+    interaction.replied = true;
+    interaction.followUp = sinon.stub().resolves();
+
+    await interactionCreateEvent(mockClient(), interaction);
+
+    expect(logger.error.called).to.be.true;
+    expect((interaction.reply as sinon.SinonStub).called).to.be.false;
+    expect((interaction.followUp as sinon.SinonStub).calledOnce).to.be.true;
+  });
+
+  it("should use followUp when interaction is deferred and error occurs", async () => {
+    const logger = mockLogger();
+    const executeStub = sinon.stub().rejects(new Error("boom"));
+
+    const { interactionCreateEvent } = await esmock(
+      "../../src/events/interactionCreate.js",
+      {
+        "../../src/utils/logger.js": { default: logger },
+        "../../src/commands/help.js": { default: { execute: executeStub } },
+        "../../src/commands/about.js": { default: { execute: sinon.stub().resolves() } },
+        "../../src/commands/changelog.js": { default: { execute: sinon.stub().resolves() } },
+        "../../src/commands/quote.js": { default: { execute: sinon.stub().resolves() } },
+        "../../src/commands/suggestion.js": { default: { execute: sinon.stub().resolves() } },
+        "../../src/commands/invite.js": { default: { execute: sinon.stub().resolves() } },
+        "../../src/commands/admin/index.js": { default: { execute: sinon.stub().resolves() } },
+        "../../src/commands/setup/index.js": {
+          default: { execute: sinon.stub().resolves() },
+          setupAutocomplete: sinon.stub().resolves(),
+        },
+        "../../src/commands/premium.js": { default: { execute: sinon.stub().resolves() } },
+        "../../src/commands/owner/index.js": { default: { execute: sinon.stub().resolves() } },
+      },
+    );
+
+    const interaction = makeCommandInteraction("help");
+    interaction.deferred = true;
+    interaction.followUp = sinon.stub().resolves();
+
+    await interactionCreateEvent(mockClient(), interaction);
+
+    expect(logger.error.called).to.be.true;
+    expect((interaction.reply as sinon.SinonStub).called).to.be.false;
+    expect((interaction.followUp as sinon.SinonStub).calledOnce).to.be.true;
   });
 
   it("should catch handler exceptions and reply with error message", async () => {
