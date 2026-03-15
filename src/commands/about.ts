@@ -70,7 +70,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       distinctId: interaction.user.id,
       event: "about command used",
       properties: {
-        environment: process.env["NODE_ENV"],
+        environment: env.NODE_ENV,
         userId: interaction.user.id,
         username: interaction.user.username,
       },

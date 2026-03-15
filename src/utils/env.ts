@@ -92,4 +92,5 @@ if (!parsed.success) {
 
 const env: EnvSchema = parsed.data;
 
+export { envSchema };
 export default env;

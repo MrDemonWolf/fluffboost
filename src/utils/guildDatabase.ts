@@ -3,6 +3,7 @@ import type { Client } from "discord.js";
 import posthog from "../utils/posthog.js";
 import { prisma } from "../database/index.js";
 import logger from "./logger.js";
+import env from "./env.js";
 
 export async function pruneGuilds(client: Client) {
   try {
@@ -67,7 +68,7 @@ export async function pruneGuilds(client: Client) {
           distinctId: guild.guildId,
           event: "guild left",
           properties: {
-            environment: process.env["NODE_ENV"],
+            environment: env.NODE_ENV,
             guildName: guild.guildId,
             guildId: guild.guildId,
           },
@@ -142,7 +143,7 @@ export async function ensureGuildExists(client: Client) {
           distinctId: guild.id,
           event: "guild joined",
           properties: {
-            environment: process.env["NODE_ENV"],
+            environment: env.NODE_ENV,
             guildName: guild.name,
             guildId: guild.id,
           },

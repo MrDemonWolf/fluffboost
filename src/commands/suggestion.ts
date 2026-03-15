@@ -147,7 +147,7 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
         quote,
         author,
         guildId: interaction.guildId,
-        environment: process.env["NODE_ENV"],
+        environment: env.NODE_ENV,
         userId: interaction.user.id,
         username: interaction.user.username,
       },

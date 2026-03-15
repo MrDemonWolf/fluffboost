@@ -5,7 +5,7 @@ import env from "./env.js";
 import logger from "./logger.js";
 
 export async function isUserPermitted(interaction: CommandInteraction) {
-  const allowedUsersArray = env.ALLOWED_USERS?.split(",") as string[];
+  const allowedUsersArray = env.ALLOWED_USERS?.split(",") ?? [];
   const allowedUsers = trimArray(allowedUsersArray);
 
   if (!allowedUsers.includes(interaction.user.id)) {

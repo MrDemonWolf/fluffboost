@@ -45,6 +45,30 @@ describe("permissions", () => {
     expect(result).to.be.true;
   });
 
+  it("should return false without crashing when ALLOWED_USERS is undefined", async () => {
+    const logger = mockLogger();
+    const { isUserPermitted } = await esmock("../../src/utils/permissions.js", {
+      "../../src/utils/env.js": { default: mockEnv({ ALLOWED_USERS: undefined }) },
+      "../../src/utils/logger.js": { default: logger },
+    });
+
+    const interaction = mockInteraction({ user: { id: "user-123", username: "test" } });
+    const result = await isUserPermitted(interaction as never);
+    expect(result).to.be.false;
+  });
+
+  it("should return false without crashing when ALLOWED_USERS is empty string", async () => {
+    const logger = mockLogger();
+    const { isUserPermitted } = await esmock("../../src/utils/permissions.js", {
+      "../../src/utils/env.js": { default: mockEnv({ ALLOWED_USERS: "" }) },
+      "../../src/utils/logger.js": { default: logger },
+    });
+
+    const interaction = mockInteraction({ user: { id: "user-123", username: "test" } });
+    const result = await isUserPermitted(interaction as never);
+    expect(result).to.be.false;
+  });
+
   it("should log unauthorized access attempts", async () => {
     const logger = mockLogger();
     const { isUserPermitted } = await esmock("../../src/utils/permissions.js", {

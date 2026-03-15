@@ -40,21 +40,27 @@ client.on(Events.ClientReady, async () => {
  * This event will run every time the bot joins a guild.
  */
 client.on(Events.GuildCreate, (guild) => {
-  guildCreateEvent(guild);
+  guildCreateEvent(guild).catch((err) => {
+    logger.error("Discord - Event (GuildCreate)", "Unhandled error", err);
+  });
 });
 
 /**
  * This event will run every time the bot leaves a guild.
  */
 client.on(Events.GuildDelete, (guild) => {
-  guildDeleteEvent(guild);
+  guildDeleteEvent(guild).catch((err) => {
+    logger.error("Discord - Event (GuildDelete)", "Unhandled error", err);
+  });
 });
 
 /**
  * Handle interactionCreate events.
  */
 client.on(Events.InteractionCreate, (interaction) => {
-  interactionCreateEvent(client, interaction);
+  interactionCreateEvent(client, interaction).catch((err) => {
+    logger.error("Discord - Event (InteractionCreate)", "Unhandled error", err);
+  });
 });
 
 /**
@@ -69,15 +75,21 @@ client.on(Events.ShardError, () => {
  */
 if (isPremiumEnabled()) {
   client.on(Events.EntitlementCreate, (entitlement) => {
-    entitlementCreateEvent(entitlement);
+    entitlementCreateEvent(entitlement).catch((err) => {
+      logger.error("Discord - Event (EntitlementCreate)", "Unhandled error", err);
+    });
   });
 
   client.on(Events.EntitlementUpdate, (oldEntitlement, newEntitlement) => {
-    entitlementUpdateEvent(oldEntitlement, newEntitlement);
+    entitlementUpdateEvent(oldEntitlement, newEntitlement).catch((err) => {
+      logger.error("Discord - Event (EntitlementUpdate)", "Unhandled error", err);
+    });
   });
 
   client.on(Events.EntitlementDelete, (entitlement) => {
-    entitlementDeleteEvent(entitlement);
+    entitlementDeleteEvent(entitlement).catch((err) => {
+      logger.error("Discord - Event (EntitlementDelete)", "Unhandled error", err);
+    });
   });
 }
 
