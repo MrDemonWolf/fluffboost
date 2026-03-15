@@ -150,6 +150,37 @@ describe("setup schedule command", () => {
     expect(prisma.guild.update.called).to.be.false;
     expect((interaction.reply as sinon.SinonStub).called).to.be.false;
   });
+
+  it("should catch autocomplete errors and respond with empty array", async () => {
+    const logger = mockLogger();
+
+    const mod = await esmock("../../../src/commands/setup/schedule.js", {
+      "../../../src/utils/logger.js": { default: logger },
+      "../../../src/database/index.js": { prisma: mockPrisma() },
+      "../../../src/utils/premium.js": {
+        isPremiumEnabled: sinon.stub().returns(false),
+        hasEntitlement: sinon.stub().returns(false),
+        getPremiumSkuId: sinon.stub().returns("sku-1"),
+      },
+      "../../../src/utils/guildDatabase.js": { guildExists: sinon.stub().resolves(true) },
+      "../../../src/utils/timezones.js": {
+        isValidTimezone: sinon.stub().returns(true),
+        filterTimezones: sinon.stub().throws(new Error("timezone error")),
+      },
+    });
+
+    const interaction = {
+      options: {
+        getFocused: sinon.stub().returns({ name: "timezone", value: "Amer" }),
+      },
+      respond: sinon.stub().resolves(),
+    };
+
+    await mod.autocomplete(interaction as never);
+
+    expect(logger.error.called).to.be.true;
+    expect(interaction.respond.calledWith([])).to.be.true;
+  });
 });
 
 function localMockClient() {
