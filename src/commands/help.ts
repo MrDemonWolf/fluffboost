@@ -4,6 +4,7 @@ import { SlashCommandBuilder, MessageFlags } from "discord.js";
 
 import logger from "../utils/logger.js";
 import posthog from "../utils/posthog.js";
+import env from "../utils/env.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("help")
@@ -41,7 +42,7 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
       distinctId: interaction.user.id,
       event: "help command used",
       properties: {
-        environment: process.env["NODE_ENV"],
+        environment: env.NODE_ENV,
         userId: interaction.user.id,
         username: interaction.user.username,
       },
