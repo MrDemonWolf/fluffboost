@@ -1,4 +1,4 @@
-import type { Queue } from "bullmq";
+import type { Queue, ConnectionOptions } from "bullmq";
 
 import { Worker, Job } from "bullmq";
 
@@ -26,7 +26,7 @@ const worker = new Worker(
     }
   },
   {
-    connection: redisClient,
+    connection: redisClient as unknown as ConnectionOptions,
   }
 );
 
