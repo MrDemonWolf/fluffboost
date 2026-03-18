@@ -7,8 +7,11 @@ import {
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 
+import { eq } from "drizzle-orm";
+
 import { isUserPermitted } from "../../../utils/permissions.js";
-import { prisma } from "../../../database/index.js";
+import { db } from "../../../database/index.js";
+import { motivationQuotes, suggestionQuotes } from "../../../database/schema.js";
 import env from "../../../utils/env.js";
 import logger from "../../../utils/logger.js";
 
@@ -32,9 +35,11 @@ export default async function (
 
     const suggestionId = options.getString("suggestion_id", true);
 
-    const suggestion = await prisma.suggestionQuote.findUnique({
-      where: { id: suggestionId },
-    });
+    const [suggestion] = await db
+      .select()
+      .from(suggestionQuotes)
+      .where(eq(suggestionQuotes.id, suggestionId))
+      .limit(1);
 
     if (!suggestion) {
       await interaction.reply({
@@ -52,23 +57,21 @@ export default async function (
       return;
     }
 
-    await prisma.$transaction([
-      prisma.motivationQuote.create({
-        data: {
-          quote: suggestion.quote,
-          author: suggestion.author,
-          addedBy: suggestion.addedBy,
-        },
-      }),
-      prisma.suggestionQuote.update({
-        where: { id: suggestionId },
-        data: {
+    await db.transaction(async (tx) => {
+      await tx.insert(motivationQuotes).values({
+        quote: suggestion.quote,
+        author: suggestion.author,
+        addedBy: suggestion.addedBy,
+      });
+      await tx
+        .update(suggestionQuotes)
+        .set({
           status: "Approved",
           reviewedBy: interaction.user.id,
           reviewedAt: new Date(),
-        },
-      }),
-    ]);
+        })
+        .where(eq(suggestionQuotes.id, suggestionId));
+    });
 
     const embed = new EmbedBuilder()
       .setColor(0x57f287)

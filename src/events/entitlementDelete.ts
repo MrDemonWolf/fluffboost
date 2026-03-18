@@ -2,7 +2,10 @@ import type { Entitlement } from "discord.js";
 
 import logger from "../utils/logger.js";
 import posthog from "../utils/posthog.js";
-import { prisma } from "../database/index.js";
+import { eq } from "drizzle-orm";
+
+import { db } from "../database/index.js";
+import { guilds } from "../database/schema.js";
 import env from "../utils/env.js";
 
 export async function entitlementDeleteEvent(entitlement: Entitlement): Promise<void> {
@@ -15,10 +18,7 @@ export async function entitlementDeleteEvent(entitlement: Entitlement): Promise<
 
   if (entitlement.guildId) {
     try {
-      await prisma.guild.update({
-        where: { guildId: entitlement.guildId },
-        data: { isPremium: false },
-      });
+      await db.update(guilds).set({ isPremium: false }).where(eq(guilds.guildId, entitlement.guildId));
     } catch (err) {
       logger.error("Discord - Event (Entitlement Delete)", "Failed to update guild premium status", err, {
         guildId: entitlement.guildId,

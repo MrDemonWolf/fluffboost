@@ -1,62 +1,61 @@
-import { expect } from "chai";
+import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import esmock from "esmock";
-import { mockLogger, mockPrisma, mockPosthog, mockGuild } from "../helpers.js";
+import { mockLogger, mockDb, mockDbChain, mockPosthog, mockGuild } from "../helpers.js";
 
 describe("guildCreateEvent", () => {
   afterEach(() => {
     sinon.restore();
+    mock.restore();
   });
 
   it("should create guild in database and log on join", async () => {
-    const prisma = mockPrisma();
+    const db = mockDb();
     const logger = mockLogger();
     const posthog = mockPosthog();
-    prisma.guild.create.resolves({ guildId: "g1" });
+    db.insert.returns(mockDbChain([{ guildId: "g1" }]));
 
-    const { guildCreateEvent } = await esmock("../../src/events/guildCreate.js", {
-      "../../src/database/index.js": { prisma },
-      "../../src/utils/logger.js": { default: logger },
-      "../../src/utils/posthog.js": { default: posthog },
-    });
+    mock.module("../../src/database/index.js", () => ({ db }));
+    mock.module("../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../src/utils/posthog.js", () => ({ default: posthog }));
+    const { guildCreateEvent } = await import("../../src/events/guildCreate.js");
 
     const guild = mockGuild({ id: "g1", name: "Test Guild", memberCount: 10 });
     await guildCreateEvent(guild as never);
 
-    expect(prisma.guild.create.calledOnce).to.be.true;
-    expect(logger.discord.guildJoined.calledOnce).to.be.true;
-    expect(posthog.capture.calledOnce).to.be.true;
+    expect(db.insert.calledOnce).toBe(true);
+    expect(logger.discord.guildJoined.calledOnce).toBe(true);
+    expect(posthog.capture.calledOnce).toBe(true);
   });
 
   it("should capture posthog event with correct properties", async () => {
-    const prisma = mockPrisma();
+    const db = mockDb();
     const posthog = mockPosthog();
-    prisma.guild.create.resolves({ guildId: "g1" });
+    db.insert.returns(mockDbChain([{ guildId: "g1" }]));
 
-    const { guildCreateEvent } = await esmock("../../src/events/guildCreate.js", {
-      "../../src/database/index.js": { prisma },
-      "../../src/utils/logger.js": { default: mockLogger() },
-      "../../src/utils/posthog.js": { default: posthog },
-    });
+    mock.module("../../src/database/index.js", () => ({ db }));
+    mock.module("../../src/utils/logger.js", () => ({ default: mockLogger() }));
+    mock.module("../../src/utils/posthog.js", () => ({ default: posthog }));
+    const { guildCreateEvent } = await import("../../src/events/guildCreate.js");
 
     await guildCreateEvent(mockGuild({ id: "g1" }) as never);
     const captureArgs = posthog.capture.firstCall.args[0];
-    expect(captureArgs.distinctId).to.equal("g1");
-    expect(captureArgs.event).to.equal("guild created");
+    expect(captureArgs.distinctId).toBe("g1");
+    expect(captureArgs.event).toBe("guild created");
   });
 
   it("should handle database creation failure gracefully", async () => {
-    const prisma = mockPrisma();
+    const db = mockDb();
     const logger = mockLogger();
-    prisma.guild.create.rejects(new Error("DB error"));
+    const chain = mockDbChain();
+    chain.rejects(new Error("DB error"));
+    db.insert.returns(chain);
 
-    const { guildCreateEvent } = await esmock("../../src/events/guildCreate.js", {
-      "../../src/database/index.js": { prisma },
-      "../../src/utils/logger.js": { default: logger },
-      "../../src/utils/posthog.js": { default: mockPosthog() },
-    });
+    mock.module("../../src/database/index.js", () => ({ db }));
+    mock.module("../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../src/utils/posthog.js", () => ({ default: mockPosthog() }));
+    const { guildCreateEvent } = await import("../../src/events/guildCreate.js");
 
     await guildCreateEvent(mockGuild() as never);
-    expect(logger.error.calledOnce).to.be.true;
+    expect(logger.error.calledOnce).toBe(true);
   });
 });

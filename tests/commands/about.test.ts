@@ -1,6 +1,5 @@
-import { expect } from "chai";
+import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import esmock from "esmock";
 import { mockLogger, mockPosthog, mockClient, mockInteraction, mockEnv } from "../helpers.js";
 
 describe("about command", () => {
@@ -13,11 +12,11 @@ describe("about command", () => {
     const posthog = mockPosthog();
     const env = mockEnv();
 
-    const mod = await esmock("../../src/commands/about.js", {
-      "../../src/utils/logger.js": { default: logger },
-      "../../src/utils/posthog.js": { default: posthog },
-      "../../src/utils/env.js": { default: env },
-    });
+    mock.module("../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../src/utils/posthog.js", () => ({ default: posthog }));
+    mock.module("../../src/utils/env.js", () => ({ default: env }));
+
+    const mod = await import("../../src/commands/about.js");
 
     return { execute: mod.execute, logger, posthog, env };
   }
@@ -29,9 +28,10 @@ describe("about command", () => {
 
     await execute(client as never, interaction as never);
 
-    expect((interaction.reply as sinon.SinonStub).calledOnce).to.be.true;
+    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.embeds).to.be.an("array").with.lengthOf(1);
+    expect(Array.isArray(replyArgs.embeds)).toBe(true);
+    expect(replyArgs.embeds).toHaveLength(1);
   });
 
   it("should capture posthog event", async () => {
@@ -41,8 +41,8 @@ describe("about command", () => {
 
     await execute(client as never, interaction as never);
 
-    expect(posthog.capture.calledOnce).to.be.true;
-    expect(posthog.capture.firstCall.args[0].event).to.equal("about command used");
+    expect(posthog.capture.calledOnce).toBe(true);
+    expect(posthog.capture.firstCall.args[0].event).toBe("about command used");
   });
 
   it("should reply with error on failure", async () => {
@@ -54,6 +54,6 @@ describe("about command", () => {
 
     await execute(client as never, interaction as never);
 
-    expect(logger.commands.error.calledOnce).to.be.true;
+    expect(logger.commands.error.calledOnce).toBe(true);
   });
 });

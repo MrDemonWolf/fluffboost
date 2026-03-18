@@ -6,9 +6,12 @@ import {
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 
+import { eq } from "drizzle-orm";
+
 import logger from "../../../utils/logger.js";
 import { isUserPermitted } from "../../../utils/permissions.js";
-import { prisma } from "../../../database/index.js";
+import { db } from "../../../database/index.js";
+import { motivationQuotes } from "../../../database/schema.js";
 import env from "../../../utils/env.js";
 
 export default async function (
@@ -31,11 +34,11 @@ export default async function (
 
     const quoteId = options.getString("quote_id", true);
 
-    const quote = await prisma.motivationQuote.findUnique({
-      where: {
-        id: quoteId,
-      },
-    });
+    const [quote] = await db
+      .select()
+      .from(motivationQuotes)
+      .where(eq(motivationQuotes.id, quoteId))
+      .limit(1);
     if (!quote) {
       await interaction.reply({
         content: `Quote with id ${quoteId} not found`,
@@ -44,11 +47,7 @@ export default async function (
       return;
     }
 
-    await prisma.motivationQuote.delete({
-      where: {
-        id: quoteId,
-      },
-    });
+    await db.delete(motivationQuotes).where(eq(motivationQuotes.id, quoteId));
 
     // send message to main channel
     if (env.MAIN_CHANNEL_ID) {

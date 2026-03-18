@@ -1,29 +1,29 @@
-import { expect } from "chai";
+import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import esmock from "esmock";
-import { mockLogger, mockPrisma, mockEnv, mockClient } from "../helpers.js";
+import { mockLogger, mockDb, mockDbChain, mockEnv, mockClient } from "../helpers.js";
 
 describe("setActivity", () => {
   afterEach(() => {
     sinon.restore();
+    mock.restore();
   });
 
   async function loadModule(overrides: {
-    prisma?: ReturnType<typeof mockPrisma>;
+    db?: ReturnType<typeof mockDb>;
     logger?: ReturnType<typeof mockLogger>;
     env?: Record<string, unknown>;
   } = {}) {
-    const prisma = overrides.prisma ?? mockPrisma();
+    const db = overrides.db ?? mockDb();
     const logger = overrides.logger ?? mockLogger();
     const env = mockEnv(overrides.env ?? {});
 
-    const mod = await esmock("../../src/worker/jobs/setActivity.js", {
-      "../../src/database/index.js": { prisma },
-      "../../src/utils/logger.js": { default: logger },
-      "../../src/utils/env.js": { default: env },
-    });
+    mock.module("../../src/database/index.js", () => ({ db }));
+    mock.module("../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../src/utils/env.js", () => ({ default: env }));
 
-    return { setActivity: mod.default, prisma, logger };
+    const mod = await import("../../src/worker/jobs/setActivity.js");
+
+    return { setActivity: mod.default, db, logger };
   }
 
   it("should warn and return when client.user is undefined", async () => {
@@ -33,57 +33,59 @@ describe("setActivity", () => {
     const client = mockClient({ user: undefined });
     await setActivity(client as never);
 
-    expect(logger.warn.calledOnce).to.be.true;
+    expect(logger.warn.calledOnce).toBe(true);
   });
 
   it("should use default activity when no custom activities in DB", async () => {
-    const prisma = mockPrisma();
-    prisma.discordActivity.findMany.resolves([]);
+    const db = mockDb();
+    db.select.returns(mockDbChain([]));
 
-    const { setActivity, logger } = await loadModule({ prisma });
+    const { setActivity, logger } = await loadModule({ db });
     const client = mockClient();
     await setActivity(client as never);
 
-    expect((client.user as { setActivity: sinon.SinonStub }).setActivity.calledOnce).to.be.true;
-    expect(logger.warn.calledOnce).to.be.true;
-    expect(logger.success.calledOnce).to.be.true;
+    expect((client.user as { setActivity: sinon.SinonStub }).setActivity.calledOnce).toBe(true);
+    expect(logger.warn.calledOnce).toBe(true);
+    expect(logger.success.calledOnce).toBe(true);
   });
 
   it("should select from custom + default activities when available", async () => {
-    const prisma = mockPrisma();
-    prisma.discordActivity.findMany.resolves([
+    const db = mockDb();
+    db.select.returns(mockDbChain([
       { id: "a1", activity: "Custom activity", type: "Playing", url: null, createdAt: new Date() },
-    ]);
+    ]));
 
-    const { setActivity } = await loadModule({ prisma });
+    const { setActivity } = await loadModule({ db });
     const client = mockClient();
 
     // Run multiple times to cover randomness
     for (let i = 0; i < 5; i++) {
       (client.user as { setActivity: sinon.SinonStub }).setActivity.reset();
       await setActivity(client as never);
-      expect((client.user as { setActivity: sinon.SinonStub }).setActivity.calledOnce).to.be.true;
+      expect((client.user as { setActivity: sinon.SinonStub }).setActivity.calledOnce).toBe(true);
     }
   });
 
   it("should handle database fetch errors gracefully", async () => {
-    const prisma = mockPrisma();
+    const db = mockDb();
     const logger = mockLogger();
-    prisma.discordActivity.findMany.rejects(new Error("DB error"));
+    const chain = mockDbChain();
+    chain.rejects(new Error("DB error"));
+    db.select.returns(chain);
 
-    const { setActivity } = await loadModule({ prisma, logger });
+    const { setActivity } = await loadModule({ db, logger });
     const client = mockClient();
 
     await setActivity(client as never);
-    expect(logger.error.calledOnce).to.be.true;
+    expect(logger.error.calledOnce).toBe(true);
   });
 
   it("should use default activity type from env", async () => {
-    const prisma = mockPrisma();
-    prisma.discordActivity.findMany.resolves([]);
+    const db = mockDb();
+    db.select.returns(mockDbChain([]));
 
     const { setActivity } = await loadModule({
-      prisma,
+      db,
       env: { DISCORD_DEFAULT_ACTIVITY_TYPE: "Playing", DISCORD_DEFAULT_STATUS: "Test Status" },
     });
 
@@ -91,6 +93,6 @@ describe("setActivity", () => {
     await setActivity(client as never);
 
     const setActivityCall = (client.user as { setActivity: sinon.SinonStub }).setActivity.firstCall;
-    expect(setActivityCall.args[0]).to.equal("Test Status");
+    expect(setActivityCall.args[0]).toBe("Test Status");
   });
 });

@@ -4,45 +4,45 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-FluffBoost is a Discord bot (Discord.js v14) that delivers daily motivational quotes and manages bot status activities. It runs as a sharded bot process with an Express health-check API, PostgreSQL database (via Prisma 7), and BullMQ background jobs backed by Redis.
+FluffBoost is a Discord bot (Discord.js v14) that delivers daily motivational quotes and manages bot status activities. It runs as a sharded bot process with an Express health-check API, PostgreSQL database (via Drizzle ORM), and BullMQ background jobs backed by Redis.
 
 ## Commands
 
 ```bash
 # Development
-pnpm dev                  # Run with tsx watch (hot reload)
-pnpm build                # Compile TypeScript to dist/
-pnpm start                # Run compiled dist/app.js
+bun dev                   # Run with --watch (hot reload)
+bun start                 # Run src/app.ts directly (Bun runs TS natively)
 
 # Linting & formatting
-pnpm lint                 # ESLint with auto-fix
-pnpm lint:check           # ESLint check only (used in CI)
-pnpm format               # Prettier formatting
+bun run lint              # ESLint with auto-fix
+bun run lint:check        # ESLint check only (used in CI)
+bun run format            # Prettier formatting
 
 # Database
-pnpm db:generate          # Generate Prisma client (outputs to src/generated/prisma/)
-pnpm db:push              # Sync schema to database (dev)
-pnpm db:migrate           # Run migrations (production)
-pnpm db:studio            # Open Prisma Studio UI
+bun run db:generate       # Generate a new Drizzle migration
+bun run db:push           # Push schema changes to database (dev)
+bun run db:migrate        # Run migrations (production)
+bun run db:studio         # Open Drizzle Studio UI
+bun run db:pull           # Introspect database and generate schema
 
 # Type checking
-pnpm tsc --noEmit         # TypeScript check without emitting
+bun run typecheck         # TypeScript check without emitting (tsc --noEmit)
 
 # Tests
-pnpm test                 # Mocha tests (cross-env NODE_ENV=test)
-pnpm test:coverage        # Tests with c8 coverage report
+bun test                  # bun:test runner (NODE_ENV=test)
+bun test --coverage       # Tests with coverage report
 
 # Infrastructure
 docker compose up         # Start PostgreSQL 16 + Redis 7 locally
 ```
 
-**After changing `prisma/schema.prisma`**, always run `pnpm db:generate` to regenerate the client, then `pnpm db:push` (dev) or `pnpm db:migrate` (prod) to sync the database.
+**After changing `src/database/schema.ts`**, run `bun run db:push` (dev) to sync changes, or `bun run db:generate` then `bun run db:migrate` (prod) to create and apply a migration. No code generation step is needed — Drizzle reads the schema at runtime.
 
 ## Architecture
 
 ### Entry Points & Process Model
 
-The app uses **Discord.js ShardingManager**. `src/app.ts` is the main process — it verifies DB/Redis connectivity, starts the Express API server, then spawns shard processes that each run `src/bot.ts`. In development, shards are loaded via tsx; in production, from compiled JS in `dist/`.
+The app uses **Discord.js ShardingManager**. `src/app.ts` is the main process — it verifies DB/Redis connectivity, starts the Express API server, then spawns shard processes that each run `src/bot.ts`. Bun runs TypeScript directly, so the ShardingManager always points to `./src/bot.ts` with no special loader flags.
 
 Each shard (`src/bot.ts`) creates a Discord client, registers event listeners, initializes a BullMQ queue + worker, and logs into Discord.
 
@@ -51,10 +51,10 @@ Each shard (`src/bot.ts`) creates a Discord client, registers event listeners, i
 - `src/commands/` — Slash commands. Each file exports `slashCommand` (SlashCommandBuilder) and `execute(client, interaction)`. Subcommand groups live in subdirectories (`admin/`, `setup/`).
 - `src/events/` — Discord event handlers. Command routing happens in `interactionCreate.ts` via a switch on `commandName`.
 - `src/worker/` — BullMQ worker setup and job handlers (`jobs/setActivity.ts`, `jobs/sendMotivation.ts`). Jobs are dispatched on repeating schedules.
-- `src/database/index.ts` — Prisma singleton using global caching pattern with `@prisma/adapter-pg`.
+- `src/database/index.ts` — Drizzle ORM instance using `postgres` driver with global caching pattern.
+- `src/database/schema.ts` — Drizzle schema definitions (tables, enums, types). This is the source of truth for the database schema.
 - `src/utils/env.ts` — Zod schema validating all environment variables at startup. The process exits immediately on invalid config.
 - `src/utils/logger.ts` — Structured consola-based logger with context-specific sub-loggers (`logger.commands.*`, `logger.database.*`, `logger.api.*`, `logger.discord.*`).
-- `src/generated/prisma/` — Auto-generated Prisma client (do not edit manually).
 
 ### Command Pattern
 
@@ -73,7 +73,7 @@ Worker log component names use `"Worker"` consistently.
 
 ### Database Models
 
-Four Prisma models: `Guild` (server config with per-guild motivation schedule including frequency, time, timezone, day, and `lastMotivationSentAt`), `MotivationQuote`, `SuggestionQuote` (user-submitted, pending approval), `DiscordActivity` (bot status entries with type enum). The `MotivationFrequency` enum (Daily/Weekly/Monthly) controls delivery cadence.
+Four Drizzle tables defined in `src/database/schema.ts`: `guilds` (server config with per-guild motivation schedule including frequency, time, timezone, day, and `lastMotivationSentAt`), `motivationQuotes`, `suggestionQuotes` (user-submitted, pending approval), `discordActivities` (bot status entries with type enum). Two pgEnums: `motivationFrequencyEnum` (Daily/Weekly/Monthly) and `discordActivityTypeEnum` (Custom/Listening/Streaming/Playing). Types are exported as `Guild`, `MotivationQuote`, `SuggestionQuote`, `DiscordActivity`, `MotivationFrequency`, `DiscordActivityType`.
 
 ### Discord.js Patterns
 
@@ -89,7 +89,7 @@ Four Prisma models: `Guild` (server config with per-guild motivation schedule in
 - **Strict TypeScript** — `noUnusedLocals`, `noUnusedParameters`, `noImplicitReturns`, `noUncheckedIndexedAccess` are all enabled.
 - **Logging** — Use `logger` from `src/utils/logger.ts` (never raw `console.log`). Use the appropriate sub-logger for context.
 - **Max line length** — 120 characters (ESLint enforced).
-- **Package manager** — pnpm 9.x (do not use npm or yarn).
+- **Runtime & Package manager** — Bun (do not use npm, yarn, or pnpm).
 
 ## Environment Variables
 
@@ -97,30 +97,25 @@ All env vars are validated by Zod in `src/utils/env.ts`. Required variables incl
 
 ## CI
 
-GitHub Actions runs on push/PR to `main` and `dev`: Prisma client generation, test execution with c8 coverage, ESLint check, TypeScript type check, build, security audit, and Docker build test. Tested on Node 20.x, 22.x, and 24.x. Uses concurrency groups to cancel in-progress runs on new pushes. Coverage reports are uploaded as artifacts on the Node 22.x run.
+GitHub Actions runs on push/PR to `main` and `dev`: test execution with Bun's built-in coverage, ESLint check, TypeScript type check, security audit, and Docker build test. Uses Bun via `oven-sh/setup-bun@v2`. Coverage reports are uploaded as artifacts.
 
 ## Docker / Deployment
 
-The app is deployed via **Coolify** using a multi-stage Dockerfile (Node 24 Alpine). The production image runs migrations at container startup via `docker-entrypoint.sh`.
+The app is deployed via **Coolify** using a multi-stage Dockerfile (`oven/bun:1`). Since Bun runs TypeScript directly, there is no build step — `src/` is copied directly into the production image. Migrations run at container startup via `docker-entrypoint.sh`.
 
 ### Key files
 
-- `Dockerfile` — Multi-stage build: base → deps → prod-deps → build → production runtime
-- `docker-entrypoint.sh` — Runs `prisma migrate deploy` then starts the app. Set `SKIP_MIGRATIONS=true` to skip.
-- `prisma.config.ts` — Provides `DATABASE_URL` to Prisma CLI tools (required in Prisma 7 since `url` was removed from the schema datasource block). Does not affect runtime — the app uses `@prisma/adapter-pg`.
+- `Dockerfile` — Multi-stage build: base → deps → prod-deps → production runtime (no build stage needed)
+- `docker-entrypoint.sh` — Runs `bunx drizzle-kit migrate` then starts the app with `bun run src/app.ts`. Set `SKIP_MIGRATIONS=true` to skip.
+- `drizzle.config.ts` — Provides database credentials and schema path to Drizzle Kit CLI tools.
+- `drizzle/` — Migration SQL files generated by `drizzle-kit generate`.
 - `.dockerignore` — Excludes tests, docs, CI config from build context
-
-### Prisma 7 notes
-
-- The `datasource` block in `prisma/schema.prisma` has **no `url` property** — this is intentional for Prisma 7 with driver adapters.
-- CLI tools (`prisma migrate deploy`, `prisma generate`, etc.) get the database URL from `prisma.config.ts` instead.
-- Prisma is installed globally in the production image (`npm install -g prisma@7.4.0`) for migrations. `NODE_PATH=/usr/local/lib/node_modules` is set so `prisma.config.ts` can resolve `prisma/config` from the global install.
 
 ### Build optimizations
 
 - `COPY --chown=fluffboost:fluffboost` is used instead of `RUN chown -R` to avoid a slow recursive ownership change
 - `deps` and `prod-deps` stages run in parallel during Docker build
-- `db:generate` and `build` are combined into a single RUN layer
+- No TypeScript compilation step — Bun runs `.ts` files directly
 
 ## Git Branching
 
@@ -144,7 +139,7 @@ Discord provides test entitlements so you can verify your subscription flow with
 **Setup:**
 1. Create a subscription SKU in the [Discord Developer Portal](https://discord.com/developers/applications) under your app's Monetization settings
 2. Set `PREMIUM_ENABLED=true` and `DISCORD_PREMIUM_SKU_ID=<your_sku_id>` in your `.env`
-3. Run `pnpm dev`
+3. Run `bun dev`
 
 **Testing the upsell flow (no entitlement):**
 - Use `/premium` — you'll see the premium info embed with a purchase button
@@ -184,9 +179,9 @@ if (isPremiumEnabled() && !hasEntitlement(interaction)) {
 
 ## Testing
 
-Tests use **Mocha** + **Chai** + **Sinon** + **esmock**, configured in `.mocharc.yml` with `tsx` and `esmock` loaders. Test files live in `tests/` (mirroring `src/` structure) and use `.test.ts` suffix. ESM module mocking uses `esmock` to replace imports at load time. Time-dependent tests use `sinon.useFakeTimers()` to control `dayjs()`.
+Tests use **bun:test** + **Sinon**, configured in `bunfig.toml`. Test files live in `tests/` (mirroring `src/` structure) and use `.test.ts` suffix. Module mocking uses `mock.module()` from `bun:test` to replace imports at load time. Time-dependent tests use `sinon.useFakeTimers()` to control `dayjs()`.
 
-- `tests/helpers.ts` — Shared mock factories (mockLogger, mockPrisma, mockPosthog, mockInteraction, mockClient, mockEnv, etc.)
+- `tests/helpers.ts` — Shared mock factories (mockLogger, mockDb, mockDbChain, mockPosthog, mockInteraction, mockClient, mockEnv, etc.)
 - `tests/utils/timezones.test.ts` — Timezone utilities (ALL_TIMEZONES, isValidTimezone, filterTimezones)
 - `tests/utils/scheduleEvaluator.test.ts` — Schedule evaluator (getCurrentTimeInTimezone, isGuildDueForMotivation)
 - `tests/utils/cronParser.test.ts` — Cron parser utilities (cronToText, isValidCron, getCronDetails)
@@ -207,8 +202,8 @@ Tests use **Mocha** + **Chai** + **Sinon** + **esmock**, configured in `.mocharc
 - `tests/commands/setup/schedule.test.ts` — Schedule command (validation, premium gate)
 - `tests/commands/owner/testCreate.test.ts` — Owner test-create command (owner check, SKU check)
 
-Run `pnpm test:coverage` to generate a coverage report with `c8`.
+Run `bun test --coverage` to generate a coverage report.
 
 ## Setup Notes
 
-If `node_modules` is missing, run `pnpm install` then `pnpm db:generate` before building or type-checking.
+If `node_modules` is missing, run `bun install` before type-checking. No code generation step is needed — Drizzle has no codegen.

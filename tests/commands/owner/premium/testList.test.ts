@@ -81,6 +81,31 @@ describe("owner premium test-list command", () => {
     expect(replyArgs.content).toContain("*(test)*");
   });
 
+  it("should truncate entitlements that exceed Discord 2000-char limit", async () => {
+    const { testList } = await loadModule({ OWNER_ID: "owner-123" });
+
+    const interaction = mockInteraction({ user: { id: "owner-123", username: "owner" } });
+    const client = mockClient();
+
+    const entries: [string, { id: string; guildId: string; skuId: string; isTest: sinon.SinonStub }][] = [];
+    for (let i = 0; i < 50; i++) {
+      const id = `entitlement-${"x".repeat(40)}-${i.toString().padStart(3, "0")}`;
+      entries.push([id, { id, guildId: `guild-${i}`, skuId: `sku-${i}`, isTest: sinon.stub().returns(false) }]);
+    }
+    const fakeEntitlements = new Map(entries);
+    (
+      client.application as { entitlements: { fetch: sinon.SinonStub } }
+    ).entitlements.fetch.resolves(fakeEntitlements);
+
+    await testList(client as never, interaction as never);
+
+    const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
+    expect(replyArgs.content.length).toBeLessThanOrEqual(2000);
+    expect(replyArgs.content).toContain("Entitlements (50)");
+    expect(replyArgs.content).toContain("...and");
+    expect(replyArgs.content).toContain("more");
+  });
+
   it("should handle errors and reply with failure message", async () => {
     const { testList } = await loadModule({ OWNER_ID: "owner-123" });
 

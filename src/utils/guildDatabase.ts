@@ -1,15 +1,15 @@
 import type { Client } from "discord.js";
+import { eq, asc } from "drizzle-orm";
 
 import posthog from "../utils/posthog.js";
-import { prisma } from "../database/index.js";
+import { db } from "../database/index.js";
+import { guilds } from "../database/schema.js";
 import logger from "./logger.js";
 import env from "./env.js";
 
 export async function pruneGuilds(client: Client) {
   try {
-    const guildsInDb = await prisma.guild.findMany({
-      orderBy: { guildId: "asc" },
-    });
+    const guildsInDb = await db.select().from(guilds).orderBy(asc(guilds.guildId));
 
     const guildsInCache = client.guilds.cache.map((guild) => guild.id);
 
@@ -50,11 +50,7 @@ export async function pruneGuilds(client: Client) {
 
     for (const guild of guildsToRemove) {
       try {
-        await prisma.guild.delete({
-          where: {
-            guildId: guild.guildId,
-          },
-        });
+        await db.delete(guilds).where(eq(guilds.guildId, guild.guildId));
 
         logger.success(
           "Discord - Guild Database",
@@ -102,9 +98,7 @@ export async function pruneGuilds(client: Client) {
 
 export async function ensureGuildExists(client: Client) {
   try {
-    const currentGuilds = await prisma.guild.findMany({
-      orderBy: { guildId: "asc" },
-    });
+    const currentGuilds = await db.select().from(guilds).orderBy(asc(guilds.guildId));
     const guildsToAdd = client.guilds.cache.filter(
       (guild) =>
         !currentGuilds.some((currentGuild: { guildId: string }) => currentGuild.guildId === guild.id)
@@ -124,11 +118,7 @@ export async function ensureGuildExists(client: Client) {
 
     for (const guild of guildsToAdd.values()) {
       try {
-        await prisma.guild.create({
-          data: {
-            guildId: guild.id,
-          },
-        });
+        await db.insert(guilds).values({ guildId: guild.id });
 
         logger.success(
           "Discord - Guild Database",
@@ -178,10 +168,6 @@ export async function ensureGuildExists(client: Client) {
 }
 
 export async function guildExists(guildId: string) {
-  await prisma.guild.upsert({
-    where: { guildId },
-    create: { guildId },
-    update: {},
-  });
+  await db.insert(guilds).values({ guildId }).onConflictDoNothing({ target: guilds.guildId });
   return true;
 }

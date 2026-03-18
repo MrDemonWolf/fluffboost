@@ -1,41 +1,38 @@
 import { EmbedBuilder } from "discord.js";
 import type { Client } from "discord.js";
+import { eq, isNotNull, asc, count } from "drizzle-orm";
 
-import { prisma } from "../../database/index.js";
+import { db } from "../../database/index.js";
+import { guilds, motivationQuotes } from "../../database/schema.js";
 import { isGuildDueForMotivation } from "../../utils/scheduleEvaluator.js";
 import posthog from "../../utils/posthog.js";
 import logger from "../../utils/logger.js";
 import env from "../../utils/env.js";
 
 export default async function sendMotivation(client: Client) {
-  const guilds = await prisma.guild.findMany({
-    where: {
-      motivationChannelId: {
-        not: null,
-      },
-    },
-    orderBy: { guildId: "asc" },
-  });
+  const allGuilds = await db
+    .select()
+    .from(guilds)
+    .where(isNotNull(guilds.motivationChannelId))
+    .orderBy(asc(guilds.guildId));
 
-  if (guilds.length === 0) {
+  if (allGuilds.length === 0) {
     return;
   }
 
   // Filter to only guilds that are due for a motivation quote right now
-  const dueGuilds = guilds.filter((g) => isGuildDueForMotivation(g));
+  const dueGuilds = allGuilds.filter((g) => isGuildDueForMotivation(g));
 
   if (dueGuilds.length === 0) {
     return;
   }
 
-  logger.info("Worker", `${dueGuilds.length} guild(s) due for motivation out of ${guilds.length} total`);
+  logger.info("Worker", `${dueGuilds.length} guild(s) due for motivation out of ${allGuilds.length} total`);
 
-  const motivationQuoteCount = await prisma.motivationQuote.count();
+  const [countResult] = await db.select({ value: count() }).from(motivationQuotes);
+  const motivationQuoteCount = countResult?.value ?? 0;
   const skip = Math.floor(Math.random() * motivationQuoteCount);
-  const motivationQuote = await prisma.motivationQuote.findMany({
-    skip,
-    take: 1,
-  });
+  const motivationQuote = await db.select().from(motivationQuotes).offset(skip).limit(1);
 
   if (!motivationQuote[0]) {
     logger.error("Worker", "No motivation quote found in the database");
@@ -87,10 +84,7 @@ export default async function sendMotivation(client: Client) {
       await channel.send({ embeds: [motivationEmbed] });
 
       // Update lastMotivationSentAt after successful send
-      await prisma.guild.update({
-        where: { guildId: g.guildId },
-        data: { lastMotivationSentAt: new Date() },
-      });
+      await db.update(guilds).set({ lastMotivationSentAt: new Date() }).where(eq(guilds.guildId, g.guildId));
 
       return "sent";
     })

@@ -62,7 +62,7 @@ const envSchema = z.object({
   POSTHOG_HOST: z.string().min(1, "PostHog host is required"),
   HOST: z.string().optional(),
   PORT: z.string().optional(),
-  CORS_ORIGIN: z.string().default("*"),
+  CORS_ORIGIN: z.string().optional(),
   VERSION: z.string().default("1.9.0"),
   NODE_ENV: z
     .enum(["development", "production", "test"])
@@ -78,6 +78,13 @@ const envSchema = z.object({
     {
       message: "DISCORD_PREMIUM_SKU_ID is required when PREMIUM_ENABLED is true",
       path: ["DISCORD_PREMIUM_SKU_ID"],
+    }
+  )
+  .refine(
+    (data) => data.NODE_ENV !== "production" || (data.CORS_ORIGIN && data.CORS_ORIGIN !== "*"),
+    {
+      message: "CORS_ORIGIN must be set to a specific origin in production (not \"*\")",
+      path: ["CORS_ORIGIN"],
     }
   );
 

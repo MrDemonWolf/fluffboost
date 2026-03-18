@@ -2,7 +2,10 @@ import type { Entitlement } from "discord.js";
 
 import logger from "../utils/logger.js";
 import posthog from "../utils/posthog.js";
-import { prisma } from "../database/index.js";
+import { eq } from "drizzle-orm";
+
+import { db } from "../database/index.js";
+import { guilds } from "../database/schema.js";
 import env from "../utils/env.js";
 
 export async function entitlementUpdateEvent(
@@ -25,10 +28,7 @@ export async function entitlementUpdateEvent(
 
   if (newEntitlement.guildId) {
     try {
-      await prisma.guild.update({
-        where: { guildId: newEntitlement.guildId },
-        data: { isPremium: !isCancelled },
-      });
+      await db.update(guilds).set({ isPremium: !isCancelled }).where(eq(guilds.guildId, newEntitlement.guildId));
     } catch (err) {
       logger.error("Discord - Event (Entitlement Update)", "Failed to update guild premium status", err, {
         guildId: newEntitlement.guildId,

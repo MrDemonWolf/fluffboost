@@ -1,6 +1,7 @@
 import type { Guild } from "discord.js";
 
-import { prisma } from "../database/index.js";
+import { db } from "../database/index.js";
+import { guilds } from "../database/schema.js";
 import posthog from "../utils/posthog.js";
 import logger from "../utils/logger.js";
 import env from "../utils/env.js";
@@ -16,14 +17,10 @@ export async function guildCreateEvent(guild: Guild): Promise<void> {
     /**
      * Add the guild to the database.
      */
-    const guildData = await prisma.guild.create({
-      data: {
-        guildId: guild.id,
-      },
-    });
+    const [guildData] = await db.insert(guilds).values({ guildId: guild.id }).returning();
 
     logger.database.operation("Guild added to database", {
-      guildId: guildData.guildId,
+      guildId: guildData?.guildId,
     });
 
     posthog.capture({

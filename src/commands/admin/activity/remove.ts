@@ -2,9 +2,12 @@ import { Client, CommandInteraction, MessageFlags } from "discord.js";
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 
+import { eq } from "drizzle-orm";
+
 import logger from "../../../utils/logger.js";
 import { isUserPermitted } from "../../../utils/permissions.js";
-import { prisma } from "../../../database/index.js";
+import { db } from "../../../database/index.js";
+import { discordActivities } from "../../../database/schema.js";
 
 export default async function (
   _client: Client,
@@ -34,9 +37,11 @@ export default async function (
       return;
     }
 
-    const activity = await prisma.discordActivity.findUnique({
-      where: { id: activityId },
-    });
+    const [activity] = await db
+      .select()
+      .from(discordActivities)
+      .where(eq(discordActivities.id, activityId))
+      .limit(1);
 
     if (!activity) {
       await interaction.reply({
@@ -46,9 +51,7 @@ export default async function (
       return;
     }
 
-    await prisma.discordActivity.delete({
-      where: { id: activityId },
-    });
+    await db.delete(discordActivities).where(eq(discordActivities.id, activityId));
 
     await interaction.reply({
       content: `Activity with ID: ${activityId} has been deleted`,

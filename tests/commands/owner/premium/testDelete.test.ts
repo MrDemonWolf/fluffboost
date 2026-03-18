@@ -1,6 +1,5 @@
-import { expect } from "chai";
+import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import esmock from "esmock";
 import { mockLogger, mockEnv, mockInteraction, mockClient } from "../../../helpers.js";
 
 describe("owner premium test-delete command", () => {
@@ -12,10 +11,10 @@ describe("owner premium test-delete command", () => {
     const logger = mockLogger();
     const env = mockEnv(envOverrides);
 
-    const mod = await esmock("../../../../src/commands/owner/premium/testDelete.js", {
-      "../../../../src/utils/logger.js": { default: logger },
-      "../../../../src/utils/env.js": { default: env },
-    });
+    mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../../../src/utils/env.js", () => ({ default: env }));
+
+    const mod = await import("../../../../src/commands/owner/premium/testDelete.js");
 
     return { handler: mod.default, logger, env };
   }
@@ -36,7 +35,7 @@ describe("owner premium test-delete command", () => {
     await handler(mockClient() as never, interaction as never, interaction.options as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("Only the bot owner");
+    expect(replyArgs.content).toContain("Only the bot owner");
   });
 
   it("should delete test entitlement successfully", async () => {
@@ -48,13 +47,13 @@ describe("owner premium test-delete command", () => {
 
     expect(
       (client.application as { entitlements: { deleteTest: sinon.SinonStub } }).entitlements.deleteTest.calledOnce
-    ).to.be.true;
+    ).toBe(true);
     expect(
       (client.application as { entitlements: { deleteTest: sinon.SinonStub } }).entitlements.deleteTest.firstCall
         .args[0]
-    ).to.equal("ent-1");
+    ).toBe("ent-1");
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("deleted");
+    expect(replyArgs.content).toContain("deleted");
   });
 
   it("should reply when application is not ready", async () => {
@@ -66,7 +65,7 @@ describe("owner premium test-delete command", () => {
     await handler(client as never, interaction as never, interaction.options as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("not ready");
+    expect(replyArgs.content).toContain("not ready");
   });
 
   it("should show error message on API failure", async () => {
@@ -79,9 +78,9 @@ describe("owner premium test-delete command", () => {
 
     await handler(client as never, interaction as never, interaction.options as never);
 
-    expect(logger.commands.error.calledOnce).to.be.true;
+    expect(logger.commands.error.calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("Failed to delete test entitlement. Check bot logs for details.");
+    expect(replyArgs.content).toContain("Failed to delete test entitlement. Check bot logs for details.");
   });
 
   it("should log unauthorized access attempt", async () => {
@@ -90,6 +89,6 @@ describe("owner premium test-delete command", () => {
 
     await handler(mockClient() as never, interaction as never, interaction.options as never);
 
-    expect(logger.commands.unauthorized.calledOnce).to.be.true;
+    expect(logger.commands.unauthorized.calledOnce).toBe(true);
   });
 });

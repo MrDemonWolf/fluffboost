@@ -1,6 +1,9 @@
 import type { Guild } from "discord.js";
 
-import { prisma } from "../database/index.js";
+import { eq } from "drizzle-orm";
+
+import { db } from "../database/index.js";
+import { guilds } from "../database/schema.js";
 import posthog from "../utils/posthog.js";
 import logger from "../utils/logger.js";
 import env from "../utils/env.js";
@@ -10,11 +13,7 @@ export async function guildDeleteEvent(guild: Guild): Promise<void> {
     /**
      * Delete the guild from the database.
      */
-    await prisma.guild.delete({
-      where: {
-        guildId: guild.id,
-      },
-    });
+    await db.delete(guilds).where(eq(guilds.guildId, guild.id));
 
     /**
      * Show the bot has left a guild in the console.

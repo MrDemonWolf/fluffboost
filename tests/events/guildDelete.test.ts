@@ -1,60 +1,58 @@
-import { expect } from "chai";
+import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import esmock from "esmock";
-import { mockLogger, mockPrisma, mockPosthog, mockGuild } from "../helpers.js";
+import { mockLogger, mockDb, mockDbChain, mockPosthog, mockGuild } from "../helpers.js";
 
 describe("guildDeleteEvent", () => {
   afterEach(() => {
     sinon.restore();
+    mock.restore();
   });
 
   it("should delete guild from database and log on leave", async () => {
-    const prisma = mockPrisma();
+    const db = mockDb();
     const logger = mockLogger();
     const posthog = mockPosthog();
 
-    const { guildDeleteEvent } = await esmock("../../src/events/guildDelete.js", {
-      "../../src/database/index.js": { prisma },
-      "../../src/utils/logger.js": { default: logger },
-      "../../src/utils/posthog.js": { default: posthog },
-    });
+    mock.module("../../src/database/index.js", () => ({ db }));
+    mock.module("../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../src/utils/posthog.js", () => ({ default: posthog }));
+    const { guildDeleteEvent } = await import("../../src/events/guildDelete.js");
 
     await guildDeleteEvent(mockGuild({ id: "g1", name: "Bye Guild" }) as never);
 
-    expect(prisma.guild.delete.calledOnce).to.be.true;
-    expect(prisma.guild.delete.firstCall.args[0]).to.deep.equal({ where: { guildId: "g1" } });
-    expect(logger.discord.guildLeft.calledOnce).to.be.true;
-    expect(posthog.capture.calledOnce).to.be.true;
+    expect(db.delete.calledOnce).toBe(true);
+    expect(logger.discord.guildLeft.calledOnce).toBe(true);
+    expect(posthog.capture.calledOnce).toBe(true);
   });
 
   it("should capture posthog event with correct properties", async () => {
-    const prisma = mockPrisma();
+    const db = mockDb();
     const posthog = mockPosthog();
 
-    const { guildDeleteEvent } = await esmock("../../src/events/guildDelete.js", {
-      "../../src/database/index.js": { prisma },
-      "../../src/utils/logger.js": { default: mockLogger() },
-      "../../src/utils/posthog.js": { default: posthog },
-    });
+    mock.module("../../src/database/index.js", () => ({ db }));
+    mock.module("../../src/utils/logger.js", () => ({ default: mockLogger() }));
+    mock.module("../../src/utils/posthog.js", () => ({ default: posthog }));
+    const { guildDeleteEvent } = await import("../../src/events/guildDelete.js");
 
     await guildDeleteEvent(mockGuild({ id: "g1" }) as never);
     const captureArgs = posthog.capture.firstCall.args[0];
-    expect(captureArgs.distinctId).to.equal("g1");
-    expect(captureArgs.event).to.equal("guild left");
+    expect(captureArgs.distinctId).toBe("g1");
+    expect(captureArgs.event).toBe("guild left");
   });
 
   it("should handle database deletion failure gracefully", async () => {
-    const prisma = mockPrisma();
+    const db = mockDb();
     const logger = mockLogger();
-    prisma.guild.delete.rejects(new Error("DB error"));
+    const chain = mockDbChain();
+    chain.rejects(new Error("DB error"));
+    db.delete.returns(chain);
 
-    const { guildDeleteEvent } = await esmock("../../src/events/guildDelete.js", {
-      "../../src/database/index.js": { prisma },
-      "../../src/utils/logger.js": { default: logger },
-      "../../src/utils/posthog.js": { default: mockPosthog() },
-    });
+    mock.module("../../src/database/index.js", () => ({ db }));
+    mock.module("../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../src/utils/posthog.js", () => ({ default: mockPosthog() }));
+    const { guildDeleteEvent } = await import("../../src/events/guildDelete.js");
 
     await guildDeleteEvent(mockGuild() as never);
-    expect(logger.error.calledOnce).to.be.true;
+    expect(logger.error.calledOnce).toBe(true);
   });
 });

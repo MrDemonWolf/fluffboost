@@ -49,8 +49,24 @@ export default async function (client: Client, interaction: CommandInteraction):
       return `• \`${e.id}\` — guild: \`${e.guildId ?? "N/A"}\` — SKU: \`${e.skuId}\`${test}`;
     });
 
+    const header = `**Entitlements (${entitlements.size}):**\n`;
+    const maxLength = 2000 - header.length;
+    const truncatedLines: string[] = [];
+    let currentLength = 0;
+
+    for (const line of lines) {
+      const addition = (truncatedLines.length > 0 ? "\n" : "") + line;
+      if (currentLength + addition.length > maxLength) {
+        const remaining = lines.length - truncatedLines.length;
+        truncatedLines.push(`\n...and ${remaining} more`);
+        break;
+      }
+      truncatedLines.push(line);
+      currentLength += addition.length;
+    }
+
     await interaction.reply({
-      content: `**Entitlements (${entitlements.size}):**\n${lines.join("\n")}`,
+      content: `${header}${truncatedLines.join("\n")}`,
       flags: MessageFlags.Ephemeral,
     });
 

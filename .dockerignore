@@ -8,5 +8,4 @@ dist
 .env.*
 *.md
 tests
-.mocharc.yml
 eslint.config.js

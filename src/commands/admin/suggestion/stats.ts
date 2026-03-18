@@ -1,7 +1,10 @@
 import { Client, CommandInteraction, EmbedBuilder, MessageFlags } from "discord.js";
 
+import { eq, count } from "drizzle-orm";
+
 import { isUserPermitted } from "../../../utils/permissions.js";
-import { prisma } from "../../../database/index.js";
+import { db } from "../../../database/index.js";
+import { suggestionQuotes } from "../../../database/schema.js";
 import logger from "../../../utils/logger.js";
 
 export default async function (
@@ -21,10 +24,18 @@ export default async function (
       return;
     }
 
+    const countByStatus = async (status: string) => {
+      const [result] = await db
+        .select({ value: count() })
+        .from(suggestionQuotes)
+        .where(eq(suggestionQuotes.status, status));
+      return result?.value ?? 0;
+    };
+
     const [pending, approved, rejected] = await Promise.all([
-      prisma.suggestionQuote.count({ where: { status: "Pending" } }),
-      prisma.suggestionQuote.count({ where: { status: "Approved" } }),
-      prisma.suggestionQuote.count({ where: { status: "Rejected" } }),
+      countByStatus("Pending"),
+      countByStatus("Approved"),
+      countByStatus("Rejected"),
     ]);
 
     const total = pending + approved + rejected;

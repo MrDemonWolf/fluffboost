@@ -1,11 +1,11 @@
-import { expect } from "chai";
+import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import esmock from "esmock";
 import { mockLogger, mockClient } from "../helpers.js";
 
 describe("ready event", () => {
   afterEach(() => {
     sinon.restore();
+    mock.restore();
   });
 
   async function loadModule() {
@@ -14,21 +14,20 @@ describe("ready event", () => {
     const ensureGuildExists = sinon.stub().resolves();
     const setActivity = sinon.stub().resolves();
 
-    const mod = await esmock("../../src/events/ready.js", {
-      "../../src/utils/logger.js": { default: logger },
-      "../../src/utils/guildDatabase.js": { pruneGuilds, ensureGuildExists },
-      "../../src/worker/jobs/setActivity.js": { default: setActivity },
-      "../../src/commands/help.js": { default: { slashCommand: { name: "help" } } },
-      "../../src/commands/about.js": { default: { slashCommand: { name: "about" } } },
-      "../../src/commands/quote.js": { default: { slashCommand: { name: "quote" } } },
-      "../../src/commands/suggestion.js": { default: { slashCommand: { name: "suggestion" } } },
-      "../../src/commands/invite.js": { default: { slashCommand: { name: "invite" } } },
-      "../../src/commands/setup/index.js": { default: { slashCommand: { name: "setup" } } },
-      "../../src/commands/admin/index.js": { default: { slashCommand: { name: "admin" } } },
-      "../../src/commands/changelog.js": { default: { slashCommand: { name: "changelog" } } },
-      "../../src/commands/premium.js": { default: { slashCommand: { name: "premium" } } },
-      "../../src/commands/owner/index.js": { default: { slashCommand: { name: "owner" } } },
-    });
+    mock.module("../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../src/utils/guildDatabase.js", () => ({ pruneGuilds, ensureGuildExists }));
+    mock.module("../../src/worker/jobs/setActivity.js", () => ({ default: setActivity }));
+    mock.module("../../src/commands/help.js", () => ({ default: { slashCommand: { name: "help" } } }));
+    mock.module("../../src/commands/about.js", () => ({ default: { slashCommand: { name: "about" } } }));
+    mock.module("../../src/commands/quote.js", () => ({ default: { slashCommand: { name: "quote" } } }));
+    mock.module("../../src/commands/suggestion.js", () => ({ default: { slashCommand: { name: "suggestion" } } }));
+    mock.module("../../src/commands/invite.js", () => ({ default: { slashCommand: { name: "invite" } } }));
+    mock.module("../../src/commands/setup/index.js", () => ({ default: { slashCommand: { name: "setup" } } }));
+    mock.module("../../src/commands/admin/index.js", () => ({ default: { slashCommand: { name: "admin" } } }));
+    mock.module("../../src/commands/changelog.js", () => ({ default: { slashCommand: { name: "changelog" } } }));
+    mock.module("../../src/commands/premium.js", () => ({ default: { slashCommand: { name: "premium" } } }));
+    mock.module("../../src/commands/owner/index.js", () => ({ default: { slashCommand: { name: "owner" } } }));
+    const mod = await import("../../src/events/ready.js");
 
     return { readyEvent: mod.readyEvent, logger, pruneGuilds, ensureGuildExists, setActivity };
   }
@@ -44,7 +43,7 @@ describe("ready event", () => {
 
     await readyEvent(client as never);
 
-    expect(logger.discord.ready.calledOnce).to.be.true;
+    expect(logger.discord.ready.calledOnce).toBe(true);
   });
 
   it("should prune guilds and ensure guilds exist", async () => {
@@ -58,8 +57,8 @@ describe("ready event", () => {
 
     await readyEvent(client as never);
 
-    expect(pruneGuilds.calledOnce).to.be.true;
-    expect(ensureGuildExists.calledOnce).to.be.true;
+    expect(pruneGuilds.calledOnce).toBe(true);
+    expect(ensureGuildExists.calledOnce).toBe(true);
   });
 
   it("should register slash commands", async () => {
@@ -73,9 +72,10 @@ describe("ready event", () => {
 
     await readyEvent(client as never);
 
-    expect(commandsSet.calledOnce).to.be.true;
+    expect(commandsSet.calledOnce).toBe(true);
     const commands = commandsSet.firstCall.args[0];
-    expect(commands).to.be.an("array").with.lengthOf(10);
+    expect(Array.isArray(commands)).toBe(true);
+    expect(commands).toHaveLength(10);
   });
 
   it("should set activity after ready", async () => {
@@ -89,7 +89,7 @@ describe("ready event", () => {
 
     await readyEvent(client as never);
 
-    expect(setActivity.calledOnce).to.be.true;
+    expect(setActivity.calledOnce).toBe(true);
   });
 
   it("should handle errors during ready event", async () => {
@@ -99,6 +99,6 @@ describe("ready event", () => {
 
     await readyEvent(client as never);
 
-    expect(logger.error.called).to.be.true;
+    expect(logger.error.called).toBe(true);
   });
 });

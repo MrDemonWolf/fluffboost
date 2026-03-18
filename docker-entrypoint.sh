@@ -5,8 +5,8 @@ if [ "${SKIP_MIGRATIONS}" = "true" ]; then
   echo "SKIP_MIGRATIONS=true, skipping database migrations."
 else
   echo "Running database migrations..."
-  prisma migrate deploy --schema ./prisma/schema.prisma
+  bunx drizzle-kit migrate
   echo "Migrations complete."
 fi
 
-exec node dist/app.js
+exec bun run src/app.ts

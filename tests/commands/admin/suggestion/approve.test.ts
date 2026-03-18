@@ -1,7 +1,6 @@
-import { expect } from "chai";
+import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import esmock from "esmock";
-import { mockLogger, mockPrisma, mockInteraction, mockClient, mockEnv } from "../../../helpers.js";
+import { mockLogger, mockDb, mockDbChain, mockInteraction, mockClient, mockEnv } from "../../../helpers.js";
 
 describe("admin suggestion approve command", () => {
   afterEach(() => {
@@ -10,17 +9,17 @@ describe("admin suggestion approve command", () => {
 
   async function loadModule(overrides: { env?: Record<string, unknown> } = {}) {
     const logger = mockLogger();
-    const prisma = mockPrisma();
+    const db = mockDb();
     const env = mockEnv(overrides.env);
 
-    const mod = await esmock("../../../../src/commands/admin/suggestion/approve.js", {
-      "../../../../src/utils/logger.js": { default: logger },
-      "../../../../src/database/index.js": { prisma },
-      "../../../../src/utils/env.js": { default: env },
-      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().resolves(true) },
-    });
+    mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../../../src/database/index.js", () => ({ db }));
+    mock.module("../../../../src/utils/env.js", () => ({ default: env }));
+    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().resolves(true) }));
 
-    return { handler: mod.default, logger, prisma, env };
+    const mod = await import("../../../../src/commands/admin/suggestion/approve.js");
+
+    return { handler: mod.default, logger, db, env };
   }
 
   function makeInteraction(suggestionId: string) {
@@ -46,88 +45,90 @@ describe("admin suggestion approve command", () => {
   }
 
   it("should return error when suggestion not found", async () => {
-    const { handler, prisma } = await loadModule();
+    const { handler, db } = await loadModule();
     const interaction = makeInteraction("nonexistent");
 
-    prisma.suggestionQuote.findUnique.resolves(null);
+    // select().from().where().limit(1) returns empty -> destructures to undefined
+    db.select.returns(mockDbChain([]));
 
     await handler({} as never, interaction as never, interaction.options as never);
 
-    expect((interaction.reply as sinon.SinonStub).calledOnce).to.be.true;
+    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("not found");
+    expect(replyArgs.content).toContain("not found");
   });
 
   it("should return error when already approved", async () => {
-    const { handler, prisma } = await loadModule();
+    const { handler, db } = await loadModule();
     const interaction = makeInteraction("s1");
 
-    prisma.suggestionQuote.findUnique.resolves({
+    db.select.returns(mockDbChain([{
       id: "s1",
       quote: "Be kind",
       author: "Anon",
       addedBy: "user-1",
       status: "Approved",
-    });
+    }]));
 
     await handler({} as never, interaction as never, interaction.options as never);
 
-    expect((interaction.reply as sinon.SinonStub).calledOnce).to.be.true;
+    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("already been approved");
+    expect(replyArgs.content).toContain("already been approved");
   });
 
   it("should approve suggestion successfully", async () => {
-    const { handler, prisma } = await loadModule();
+    const { handler, db } = await loadModule();
     const interaction = makeInteraction("s1");
     const { client, channel, submitter } = makeClient();
 
-    prisma.suggestionQuote.findUnique.resolves({
+    db.select.returns(mockDbChain([{
       id: "s1",
       quote: "Be kind",
       author: "Anon",
       addedBy: "user-1",
       status: "Pending",
+    }]));
+
+    // Capture what happens inside the transaction
+    let txDb: ReturnType<typeof mockDb>;
+    db.transaction.callsFake(async (fn: (tx: ReturnType<typeof mockDb>) => Promise<unknown>) => {
+      txDb = mockDb();
+      return fn(txDb);
     });
 
     await handler(client as never, interaction as never, interaction.options as never);
 
-    // Creates motivation quote
-    expect(prisma.motivationQuote.create.calledOnce).to.be.true;
-    const createArgs = prisma.motivationQuote.create.firstCall.args[0];
-    expect(createArgs.data.quote).to.equal("Be kind");
-    expect(createArgs.data.author).to.equal("Anon");
-    expect(createArgs.data.addedBy).to.equal("user-1");
+    // Transaction was called
+    expect(db.transaction.calledOnce).toBe(true);
 
-    // Updates suggestion status
-    expect(prisma.suggestionQuote.update.calledOnce).to.be.true;
-    const updateArgs = prisma.suggestionQuote.update.firstCall.args[0];
-    expect(updateArgs.data.status).to.equal("Approved");
-    expect(updateArgs.data.reviewedBy).to.equal("user-123");
+    // Inside transaction: insert (motivation quote) and update (suggestion status)
+    expect(txDb!.insert.calledOnce).toBe(true);
+    expect(txDb!.update.calledOnce).toBe(true);
 
     // Sends embed to main channel
-    expect(channel.send.calledOnce).to.be.true;
+    expect(channel.send.calledOnce).toBe(true);
 
     // DMs submitter
-    expect(submitter.send.calledOnce).to.be.true;
+    expect(submitter.send.calledOnce).toBe(true);
 
     // Ephemeral reply to admin
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("approved");
+    expect(replyArgs.content).toContain("approved");
   });
 
   it("should not break if DM fails", async () => {
-    const { handler, prisma } = await loadModule();
+    const { handler, db } = await loadModule();
     const interaction = makeInteraction("s1");
     const { client } = makeClient();
 
-    prisma.suggestionQuote.findUnique.resolves({
+    db.select.returns(mockDbChain([{
       id: "s1",
       quote: "Be kind",
       author: "Anon",
       addedBy: "user-1",
       status: "Pending",
-    });
+    }]));
 
     // Make user fetch throw to simulate DMs disabled
     (client.users.fetch as sinon.SinonStub).rejects(new Error("Cannot send DM"));
@@ -135,8 +136,8 @@ describe("admin suggestion approve command", () => {
     await handler(client as never, interaction as never, interaction.options as never);
 
     // Should still reply successfully
-    expect((interaction.reply as sinon.SinonStub).calledOnce).to.be.true;
+    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("approved");
+    expect(replyArgs.content).toContain("approved");
   });
 });

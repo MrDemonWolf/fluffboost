@@ -2,6 +2,7 @@ import express from "express";
 import morgan from "morgan";
 import helmet from "helmet";
 import cors from "cors";
+import rateLimit from "express-rate-limit";
 
 import env from "../utils/env.js";
 
@@ -23,6 +24,14 @@ app.use(
       env.NODE_ENV === "production"
         ? env.CORS_ORIGIN // e.g. "https://app.example.com"
         : "*",
+  })
+);
+app.use(
+  rateLimit({
+    windowMs: 60 * 1000,
+    limit: 60,
+    standardHeaders: "draft-7",
+    legacyHeaders: false,
   })
 );
 app.set("x-powered-by", "MrDemonWolf, Inc., Community Bot");

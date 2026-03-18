@@ -60,8 +60,7 @@
     "emitDecoratorMetadata": true,
 
     // Type definitions
-    "types": ["node"],
-    "typeRoots": ["node_modules/@types"]
+    "types": ["@types/bun"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]

@@ -2,8 +2,11 @@ import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
 
 import type { Client, ChatInputCommandInteraction } from "discord.js";
 
+import { count } from "drizzle-orm";
+
 import logger from "../utils/logger.js";
-import { prisma } from "../database/index.js";
+import { db } from "../database/index.js";
+import { motivationQuotes } from "../database/schema.js";
 import posthog from "../utils/posthog.js";
 import env from "../utils/env.js";
 
@@ -22,12 +25,10 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
     /**
      * Find a random motivation quote from the database.
      */
-    const motivationQuoteCount = await prisma.motivationQuote.count();
+    const [countResult] = await db.select({ value: count() }).from(motivationQuotes);
+    const motivationQuoteCount = countResult?.value ?? 0;
     const skip = Math.floor(Math.random() * motivationQuoteCount);
-    const motivationQuote = await prisma.motivationQuote.findMany({
-      skip,
-      take: 1,
-    });
+    const motivationQuote = await db.select().from(motivationQuotes).offset(skip).limit(1);
 
     if (!motivationQuote[0]) {
       await interaction.reply(

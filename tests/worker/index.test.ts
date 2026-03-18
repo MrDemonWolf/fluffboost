@@ -1,11 +1,11 @@
-import { expect } from "chai";
+import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import esmock from "esmock";
 import { mockLogger, mockEnv } from "../helpers.js";
 
 describe("worker index", () => {
   afterEach(() => {
     sinon.restore();
+    mock.restore();
   });
 
   it("should register jobs with correct intervals", async () => {
@@ -15,34 +15,34 @@ describe("worker index", () => {
     const workerOnStub = sinon.stub();
     const WorkerStub = sinon.stub().returns({ on: workerOnStub });
 
-    const mod = await esmock("../../src/worker/index.js", {
-      "../../src/utils/logger.js": { default: logger },
-      "../../src/utils/env.js": { default: env },
-      "../../src/bot.js": { default: {} },
-      "../../src/redis/index.js": { default: {} },
-      "../../src/worker/jobs/setActivity.js": { default: sinon.stub() },
-      "../../src/worker/jobs/sendMotivation.js": { default: sinon.stub() },
-      "bullmq": { Worker: WorkerStub, Job: class {} },
-    });
+    mock.module("../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../src/utils/env.js", () => ({ default: env }));
+    mock.module("../../src/bot.js", () => ({ default: {} }));
+    mock.module("../../src/redis/index.js", () => ({ default: {} }));
+    mock.module("../../src/worker/jobs/setActivity.js", () => ({ default: sinon.stub() }));
+    mock.module("../../src/worker/jobs/sendMotivation.js", () => ({ default: sinon.stub() }));
+    mock.module("bullmq", () => ({ Worker: WorkerStub, Job: class {} }));
+
+    const mod = await import("../../src/worker/index.js");
 
     const addStub = sinon.stub();
     const mockQueue = { add: addStub };
 
     mod.default(mockQueue as never);
 
-    expect(addStub.calledTwice).to.be.true;
+    expect(addStub.calledTwice).toBe(true);
 
     // First call: set-activity
     const activityCall = addStub.firstCall;
-    expect(activityCall.args[0]).to.equal("set-activity");
-    expect(activityCall.args[2].repeat.every).to.equal(10 * 60 * 1000);
+    expect(activityCall.args[0]).toBe("set-activity");
+    expect(activityCall.args[2].repeat.every).toBe(10 * 60 * 1000);
 
     // Second call: send-motivation
     const motivationCall = addStub.secondCall;
-    expect(motivationCall.args[0]).to.equal("send-motivation");
-    expect(motivationCall.args[2].repeat.every).to.equal(60 * 1000);
+    expect(motivationCall.args[0]).toBe("send-motivation");
+    expect(motivationCall.args[2].repeat.every).toBe(60 * 1000);
 
-    expect(logger.info.called).to.be.true;
+    expect(logger.info.called).toBe(true);
   });
 
   it("should create Worker with correct job handler", async () => {
@@ -59,33 +59,33 @@ describe("worker index", () => {
       return { on: workerOnStub };
     });
 
-    await esmock("../../src/worker/index.js", {
-      "../../src/utils/logger.js": { default: logger },
-      "../../src/utils/env.js": { default: env },
-      "../../src/bot.js": { default: mockClient },
-      "../../src/redis/index.js": { default: {} },
-      "../../src/worker/jobs/setActivity.js": { default: setActivityStub },
-      "../../src/worker/jobs/sendMotivation.js": { default: sendMotivationStub },
-      "bullmq": { Worker: WorkerStub, Job: class {} },
-    });
+    mock.module("../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../src/utils/env.js", () => ({ default: env }));
+    mock.module("../../src/bot.js", () => ({ default: mockClient }));
+    mock.module("../../src/redis/index.js", () => ({ default: {} }));
+    mock.module("../../src/worker/jobs/setActivity.js", () => ({ default: setActivityStub }));
+    mock.module("../../src/worker/jobs/sendMotivation.js", () => ({ default: sendMotivationStub }));
+    mock.module("bullmq", () => ({ Worker: WorkerStub, Job: class {} }));
 
-    expect(jobProcessor).to.be.a("function");
+    await import("../../src/worker/index.js");
+
+    expect(typeof jobProcessor).toBe("function");
 
     // Test set-activity job
     await jobProcessor!({ name: "set-activity" });
-    expect(setActivityStub.calledOnce).to.be.true;
-    expect(setActivityStub.firstCall.args[0]).to.equal(mockClient);
+    expect(setActivityStub.calledOnce).toBe(true);
+    expect(setActivityStub.firstCall.args[0]).toBe(mockClient);
 
     // Test send-motivation job
     await jobProcessor!({ name: "send-motivation" });
-    expect(sendMotivationStub.calledOnce).to.be.true;
+    expect(sendMotivationStub.calledOnce).toBe(true);
 
     // Test unknown job
     try {
       await jobProcessor!({ name: "unknown-job" });
-      expect.fail("Should have thrown");
+      expect(true).toBe(false); // Should have thrown
     } catch (err) {
-      expect((err as Error).message).to.include("No job found");
+      expect((err as Error).message).toContain("No job found");
     }
   });
 
@@ -96,27 +96,27 @@ describe("worker index", () => {
     const workerOnStub = sinon.stub();
     const WorkerStub = sinon.stub().returns({ on: workerOnStub });
 
-    await esmock("../../src/worker/index.js", {
-      "../../src/utils/logger.js": { default: logger },
-      "../../src/utils/env.js": { default: env },
-      "../../src/bot.js": { default: {} },
-      "../../src/redis/index.js": { default: {} },
-      "../../src/worker/jobs/setActivity.js": { default: sinon.stub() },
-      "../../src/worker/jobs/sendMotivation.js": { default: sinon.stub() },
-      "bullmq": { Worker: WorkerStub, Job: class {} },
-    });
+    mock.module("../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../src/utils/env.js", () => ({ default: env }));
+    mock.module("../../src/bot.js", () => ({ default: {} }));
+    mock.module("../../src/redis/index.js", () => ({ default: {} }));
+    mock.module("../../src/worker/jobs/setActivity.js", () => ({ default: sinon.stub() }));
+    mock.module("../../src/worker/jobs/sendMotivation.js", () => ({ default: sinon.stub() }));
+    mock.module("bullmq", () => ({ Worker: WorkerStub, Job: class {} }));
 
-    expect(workerOnStub.calledWith("completed")).to.be.true;
-    expect(workerOnStub.calledWith("failed")).to.be.true;
+    await import("../../src/worker/index.js");
+
+    expect(workerOnStub.calledWith("completed")).toBe(true);
+    expect(workerOnStub.calledWith("failed")).toBe(true);
 
     // Test completed handler
     const completedHandler = workerOnStub.getCalls().find((c: sinon.SinonSpyCall) => c.args[0] === "completed");
     completedHandler!.args[1]({ name: "test-job", id: "123" });
-    expect(logger.success.called).to.be.true;
+    expect(logger.success.called).toBe(true);
 
     // Test failed handler
     const failedHandler = workerOnStub.getCalls().find((c: sinon.SinonSpyCall) => c.args[0] === "failed");
     failedHandler!.args[1]({ name: "test-job", id: "123" }, new Error("fail"));
-    expect(logger.error.called).to.be.true;
+    expect(logger.error.called).toBe(true);
   });
 });

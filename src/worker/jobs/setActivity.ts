@@ -1,8 +1,10 @@
 import { ActivityType } from "discord.js";
 
 import type { Client } from "discord.js";
+import { desc } from "drizzle-orm";
 
-import { prisma } from "../../database/index.js";
+import { db } from "../../database/index.js";
+import { discordActivities } from "../../database/schema.js";
 import env from "../../utils/env.js";
 import logger from "../../utils/logger.js";
 
@@ -26,9 +28,10 @@ export default async (client: Client) => {
       );
     }
     const randomActivity = async () => {
-      const activities = await prisma.discordActivity.findMany({
-        orderBy: { createdAt: "desc" },
-      });
+      const activities = await db
+        .select()
+        .from(discordActivities)
+        .orderBy(desc(discordActivities.createdAt));
 
       if (activities.length === 0) {
         return null;
