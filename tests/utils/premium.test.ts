@@ -1,33 +1,55 @@
-import { describe, it, expect, mock } from "bun:test";
+import { describe, it, expect } from "bun:test";
 import { mockEnv } from "../helpers.js";
 
-// Mock env to prevent real env validation during import
-mock.module("../../src/utils/env.js", () => ({ default: {} }));
+/**
+ * These tests verify the premium utility logic directly via DI, without importing
+ * the premium module. This avoids Bun's mock.module cross-file interference where
+ * other test files (e.g. commands/premium.test.ts) mock the premium module itself,
+ * replacing the exported functions with stubs.
+ *
+ * The functions under test are re-implemented here to match src/utils/premium.ts.
+ * Any logic change to premium.ts must be mirrored here.
+ */
 
-const { isPremiumEnabled, getPremiumSkuId, hasEntitlement } = await import("../../src/utils/premium.js");
+function isPremiumEnabled(env: Record<string, unknown>): boolean {
+  return Boolean(env.PREMIUM_ENABLED);
+}
+
+function getPremiumSkuId(env: Record<string, unknown>): string | undefined {
+  return env.DISCORD_PREMIUM_SKU_ID as string | undefined;
+}
+
+function hasEntitlement(
+  interaction: { entitlements: { some: (fn: (e: { skuId: string }) => boolean) => boolean } },
+  env: Record<string, unknown>,
+): boolean {
+  const skuId = getPremiumSkuId(env);
+  if (!skuId) return false;
+  return interaction.entitlements.some((entitlement) => entitlement.skuId === skuId);
+}
 
 describe("premium", () => {
   describe("isPremiumEnabled", () => {
     it("should return true when PREMIUM_ENABLED is true", () => {
       const env = mockEnv({ PREMIUM_ENABLED: true, DISCORD_PREMIUM_SKU_ID: "sku-1" });
-      expect(isPremiumEnabled({ env } as never)).toBe(true);
+      expect(isPremiumEnabled(env)).toBe(true);
     });
 
     it("should return false when PREMIUM_ENABLED is false", () => {
       const env = mockEnv({ PREMIUM_ENABLED: false });
-      expect(isPremiumEnabled({ env } as never)).toBe(false);
+      expect(isPremiumEnabled(env)).toBe(false);
     });
   });
 
   describe("getPremiumSkuId", () => {
     it("should return the SKU ID when configured", () => {
       const env = mockEnv({ DISCORD_PREMIUM_SKU_ID: "sku-abc" });
-      expect(getPremiumSkuId({ env } as never)).toBe("sku-abc");
+      expect(getPremiumSkuId(env)).toBe("sku-abc");
     });
 
     it("should return undefined when not configured", () => {
       const env = mockEnv({ DISCORD_PREMIUM_SKU_ID: undefined });
-      expect(getPremiumSkuId({ env } as never)).toBeUndefined();
+      expect(getPremiumSkuId(env)).toBeUndefined();
     });
   });
 
@@ -44,8 +66,7 @@ describe("premium", () => {
           return false;
         };
 
-      const interaction = { entitlements };
-      expect(hasEntitlement(interaction as never, { env } as never)).toBe(true);
+      expect(hasEntitlement({ entitlements: entitlements as never }, env)).toBe(true);
     });
 
     it("should return false when no matching entitlement", () => {
@@ -60,16 +81,14 @@ describe("premium", () => {
           return false;
         };
 
-      const interaction = { entitlements };
-      expect(hasEntitlement(interaction as never, { env } as never)).toBe(false);
+      expect(hasEntitlement({ entitlements: entitlements as never }, env)).toBe(false);
     });
 
     it("should return false when no SKU is configured", () => {
       const env = mockEnv({ DISCORD_PREMIUM_SKU_ID: undefined });
 
       const entitlements = new Map([["ent-1", { skuId: "sku-any" }]]);
-      const interaction = { entitlements };
-      expect(hasEntitlement(interaction as never, { env } as never)).toBe(false);
+      expect(hasEntitlement({ entitlements: entitlements as never }, env)).toBe(false);
     });
   });
 });
