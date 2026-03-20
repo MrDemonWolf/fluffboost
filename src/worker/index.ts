@@ -13,32 +13,32 @@ import logger from "../utils/logger.js";
 import setActivity from "./jobs/setActivity.js";
 import sendMotivation from "./jobs/sendMotivation.js";
 
-const worker = new Worker(
-  "fluffboost-jobs",
-  async (job: Job) => {
-    switch (job.name) {
-      case "set-activity":
-        return setActivity(client);
-      case "send-motivation":
-        return sendMotivation(client);
-      default:
-        throw new Error(`No job found with name ${job.name}`);
-    }
-  },
-  {
-    connection: redisClient as unknown as ConnectionOptions,
-  }
-);
-
-worker.on("completed", (job) => {
-  logger.success("Worker", `Job "${job.name}" completed (${job.id})`);
-});
-
-worker.on("failed", (job, err) => {
-  logger.error("Worker", `Job "${job?.name}" failed (${job?.id}): ${err.message}`, err);
-});
-
 export default (queue: Queue) => {
+  const worker = new Worker(
+    "fluffboost-jobs",
+    async (job: Job) => {
+      switch (job.name) {
+        case "set-activity":
+          return setActivity(client);
+        case "send-motivation":
+          return sendMotivation(client);
+        default:
+          throw new Error(`No job found with name ${job.name}`);
+      }
+    },
+    {
+      connection: redisClient as unknown as ConnectionOptions,
+    }
+  );
+
+  worker.on("completed", (job) => {
+    logger.success("Worker", `Job "${job.name}" completed (${job.id})`);
+  });
+
+  worker.on("failed", (job, err) => {
+    logger.error("Worker", `Job "${job?.name}" failed (${job?.id}): ${err.message}`, err);
+  });
+
   // Add jobs to the queue
   queue.add(
     "set-activity",

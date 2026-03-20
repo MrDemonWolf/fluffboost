@@ -32,9 +32,6 @@ function createCollectionCache<V>(entries: [string, V][] = []) {
 }
 
 describe("guildDatabase", () => {
-  beforeEach(() => {
-    mock.restore();
-  });
 
   afterEach(() => {
     sinon.restore();

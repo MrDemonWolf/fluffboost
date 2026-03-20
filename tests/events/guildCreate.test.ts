@@ -5,7 +5,6 @@ import { mockLogger, mockDb, mockDbChain, mockPosthog, mockGuild } from "../help
 describe("guildCreateEvent", () => {
   afterEach(() => {
     sinon.restore();
-    mock.restore();
   });
 
   it("should create guild in database and log on join", async () => {

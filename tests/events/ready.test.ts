@@ -5,7 +5,6 @@ import { mockLogger, mockClient } from "../helpers.js";
 describe("ready event", () => {
   afterEach(() => {
     sinon.restore();
-    mock.restore();
   });
 
   async function loadModule() {

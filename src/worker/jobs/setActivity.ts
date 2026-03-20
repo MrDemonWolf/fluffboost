@@ -15,20 +15,26 @@ const getActivityType = (activityTypeString: string): ActivityType => {
   return activityType !== undefined ? activityType : ActivityType.Playing;
 };
 
-export default async (client: Client) => {
+export interface SetActivityDeps {
+  db: typeof db;
+  env: typeof env;
+  logger: typeof logger;
+}
+
+export async function setActivityCore(client: Client, { db: _db, env: _env, logger: _logger }: SetActivityDeps) {
   try {
-    const defaultActivity = env.DISCORD_DEFAULT_STATUS;
-    const defaultActivityType = env.DISCORD_DEFAULT_ACTIVITY_TYPE;
-    const defaultActivityUrl = env.DEFAULT_ACTIVITY_URL;
+    const defaultActivity = _env.DISCORD_DEFAULT_STATUS;
+    const defaultActivityType = _env.DISCORD_DEFAULT_ACTIVITY_TYPE;
+    const defaultActivityUrl = _env.DEFAULT_ACTIVITY_URL;
 
     if (!client.user) {
-      return logger.warn(
+      return _logger.warn(
         "Worker",
         "Client user is not defined, cannot set activity"
       );
     }
     const randomActivity = async () => {
-      const activities = await db
+      const activities = await _db
         .select()
         .from(discordActivities)
         .orderBy(desc(discordActivities.createdAt));
@@ -53,7 +59,7 @@ export default async (client: Client) => {
     const activity = await randomActivity();
 
     if (!activity) {
-      logger.warn(
+      _logger.warn(
         "Worker",
         "No custom discord activity found, using default activity"
       );
@@ -62,7 +68,7 @@ export default async (client: Client) => {
         type: safeActivityType,
         url: defaultActivityUrl,
       });
-      logger.success("Worker", "Activity has been set", {
+      _logger.success("Worker", "Activity has been set", {
         activity: defaultActivity,
         type: safeActivityType,
         url: defaultActivityUrl,
@@ -76,16 +82,18 @@ export default async (client: Client) => {
       url: activity.url ? activity.url : undefined,
     });
 
-    logger.success("Worker", "Activity has been set", {
+    _logger.success("Worker", "Activity has been set", {
       activity: activity.activity,
       type: safeActivityType,
     });
     return true;
   } catch (err) {
-    logger.error(
+    _logger.error(
       "Worker",
       "Error setting custom discord activity",
       err
     );
   }
-};
+}
+
+export default async (client: Client) => setActivityCore(client, { db, env, logger });

@@ -5,7 +5,6 @@ import { mockLogger, mockDb, mockDbChain, mockPosthog, mockEntitlement } from ".
 describe("entitlementUpdateEvent", () => {
   afterEach(() => {
     sinon.restore();
-    mock.restore();
   });
 
   it("should set isPremium=false when endsAt is not null (cancellation)", async () => {

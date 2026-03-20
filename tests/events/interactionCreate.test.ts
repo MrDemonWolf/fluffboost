@@ -5,7 +5,6 @@ import { mockLogger, mockClient } from "../helpers.js";
 describe("interactionCreateEvent", () => {
   afterEach(() => {
     sinon.restore();
-    mock.restore();
   });
 
   function makeCommandInteraction(commandName: string) {

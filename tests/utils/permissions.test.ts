@@ -3,9 +3,6 @@ import sinon from "sinon";
 import { mockEnv, mockLogger, mockInteraction } from "../helpers.js";
 
 describe("permissions", () => {
-  beforeEach(() => {
-    mock.restore();
-  });
 
   afterEach(() => {
     sinon.restore();

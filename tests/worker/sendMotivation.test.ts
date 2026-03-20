@@ -5,7 +5,6 @@ import { mockLogger, mockDb, mockDbChain, mockPosthog, mockClient } from "../hel
 describe("sendMotivation", () => {
   afterEach(() => {
     sinon.restore();
-    mock.restore();
   });
 
   async function loadModule(overrides: {

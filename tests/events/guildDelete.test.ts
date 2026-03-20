@@ -5,7 +5,6 @@ import { mockLogger, mockDb, mockDbChain, mockPosthog, mockGuild } from "../help
 describe("guildDeleteEvent", () => {
   afterEach(() => {
     sinon.restore();
-    mock.restore();
   });
 
   it("should delete guild from database and log on leave", async () => {

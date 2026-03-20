@@ -2,9 +2,6 @@ import { describe, it, expect, beforeEach, mock } from "bun:test";
 import { mockEnv } from "../helpers.js";
 
 describe("premium", () => {
-  beforeEach(() => {
-    mock.restore();
-  });
 
   describe("isPremiumEnabled", () => {
     it("should return true when PREMIUM_ENABLED is true", async () => {

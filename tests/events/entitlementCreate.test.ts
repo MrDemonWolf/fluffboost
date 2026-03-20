@@ -5,7 +5,6 @@ import { mockLogger, mockDb, mockDbChain, mockPosthog, mockEntitlement } from ".
 describe("entitlementCreateEvent", () => {
   afterEach(() => {
     sinon.restore();
-    mock.restore();
   });
 
   it("should update guild isPremium=true for guild-level entitlement", async () => {

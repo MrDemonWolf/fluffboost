@@ -5,7 +5,6 @@ import { mockLogger } from "../helpers.js";
 describe("shardDisconnect event", () => {
   afterEach(() => {
     sinon.restore();
-    mock.restore();
   });
 
   it("should log error and exit process", async () => {
