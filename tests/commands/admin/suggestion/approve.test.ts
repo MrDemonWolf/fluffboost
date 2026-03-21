@@ -14,7 +14,7 @@ describe("admin suggestion approve command", () => {
 
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../../src/database/index.js", () => ({ db }));
-    mock.module("../../../../src/utils/env.js", () => ({ default: env }));
+    mock.module("../../../../src/utils/env.js", () => ({ default: env, envSchema: {} }));
     mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().resolves(true) }));
 
     const mod = await import("../../../../src/commands/admin/suggestion/approve.js");

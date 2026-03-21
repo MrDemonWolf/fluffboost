@@ -12,7 +12,7 @@ describe("owner premium test-list command", () => {
     const env = mockEnv(envOverrides);
 
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../../../src/utils/env.js", () => ({ default: env }));
+    mock.module("../../../../src/utils/env.js", () => ({ default: env, envSchema: {} }));
 
     const mod = await import("../../../../src/commands/owner/premium/testList.js");
 

@@ -12,7 +12,7 @@ describe("about command", () => {
     const env = mockEnv();
 
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../src/utils/env.js", () => ({ default: env }));
+    mock.module("../../src/utils/env.js", () => ({ default: env, envSchema: {} }));
 
     const mod = await import("../../src/commands/about.js");
 
