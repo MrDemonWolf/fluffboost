@@ -13,7 +13,7 @@ describe("admin suggestion stats command", () => {
 
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../../src/database/index.js", () => ({ db }));
-    mock.module("../../../../src/utils/env.js", () => ({ default: mockEnv(), envSchema: {} }));
+    mock.module("../../../../src/utils/env.js", () => ({ default: mockEnv() }));
     mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().resolves(permitted) }));
 
     const mod = await import("../../../../src/commands/admin/suggestion/stats.js");

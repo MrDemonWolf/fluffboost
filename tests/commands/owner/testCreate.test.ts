@@ -12,7 +12,7 @@ describe("owner premium test-create command", () => {
     const env = mockEnv(envOverrides);
 
     mock.module("../../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../../src/utils/env.js", () => ({ default: env, envSchema: {} }));
+    mock.module("../../../src/utils/env.js", () => ({ default: env }));
     mock.module("../../../src/utils/premium.js", () => ({
       getPremiumSkuId: sinon.stub().returns(env.DISCORD_PREMIUM_SKU_ID),
     }));

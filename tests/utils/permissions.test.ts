@@ -5,7 +5,7 @@ import { mockEnv, mockLogger, mockInteraction } from "../helpers.js";
 const logger = mockLogger();
 const env = mockEnv();
 
-mock.module("../../src/utils/env.js", () => ({ default: env, envSchema: {} }));
+mock.module("../../src/utils/env.js", () => ({ default: env }));
 mock.module("../../src/utils/logger.js", () => ({ default: logger }));
 
 const { isUserPermitted } = await import("../../src/utils/permissions.js");

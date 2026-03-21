@@ -14,7 +14,7 @@ describe("suggestion command", () => {
 
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../src/database/index.js", () => ({ db }));
-    mock.module("../../src/utils/env.js", () => ({ default: env, envSchema: {} }));
+    mock.module("../../src/utils/env.js", () => ({ default: env }));
 
     const mod = await import("../../src/commands/suggestion.js");
 

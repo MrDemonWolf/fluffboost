@@ -14,7 +14,7 @@ describe("admin quote remove command", () => {
 
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../../src/database/index.js", () => ({ db }));
-    mock.module("../../../../src/utils/env.js", () => ({ default: env, envSchema: {} }));
+    mock.module("../../../../src/utils/env.js", () => ({ default: env }));
     mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().returns(true) }));
 
     const mod = await import("../../../../src/commands/admin/quote/remove.js");
@@ -29,7 +29,7 @@ describe("admin quote remove command", () => {
 
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../../src/database/index.js", () => ({ db }));
-    mock.module("../../../../src/utils/env.js", () => ({ default: env, envSchema: {} }));
+    mock.module("../../../../src/utils/env.js", () => ({ default: env }));
     mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().resolves(false) }));
 
     const mod = await import("../../../../src/commands/admin/quote/remove.js");

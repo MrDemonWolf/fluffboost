@@ -4,7 +4,7 @@ import { mockLogger, mockDb, mockDbChain, mockEnv, mockClient } from "../helpers
 
 // Mock schema to prevent real DB connection during import
 mock.module("../../src/database/index.js", () => ({ db: {} }));
-mock.module("../../src/utils/env.js", () => ({ default: {}, envSchema: {} }));
+mock.module("../../src/utils/env.js", () => ({ default: {} }));
 mock.module("../../src/utils/logger.js", () => ({ default: {} }));
 
 // Import the core function that accepts deps directly — no mock.module needed for testing

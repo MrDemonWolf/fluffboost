@@ -12,7 +12,7 @@ describe("owner premium test-delete command", () => {
     const env = mockEnv(envOverrides);
 
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../../../src/utils/env.js", () => ({ default: env, envSchema: {} }));
+    mock.module("../../../../src/utils/env.js", () => ({ default: env }));
 
     const mod = await import("../../../../src/commands/owner/premium/testDelete.js");
 

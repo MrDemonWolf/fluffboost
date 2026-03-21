@@ -7,7 +7,7 @@ describe("Health API", () => {
 
   beforeAll(async () => {
     // Load app with mocked env to avoid Zod validation of real env vars
-    mock.module("../../src/utils/env.js", () => ({ default: mockEnv(), envSchema: {} }));
+    mock.module("../../src/utils/env.js", () => ({ default: mockEnv() }));
     const app = await import("../../src/api/index.js");
     request = supertest(app.default);
   });

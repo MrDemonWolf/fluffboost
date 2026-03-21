@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { envSchema } from "../../src/utils/env.js";
+import { envSchema } from "../../src/utils/envSchema.js";
 
 function validEnv(overrides: Record<string, unknown> = {}) {
   return {
