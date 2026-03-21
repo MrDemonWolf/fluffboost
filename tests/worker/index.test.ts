@@ -19,7 +19,7 @@ const WorkerStub = sinon.stub().callsFake((_name: string, processor: typeof jobP
 });
 
 mock.module("../../src/utils/logger.js", () => ({ default: logger }));
-mock.module("../../src/utils/env.js", () => ({ default: env }));
+mock.module("../../src/utils/env.js", () => ({ default: env, envSchema: {} }));
 mock.module("../../src/bot.js", () => ({ default: mockClient }));
 mock.module("../../src/redis/index.js", () => ({ default: {} }));
 mock.module("bullmq", () => ({ Worker: WorkerStub, Job: class {} }));
