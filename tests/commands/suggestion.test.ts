@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockLogger, mockDb, mockDbChain, mockPosthog, mockClient, mockInteraction, mockEnv } from "../helpers.js";
+import { mockLogger, mockDb, mockDbChain, mockClient, mockInteraction, mockEnv } from "../helpers.js";
 
 describe("suggestion command", () => {
   afterEach(() => {
@@ -10,17 +10,15 @@ describe("suggestion command", () => {
   async function loadModule() {
     const logger = mockLogger();
     const db = mockDb();
-    const posthog = mockPosthog();
     const env = mockEnv();
 
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../src/database/index.js", () => ({ db }));
-    mock.module("../../src/utils/posthog.js", () => ({ default: posthog }));
     mock.module("../../src/utils/env.js", () => ({ default: env }));
 
     const mod = await import("../../src/commands/suggestion.js");
 
-    return { execute: mod.execute, logger, db, posthog, env };
+    return { execute: mod.execute, logger, db, env };
   }
 
   function makeInteraction(quote: string | null, author: string | null) {

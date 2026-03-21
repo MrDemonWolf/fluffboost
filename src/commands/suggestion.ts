@@ -13,7 +13,6 @@ import logger from "../utils/logger.js";
 import { db } from "../database/index.js";
 import { guilds, suggestionQuotes } from "../database/schema.js";
 import env from "../utils/env.js";
-import posthog from "../utils/posthog.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("suggestion")
@@ -147,19 +146,6 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
       interaction.user.username,
       interaction.user.id
     );
-
-    posthog.capture({
-      distinctId: interaction.user.id,
-      event: "suggestion command used",
-      properties: {
-        quote,
-        author,
-        guildId: interaction.guildId,
-        environment: env.NODE_ENV,
-        userId: interaction.user.id,
-        username: interaction.user.username,
-      },
-    });
   } catch (err) {
     logger.commands.error(
       "suggestion",

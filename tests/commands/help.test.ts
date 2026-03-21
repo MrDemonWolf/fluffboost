@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockLogger, mockPosthog, mockClient, mockInteraction } from "../helpers.js";
+import { mockLogger, mockClient, mockInteraction } from "../helpers.js";
 
 describe("help command", () => {
   afterEach(() => {
@@ -9,14 +9,12 @@ describe("help command", () => {
 
   async function loadModule() {
     const logger = mockLogger();
-    const posthog = mockPosthog();
 
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../src/utils/posthog.js", () => ({ default: posthog }));
 
     const mod = await import("../../src/commands/help.js");
 
-    return { execute: mod.execute, logger, posthog };
+    return { execute: mod.execute, logger };
   }
 
   it("should reply with command list", async () => {
@@ -30,16 +28,6 @@ describe("help command", () => {
     expect(replyArgs.content).toContain("/about");
     expect(replyArgs.content).toContain("/quote");
     expect(replyArgs.flags).toBeDefined();
-  });
-
-  it("should capture posthog event", async () => {
-    const { execute, posthog } = await loadModule();
-    const interaction = mockInteraction();
-
-    await execute(mockClient() as never, interaction as never);
-
-    expect(posthog.capture.calledOnce).toBe(true);
-    expect(posthog.capture.firstCall.args[0].event).toBe("help command used");
   });
 
   it("should reply with error on failure", async () => {

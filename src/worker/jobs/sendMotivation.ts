@@ -5,9 +5,7 @@ import { eq, isNotNull, asc, count } from "drizzle-orm";
 import { db } from "../../database/index.js";
 import { guilds, motivationQuotes } from "../../database/schema.js";
 import { isGuildDueForMotivation } from "../../utils/scheduleEvaluator.js";
-import posthog from "../../utils/posthog.js";
 import logger from "../../utils/logger.js";
-import env from "../../utils/env.js";
 
 export default async function sendMotivation(client: Client) {
   const allGuilds = await db
@@ -103,16 +101,4 @@ export default async function sendMotivation(client: Client) {
   }
 
   logger.success("Worker", `Motivation sent to ${sent} guild(s), ${failed} failed`);
-
-  posthog.capture({
-    distinctId: "motivation-job",
-    event: "motivation job executed",
-    properties: {
-      environment: env.NODE_ENV,
-      quote: motivationQuote[0].id,
-      sent,
-      failed,
-      total: dueGuilds.length,
-    },
-  });
 }

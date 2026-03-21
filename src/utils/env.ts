@@ -58,8 +58,6 @@ const envSchema = z.object({
   OWNER_ID: z.string().min(1, "Owner ID is required"),
   MAIN_GUILD_ID: z.string().min(1, "Main guild ID is required"),
   MAIN_CHANNEL_ID: z.string().min(1, "Main channel ID is required"),
-  POSTHOG_API_KEY: z.string().min(1, "PostHog API key is required"),
-  POSTHOG_HOST: z.string().min(1, "PostHog host is required"),
   HOST: z.string().optional(),
   PORT: z.string().optional(),
   CORS_ORIGIN: z.string().optional(),

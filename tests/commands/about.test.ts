@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockLogger, mockPosthog, mockClient, mockInteraction, mockEnv } from "../helpers.js";
+import { mockLogger, mockClient, mockInteraction, mockEnv } from "../helpers.js";
 
 describe("about command", () => {
   afterEach(() => {
@@ -9,16 +9,14 @@ describe("about command", () => {
 
   async function loadModule() {
     const logger = mockLogger();
-    const posthog = mockPosthog();
     const env = mockEnv();
 
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../src/utils/posthog.js", () => ({ default: posthog }));
     mock.module("../../src/utils/env.js", () => ({ default: env }));
 
     const mod = await import("../../src/commands/about.js");
 
-    return { execute: mod.execute, logger, posthog, env };
+    return { execute: mod.execute, logger, env };
   }
 
   it("should reply with an embed containing bot info", async () => {
@@ -32,17 +30,6 @@ describe("about command", () => {
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
     expect(Array.isArray(replyArgs.embeds)).toBe(true);
     expect(replyArgs.embeds).toHaveLength(1);
-  });
-
-  it("should capture posthog event", async () => {
-    const { execute, posthog } = await loadModule();
-    const client = mockClient();
-    const interaction = mockInteraction();
-
-    await execute(client as never, interaction as never);
-
-    expect(posthog.capture.calledOnce).toBe(true);
-    expect(posthog.capture.firstCall.args[0].event).toBe("about command used");
   });
 
   it("should reply with error on failure", async () => {

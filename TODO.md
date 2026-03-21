@@ -6,10 +6,10 @@ Work through these sections top-to-bottom. Each section builds on the previous.
 
 ## Section 1 — Discord Developer Portal (one-time setup)
 
-- [ ] Go to [Discord Developer Portal](https://discord.com/developers/applications) → your app → **Monetization**
-- [ ] Enable monetization if not already enabled
-- [ ] Go to **SKUs** → Create a new subscription (name it, set price)
-- [ ] Copy the **SKU ID** — you'll need it in the next section
+- [x] Go to [Discord Developer Portal](https://discord.com/developers/applications) → your app → **Monetization**
+- [x] Enable monetization if not already enabled
+- [x] Go to **SKUs** → Create a new subscription (name it, set price)
+- [x] Copy the **SKU ID** — you'll need it in the next section
 
 ---
 
@@ -17,7 +17,7 @@ Work through these sections top-to-bottom. Each section builds on the previous.
 
 - [ ] Set `PREMIUM_ENABLED=true` in production env
 - [ ] Set `DISCORD_PREMIUM_SKU_ID=<paste-sku-id-from-above>` in production env
-- [ ] Confirm all other required vars are present: `DATABASE_URL`, `REDIS_URL`, `DISCORD_APPLICATION_ID`, `DISCORD_APPLICATION_PUBLIC_KEY`, `DISCORD_APPLICATION_BOT_TOKEN`, `OWNER_ID`, `MAIN_GUILD_ID`, `MAIN_CHANNEL_ID`, `POSTHOG_API_KEY`, `POSTHOG_HOST`
+- [ ] Confirm all other required vars are present: `DATABASE_URL`, `REDIS_URL`, `DISCORD_APPLICATION_ID`, `DISCORD_APPLICATION_PUBLIC_KEY`, `DISCORD_APPLICATION_BOT_TOKEN`, `OWNER_ID`, `MAIN_GUILD_ID`, `MAIN_CHANNEL_ID`
 
 ---
 

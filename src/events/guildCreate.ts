@@ -2,9 +2,7 @@ import type { Guild } from "discord.js";
 
 import { db } from "../database/index.js";
 import { guilds } from "../database/schema.js";
-import posthog from "../utils/posthog.js";
 import logger from "../utils/logger.js";
-import env from "../utils/env.js";
 
 export async function guildCreateEvent(guild: Guild): Promise<void> {
   try {
@@ -23,15 +21,6 @@ export async function guildCreateEvent(guild: Guild): Promise<void> {
       guildId: guildData?.guildId,
     });
 
-    posthog.capture({
-      distinctId: guild.id,
-      event: "guild created",
-      properties: {
-        environment: env.NODE_ENV,
-        guildName: guild.name,
-        guildId: guild.id,
-      },
-    });
   } catch (err) {
     logger.error(
       "Discord - Event (Guild Create)",

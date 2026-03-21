@@ -3,7 +3,7 @@ import type { SinonStub } from "sinon";
 
 /**
  * Shared test helper factories for FluffBoost tests.
- * Provides lightweight mock objects for Discord.js, Drizzle, Logger, and PostHog.
+ * Provides lightweight mock objects for Discord.js, Drizzle, and Logger.
  */
 
 // ── Logger mock ──────────────────────────────────────────────────────────────
@@ -113,15 +113,6 @@ export function mockDb() {
   };
 }
 
-// ── PostHog mock ─────────────────────────────────────────────────────────────
-
-export function mockPosthog() {
-  return {
-    capture: sinon.stub(),
-    shutdown: sinon.stub(),
-  };
-}
-
 // ── Discord.js mocks ─────────────────────────────────────────────────────────
 
 export function mockInteraction(overrides: Record<string, unknown> = {}) {
@@ -226,8 +217,6 @@ export function mockEnv(overrides: Record<string, unknown> = {}) {
     OWNER_ID: "owner-123",
     MAIN_GUILD_ID: "main-guild-123",
     MAIN_CHANNEL_ID: "main-channel-123",
-    POSTHOG_API_KEY: "phk_test",
-    POSTHOG_HOST: "https://posthog.test",
     HOST: "localhost",
     PORT: "3000",
     CORS_ORIGIN: "*",
@@ -243,5 +232,4 @@ export function mockEnv(overrides: Record<string, unknown> = {}) {
 
 export type MockLogger = ReturnType<typeof mockLogger>;
 export type MockDb = ReturnType<typeof mockDb>;
-export type MockPosthog = ReturnType<typeof mockPosthog>;
 export type StubFn = SinonStub;

@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockLogger, mockDb, mockDbChain, mockPosthog, mockClient } from "../helpers.js";
+import { mockLogger, mockDb, mockDbChain, mockClient } from "../helpers.js";
 
 describe("sendMotivation", () => {
   afterEach(() => {
@@ -10,22 +10,19 @@ describe("sendMotivation", () => {
   async function loadModule(overrides: {
     db?: ReturnType<typeof mockDb>;
     logger?: ReturnType<typeof mockLogger>;
-    posthog?: ReturnType<typeof mockPosthog>;
     isGuildDueForMotivation?: sinon.SinonStub;
   } = {}) {
     const db = overrides.db ?? mockDb();
     const logger = overrides.logger ?? mockLogger();
-    const posthog = overrides.posthog ?? mockPosthog();
     const isGuildDueStub = overrides.isGuildDueForMotivation ?? sinon.stub().returns(true);
 
     mock.module("../../src/database/index.js", () => ({ db }));
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../src/utils/posthog.js", () => ({ default: posthog }));
     mock.module("../../src/utils/scheduleEvaluator.js", () => ({ isGuildDueForMotivation: isGuildDueStub }));
 
     const mod = await import("../../src/worker/jobs/sendMotivation.js");
 
-    return { sendMotivation: mod.default, db, logger, posthog, isGuildDueStub };
+    return { sendMotivation: mod.default, db, logger, isGuildDueStub };
   }
 
   it("should return early when no guilds have channels configured", async () => {
@@ -76,12 +73,11 @@ describe("sendMotivation", () => {
     const client = mockClient();
     (client.channels.fetch as sinon.SinonStub).resolves(channel);
 
-    const { sendMotivation, posthog } = await loadModule({ db });
+    const { sendMotivation } = await loadModule({ db });
     await sendMotivation(client as never);
 
     expect(sendStub.calledOnce).toBe(true);
     expect(db.update.calledOnce).toBe(true);
-    expect(posthog.capture.calledOnce).toBe(true);
   });
 
   it("should skip guilds with invalid channels (not text-based)", async () => {
@@ -154,26 +150,6 @@ describe("sendMotivation", () => {
 
     // Should not throw, both guilds attempted
     expect(logger.error.called).toBe(true);
-  });
-
-  it("should capture posthog event with sent/failed stats", async () => {
-    const db = mockDb();
-    db.select.onCall(0).returns(mockDbChain([{ guildId: "g1", motivationChannelId: "ch1" }]));
-    db.select.onCall(1).returns(mockDbChain([{ value: 1 }]));
-    db.select.onCall(2).returns(mockDbChain([{ id: "q1", quote: "Stay", author: "A", addedBy: "u1" }]));
-
-    const channel = { isTextBased: () => true, isDMBased: () => false, send: sinon.stub().resolves() };
-    const client = mockClient();
-    (client.channels.fetch as sinon.SinonStub).resolves(channel);
-
-    const posthog = mockPosthog();
-    const { sendMotivation } = await loadModule({ db, posthog });
-    await sendMotivation(client as never);
-
-    const captureArgs = posthog.capture.firstCall.args[0];
-    expect(captureArgs.event).toBe("motivation job executed");
-    expect(captureArgs.properties).toHaveProperty("sent");
-    expect(captureArgs.properties).toHaveProperty("failed");
   });
 
   it("should handle user fetch failure for addedBy gracefully", async () => {

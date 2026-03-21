@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockLogger, mockPosthog, mockClient, mockInteraction, mockEnv } from "../helpers.js";
+import { mockLogger, mockClient, mockInteraction, mockEnv } from "../helpers.js";
 
 describe("premium command", () => {
   afterEach(() => {
@@ -9,14 +9,12 @@ describe("premium command", () => {
 
   async function loadModule(overrides: { premiumEnabled?: boolean; skuId?: string; hasEntitlement?: boolean } = {}) {
     const logger = mockLogger();
-    const posthog = mockPosthog();
     const env = mockEnv({
       PREMIUM_ENABLED: overrides.premiumEnabled ?? false,
       DISCORD_PREMIUM_SKU_ID: overrides.skuId,
     });
 
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../src/utils/posthog.js", () => ({ default: posthog }));
     mock.module("../../src/utils/premium.js", () => ({
       isPremiumEnabled: sinon.stub().returns(overrides.premiumEnabled ?? false),
       hasEntitlement: sinon.stub().returns(overrides.hasEntitlement ?? false),
@@ -25,7 +23,7 @@ describe("premium command", () => {
 
     const mod = await import("../../src/commands/premium.js");
 
-    return { execute: mod.execute, logger, posthog };
+    return { execute: mod.execute, logger };
   }
 
   it("should show unavailable message when premium is disabled", async () => {
@@ -86,13 +84,4 @@ describe("premium command", () => {
     expect(replyArgs.flags).toBeDefined();
   });
 
-  it("should capture posthog event", async () => {
-    const { execute, posthog } = await loadModule({ premiumEnabled: true, skuId: "sku-1" });
-    const interaction = mockInteraction();
-
-    await execute(mockClient() as never, interaction as never);
-
-    expect(posthog.capture.calledOnce).toBe(true);
-    expect(posthog.capture.firstCall.args[0].event).toBe("premium command used");
-  });
 });

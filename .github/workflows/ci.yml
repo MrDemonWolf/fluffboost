@@ -38,8 +38,6 @@ jobs:
           OWNER_ID: ci-test-owner-id
           MAIN_GUILD_ID: ci-test-guild-id
           MAIN_CHANNEL_ID: ci-test-channel-id
-          POSTHOG_API_KEY: ci-test-posthog-key
-          POSTHOG_HOST: https://ci-test-posthog.example.com
 
       - name: Run ESLint
         run: bun run lint:check

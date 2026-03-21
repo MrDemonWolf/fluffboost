@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockLogger, mockDb, mockDbChain, mockPosthog, mockEntitlement } from "../helpers.js";
+import { mockLogger, mockDb, mockDbChain, mockEntitlement } from "../helpers.js";
 
 describe("entitlementUpdateEvent", () => {
   afterEach(() => {
@@ -12,7 +12,6 @@ describe("entitlementUpdateEvent", () => {
 
     mock.module("../../src/database/index.js", () => ({ db }));
     mock.module("../../src/utils/logger.js", () => ({ default: mockLogger() }));
-    mock.module("../../src/utils/posthog.js", () => ({ default: mockPosthog() }));
     const { entitlementUpdateEvent } = await import("../../src/events/entitlementUpdate.js");
 
     const cancelled = mockEntitlement({ guildId: "g1", endsAt: new Date("2025-12-31") });
@@ -26,7 +25,6 @@ describe("entitlementUpdateEvent", () => {
 
     mock.module("../../src/database/index.js", () => ({ db }));
     mock.module("../../src/utils/logger.js", () => ({ default: mockLogger() }));
-    mock.module("../../src/utils/posthog.js", () => ({ default: mockPosthog() }));
     const { entitlementUpdateEvent } = await import("../../src/events/entitlementUpdate.js");
 
     const renewed = mockEntitlement({ guildId: "g1", endsAt: null });
@@ -40,41 +38,10 @@ describe("entitlementUpdateEvent", () => {
 
     mock.module("../../src/database/index.js", () => ({ db }));
     mock.module("../../src/utils/logger.js", () => ({ default: mockLogger() }));
-    mock.module("../../src/utils/posthog.js", () => ({ default: mockPosthog() }));
     const { entitlementUpdateEvent } = await import("../../src/events/entitlementUpdate.js");
 
     await entitlementUpdateEvent(null, mockEntitlement({ guildId: null }) as never);
     expect(db.update.called).toBe(false);
-  });
-
-  it("should capture posthog event with cancelled flag", async () => {
-    const posthog = mockPosthog();
-
-    mock.module("../../src/database/index.js", () => ({ db: mockDb() }));
-    mock.module("../../src/utils/logger.js", () => ({ default: mockLogger() }));
-    mock.module("../../src/utils/posthog.js", () => ({ default: posthog }));
-    const { entitlementUpdateEvent } = await import("../../src/events/entitlementUpdate.js");
-
-    const cancelled = mockEntitlement({ endsAt: new Date("2025-12-31") });
-    await entitlementUpdateEvent(null, cancelled as never);
-
-    expect(posthog.capture.calledOnce).toBe(true);
-    const props = posthog.capture.firstCall.args[0].properties;
-    expect(props.cancelled).toBe(true);
-  });
-
-  it("should capture posthog event with cancelled=false on renewal", async () => {
-    const posthog = mockPosthog();
-
-    mock.module("../../src/database/index.js", () => ({ db: mockDb() }));
-    mock.module("../../src/utils/logger.js", () => ({ default: mockLogger() }));
-    mock.module("../../src/utils/posthog.js", () => ({ default: posthog }));
-    const { entitlementUpdateEvent } = await import("../../src/events/entitlementUpdate.js");
-
-    await entitlementUpdateEvent(null, mockEntitlement({ endsAt: null }) as never);
-
-    const props = posthog.capture.firstCall.args[0].properties;
-    expect(props.cancelled).toBe(false);
   });
 
   it("should handle DB update failure gracefully", async () => {
@@ -86,7 +53,6 @@ describe("entitlementUpdateEvent", () => {
 
     mock.module("../../src/database/index.js", () => ({ db }));
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../src/utils/posthog.js", () => ({ default: mockPosthog() }));
     const { entitlementUpdateEvent } = await import("../../src/events/entitlementUpdate.js");
 
     await entitlementUpdateEvent(null, mockEntitlement({ guildId: "g1" }) as never);

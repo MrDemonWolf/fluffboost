@@ -1,12 +1,10 @@
 import type { Entitlement } from "discord.js";
 
 import logger from "../utils/logger.js";
-import posthog from "../utils/posthog.js";
 import { eq } from "drizzle-orm";
 
 import { db } from "../database/index.js";
 import { guilds } from "../database/schema.js";
-import env from "../utils/env.js";
 
 export async function entitlementDeleteEvent(entitlement: Entitlement): Promise<void> {
   logger.info("Discord - Event (Entitlement Delete)", "Premium entitlement removed", {
@@ -25,15 +23,4 @@ export async function entitlementDeleteEvent(entitlement: Entitlement): Promise<
       });
     }
   }
-
-  posthog.capture({
-    distinctId: entitlement.userId ?? "unknown",
-    event: "premium_deleted",
-    properties: {
-      environment: env.NODE_ENV,
-      userId: entitlement.userId,
-      skuId: entitlement.skuId,
-      guildId: entitlement.guildId,
-    },
-  });
 }

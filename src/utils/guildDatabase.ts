@@ -1,11 +1,9 @@
 import type { Client } from "discord.js";
 import { eq, asc } from "drizzle-orm";
 
-import posthog from "../utils/posthog.js";
 import { db } from "../database/index.js";
 import { guilds } from "../database/schema.js";
 import logger from "./logger.js";
-import env from "./env.js";
 
 export async function pruneGuilds(client: Client) {
   try {
@@ -59,16 +57,6 @@ export async function pruneGuilds(client: Client) {
             guildId: guild.guildId,
           }
         );
-
-        posthog.capture({
-          distinctId: guild.guildId,
-          event: "guild left",
-          properties: {
-            environment: env.NODE_ENV,
-            guildName: guild.guildId,
-            guildId: guild.guildId,
-          },
-        });
       } catch (err) {
         logger.error(
           "Discord Event Logger",
@@ -128,16 +116,6 @@ export async function ensureGuildExists(client: Client) {
             guildName: guild.name,
           }
         );
-
-        posthog.capture({
-          distinctId: guild.id,
-          event: "guild joined",
-          properties: {
-            environment: env.NODE_ENV,
-            guildName: guild.name,
-            guildId: guild.id,
-          },
-        });
       } catch (err) {
         logger.error(
           "Discord Event Logger",

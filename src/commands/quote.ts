@@ -7,8 +7,6 @@ import { count } from "drizzle-orm";
 import logger from "../utils/logger.js";
 import { db } from "../database/index.js";
 import { motivationQuotes } from "../database/schema.js";
-import posthog from "../utils/posthog.js";
-import env from "../utils/env.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("quote")
@@ -85,17 +83,6 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
       interaction.user.username,
       interaction.user.id
     );
-
-    posthog.capture({
-      distinctId: interaction.user.id,
-      event: "quote command used",
-      properties: {
-        quote: motivationQuote[0].id,
-        environment: env.NODE_ENV,
-        userId: interaction.user.id,
-        username: interaction.user.username,
-      },
-    });
   } catch (err) {
     logger.commands.error(
       "quote",

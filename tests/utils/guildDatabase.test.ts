@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockLogger, mockDb, mockDbChain, mockPosthog } from "../helpers.js";
+import { mockLogger, mockDb, mockDbChain } from "../helpers.js";
 
 /**
  * Create a Discord Collection-like Map with .map() and .filter() methods.
@@ -31,11 +31,9 @@ function createCollectionCache<V>(entries: [string, V][] = []) {
 
 const db = mockDb();
 const logger = mockLogger();
-const posthog = mockPosthog();
 
 mock.module("../../src/database/index.js", () => ({ db }));
 mock.module("../../src/utils/logger.js", () => ({ default: logger }));
-mock.module("../../src/utils/posthog.js", () => ({ default: posthog }));
 
 const { pruneGuilds, ensureGuildExists, guildExists } = await import("../../src/utils/guildDatabase.js");
 
@@ -61,9 +59,6 @@ function resetStubs() {
       }
     }
   }
-  // Reset posthog
-  posthog.capture.reset();
-  posthog.shutdown.reset();
 }
 
 describe("guildDatabase", () => {
@@ -145,7 +140,6 @@ describe("guildDatabase", () => {
 
       await ensureGuildExists(client as never);
       expect(db.insert.calledOnce).toBe(true);
-      expect(posthog.capture.calledOnce).toBe(true);
     });
 
     it("should handle per-guild create errors gracefully", async () => {

@@ -93,7 +93,7 @@ Four Drizzle tables defined in `src/database/schema.ts`: `guilds` (server config
 
 ## Environment Variables
 
-All env vars are validated by Zod in `src/utils/env.ts`. Required variables include: `DATABASE_URL`, `REDIS_URL`, `DISCORD_APPLICATION_ID`, `DISCORD_APPLICATION_PUBLIC_KEY`, `DISCORD_APPLICATION_BOT_TOKEN`, `OWNER_ID`, `MAIN_GUILD_ID`, `MAIN_CHANNEL_ID`, `POSTHOG_API_KEY`, `POSTHOG_HOST`. See `.env.example` for the full list.
+All env vars are validated by Zod in `src/utils/env.ts`. Required variables include: `DATABASE_URL`, `REDIS_URL`, `DISCORD_APPLICATION_ID`, `DISCORD_APPLICATION_PUBLIC_KEY`, `DISCORD_APPLICATION_BOT_TOKEN`, `OWNER_ID`, `MAIN_GUILD_ID`, `MAIN_CHANNEL_ID`. See `.env.example` for the full list.
 
 ## CI
 
@@ -181,7 +181,7 @@ if (isPremiumEnabled() && !hasEntitlement(interaction)) {
 
 Tests use **bun:test** + **Sinon**, configured in `bunfig.toml`. Test files live in `tests/` (mirroring `src/` structure) and use `.test.ts` suffix. Module mocking uses `mock.module()` from `bun:test` to replace imports at load time. Time-dependent tests use `sinon.useFakeTimers()` to control `dayjs()`.
 
-- `tests/helpers.ts` — Shared mock factories (mockLogger, mockDb, mockDbChain, mockPosthog, mockInteraction, mockClient, mockEnv, etc.)
+- `tests/helpers.ts` — Shared mock factories (mockLogger, mockDb, mockDbChain, mockInteraction, mockClient, mockEnv, etc.)
 - `tests/utils/timezones.test.ts` — Timezone utilities (ALL_TIMEZONES, isValidTimezone, filterTimezones)
 - `tests/utils/scheduleEvaluator.test.ts` — Schedule evaluator (getCurrentTimeInTimezone, isGuildDueForMotivation)
 - `tests/utils/cronParser.test.ts` — Cron parser utilities (cronToText, isValidCron, getCronDetails)

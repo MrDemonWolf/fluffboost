@@ -11,8 +11,6 @@ function validEnv(overrides: Record<string, unknown> = {}) {
     OWNER_ID: "owner-123",
     MAIN_GUILD_ID: "guild-123",
     MAIN_CHANNEL_ID: "channel-123",
-    POSTHOG_API_KEY: "phk_test",
-    POSTHOG_HOST: "https://posthog.test",
     ...overrides,
   };
 }

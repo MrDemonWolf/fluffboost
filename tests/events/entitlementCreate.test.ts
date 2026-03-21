@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockLogger, mockDb, mockDbChain, mockPosthog, mockEntitlement } from "../helpers.js";
+import { mockLogger, mockDb, mockDbChain, mockEntitlement } from "../helpers.js";
 
 describe("entitlementCreateEvent", () => {
   afterEach(() => {
@@ -10,11 +10,9 @@ describe("entitlementCreateEvent", () => {
   it("should update guild isPremium=true for guild-level entitlement", async () => {
     const db = mockDb();
     const logger = mockLogger();
-    const posthog = mockPosthog();
 
     mock.module("../../src/database/index.js", () => ({ db }));
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../src/utils/posthog.js", () => ({ default: posthog }));
     const { entitlementCreateEvent } = await import("../../src/events/entitlementCreate.js");
 
     await entitlementCreateEvent(mockEntitlement({ guildId: "g1" }) as never);
@@ -27,24 +25,10 @@ describe("entitlementCreateEvent", () => {
 
     mock.module("../../src/database/index.js", () => ({ db }));
     mock.module("../../src/utils/logger.js", () => ({ default: mockLogger() }));
-    mock.module("../../src/utils/posthog.js", () => ({ default: mockPosthog() }));
     const { entitlementCreateEvent } = await import("../../src/events/entitlementCreate.js");
 
     await entitlementCreateEvent(mockEntitlement({ guildId: null }) as never);
     expect(db.update.called).toBe(false);
-  });
-
-  it("should capture posthog event", async () => {
-    const posthog = mockPosthog();
-
-    mock.module("../../src/database/index.js", () => ({ db: mockDb() }));
-    mock.module("../../src/utils/logger.js", () => ({ default: mockLogger() }));
-    mock.module("../../src/utils/posthog.js", () => ({ default: posthog }));
-    const { entitlementCreateEvent } = await import("../../src/events/entitlementCreate.js");
-
-    await entitlementCreateEvent(mockEntitlement() as never);
-    expect(posthog.capture.calledOnce).toBe(true);
-    expect(posthog.capture.firstCall.args[0].event).toBe("premium_subscribed");
   });
 
   it("should handle DB update failure gracefully", async () => {
@@ -56,7 +40,6 @@ describe("entitlementCreateEvent", () => {
 
     mock.module("../../src/database/index.js", () => ({ db }));
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../src/utils/posthog.js", () => ({ default: mockPosthog() }));
     const { entitlementCreateEvent } = await import("../../src/events/entitlementCreate.js");
 
     await entitlementCreateEvent(mockEntitlement({ guildId: "g1" }) as never);

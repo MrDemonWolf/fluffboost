@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { MessageFlags } from "discord.js";
-import { mockLogger, mockPosthog, mockClient, mockInteraction } from "../helpers.js";
+import { mockLogger, mockClient, mockInteraction } from "../helpers.js";
 
 describe("changelog command", () => {
   afterEach(() => {
@@ -10,14 +10,12 @@ describe("changelog command", () => {
 
   async function loadModule() {
     const logger = mockLogger();
-    const posthog = mockPosthog();
 
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../src/utils/posthog.js", () => ({ default: posthog }));
 
     const mod = await import("../../src/commands/changelog.js");
 
-    return { execute: mod.execute, logger, posthog };
+    return { execute: mod.execute, logger };
   }
 
   it("should reply with changelog embed", async () => {
@@ -31,16 +29,6 @@ describe("changelog command", () => {
     expect(Array.isArray(replyArgs.embeds)).toBe(true);
     expect(replyArgs.embeds).toHaveLength(1);
     expect(replyArgs.flags).toBe(MessageFlags.Ephemeral);
-  });
-
-  it("should capture posthog event", async () => {
-    const { execute, posthog } = await loadModule();
-    const interaction = mockInteraction();
-
-    await execute(mockClient() as never, interaction as never);
-
-    expect(posthog.capture.calledOnce).toBe(true);
-    expect(posthog.capture.firstCall.args[0].event).toBe("changelog command used");
   });
 
   it("should reply with error on failure", async () => {

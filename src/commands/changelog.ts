@@ -3,8 +3,6 @@ import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
 import type { Client, CommandInteraction } from "discord.js";
 
 import logger from "../utils/logger.js";
-import posthog from "../utils/posthog.js";
-import env from "../utils/env.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("changelog")
@@ -66,16 +64,6 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
       interaction.user.username,
       interaction.user.id
     );
-
-    posthog.capture({
-      distinctId: interaction.user.id,
-      event: "changelog command used",
-      properties: {
-        environment: env.NODE_ENV,
-        userId: interaction.user.id,
-        username: interaction.user.username,
-      },
-    });
   } catch (err) {
     logger.commands.error(
       "changelog",
