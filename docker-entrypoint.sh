@@ -5,7 +5,7 @@ if [ "${SKIP_MIGRATIONS}" = "true" ]; then
   echo "SKIP_MIGRATIONS=true, skipping database migrations."
 else
   echo "Running database migrations..."
-  bunx drizzle-kit migrate
+  bun run src/database/migrate.ts
   echo "Migrations complete."
 fi
 

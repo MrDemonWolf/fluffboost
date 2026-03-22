@@ -89,13 +89,13 @@ FluffBoost uses Discord slash commands grouped by role.
 
 | Layer            | Technology                               |
 | ---------------- | ---------------------------------------- |
-| Runtime          | Node.js 20.x / 22.x / 24.x             |
+| Runtime          | Bun                                      |
 | Language         | TypeScript 5.x (strict mode)            |
 | Discord Library  | Discord.js v14                           |
-| Database         | PostgreSQL 16 via Prisma 7               |
+| Database         | PostgreSQL 16 via Drizzle ORM             |
 | Job Queue        | BullMQ with Redis 7                      |
 | HTTP Server      | Express 5                                |
-| Containerization | Docker (multi-stage, Node 24 Alpine)     |
+| Containerization | Docker (multi-stage, Bun)                |
 | CI/CD            | GitHub Actions                           |
 | Deployment       | Coolify                                  |
 
@@ -103,8 +103,7 @@ FluffBoost uses Discord slash commands grouped by role.
 
 ### Prerequisites
 
-- Node.js 20.x, 22.x, or 24.x
-- pnpm 9.x
+- Bun
 - PostgreSQL 16 (or use Docker Compose)
 - Redis 7 (or use Docker Compose)
 - A Discord application with bot token
@@ -121,7 +120,7 @@ FluffBoost uses Discord slash commands grouped by role.
 2. Install dependencies:
 
    ```bash
-   pnpm install
+   bun install
    ```
 
 3. Start local infrastructure:
@@ -136,39 +135,32 @@ FluffBoost uses Discord slash commands grouped by role.
    cp .env.example .env
    ```
 
-5. Generate the Prisma client:
+5. Sync the database schema:
 
    ```bash
-   pnpm db:generate
+   bun run db:push
    ```
 
-6. Sync the database schema:
+6. Start the development server:
 
    ```bash
-   pnpm db:push
-   ```
-
-7. Start the development server:
-
-   ```bash
-   pnpm dev
+   bun dev
    ```
 
 ### Development Scripts
 
-- `pnpm dev` — Start development server with hot reload
-- `pnpm build` — Compile TypeScript to `dist/`
-- `pnpm start` — Run compiled production build
-- `pnpm lint` — Run ESLint with auto-fix
-- `pnpm lint:check` — Check linting without fixing
-- `pnpm format` — Format code with Prettier
-- `pnpm tsc --noEmit` — Run TypeScript type checking
-- `pnpm db:generate` — Regenerate Prisma client
-- `pnpm db:push` — Sync schema to database (dev)
-- `pnpm db:migrate` — Run migrations (production)
-- `pnpm db:studio` — Open Prisma Studio UI
-- `pnpm test` — Run test suite (216 tests)
-- `pnpm test:coverage` — Run tests with c8 coverage
+- `bun dev` — Start development server with hot reload
+- `bun start` — Run src/app.ts directly
+- `bun run lint` — Run ESLint with auto-fix
+- `bun run lint:check` — Check linting without fixing
+- `bun run format` — Format code with Prettier
+- `bun run typecheck` — Run TypeScript type checking
+- `bun run db:push` — Sync schema to database (dev)
+- `bun run db:generate` — Generate a Drizzle migration
+- `bun run db:migrate` — Run migrations (production)
+- `bun run db:studio` — Open Drizzle Studio UI
+- `bun test` — Run test suite
+- `bun test --coverage` — Run tests with coverage
 
 ### Code Quality
 
@@ -176,10 +168,9 @@ FluffBoost uses Discord slash commands grouped by role.
 - Strict TypeScript (`noUnusedLocals`,
   `noUnusedParameters`, `noImplicitReturns`,
   `noUncheckedIndexedAccess`)
-- Mocha + Chai + Sinon + esmock test framework
-- c8 V8-based code coverage
+- bun:test + Sinon test framework
 - supertest for HTTP endpoint testing
-- CI runs on Node 20.x, 22.x, and 24.x
+- CI runs via GitHub Actions with Bun
 
 ## Project Structure
 
@@ -196,15 +187,14 @@ fluffboost/
 │   │   ├── owner/        # Owner-only commands
 │   │   │   └── premium/  # Test entitlement commands
 │   │   └── setup/        # Server setup commands
-│   ├── database/         # Prisma client singleton
+│   ├── database/         # Drizzle ORM instance and schema
 │   ├── events/           # Discord event handlers
-│   ├── generated/        # Auto-generated Prisma client
 │   ├── redis/            # Redis/IORedis connection
 │   ├── utils/            # Shared utilities
 │   └── worker/           # BullMQ worker and jobs
 │       └── jobs/         # Job handlers
 ├── tests/                # Test suite (mirrors src/)
-├── prisma/               # Prisma schema and migrations
+├── drizzle/              # Drizzle migration SQL files
 ├── Dockerfile            # Multi-stage production build
 ├── docker-compose.yml    # Local PostgreSQL + Redis
 └── docker-entrypoint.sh  # Migration runner for deploy
