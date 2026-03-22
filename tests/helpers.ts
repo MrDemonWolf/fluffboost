@@ -219,7 +219,6 @@ export function mockEnv(overrides: Record<string, unknown> = {}) {
     MAIN_CHANNEL_ID: "main-channel-123",
     HOST: "localhost",
     PORT: "3000",
-    CORS_ORIGIN: "*",
     VERSION: "1.0.0",
     NODE_ENV: "test",
     PREMIUM_ENABLED: false,

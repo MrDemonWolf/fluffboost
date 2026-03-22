@@ -36,7 +36,6 @@
     "@discordjs/rest": "^2.6.0",
     "bullmq": "^5.66.2",
     "consola": "^3.4.2",
-    "cors": "^2.8.5",
     "cronstrue": "^3.9.0",
     "dayjs": "^1.11.19",
     "discord.js": "^14.25.1",
@@ -55,7 +54,6 @@
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@types/bun": "latest",
-    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/morgan": "^1.9.10",
     "@types/node-cron": "^3.0.11",
