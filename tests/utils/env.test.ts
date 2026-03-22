@@ -61,11 +61,7 @@ describe("envSchema", () => {
 
   it("should accept valid NODE_ENV values", () => {
     for (const nodeEnv of ["development", "production", "test"]) {
-      const overrides: Record<string, string> = { NODE_ENV: nodeEnv };
-      if (nodeEnv === "production") {
-        overrides.CORS_ORIGIN = "https://app.example.com";
-      }
-      const result = envSchema.safeParse(validEnv(overrides));
+      const result = envSchema.safeParse(validEnv({ NODE_ENV: nodeEnv }));
       expect(result.success).toBe(true);
     }
   });
@@ -85,25 +81,4 @@ describe("envSchema", () => {
     }
   });
 
-  it("should reject wildcard CORS_ORIGIN in production", () => {
-    const result = envSchema.safeParse(validEnv({ NODE_ENV: "production", CORS_ORIGIN: "*" }));
-    expect(result.success).toBe(false);
-  });
-
-  it("should reject missing CORS_ORIGIN in production", () => {
-    const result = envSchema.safeParse(validEnv({ NODE_ENV: "production" }));
-    expect(result.success).toBe(false);
-  });
-
-  it("should accept specific CORS_ORIGIN in production", () => {
-    const result = envSchema.safeParse(
-      validEnv({ NODE_ENV: "production", CORS_ORIGIN: "https://app.example.com" })
-    );
-    expect(result.success).toBe(true);
-  });
-
-  it("should allow wildcard CORS_ORIGIN in development", () => {
-    const result = envSchema.safeParse(validEnv({ CORS_ORIGIN: "*" }));
-    expect(result.success).toBe(true);
-  });
 });

@@ -57,7 +57,6 @@ export const envSchema = z.object({
   MAIN_CHANNEL_ID: z.string().min(1, "Main channel ID is required"),
   HOST: z.string().optional(),
   PORT: z.string().optional(),
-  CORS_ORIGIN: z.string().optional(),
   VERSION: z.string().default("1.9.0"),
   NODE_ENV: z
     .enum(["development", "production", "test"])
@@ -75,10 +74,4 @@ export const envSchema = z.object({
       path: ["DISCORD_PREMIUM_SKU_ID"],
     }
   )
-  .refine(
-    (data) => data.NODE_ENV !== "production" || (data.CORS_ORIGIN && data.CORS_ORIGIN !== "*"),
-    {
-      message: "CORS_ORIGIN must be set to a specific origin in production (not \"*\")",
-      path: ["CORS_ORIGIN"],
-    }
-  );
+;
