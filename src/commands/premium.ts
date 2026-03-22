@@ -10,6 +10,7 @@ import {
 import type { Client, CommandInteraction } from "discord.js";
 
 import logger from "../utils/logger.js";
+import { safeErrorReply } from "../utils/commandErrors.js";
 import { isPremiumEnabled, hasEntitlement, getPremiumSkuId } from "../utils/premium.js";
 
 export const slashCommand = new SlashCommandBuilder()
@@ -90,12 +91,7 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
       command: "premium",
     });
 
-    if (!interaction.replied) {
-      await interaction.reply({
-        content: "An error occurred while processing your request. Please try again later.",
-        flags: MessageFlags.Ephemeral,
-      });
-    }
+    await safeErrorReply(interaction);
   }
 }
 

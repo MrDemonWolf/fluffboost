@@ -12,7 +12,8 @@ import { eq } from "drizzle-orm";
 import logger from "../utils/logger.js";
 import { db } from "../database/index.js";
 import { guilds, suggestionQuotes } from "../database/schema.js";
-import env from "../utils/env.js";
+import { sendToMainChannel } from "../utils/mainChannel.js";
+import { safeErrorReply } from "../utils/commandErrors.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("suggestion")
@@ -134,12 +135,7 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
         text: `Created with ID ${newQuote.id}`,
       });
 
-    if (env.MAIN_CHANNEL_ID) {
-      const mainChannel = await client.channels.fetch(env.MAIN_CHANNEL_ID);
-      if (mainChannel?.isTextBased() && !mainChannel.isDMBased()) {
-        await mainChannel.send({ embeds: [embed] });
-      }
-    }
+    await sendToMainChannel(client, { embeds: [embed] });
 
     logger.commands.success(
       "suggestion",
@@ -154,12 +150,7 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
       err
     );
 
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({
-        content: "An error occurred while processing your request.",
-        flags: MessageFlags.Ephemeral,
-      });
-    }
+    await safeErrorReply(interaction);
   }
 }
 

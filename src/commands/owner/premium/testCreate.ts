@@ -3,8 +3,9 @@ import { MessageFlags } from "discord.js";
 import type { Client, CommandInteraction, CommandInteractionOptionResolver } from "discord.js";
 
 import logger from "../../../utils/logger.js";
-import env from "../../../utils/env.js";
 import { getPremiumSkuId } from "../../../utils/premium.js";
+import { requireOwner } from "../../../utils/ownerGuard.js";
+import { safeErrorReply } from "../../../utils/commandErrors.js";
 
 export default async function (
   client: Client,
@@ -18,16 +19,7 @@ export default async function (
       interaction.user.id
     );
 
-    if (interaction.user.id !== env.OWNER_ID) {
-      logger.commands.unauthorized(
-        "owner premium test-create",
-        interaction.user.username,
-        interaction.user.id
-      );
-      await interaction.reply({
-        content: "Only the bot owner can use this command.",
-        flags: MessageFlags.Ephemeral,
-      });
+    if (!(await requireOwner(interaction, "owner premium test-create"))) {
       return;
     }
 
@@ -93,11 +85,9 @@ export default async function (
       }
     );
 
-    if (!interaction.replied) {
-      await interaction.reply({
-        content: `Failed to create test entitlement: ${err instanceof Error ? err.message : String(err)}`,
-        flags: MessageFlags.Ephemeral,
-      });
-    }
+    await safeErrorReply(
+      interaction,
+      `Failed to create test entitlement: ${err instanceof Error ? err.message : String(err)}`
+    );
   }
 }

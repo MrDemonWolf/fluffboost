@@ -10,8 +10,9 @@ import type { CommandInteractionOptionResolver } from "discord.js";
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
 import { motivationQuotes } from "../../../database/schema.js";
-import env from "../../../utils/env.js";
 import logger from "../../../utils/logger.js";
+import { sendToMainChannel } from "../../../utils/mainChannel.js";
+import { safeErrorReply } from "../../../utils/commandErrors.js";
 
 export default async function (
   client: Client,
@@ -83,18 +84,7 @@ export default async function (
       })
       .setTimestamp();
 
-    if (env.MAIN_CHANNEL_ID) {
-      const channel = await client.channels.fetch(env.MAIN_CHANNEL_ID);
-      if (channel?.isTextBased() && !channel.isDMBased()) {
-        await channel.send({ embeds: [embed] });
-      } else {
-        logger.warn("Admin", "Main channel not found or not text-based", {
-          channelId: env.MAIN_CHANNEL_ID,
-        });
-      }
-    } else {
-      logger.warn("Admin", "MAIN_CHANNEL_ID not configured");
-    }
+    await sendToMainChannel(client, { embeds: [embed] });
 
     await interaction.reply({
       content: `Quote created with id: ${newQuote.id}`,
@@ -114,11 +104,6 @@ export default async function (
       err
     );
 
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({
-        content: "An error occurred while processing your request.",
-        flags: MessageFlags.Ephemeral,
-      });
-    }
+    await safeErrorReply(interaction);
   }
 }

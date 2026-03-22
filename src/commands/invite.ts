@@ -3,6 +3,7 @@ import { SlashCommandBuilder, OAuth2Scopes, MessageFlags } from "discord.js";
 import type { Client, CommandInteraction } from "discord.js";
 
 import logger from "../utils/logger.js";
+import { safeErrorReply } from "../utils/commandErrors.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("invite")
@@ -46,12 +47,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       command: "invite",
     });
 
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({
-        content: "An error occurred while processing your request.",
-        flags: MessageFlags.Ephemeral,
-      });
-    }
+    await safeErrorReply(interaction);
   }
 }
 

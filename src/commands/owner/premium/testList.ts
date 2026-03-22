@@ -3,7 +3,8 @@ import { MessageFlags } from "discord.js";
 import type { Client, CommandInteraction } from "discord.js";
 
 import logger from "../../../utils/logger.js";
-import env from "../../../utils/env.js";
+import { requireOwner } from "../../../utils/ownerGuard.js";
+import { safeErrorReply } from "../../../utils/commandErrors.js";
 
 export default async function (client: Client, interaction: CommandInteraction): Promise<void> {
   try {
@@ -13,16 +14,7 @@ export default async function (client: Client, interaction: CommandInteraction):
       interaction.user.id
     );
 
-    if (interaction.user.id !== env.OWNER_ID) {
-      logger.commands.unauthorized(
-        "owner premium test-list",
-        interaction.user.username,
-        interaction.user.id
-      );
-      await interaction.reply({
-        content: "Only the bot owner can use this command.",
-        flags: MessageFlags.Ephemeral,
-      });
+    if (!(await requireOwner(interaction, "owner premium test-list"))) {
       return;
     }
 
@@ -92,11 +84,6 @@ export default async function (client: Client, interaction: CommandInteraction):
       }
     );
 
-    if (!interaction.replied) {
-      await interaction.reply({
-        content: "Failed to list entitlements. Check bot logs for details.",
-        flags: MessageFlags.Ephemeral,
-      });
-    }
+    await safeErrorReply(interaction, "Failed to list entitlements. Check bot logs for details.");
   }
 }

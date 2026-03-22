@@ -6,6 +6,7 @@ import { eq, desc } from "drizzle-orm";
 import type { SuggestionQuote } from "../../../database/schema.js";
 
 import logger from "../../../utils/logger.js";
+import { safeErrorReply } from "../../../utils/commandErrors.js";
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
 import { suggestionQuotes } from "../../../database/schema.js";
@@ -73,11 +74,6 @@ export default async function (
       err,
     );
 
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({
-        content: "An error occurred while processing your request.",
-        flags: MessageFlags.Ephemeral,
-      });
-    }
+    await safeErrorReply(interaction);
   }
 }
