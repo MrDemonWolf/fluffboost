@@ -1,7 +1,6 @@
 import express from "express";
 import morgan from "morgan";
 import helmet from "helmet";
-import cors from "cors";
 import rateLimit from "express-rate-limit";
 
 import env from "../utils/env.js";
@@ -18,14 +17,6 @@ const app: express.Application = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(helmet());
-app.use(
-  cors({
-    origin:
-      env.NODE_ENV === "production"
-        ? env.CORS_ORIGIN // e.g. "https://app.example.com"
-        : "*",
-  })
-);
 app.use(
   rateLimit({
     windowMs: 60 * 1000,
