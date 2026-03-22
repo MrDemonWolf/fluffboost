@@ -7,7 +7,8 @@ import type {
 } from "discord.js";
 
 import logger from "../../utils/logger.js";
-import env from "../../utils/env.js";
+import { requireOwner } from "../../utils/ownerGuard.js";
+import { safeErrorReply } from "../../utils/commandErrors.js";
 
 /**
  * Import subcommands
@@ -62,16 +63,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       interaction.user.id
     );
 
-    if (interaction.user.id !== env.OWNER_ID) {
-      logger.commands.unauthorized(
-        "owner",
-        interaction.user.username,
-        interaction.user.id
-      );
-      await interaction.reply({
-        content: "Only the bot owner can use this command.",
-        flags: MessageFlags.Ephemeral,
-      });
+    if (!(await requireOwner(interaction, "owner"))) {
       return;
     }
 
@@ -125,12 +117,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       command: "owner",
     });
 
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({
-        content: "An error occurred while processing your request.",
-        flags: MessageFlags.Ephemeral,
-      });
-    }
+    await safeErrorReply(interaction);
   }
 }
 

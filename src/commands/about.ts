@@ -1,9 +1,10 @@
-import { EmbedBuilder, MessageFlags, SlashCommandBuilder } from "discord.js";
+import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 
 import type { Client, CommandInteraction, User } from "discord.js";
 
 import env from "../utils/env.js";
 import logger from "../utils/logger.js";
+import { safeErrorReply } from "../utils/commandErrors.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("about")
@@ -76,12 +77,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       command: "about",
     });
 
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({
-        content: "An error occurred while processing your request.",
-        flags: MessageFlags.Ephemeral,
-      });
-    }
+    await safeErrorReply(interaction);
   }
 }
 
