@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { describe, it, expect, afterEach } from "bun:test";
 import sinon from "sinon";
 import { getCurrentTimeInTimezone, isGuildDueForMotivation } from "../../src/utils/scheduleEvaluator.js";
 
@@ -35,40 +35,43 @@ describe("scheduleEvaluator", () => {
       // 2024-03-15 10:30:00 UTC (Friday)
       clock = sinon.useFakeTimers(new Date("2024-03-15T10:30:00Z").getTime());
       const result = getCurrentTimeInTimezone("UTC");
-      expect(result.hour).to.equal(10);
-      expect(result.minute).to.equal(30);
-      expect(result.dayOfWeek).to.equal(5); // Friday
-      expect(result.dayOfMonth).to.equal(15);
+      expect(result.hour).toBe(10);
+      expect(result.minute).toBe(30);
+      expect(result.dayOfWeek).toBe(5); // Friday
+      expect(result.dayOfMonth).toBe(15);
     });
 
     it("should convert UTC to America/Chicago (CST = UTC-6)", () => {
       // 2024-01-15 14:00:00 UTC → 08:00 CST
       clock = sinon.useFakeTimers(new Date("2024-01-15T14:00:00Z").getTime());
       const result = getCurrentTimeInTimezone("America/Chicago");
-      expect(result.hour).to.equal(8);
-      expect(result.minute).to.equal(0);
+      expect(result.hour).toBe(8);
+      expect(result.minute).toBe(0);
     });
 
     it("should convert UTC to Asia/Tokyo (UTC+9)", () => {
       // 2024-01-15 00:00:00 UTC → 09:00 JST
       clock = sinon.useFakeTimers(new Date("2024-01-15T00:00:00Z").getTime());
       const result = getCurrentTimeInTimezone("Asia/Tokyo");
-      expect(result.hour).to.equal(9);
-      expect(result.minute).to.equal(0);
+      expect(result.hour).toBe(9);
+      expect(result.minute).toBe(0);
     });
 
     it("should handle date rollback in negative-offset timezone", () => {
       // 2024-01-16 02:00:00 UTC → 2024-01-15 18:00 in LA (UTC-8)
       clock = sinon.useFakeTimers(new Date("2024-01-16T02:00:00Z").getTime());
       const result = getCurrentTimeInTimezone("America/Los_Angeles");
-      expect(result.hour).to.equal(18);
-      expect(result.dayOfMonth).to.equal(15);
+      expect(result.hour).toBe(18);
+      expect(result.dayOfMonth).toBe(15);
     });
 
     it("should return all four keys", () => {
       clock = sinon.useFakeTimers(new Date("2024-01-15T12:00:00Z").getTime());
       const result = getCurrentTimeInTimezone("UTC");
-      expect(result).to.have.all.keys("hour", "minute", "dayOfWeek", "dayOfMonth");
+      expect(result).toHaveProperty("hour");
+      expect(result).toHaveProperty("minute");
+      expect(result).toHaveProperty("dayOfWeek");
+      expect(result).toHaveProperty("dayOfMonth");
     });
   });
 
@@ -77,21 +80,21 @@ describe("scheduleEvaluator", () => {
       // 2024-01-15 14:00:00 UTC → 08:00 CST
       clock = sinon.useFakeTimers(new Date("2024-01-15T14:00:00Z").getTime());
       const guild = makeGuild();
-      expect(isGuildDueForMotivation(guild)).to.be.true;
+      expect(isGuildDueForMotivation(guild)).toBe(true);
     });
 
     it("should return false when time does not match", () => {
       // 2024-01-15 15:00:00 UTC → 09:00 CST (target is 08:00)
       clock = sinon.useFakeTimers(new Date("2024-01-15T15:00:00Z").getTime());
       const guild = makeGuild();
-      expect(isGuildDueForMotivation(guild)).to.be.false;
+      expect(isGuildDueForMotivation(guild)).toBe(false);
     });
 
     it("should return false when hour matches but minute does not", () => {
       // 2024-01-15 14:30:00 UTC → 08:30 CST (target is 08:00)
       clock = sinon.useFakeTimers(new Date("2024-01-15T14:30:00Z").getTime());
       const guild = makeGuild();
-      expect(isGuildDueForMotivation(guild)).to.be.false;
+      expect(isGuildDueForMotivation(guild)).toBe(false);
     });
 
     it("should return false when already sent today", () => {
@@ -99,7 +102,7 @@ describe("scheduleEvaluator", () => {
       const guild = makeGuild({
         lastMotivationSentAt: new Date("2024-01-15T14:00:00Z"),
       });
-      expect(isGuildDueForMotivation(guild)).to.be.false;
+      expect(isGuildDueForMotivation(guild)).toBe(false);
     });
 
     it("should return true when last sent was yesterday", () => {
@@ -107,7 +110,7 @@ describe("scheduleEvaluator", () => {
       const guild = makeGuild({
         lastMotivationSentAt: new Date("2024-01-14T14:00:00Z"),
       });
-      expect(isGuildDueForMotivation(guild)).to.be.true;
+      expect(isGuildDueForMotivation(guild)).toBe(true);
     });
   });
 
@@ -119,7 +122,7 @@ describe("scheduleEvaluator", () => {
         motivationFrequency: "Weekly",
         motivationDay: 1, // Monday
       });
-      expect(isGuildDueForMotivation(guild)).to.be.true;
+      expect(isGuildDueForMotivation(guild)).toBe(true);
     });
 
     it("should return false when day-of-week does not match", () => {
@@ -129,7 +132,7 @@ describe("scheduleEvaluator", () => {
         motivationFrequency: "Weekly",
         motivationDay: 3, // Wednesday
       });
-      expect(isGuildDueForMotivation(guild)).to.be.false;
+      expect(isGuildDueForMotivation(guild)).toBe(false);
     });
 
     it("should return false when motivationDay is null", () => {
@@ -138,7 +141,7 @@ describe("scheduleEvaluator", () => {
         motivationFrequency: "Weekly",
         motivationDay: null,
       });
-      expect(isGuildDueForMotivation(guild)).to.be.false;
+      expect(isGuildDueForMotivation(guild)).toBe(false);
     });
 
     it("should return false when already sent this week", () => {
@@ -150,7 +153,7 @@ describe("scheduleEvaluator", () => {
         // Sent earlier this same week (same Monday)
         lastMotivationSentAt: new Date("2024-01-15T08:00:00Z"),
       });
-      expect(isGuildDueForMotivation(guild)).to.be.false;
+      expect(isGuildDueForMotivation(guild)).toBe(false);
     });
 
     it("should return true when last sent was last week", () => {
@@ -161,7 +164,7 @@ describe("scheduleEvaluator", () => {
         motivationDay: 1,
         lastMotivationSentAt: new Date("2024-01-08T14:00:00Z"), // Previous Monday
       });
-      expect(isGuildDueForMotivation(guild)).to.be.true;
+      expect(isGuildDueForMotivation(guild)).toBe(true);
     });
   });
 
@@ -173,7 +176,7 @@ describe("scheduleEvaluator", () => {
         motivationFrequency: "Monthly",
         motivationDay: 15,
       });
-      expect(isGuildDueForMotivation(guild)).to.be.true;
+      expect(isGuildDueForMotivation(guild)).toBe(true);
     });
 
     it("should return false when day-of-month does not match", () => {
@@ -183,7 +186,7 @@ describe("scheduleEvaluator", () => {
         motivationFrequency: "Monthly",
         motivationDay: 20,
       });
-      expect(isGuildDueForMotivation(guild)).to.be.false;
+      expect(isGuildDueForMotivation(guild)).toBe(false);
     });
 
     it("should return false when motivationDay is null", () => {
@@ -192,7 +195,7 @@ describe("scheduleEvaluator", () => {
         motivationFrequency: "Monthly",
         motivationDay: null,
       });
-      expect(isGuildDueForMotivation(guild)).to.be.false;
+      expect(isGuildDueForMotivation(guild)).toBe(false);
     });
 
     it("should return false when already sent this month", () => {
@@ -202,7 +205,7 @@ describe("scheduleEvaluator", () => {
         motivationDay: 15,
         lastMotivationSentAt: new Date("2024-01-15T08:00:00Z"),
       });
-      expect(isGuildDueForMotivation(guild)).to.be.false;
+      expect(isGuildDueForMotivation(guild)).toBe(false);
     });
 
     it("should return true when last sent was last month", () => {
@@ -212,7 +215,7 @@ describe("scheduleEvaluator", () => {
         motivationDay: 15,
         lastMotivationSentAt: new Date("2023-12-15T14:00:00Z"),
       });
-      expect(isGuildDueForMotivation(guild)).to.be.true;
+      expect(isGuildDueForMotivation(guild)).toBe(true);
     });
   });
 
@@ -221,14 +224,14 @@ describe("scheduleEvaluator", () => {
       // 2024-01-15 06:00 UTC → 00:00 CST
       clock = sinon.useFakeTimers(new Date("2024-01-15T06:00:00Z").getTime());
       const guild = makeGuild({ motivationTime: "00:00" });
-      expect(isGuildDueForMotivation(guild)).to.be.true;
+      expect(isGuildDueForMotivation(guild)).toBe(true);
     });
 
     it("should handle end of day (23:59)", () => {
       // 2024-01-16 05:59 UTC → 23:59 CST on Jan 15
       clock = sinon.useFakeTimers(new Date("2024-01-16T05:59:00Z").getTime());
       const guild = makeGuild({ motivationTime: "23:59" });
-      expect(isGuildDueForMotivation(guild)).to.be.true;
+      expect(isGuildDueForMotivation(guild)).toBe(true);
     });
 
     it("should handle Sunday (day 0) for weekly", () => {
@@ -238,7 +241,7 @@ describe("scheduleEvaluator", () => {
         motivationFrequency: "Weekly",
         motivationDay: 0, // Sunday
       });
-      expect(isGuildDueForMotivation(guild)).to.be.true;
+      expect(isGuildDueForMotivation(guild)).toBe(true);
     });
 
     it("should handle timezone day boundary where UTC date differs from local date", () => {
@@ -251,7 +254,7 @@ describe("scheduleEvaluator", () => {
         motivationTime: "10:00",
         timezone: "Asia/Tokyo",
       });
-      expect(isGuildDueForMotivation(guild)).to.be.true;
+      expect(isGuildDueForMotivation(guild)).toBe(true);
     });
   });
 });

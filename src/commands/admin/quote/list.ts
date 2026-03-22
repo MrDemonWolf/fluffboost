@@ -1,10 +1,13 @@
 import { Client, CommandInteraction, MessageFlags } from "discord.js";
 
-import type { MotivationQuote } from "../../../generated/prisma/client.js";
+import { desc } from "drizzle-orm";
+
+import type { MotivationQuote } from "../../../database/schema.js";
 
 import logger from "../../../utils/logger.js";
 import { isUserPermitted } from "../../../utils/permissions.js";
-import { prisma } from "../../../database/index.js";
+import { db } from "../../../database/index.js";
+import { motivationQuotes } from "../../../database/schema.js";
 
 export default async function (
   _client: Client,
@@ -23,9 +26,10 @@ export default async function (
       return;
     }
 
-    const quotes = await prisma.motivationQuote.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+    const quotes = await db
+      .select()
+      .from(motivationQuotes)
+      .orderBy(desc(motivationQuotes.createdAt));
 
     if (quotes.length === 0) {
       await interaction.reply({

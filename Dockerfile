@@ -1,55 +1,42 @@
 # ----------------------------
 # Base image
 # ----------------------------
-FROM node:24-alpine AS base
+FROM oven/bun:1 AS base
 WORKDIR /usr/src/app
-RUN apk add --no-cache openssl && corepack enable
 
 # ----------------------------
 # Install all deps (cached layer)
 # ----------------------------
 FROM base AS deps
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY package.json bun.lock bunfig.toml ./
+RUN bun install --frozen-lockfile
 
 # ----------------------------
-# Install prod deps only (runs in parallel with build)
+# Install prod deps only (runs in parallel with deps)
 # ----------------------------
 FROM base AS prod-deps
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod
-
-# ----------------------------
-# Build TypeScript
-# ----------------------------
-FROM base AS build
-COPY --from=deps /usr/src/app/node_modules ./node_modules
-COPY . .
-RUN pnpm db:generate && pnpm build
+COPY package.json bun.lock bunfig.toml ./
+RUN bun install --frozen-lockfile --production
 
 # ----------------------------
 # Production runtime
 # ----------------------------
-FROM node:24-alpine
-
+FROM oven/bun:1-slim
 WORKDIR /usr/src/app
 
-RUN apk add --no-cache openssl curl \
-    && npm install -g prisma@7.4.0 \
-    && addgroup -S fluffboost && adduser -S fluffboost -G fluffboost
+RUN apt-get update && apt-get install -y openssl curl && rm -rf /var/lib/apt/lists/* \
+    && groupadd -r fluffboost && useradd -r -g fluffboost fluffboost
 
 COPY --from=prod-deps --chown=fluffboost:fluffboost /usr/src/app/node_modules ./node_modules
-COPY --from=build --chown=fluffboost:fluffboost /usr/src/app/dist ./dist
-COPY --from=build --chown=fluffboost:fluffboost /usr/src/app/package.json ./
-COPY --from=build --chown=fluffboost:fluffboost /usr/src/app/src/generated ./src/generated
-COPY --from=build --chown=fluffboost:fluffboost /usr/src/app/prisma ./prisma
-COPY --from=build --chown=fluffboost:fluffboost /usr/src/app/prisma.config.ts ./
-COPY --from=build --chown=fluffboost:fluffboost /usr/src/app/docker-entrypoint.sh ./
+COPY --chown=fluffboost:fluffboost package.json bunfig.toml ./
+COPY --chown=fluffboost:fluffboost src ./src
+COPY --chown=fluffboost:fluffboost drizzle ./drizzle
+COPY --chown=fluffboost:fluffboost drizzle.config.ts ./
+COPY --chown=fluffboost:fluffboost docker-entrypoint.sh ./
 
 USER fluffboost
 
 ENV NODE_ENV=production
-ENV NODE_PATH=/usr/local/lib/node_modules
 
 EXPOSE 3000
 

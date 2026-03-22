@@ -10,8 +10,6 @@ import {
 import type { Client, CommandInteraction } from "discord.js";
 
 import logger from "../utils/logger.js";
-import posthog from "../utils/posthog.js";
-import env from "../utils/env.js";
 import { isPremiumEnabled, hasEntitlement, getPremiumSkuId } from "../utils/premium.js";
 
 export const slashCommand = new SlashCommandBuilder()
@@ -85,17 +83,6 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
     }
 
     logger.commands.success("premium", interaction.user.username, interaction.user.id);
-
-    posthog.capture({
-      distinctId: interaction.user.id,
-      event: "premium command used",
-      properties: {
-        environment: env.NODE_ENV,
-        userId: interaction.user.id,
-        username: interaction.user.username,
-        hasPremium: hasEntitlement(interaction),
-      },
-    });
   } catch (err) {
     logger.commands.error("premium", interaction.user.username, interaction.user.id, err);
     logger.error("Discord - Command", "Error executing premium command", err, {

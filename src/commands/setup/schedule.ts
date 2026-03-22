@@ -1,12 +1,15 @@
 import { EmbedBuilder, MessageFlags } from "discord.js";
 import type { Client, ChatInputCommandInteraction, AutocompleteInteraction } from "discord.js";
 
+import { eq } from "drizzle-orm";
+
 import logger from "../../utils/logger.js";
-import { prisma } from "../../database/index.js";
+import { db } from "../../database/index.js";
+import { guilds } from "../../database/schema.js";
+import type { MotivationFrequency } from "../../database/schema.js";
 import { guildExists } from "../../utils/guildDatabase.js";
 import { hasEntitlement, isPremiumEnabled, getPremiumSkuId } from "../../utils/premium.js";
 import { isValidTimezone, filterTimezones } from "../../utils/timezones.js";
-import type { MotivationFrequency } from "../../generated/prisma/client.js";
 
 const DAY_OF_WEEK_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -110,15 +113,15 @@ export default async function schedule(_client: Client, interaction: ChatInputCo
 
     await guildExists(interaction.guildId);
 
-    await prisma.guild.update({
-      where: { guildId: interaction.guildId },
-      data: {
+    await db
+      .update(guilds)
+      .set({
         motivationFrequency: frequency,
         motivationTime: time,
         timezone,
         motivationDay: frequency === "Daily" ? null : day,
-      },
-    });
+      })
+      .where(eq(guilds.guildId, interaction.guildId));
 
     const embed = new EmbedBuilder()
       .setColor(0xfadb7f)

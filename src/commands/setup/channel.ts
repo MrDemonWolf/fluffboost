@@ -6,8 +6,11 @@ import type {
   TextChannel,
 } from "discord.js";
 
+import { eq } from "drizzle-orm";
+
 import logger from "../../utils/logger.js";
-import { prisma } from "../../database/index.js";
+import { db } from "../../database/index.js";
+import { guilds } from "../../database/schema.js";
 import { guildExists } from "../../utils/guildDatabase.js";
 
 export default async function (
@@ -34,14 +37,10 @@ export default async function (
 
     await guildExists(interaction.guildId);
 
-    await prisma.guild.update({
-      where: {
-        guildId: interaction.guildId,
-      },
-      data: {
-        motivationChannelId: motivationChannel.id,
-      },
-    });
+    await db
+      .update(guilds)
+      .set({ motivationChannelId: motivationChannel.id })
+      .where(eq(guilds.guildId, interaction.guildId));
 
     await interaction.reply({
       content: `The motivation channel has been set to <#${motivationChannel.id}>`,

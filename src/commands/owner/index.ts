@@ -14,6 +14,7 @@ import env from "../../utils/env.js";
  */
 import premiumTestCreate from "./premium/testCreate.js";
 import premiumTestDelete from "./premium/testDelete.js";
+import premiumTestList from "./premium/testList.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("owner")
@@ -43,6 +44,9 @@ export const slashCommand = new SlashCommandBuilder()
               .setDescription("The entitlement ID to delete")
               .setRequired(true)
           );
+      })
+      .addSubcommand((subCommand) => {
+        return subCommand.setName("test-list").setDescription("List all entitlements");
       });
   });
 
@@ -91,6 +95,9 @@ export async function execute(client: Client, interaction: CommandInteraction) {
               interaction,
               options as CommandInteractionOptionResolver
             );
+            break;
+          case "test-list":
+            await premiumTestList(client, interaction);
             break;
           default:
             await interaction.reply({

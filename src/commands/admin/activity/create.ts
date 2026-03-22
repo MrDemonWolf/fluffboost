@@ -1,11 +1,13 @@
 import { Client, CommandInteraction, MessageFlags } from "discord.js";
 
 import type { CommandInteractionOptionResolver } from "discord.js";
-import type { DiscordActivityType } from "../../../generated/prisma/client.js";
+
+import type { DiscordActivityType } from "../../../database/schema.js";
 
 import logger from "../../../utils/logger.js";
 import { isUserPermitted } from "../../../utils/permissions.js";
-import { prisma } from "../../../database/index.js";
+import { db } from "../../../database/index.js";
+import { discordActivities } from "../../../database/schema.js";
 
 export default async function (
   _client: Client,
@@ -44,16 +46,17 @@ export default async function (
       return;
     }
 
-    const newActivity = await prisma.discordActivity.create({
-      data: {
+    const [newActivity] = await db
+      .insert(discordActivities)
+      .values({
         activity,
         type: activityType as DiscordActivityType,
         url: activityUrl,
-      },
-    });
+      })
+      .returning();
 
     await interaction.reply({
-      content: `Activity added with id: ${newActivity.id}`,
+      content: `Activity added with id: ${newActivity?.id}`,
       flags: MessageFlags.Ephemeral,
     });
 

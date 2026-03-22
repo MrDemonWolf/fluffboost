@@ -2,10 +2,11 @@ import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
 
 import type { Client, ChatInputCommandInteraction } from "discord.js";
 
+import { count } from "drizzle-orm";
+
 import logger from "../utils/logger.js";
-import { prisma } from "../database/index.js";
-import posthog from "../utils/posthog.js";
-import env from "../utils/env.js";
+import { db } from "../database/index.js";
+import { motivationQuotes } from "../database/schema.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("quote")
@@ -22,12 +23,10 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
     /**
      * Find a random motivation quote from the database.
      */
-    const motivationQuoteCount = await prisma.motivationQuote.count();
+    const [countResult] = await db.select({ value: count() }).from(motivationQuotes);
+    const motivationQuoteCount = countResult?.value ?? 0;
     const skip = Math.floor(Math.random() * motivationQuoteCount);
-    const motivationQuote = await prisma.motivationQuote.findMany({
-      skip,
-      take: 1,
-    });
+    const motivationQuote = await db.select().from(motivationQuotes).offset(skip).limit(1);
 
     if (!motivationQuote[0]) {
       await interaction.reply(
@@ -84,17 +83,6 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
       interaction.user.username,
       interaction.user.id
     );
-
-    posthog.capture({
-      distinctId: interaction.user.id,
-      event: "quote command used",
-      properties: {
-        quote: motivationQuote[0].id,
-        environment: env.NODE_ENV,
-        userId: interaction.user.id,
-        username: interaction.user.username,
-      },
-    });
   } catch (err) {
     logger.commands.error(
       "quote",
