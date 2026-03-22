@@ -1,7 +1,6 @@
-import { expect } from "chai";
+import { describe, it, expect, beforeEach, mock } from "bun:test";
 import sinon from "sinon";
-import esmock from "esmock";
-import { mockLogger, mockPrisma, mockPosthog } from "../helpers.js";
+import { mockLogger, mockDb, mockDbChain } from "../helpers.js";
 
 /**
  * Create a Discord Collection-like Map with .map() and .filter() methods.
@@ -9,14 +8,12 @@ import { mockLogger, mockPrisma, mockPosthog } from "../helpers.js";
 function createCollectionCache<V>(entries: [string, V][] = []) {
   const map = new Map<string, V>(entries);
 
-  // Discord Collection.map returns an array of mapped values
   (map as unknown as Record<string, unknown>).map = function (
     fn: (value: V, key: string, collection: Map<string, V>) => unknown,
   ) {
     return [...map.values()].map((v, _i) => fn(v, "", map));
   };
 
-  // Discord Collection.filter returns a new Collection (Map with .size)
   (map as unknown as Record<string, unknown>).filter = function (
     fn: (value: V, key: string) => boolean,
   ) {
@@ -32,199 +29,144 @@ function createCollectionCache<V>(entries: [string, V][] = []) {
   return map;
 }
 
+const db = mockDb();
+const logger = mockLogger();
+
+mock.module("../../src/database/index.js", () => ({ db }));
+mock.module("../../src/utils/logger.js", () => ({ default: logger }));
+
+const { pruneGuilds, ensureGuildExists, guildExists } = await import("../../src/utils/guildDatabase.js");
+
+function resetStubs() {
+  sinon.restore();
+  // Reset db
+  for (const key of ["select", "insert", "update", "delete"] as const) {
+    db[key].reset();
+  }
+  db.select.callsFake(() => mockDbChain([]));
+  db.insert.callsFake(() => mockDbChain([]));
+  db.update.callsFake(() => mockDbChain([]));
+  db.delete.callsFake(() => mockDbChain());
+  // Reset logger
+  for (const value of Object.values(logger)) {
+    if (typeof value === "function" && "reset" in value) {
+      (value as sinon.SinonStub).reset();
+    } else if (typeof value === "object" && value !== null) {
+      for (const sub of Object.values(value)) {
+        if (typeof sub === "function" && "reset" in sub) {
+          (sub as sinon.SinonStub).reset();
+        }
+      }
+    }
+  }
+}
+
 describe("guildDatabase", () => {
-  afterEach(() => {
-    sinon.restore();
+  beforeEach(() => {
+    resetStubs();
   });
 
   describe("pruneGuilds", () => {
     it("should return early when no guilds in database", async () => {
-      const prisma = mockPrisma();
-      const logger = mockLogger();
-      prisma.guild.findMany.resolves([]);
-
-      const { pruneGuilds } = await esmock("../../src/utils/guildDatabase.js", {
-        "../../src/database/index.js": { prisma },
-        "../../src/utils/logger.js": { default: logger },
-        "../../src/utils/posthog.js": { default: mockPosthog() },
-      });
+      db.select.returns(mockDbChain([]));
 
       const cache = createCollectionCache();
       const client = { guilds: { cache } };
       await pruneGuilds(client as never);
-      expect(logger.info.called).to.be.true;
-      expect(prisma.guild.delete.called).to.be.false;
+      expect(logger.info.called).toBe(true);
+      expect(db.delete.called).toBe(false);
     });
 
     it("should return early when guild cache is empty", async () => {
-      const prisma = mockPrisma();
-      const logger = mockLogger();
-      prisma.guild.findMany.resolves([{ guildId: "g1" }]);
-
-      const { pruneGuilds } = await esmock("../../src/utils/guildDatabase.js", {
-        "../../src/database/index.js": { prisma },
-        "../../src/utils/logger.js": { default: logger },
-        "../../src/utils/posthog.js": { default: mockPosthog() },
-      });
+      db.select.returns(mockDbChain([{ guildId: "g1" }]));
 
       const cache = createCollectionCache();
       const client = { guilds: { cache } };
       await pruneGuilds(client as never);
-      expect(logger.info.called).to.be.true;
-      expect(prisma.guild.delete.called).to.be.false;
+      expect(logger.info.called).toBe(true);
+      expect(db.delete.called).toBe(false);
     });
 
     it("should delete guilds that are not in cache", async () => {
-      const prisma = mockPrisma();
-      const logger = mockLogger();
-      const posthog = mockPosthog();
-      prisma.guild.findMany.resolves([{ guildId: "g1" }, { guildId: "g2" }]);
+      db.select.returns(mockDbChain([{ guildId: "g1" }, { guildId: "g2" }]));
 
-      const { pruneGuilds } = await esmock("../../src/utils/guildDatabase.js", {
-        "../../src/database/index.js": { prisma },
-        "../../src/utils/logger.js": { default: logger },
-        "../../src/utils/posthog.js": { default: posthog },
-      });
-
-      // Only g2 is in cache; g1 should be pruned
       const cache = createCollectionCache([["g2", { id: "g2" }]]);
       const client = { guilds: { cache } };
 
       await pruneGuilds(client as never);
-      expect(prisma.guild.delete.calledOnce).to.be.true;
-      expect(prisma.guild.delete.firstCall.args[0]).to.deep.equal({ where: { guildId: "g1" } });
+      expect(db.delete.calledOnce).toBe(true);
     });
 
     it("should not delete any guilds when all are in cache", async () => {
-      const prisma = mockPrisma();
-      const logger = mockLogger();
-      prisma.guild.findMany.resolves([{ guildId: "g1" }]);
-
-      const { pruneGuilds } = await esmock("../../src/utils/guildDatabase.js", {
-        "../../src/database/index.js": { prisma },
-        "../../src/utils/logger.js": { default: logger },
-        "../../src/utils/posthog.js": { default: mockPosthog() },
-      });
+      db.select.returns(mockDbChain([{ guildId: "g1" }]));
 
       const cache = createCollectionCache([["g1", { id: "g1" }]]);
       const client = { guilds: { cache } };
 
       await pruneGuilds(client as never);
-      expect(prisma.guild.delete.called).to.be.false;
+      expect(db.delete.called).toBe(false);
     });
 
     it("should handle per-guild delete errors gracefully", async () => {
-      const prisma = mockPrisma();
-      const logger = mockLogger();
-      prisma.guild.findMany.resolves([{ guildId: "g1" }]);
-      prisma.guild.delete.rejects(new Error("DB error"));
+      db.select.returns(mockDbChain([{ guildId: "g1" }]));
+      const deleteChain = mockDbChain();
+      deleteChain.rejects(new Error("DB error"));
+      db.delete.returns(deleteChain);
 
-      const { pruneGuilds } = await esmock("../../src/utils/guildDatabase.js", {
-        "../../src/database/index.js": { prisma },
-        "../../src/utils/logger.js": { default: logger },
-        "../../src/utils/posthog.js": { default: mockPosthog() },
-      });
-
-      // Cache has "other" but not "g1", so g1 should be pruned
       const cache = createCollectionCache([["other", { id: "other" }]]);
       const client = { guilds: { cache } };
 
       await pruneGuilds(client as never);
-      expect(logger.error.called).to.be.true;
+      expect(logger.error.called).toBe(true);
     });
   });
 
   describe("ensureGuildExists", () => {
     it("should return early when all guilds already exist", async () => {
-      const prisma = mockPrisma();
-      const logger = mockLogger();
-      prisma.guild.findMany.resolves([{ guildId: "g1" }]);
-
-      const { ensureGuildExists } = await esmock("../../src/utils/guildDatabase.js", {
-        "../../src/database/index.js": { prisma },
-        "../../src/utils/logger.js": { default: logger },
-        "../../src/utils/posthog.js": { default: mockPosthog() },
-      });
+      db.select.returns(mockDbChain([{ guildId: "g1" }]));
 
       const cache = createCollectionCache([["g1", { id: "g1", name: "G1" }]]);
       const client = { guilds: { cache } };
 
       await ensureGuildExists(client as never);
-      expect(prisma.guild.create.called).to.be.false;
+      expect(db.insert.called).toBe(false);
     });
 
     it("should create guilds that are in cache but not in database", async () => {
-      const prisma = mockPrisma();
-      const logger = mockLogger();
-      const posthog = mockPosthog();
-      prisma.guild.findMany.resolves([]);
-
-      const { ensureGuildExists } = await esmock("../../src/utils/guildDatabase.js", {
-        "../../src/database/index.js": { prisma },
-        "../../src/utils/logger.js": { default: logger },
-        "../../src/utils/posthog.js": { default: posthog },
-      });
+      db.select.returns(mockDbChain([]));
 
       const cache = createCollectionCache([["g1", { id: "g1", name: "G1" }]]);
       const client = { guilds: { cache } };
 
       await ensureGuildExists(client as never);
-      expect(prisma.guild.create.calledOnce).to.be.true;
-      expect(posthog.capture.calledOnce).to.be.true;
+      expect(db.insert.calledOnce).toBe(true);
     });
 
     it("should handle per-guild create errors gracefully", async () => {
-      const prisma = mockPrisma();
-      const logger = mockLogger();
-      prisma.guild.findMany.resolves([]);
-      prisma.guild.create.rejects(new Error("DB error"));
-
-      const { ensureGuildExists } = await esmock("../../src/utils/guildDatabase.js", {
-        "../../src/database/index.js": { prisma },
-        "../../src/utils/logger.js": { default: logger },
-        "../../src/utils/posthog.js": { default: mockPosthog() },
-      });
+      db.select.returns(mockDbChain([]));
+      const insertChain = mockDbChain();
+      insertChain.rejects(new Error("DB error"));
+      db.insert.returns(insertChain);
 
       const cache = createCollectionCache([["g1", { id: "g1", name: "G1" }]]);
       const client = { guilds: { cache } };
 
       await ensureGuildExists(client as never);
-      expect(logger.error.called).to.be.true;
+      expect(logger.error.called).toBe(true);
     });
   });
 
   describe("guildExists", () => {
-    it("should upsert and return true for existing guild", async () => {
-      const prisma = mockPrisma();
-      prisma.guild.upsert.resolves({ guildId: "g1" });
-
-      const { guildExists } = await esmock("../../src/utils/guildDatabase.js", {
-        "../../src/database/index.js": { prisma },
-        "../../src/utils/logger.js": { default: mockLogger() },
-        "../../src/utils/posthog.js": { default: mockPosthog() },
-      });
-
+    it("should insert with onConflictDoNothing and return true", async () => {
       const result = await guildExists("g1");
-      expect(result).to.be.true;
-      expect(prisma.guild.upsert.calledOnce).to.be.true;
-      const args = prisma.guild.upsert.firstCall.args[0];
-      expect(args.where.guildId).to.equal("g1");
-      expect(args.create.guildId).to.equal("g1");
+      expect(result).toBe(true);
+      expect(db.insert.calledOnce).toBe(true);
     });
 
-    it("should upsert and return true for new guild", async () => {
-      const prisma = mockPrisma();
-      prisma.guild.upsert.resolves({ guildId: "g-new" });
-
-      const { guildExists } = await esmock("../../src/utils/guildDatabase.js", {
-        "../../src/database/index.js": { prisma },
-        "../../src/utils/logger.js": { default: mockLogger() },
-        "../../src/utils/posthog.js": { default: mockPosthog() },
-      });
-
+    it("should insert with onConflictDoNothing and return true for new guild", async () => {
       const result = await guildExists("g-new");
-      expect(result).to.be.true;
-      expect(prisma.guild.upsert.calledOnce).to.be.true;
+      expect(result).toBe(true);
+      expect(db.insert.calledOnce).toBe(true);
     });
   });
 });

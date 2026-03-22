@@ -1,8 +1,7 @@
-import { expect } from "chai";
+import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import esmock from "esmock";
 import { MessageFlags } from "discord.js";
-import { mockLogger, mockPosthog, mockClient, mockInteraction } from "../helpers.js";
+import { mockLogger, mockClient, mockInteraction } from "../helpers.js";
 
 describe("changelog command", () => {
   afterEach(() => {
@@ -11,14 +10,12 @@ describe("changelog command", () => {
 
   async function loadModule() {
     const logger = mockLogger();
-    const posthog = mockPosthog();
 
-    const mod = await esmock("../../src/commands/changelog.js", {
-      "../../src/utils/logger.js": { default: logger },
-      "../../src/utils/posthog.js": { default: posthog },
-    });
+    mock.module("../../src/utils/logger.js", () => ({ default: logger }));
 
-    return { execute: mod.execute, logger, posthog };
+    const mod = await import("../../src/commands/changelog.js");
+
+    return { execute: mod.execute, logger };
   }
 
   it("should reply with changelog embed", async () => {
@@ -27,20 +24,11 @@ describe("changelog command", () => {
 
     await execute(mockClient() as never, interaction as never);
 
-    expect((interaction.reply as sinon.SinonStub).calledOnce).to.be.true;
+    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.embeds).to.be.an("array").with.lengthOf(1);
-    expect(replyArgs.flags).to.equal(MessageFlags.Ephemeral);
-  });
-
-  it("should capture posthog event", async () => {
-    const { execute, posthog } = await loadModule();
-    const interaction = mockInteraction();
-
-    await execute(mockClient() as never, interaction as never);
-
-    expect(posthog.capture.calledOnce).to.be.true;
-    expect(posthog.capture.firstCall.args[0].event).to.equal("changelog command used");
+    expect(Array.isArray(replyArgs.embeds)).toBe(true);
+    expect(replyArgs.embeds).toHaveLength(1);
+    expect(replyArgs.flags).toBe(MessageFlags.Ephemeral);
   });
 
   it("should reply with error on failure", async () => {
@@ -51,6 +39,6 @@ describe("changelog command", () => {
 
     await execute(mockClient() as never, interaction as never);
 
-    expect(logger.commands.error.calledOnce).to.be.true;
+    expect(logger.commands.error.calledOnce).toBe(true);
   });
 });

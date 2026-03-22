@@ -1,0 +1,8 @@
+[install]
+globalCache = true
+linker = "isolated"
+autoInstall = false
+
+[test]
+root = "./tests"
+timeout = 5000

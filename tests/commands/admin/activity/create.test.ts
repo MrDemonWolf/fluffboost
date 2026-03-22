@@ -1,7 +1,6 @@
-import { expect } from "chai";
+import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import esmock from "esmock";
-import { mockLogger, mockPrisma, mockInteraction, mockClient } from "../../../helpers.js";
+import { mockLogger, mockDb, mockDbChain, mockInteraction, mockClient } from "../../../helpers.js";
 
 describe("admin activity create command", () => {
   afterEach(() => {
@@ -10,28 +9,28 @@ describe("admin activity create command", () => {
 
   async function loadModule() {
     const logger = mockLogger();
-    const prisma = mockPrisma();
+    const db = mockDb();
 
-    const mod = await esmock("../../../../src/commands/admin/activity/create.js", {
-      "../../../../src/utils/logger.js": { default: logger },
-      "../../../../src/database/index.js": { prisma },
-      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().resolves(true) },
-    });
+    mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../../../src/database/index.js", () => ({ db }));
+    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().resolves(true) }));
 
-    return { handler: mod.default, logger, prisma };
+    const mod = await import("../../../../src/commands/admin/activity/create.js");
+
+    return { handler: mod.default, logger, db };
   }
 
   async function loadModuleNotPermitted() {
     const logger = mockLogger();
-    const prisma = mockPrisma();
+    const db = mockDb();
 
-    const mod = await esmock("../../../../src/commands/admin/activity/create.js", {
-      "../../../../src/utils/logger.js": { default: logger },
-      "../../../../src/database/index.js": { prisma },
-      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().resolves(false) },
-    });
+    mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../../../src/database/index.js", () => ({ db }));
+    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().resolves(false) }));
 
-    return { handler: mod.default, logger, prisma };
+    const mod = await import("../../../../src/commands/admin/activity/create.js");
+
+    return { handler: mod.default, logger, db };
   }
 
   function makeInteraction(activity: string, type: string, url: string | null = null) {
@@ -49,7 +48,7 @@ describe("admin activity create command", () => {
 
     await handler(mockClient() as never, interaction as never, interaction.options as never);
 
-    expect((interaction.reply as sinon.SinonStub).called).to.be.false;
+    expect((interaction.reply as sinon.SinonStub).called).toBe(false);
   });
 
   it("should reply when empty activity provided", async () => {
@@ -59,7 +58,7 @@ describe("admin activity create command", () => {
     await handler(mockClient() as never, interaction as never, interaction.options as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("provide an activity");
+    expect(replyArgs.content).toContain("provide an activity");
   });
 
   it("should reply when empty type provided", async () => {
@@ -69,47 +68,50 @@ describe("admin activity create command", () => {
     await handler(mockClient() as never, interaction as never, interaction.options as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("provide a type");
+    expect(replyArgs.content).toContain("provide a type");
   });
 
   it("should create activity and reply on success", async () => {
-    const { handler, prisma } = await loadModule();
-    prisma.discordActivity.create.resolves({ id: "a1", activity: "Gaming", type: "Playing", url: null });
+    const { handler, db } = await loadModule();
+    db.insert.returns(mockDbChain([{ id: "a1", activity: "Gaming", type: "Playing", url: null }]));
 
     const interaction = makeInteraction("Gaming", "Playing");
     await handler(mockClient() as never, interaction as never, interaction.options as never);
 
-    expect(prisma.discordActivity.create.calledOnce).to.be.true;
+    expect(db.insert.calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("Activity added");
+    expect(replyArgs.content).toContain("Activity added");
   });
 
   it("should create activity with url when provided", async () => {
-    const { handler, prisma } = await loadModule();
-    prisma.discordActivity.create.resolves({
+    const { handler, db } = await loadModule();
+    const chain = mockDbChain([{
       id: "a1",
       activity: "Streaming",
       type: "Streaming",
       url: "https://twitch.tv/test",
-    });
+    }]);
+    db.insert.returns(chain);
 
     const interaction = makeInteraction("Streaming", "Streaming", "https://twitch.tv/test");
     await handler(mockClient() as never, interaction as never, interaction.options as never);
 
-    expect(prisma.discordActivity.create.calledOnce).to.be.true;
-    const createArgs = prisma.discordActivity.create.firstCall.args[0];
-    expect(createArgs.data.url).to.equal("https://twitch.tv/test");
+    expect(db.insert.calledOnce).toBe(true);
+    const valuesArgs = (chain.values as sinon.SinonStub).firstCall.args[0];
+    expect(valuesArgs.url).toBe("https://twitch.tv/test");
   });
 
   it("should reply with error on database failure", async () => {
-    const { handler, prisma, logger } = await loadModule();
-    prisma.discordActivity.create.rejects(new Error("DB error"));
+    const { handler, db, logger } = await loadModule();
+    const chain = mockDbChain();
+    chain.rejects(new Error("DB error"));
+    db.insert.returns(chain);
 
     const interaction = makeInteraction("Gaming", "Playing");
     await handler(mockClient() as never, interaction as never, interaction.options as never);
 
-    expect(logger.commands.error.calledOnce).to.be.true;
+    expect(logger.commands.error.calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("error occurred");
+    expect(replyArgs.content).toContain("error occurred");
   });
 });

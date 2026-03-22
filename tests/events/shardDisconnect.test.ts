@@ -1,6 +1,5 @@
-import { expect } from "chai";
+import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import esmock from "esmock";
 import { mockLogger } from "../helpers.js";
 
 describe("shardDisconnect event", () => {
@@ -12,15 +11,14 @@ describe("shardDisconnect event", () => {
     const logger = mockLogger();
     const exitStub = sinon.stub(process, "exit");
 
-    const mod = await esmock("../../src/events/shardDisconnect.js", {
-      "../../src/utils/logger.js": { default: logger },
-    });
+    mock.module("../../src/utils/logger.js", () => ({ default: logger }));
+    const mod = await import("../../src/events/shardDisconnect.js");
 
     mod.shardDisconnectEvent();
 
-    expect(logger.error.calledOnce).to.be.true;
-    expect(logger.error.firstCall.args[0]).to.include("Shard Disconnect");
-    expect(exitStub.calledOnce).to.be.true;
-    expect(exitStub.firstCall.args[0]).to.equal(1);
+    expect(logger.error.calledOnce).toBe(true);
+    expect(logger.error.firstCall.args[0]).toContain("Shard Disconnect");
+    expect(exitStub.calledOnce).toBe(true);
+    expect(exitStub.firstCall.args[0]).toBe(1);
   });
 });

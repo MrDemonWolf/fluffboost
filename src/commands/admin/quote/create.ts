@@ -8,7 +8,8 @@ import {
 import type { CommandInteractionOptionResolver } from "discord.js";
 
 import { isUserPermitted } from "../../../utils/permissions.js";
-import { prisma } from "../../../database/index.js";
+import { db } from "../../../database/index.js";
+import { motivationQuotes } from "../../../database/schema.js";
 import env from "../../../utils/env.js";
 import logger from "../../../utils/logger.js";
 
@@ -48,13 +49,18 @@ export default async function (
       return;
     }
 
-    const newQuote = await prisma.motivationQuote.create({
-      data: {
+    const [newQuote] = await db
+      .insert(motivationQuotes)
+      .values({
         quote,
         author: quoteAuthor,
         addedBy: interaction.user.id,
-      },
-    });
+      })
+      .returning();
+
+    if (!newQuote) {
+      return;
+    }
 
     /**
      * Send a message to the main channelof the owner guild

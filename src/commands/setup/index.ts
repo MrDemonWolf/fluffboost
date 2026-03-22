@@ -75,6 +75,14 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       return;
     }
 
+    if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+      await interaction.reply({
+        content: "You need Administrator permissions to use this command.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
     logger.commands.executing(
       "setup",
       interaction.user.username,
