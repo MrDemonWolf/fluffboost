@@ -95,7 +95,6 @@ FluffBoost uses Discord slash commands grouped by role.
 | Database         | PostgreSQL 16 via Prisma 7               |
 | Job Queue        | BullMQ with Redis 7                      |
 | HTTP Server      | Express 5                                |
-| Analytics        | PostHog                                  |
 | Containerization | Docker (multi-stage, Node 24 Alpine)     |
 | CI/CD            | GitHub Actions                           |
 | Deployment       | Coolify                                  |

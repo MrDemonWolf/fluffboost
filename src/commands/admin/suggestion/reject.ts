@@ -7,8 +7,11 @@ import {
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 
+import { eq, and } from "drizzle-orm";
+
 import { isUserPermitted } from "../../../utils/permissions.js";
-import { prisma } from "../../../database/index.js";
+import { db } from "../../../database/index.js";
+import { suggestionQuotes } from "../../../database/schema.js";
 import env from "../../../utils/env.js";
 import logger from "../../../utils/logger.js";
 
@@ -33,19 +36,22 @@ export default async function (
     const suggestionId = options.getString("suggestion_id", true);
     const reason = options.getString("reason");
 
-    const result = await prisma.suggestionQuote.updateMany({
-      where: { id: suggestionId, status: "Pending" },
-      data: {
+    const result = await db
+      .update(suggestionQuotes)
+      .set({
         status: "Rejected",
         reviewedBy: interaction.user.id,
         reviewedAt: new Date(),
-      },
-    });
+      })
+      .where(and(eq(suggestionQuotes.id, suggestionId), eq(suggestionQuotes.status, "Pending")))
+      .returning();
 
-    if (result.count === 0) {
-      const existing = await prisma.suggestionQuote.findUnique({
-        where: { id: suggestionId },
-      });
+    if (result.length === 0) {
+      const [existing] = await db
+        .select()
+        .from(suggestionQuotes)
+        .where(eq(suggestionQuotes.id, suggestionId))
+        .limit(1);
 
       if (!existing) {
         await interaction.reply({
@@ -61,9 +67,11 @@ export default async function (
       return;
     }
 
-    const suggestion = await prisma.suggestionQuote.findUnique({
-      where: { id: suggestionId },
-    });
+    const [suggestion] = await db
+      .select()
+      .from(suggestionQuotes)
+      .where(eq(suggestionQuotes.id, suggestionId))
+      .limit(1);
 
     if (!suggestion) {
       return;

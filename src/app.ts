@@ -1,7 +1,6 @@
 import { ShardingManager } from "discord.js";
 import { config } from "dotenv";
-import { PrismaClient } from "./generated/prisma/client.js";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { queryClient } from "./database/index.js";
 import api from "./api/index.js";
 import redis from "./redis/index.js";
 import env from "./utils/env.js";
@@ -13,22 +12,14 @@ import logger from "./utils/logger.js";
 config();
 
 /**
- * Load Prsima Client and connect to Prisma Server if failed to connect, throw error.
+ * Verify database connectivity via a simple query.
  */
-const adapter = new PrismaPg({
-  connectionString: env.DATABASE_URL,
-});
-
-const prisma = new PrismaClient({ adapter });
-
-prisma
-  .$connect()
-  .then(async () => {
-    await prisma.$disconnect();
-    logger.database.connected("Prisma");
+queryClient`SELECT 1`
+  .then(() => {
+    logger.database.connected("PostgreSQL");
   })
-  .catch(async (err: Error) => {
-    logger.database.error("Prisma", err);
+  .catch((err: Error) => {
+    logger.database.error("PostgreSQL", err);
     process.exit(1);
   });
 
@@ -56,19 +47,10 @@ server.on("error", (err: unknown) => {
 /**
  * Discord.js Sharding Manager
  */
-const manager = new ShardingManager(
-  env.NODE_ENV === "production" ? "./dist/bot.js" : "./src/bot.ts",
-  env.NODE_ENV === "production"
-    ? {
-        token: env.DISCORD_APPLICATION_BOT_TOKEN,
-        totalShards: "auto",
-      }
-    : {
-        token: env.DISCORD_APPLICATION_BOT_TOKEN,
-        totalShards: "auto",
-        execArgv: ["--import", "tsx"],
-      }
-);
+const manager = new ShardingManager("./src/bot.ts", {
+  token: env.DISCORD_APPLICATION_BOT_TOKEN,
+  totalShards: "auto",
+});
 
 manager.on("shardCreate", (shard) => {
   try {

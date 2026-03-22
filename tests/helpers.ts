@@ -3,7 +3,7 @@ import type { SinonStub } from "sinon";
 
 /**
  * Shared test helper factories for FluffBoost tests.
- * Provides lightweight mock objects for Discord.js, Prisma, Logger, and PostHog.
+ * Provides lightweight mock objects for Discord.js, Drizzle, and Logger.
  */
 
 // ── Logger mock ──────────────────────────────────────────────────────────────
@@ -44,50 +44,72 @@ export function mockLogger() {
   };
 }
 
-// ── Prisma mock ──────────────────────────────────────────────────────────────
+// ── Drizzle DB mock ─────────────────────────────────────────────────────────
 
-export function mockPrisma() {
-  return {
-    $transaction: sinon.stub().callsFake((promises: Promise<unknown>[]) => Promise.all(promises)),
-    guild: {
-      findMany: sinon.stub().resolves([]),
-      findUnique: sinon.stub().resolves(null),
-      create: sinon.stub().resolves({ guildId: "test-guild" }),
-      update: sinon.stub().resolves({ guildId: "test-guild" }),
-      upsert: sinon.stub().resolves({ guildId: "test-guild" }),
-      delete: sinon.stub().resolves({ guildId: "test-guild" }),
-      count: sinon.stub().resolves(0),
-    },
-    motivationQuote: {
-      findMany: sinon.stub().resolves([]),
-      findUnique: sinon.stub().resolves(null),
-      count: sinon.stub().resolves(0),
-      create: sinon.stub().resolves({}),
-      delete: sinon.stub().resolves({}),
-    },
-    discordActivity: {
-      findMany: sinon.stub().resolves([]),
-      findUnique: sinon.stub().resolves(null),
-      create: sinon.stub().resolves({}),
-      delete: sinon.stub().resolves({}),
-    },
-    suggestionQuote: {
-      findMany: sinon.stub().resolves([]),
-      findUnique: sinon.stub().resolves(null),
-      create: sinon.stub().resolves({}),
-      update: sinon.stub().resolves({}),
-      updateMany: sinon.stub().resolves({ count: 0 }),
-      count: sinon.stub().resolves(0),
-    },
+/**
+ * Creates a chainable mock that simulates Drizzle's query builder.
+ * All chaining methods (from, where, orderBy, etc.) return `this`.
+ * When `await`ed, resolves to the configured value (default: []).
+ *
+ * Usage in tests:
+ *   const chain = mockDbChain([{ guildId: "g1" }]);
+ *   db.select.returns(chain);
+ *   // When source code does: await db.select().from(guilds).where(...)
+ *   // It resolves to [{ guildId: "g1" }]
+ *
+ * For error cases:
+ *   const chain = mockDbChain();
+ *   chain.rejects(new Error("DB error"));
+ */
+export function mockDbChain(resolveValue: unknown = []) {
+  let _resolveValue: unknown = resolveValue;
+  let _rejectValue: unknown = undefined;
+
+  const chain: Record<string, unknown> = {};
+  const methods = [
+    "from", "where", "orderBy", "limit", "offset",
+    "set", "values", "onConflictDoNothing", "returning", "target",
+  ];
+
+  for (const method of methods) {
+    chain[method] = sinon.stub().returns(chain);
+  }
+
+  // Make the chain thenable so `await db.select().from(...)` works
+  chain.then = (onFulfill: (v: unknown) => unknown, onReject?: (e: unknown) => unknown) => {
+    if (_rejectValue !== undefined) {
+      return Promise.reject(_rejectValue).then(onFulfill, onReject);
+    }
+    return Promise.resolve(_resolveValue).then(onFulfill, onReject);
   };
+
+  // Test configuration helpers
+  chain.resolves = (value: unknown) => { _resolveValue = value; _rejectValue = undefined; return chain; };
+  chain.rejects = (err: unknown) => { _rejectValue = err; return chain; };
+
+  return chain;
 }
 
-// ── PostHog mock ─────────────────────────────────────────────────────────────
-
-export function mockPosthog() {
+/**
+ * Creates a mock for Drizzle's `db` object.
+ * Each method (select, insert, update, delete) returns a fresh chainable mock by default.
+ * Use sinon's `.returns()` or `.onCall(n).returns()` to configure specific chain results.
+ *
+ * Example:
+ *   const db = mockDb();
+ *   db.select.returns(mockDbChain([{ guildId: "g1" }]));
+ *   db.insert.returns(mockDbChain([{ id: "new-id" }]));
+ */
+export function mockDb() {
   return {
-    capture: sinon.stub(),
-    shutdown: sinon.stub(),
+    select: sinon.stub().callsFake(() => mockDbChain([])),
+    insert: sinon.stub().callsFake(() => mockDbChain([])),
+    update: sinon.stub().callsFake(() => mockDbChain([])),
+    delete: sinon.stub().callsFake(() => mockDbChain()),
+    transaction: sinon.stub().callsFake(async (fn: (tx: ReturnType<typeof mockDb>) => Promise<unknown>) => {
+      const tx = mockDb();
+      return fn(tx);
+    }),
   };
 }
 
@@ -150,6 +172,7 @@ export function mockClient(overrides: Record<string, unknown> = {}) {
       entitlements: {
         createTest: sinon.stub().resolves({ id: "ent-123", skuId: "sku-123" }),
         deleteTest: sinon.stub().resolves(),
+        fetch: sinon.stub().resolves(new Map()),
       },
     },
     ...overrides,
@@ -194,8 +217,6 @@ export function mockEnv(overrides: Record<string, unknown> = {}) {
     OWNER_ID: "owner-123",
     MAIN_GUILD_ID: "main-guild-123",
     MAIN_CHANNEL_ID: "main-channel-123",
-    POSTHOG_API_KEY: "phk_test",
-    POSTHOG_HOST: "https://posthog.test",
     HOST: "localhost",
     PORT: "3000",
     CORS_ORIGIN: "*",
@@ -210,6 +231,5 @@ export function mockEnv(overrides: Record<string, unknown> = {}) {
 // ── Utility types for stubs ──────────────────────────────────────────────────
 
 export type MockLogger = ReturnType<typeof mockLogger>;
-export type MockPrisma = ReturnType<typeof mockPrisma>;
-export type MockPosthog = ReturnType<typeof mockPosthog>;
+export type MockDb = ReturnType<typeof mockDb>;
 export type StubFn = SinonStub;

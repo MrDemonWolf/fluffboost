@@ -1,7 +1,6 @@
-import { expect } from "chai";
+import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import esmock from "esmock";
-import { mockLogger, mockPrisma, mockInteraction, mockEnv } from "../../../helpers.js";
+import { mockLogger, mockDb, mockDbChain, mockInteraction, mockEnv } from "../../../helpers.js";
 
 describe("admin suggestion list command", () => {
   afterEach(() => {
@@ -10,31 +9,31 @@ describe("admin suggestion list command", () => {
 
   async function loadModule(overrides: { env?: Record<string, unknown> } = {}) {
     const logger = mockLogger();
-    const prisma = mockPrisma();
+    const db = mockDb();
     const env = mockEnv(overrides.env);
 
-    const mod = await esmock("../../../../src/commands/admin/suggestion/list.js", {
-      "../../../../src/utils/logger.js": { default: logger },
-      "../../../../src/database/index.js": { prisma },
-      "../../../../src/utils/env.js": { default: env },
-      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().returns(true) },
-    });
+    mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../../../src/database/index.js", () => ({ db }));
+    mock.module("../../../../src/utils/env.js", () => ({ default: env }));
+    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().returns(true) }));
 
-    return { handler: mod.default, logger, prisma };
+    const mod = await import("../../../../src/commands/admin/suggestion/list.js");
+
+    return { handler: mod.default, logger, db };
   }
 
   async function loadModuleUnauthorized() {
     const logger = mockLogger();
-    const prisma = mockPrisma();
+    const db = mockDb();
 
-    const mod = await esmock("../../../../src/commands/admin/suggestion/list.js", {
-      "../../../../src/utils/logger.js": { default: logger },
-      "../../../../src/database/index.js": { prisma },
-      "../../../../src/utils/env.js": { default: mockEnv() },
-      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().returns(false) },
-    });
+    mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../../../src/database/index.js", () => ({ db }));
+    mock.module("../../../../src/utils/env.js", () => ({ default: mockEnv() }));
+    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().returns(false) }));
 
-    return { handler: mod.default, logger, prisma };
+    const mod = await import("../../../../src/commands/admin/suggestion/list.js");
+
+    return { handler: mod.default, logger, db };
   }
 
   function makeInteraction(status: string | null = null) {
@@ -45,58 +44,62 @@ describe("admin suggestion list command", () => {
   }
 
   it("should deny unauthorized users", async () => {
-    const { handler, prisma } = await loadModuleUnauthorized();
+    const { handler, db } = await loadModuleUnauthorized();
     const interaction = makeInteraction();
 
     await handler({} as never, interaction as never, interaction.options as never);
 
-    expect(prisma.suggestionQuote.findMany.called).to.be.false;
+    expect(db.select.called).toBe(false);
   });
 
   it("should return message when no suggestions found", async () => {
     const { handler } = await loadModule();
     const interaction = makeInteraction();
 
+    // Default mockDb already returns empty array for select
     await handler({} as never, interaction as never, interaction.options as never);
 
-    expect((interaction.reply as sinon.SinonStub).calledOnce).to.be.true;
+    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("No suggestions found");
+    expect(replyArgs.content).toContain("No suggestions found");
   });
 
   it("should filter by status when provided", async () => {
-    const { handler, prisma } = await loadModule();
+    const { handler, db } = await loadModule();
     const interaction = makeInteraction("Pending");
 
-    prisma.suggestionQuote.findMany.resolves([]);
+    // The source builds the chain: db.select().from().orderBy() then conditionally .where()
+    // With our mock, select returns a chain, and .where() is called on it
+    const chain = mockDbChain([]);
+    db.select.returns(chain);
 
     await handler({} as never, interaction as never, interaction.options as never);
 
-    expect(prisma.suggestionQuote.findMany.calledOnce).to.be.true;
-    const findArgs = prisma.suggestionQuote.findMany.firstCall.args[0];
-    expect(findArgs.where.status).to.equal("Pending");
+    expect(db.select.calledOnce).toBe(true);
+    // The where method should have been called (for status filter)
+    expect((chain.where as sinon.SinonStub).called).toBe(true);
   });
 
   it("should return suggestions as a text file", async () => {
-    const { handler, prisma } = await loadModule();
+    const { handler, db } = await loadModule();
     const interaction = makeInteraction();
 
-    prisma.suggestionQuote.findMany.resolves([
+    db.select.returns(mockDbChain([
       { id: "s1", quote: "Be kind", author: "Anon", status: "Pending", addedBy: "user-1" },
       { id: "s2", quote: "Stay strong", author: "Me", status: "Approved", addedBy: "user-2" },
-    ]);
+    ]));
 
     await handler({} as never, interaction as never, interaction.options as never);
 
-    expect((interaction.reply as sinon.SinonStub).calledOnce).to.be.true;
+    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.files).to.have.length(1);
-    expect(replyArgs.files[0].name).to.equal("suggestions.txt");
+    expect(replyArgs.files).toHaveLength(1);
+    expect(replyArgs.files[0].name).toBe("suggestions.txt");
 
     const content = replyArgs.files[0].attachment.toString();
-    expect(content).to.include("s1");
-    expect(content).to.include("Be kind");
-    expect(content).to.include("s2");
-    expect(content).to.include("Stay strong");
+    expect(content).toContain("s1");
+    expect(content).toContain("Be kind");
+    expect(content).toContain("s2");
+    expect(content).toContain("Stay strong");
   });
 });

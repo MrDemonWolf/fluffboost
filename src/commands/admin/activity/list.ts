@@ -1,10 +1,13 @@
 import { Client, CommandInteraction, MessageFlags } from "discord.js";
 
-import type { DiscordActivity } from "../../../generated/prisma/client.js";
+import { desc } from "drizzle-orm";
+
+import type { DiscordActivity } from "../../../database/schema.js";
 
 import logger from "../../../utils/logger.js";
 import { isUserPermitted } from "../../../utils/permissions.js";
-import { prisma } from "../../../database/index.js";
+import { db } from "../../../database/index.js";
+import { discordActivities } from "../../../database/schema.js";
 
 export default async function (
   _client: Client,
@@ -23,9 +26,10 @@ export default async function (
       return;
     }
 
-    const activities = await prisma.discordActivity.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+    const activities = await db
+      .select()
+      .from(discordActivities)
+      .orderBy(desc(discordActivities.createdAt));
 
     if (activities.length === 0) {
       await interaction.reply({

@@ -1,7 +1,6 @@
-import { expect } from "chai";
+import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import esmock from "esmock";
-import { mockLogger, mockPrisma, mockInteraction } from "../../helpers.js";
+import { mockLogger, mockDb, mockDbChain, mockInteraction } from "../../helpers.js";
 
 describe("setup schedule command", () => {
   afterEach(() => {
@@ -10,26 +9,26 @@ describe("setup schedule command", () => {
 
   async function loadModule(overrides: { premiumEnabled?: boolean; hasEntitlement?: boolean } = {}) {
     const logger = mockLogger();
-    const prisma = mockPrisma();
+    const db = mockDb();
 
-    const mod = await esmock("../../../src/commands/setup/schedule.js", {
-      "../../../src/utils/logger.js": { default: logger },
-      "../../../src/database/index.js": { prisma },
-      "../../../src/utils/premium.js": {
-        isPremiumEnabled: sinon.stub().returns(overrides.premiumEnabled ?? false),
-        hasEntitlement: sinon.stub().returns(overrides.hasEntitlement ?? false),
-        getPremiumSkuId: sinon.stub().returns("sku-1"),
-      },
-      "../../../src/utils/guildDatabase.js": { guildExists: sinon.stub().resolves(true) },
-      "../../../src/utils/timezones.js": {
-        isValidTimezone: sinon.stub().callsFake((tz: string) => {
-          return ["America/Chicago", "America/New_York", "Europe/London", "UTC"].includes(tz);
-        }),
-        filterTimezones: sinon.stub().returns([]),
-      },
-    });
+    mock.module("../../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../../src/database/index.js", () => ({ db }));
+    mock.module("../../../src/utils/premium.js", () => ({
+      isPremiumEnabled: sinon.stub().returns(overrides.premiumEnabled ?? false),
+      hasEntitlement: sinon.stub().returns(overrides.hasEntitlement ?? false),
+      getPremiumSkuId: sinon.stub().returns("sku-1"),
+    }));
+    mock.module("../../../src/utils/guildDatabase.js", () => ({ guildExists: sinon.stub().resolves(true) }));
+    mock.module("../../../src/utils/timezones.js", () => ({
+      isValidTimezone: sinon.stub().callsFake((tz: string) => {
+        return ["America/Chicago", "America/New_York", "Europe/London", "UTC"].includes(tz);
+      }),
+      filterTimezones: sinon.stub().returns([]),
+    }));
 
-    return { schedule: mod.default, logger, prisma };
+    const mod = await import("../../../src/commands/setup/schedule.js");
+
+    return { schedule: mod.default, logger, db };
   }
 
   function makeScheduleInteraction(opts: {
@@ -57,22 +56,24 @@ describe("setup schedule command", () => {
 
     await schedule(localMockClient(), interaction as never);
 
-    expect((interaction.reply as sinon.SinonStub).calledOnce).to.be.true;
+    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.embeds[0].data.title).to.equal("Premium Feature");
+    expect(replyArgs.embeds[0].data.title).toBe("Premium Feature");
   });
 
   it("should update guild with valid daily schedule", async () => {
-    const { schedule, prisma } = await loadModule({ premiumEnabled: false });
+    const { schedule, db } = await loadModule({ premiumEnabled: false });
+    const chain = mockDbChain([]);
+    db.update.returns(chain);
     const interaction = makeScheduleInteraction({ frequency: "Daily", time: "09:00", timezone: "America/Chicago" });
 
     await schedule(localMockClient(), interaction as never);
 
-    expect(prisma.guild.update.calledOnce).to.be.true;
-    const updateArgs = prisma.guild.update.firstCall.args[0];
-    expect(updateArgs.data.motivationFrequency).to.equal("Daily");
-    expect(updateArgs.data.motivationTime).to.equal("09:00");
-    expect(updateArgs.data.timezone).to.equal("America/Chicago");
+    expect(db.update.calledOnce).toBe(true);
+    const setArgs = (chain.set as sinon.SinonStub).firstCall.args[0];
+    expect(setArgs.motivationFrequency).toBe("Daily");
+    expect(setArgs.motivationTime).toBe("09:00");
+    expect(setArgs.timezone).toBe("America/Chicago");
   });
 
   it("should reject invalid time format", async () => {
@@ -82,7 +83,7 @@ describe("setup schedule command", () => {
     await schedule(localMockClient(), interaction as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("Invalid time format");
+    expect(replyArgs.content).toContain("Invalid time format");
   });
 
   it("should reject invalid timezone", async () => {
@@ -92,7 +93,7 @@ describe("setup schedule command", () => {
     await schedule(localMockClient(), interaction as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("Invalid timezone");
+    expect(replyArgs.content).toContain("Invalid timezone");
   });
 
   it("should reject weekly without day", async () => {
@@ -107,7 +108,7 @@ describe("setup schedule command", () => {
     await schedule(localMockClient(), interaction as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("Weekly frequency requires");
+    expect(replyArgs.content).toContain("Weekly frequency requires");
   });
 
   it("should reject monthly with out-of-range day", async () => {
@@ -122,11 +123,13 @@ describe("setup schedule command", () => {
     await schedule(localMockClient(), interaction as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("Monthly frequency requires");
+    expect(replyArgs.content).toContain("Monthly frequency requires");
   });
 
   it("should accept valid weekly schedule with day", async () => {
-    const { schedule, prisma } = await loadModule({ premiumEnabled: false });
+    const { schedule, db } = await loadModule({ premiumEnabled: false });
+    const chain = mockDbChain([]);
+    db.update.returns(chain);
     const interaction = makeScheduleInteraction({
       frequency: "Weekly",
       time: "14:30",
@@ -136,38 +139,39 @@ describe("setup schedule command", () => {
 
     await schedule(localMockClient(), interaction as never);
 
-    expect(prisma.guild.update.calledOnce).to.be.true;
-    const updateArgs = prisma.guild.update.firstCall.args[0];
-    expect(updateArgs.data.motivationDay).to.equal(3);
+    expect(db.update.calledOnce).toBe(true);
+    const setArgs = (chain.set as sinon.SinonStub).firstCall.args[0];
+    expect(setArgs.motivationDay).toBe(3);
   });
 
   it("should return early when no guildId", async () => {
-    const { schedule, prisma } = await loadModule({ premiumEnabled: false });
+    const { schedule, db } = await loadModule({ premiumEnabled: false });
     const interaction = makeScheduleInteraction({ guildId: null });
 
     await schedule(localMockClient(), interaction as never);
 
-    expect(prisma.guild.update.called).to.be.false;
-    expect((interaction.reply as sinon.SinonStub).called).to.be.false;
+    expect(db.update.called).toBe(false);
+    expect((interaction.reply as sinon.SinonStub).called).toBe(false);
   });
 
   it("should catch autocomplete errors and respond with empty array", async () => {
     const logger = mockLogger();
+    const db = mockDb();
 
-    const mod = await esmock("../../../src/commands/setup/schedule.js", {
-      "../../../src/utils/logger.js": { default: logger },
-      "../../../src/database/index.js": { prisma: mockPrisma() },
-      "../../../src/utils/premium.js": {
-        isPremiumEnabled: sinon.stub().returns(false),
-        hasEntitlement: sinon.stub().returns(false),
-        getPremiumSkuId: sinon.stub().returns("sku-1"),
-      },
-      "../../../src/utils/guildDatabase.js": { guildExists: sinon.stub().resolves(true) },
-      "../../../src/utils/timezones.js": {
-        isValidTimezone: sinon.stub().returns(true),
-        filterTimezones: sinon.stub().throws(new Error("timezone error")),
-      },
-    });
+    mock.module("../../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../../src/database/index.js", () => ({ db }));
+    mock.module("../../../src/utils/premium.js", () => ({
+      isPremiumEnabled: sinon.stub().returns(false),
+      hasEntitlement: sinon.stub().returns(false),
+      getPremiumSkuId: sinon.stub().returns("sku-1"),
+    }));
+    mock.module("../../../src/utils/guildDatabase.js", () => ({ guildExists: sinon.stub().resolves(true) }));
+    mock.module("../../../src/utils/timezones.js", () => ({
+      isValidTimezone: sinon.stub().returns(true),
+      filterTimezones: sinon.stub().throws(new Error("timezone error")),
+    }));
+
+    const mod = await import("../../../src/commands/setup/schedule.js");
 
     const interaction = {
       options: {
@@ -178,8 +182,8 @@ describe("setup schedule command", () => {
 
     await mod.autocomplete(interaction as never);
 
-    expect(logger.error.called).to.be.true;
-    expect(interaction.respond.calledWith([])).to.be.true;
+    expect(logger.error.called).toBe(true);
+    expect(interaction.respond.calledWith([])).toBe(true);
   });
 });
 

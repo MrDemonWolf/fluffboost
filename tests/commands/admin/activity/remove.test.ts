@@ -1,7 +1,6 @@
-import { expect } from "chai";
+import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import esmock from "esmock";
-import { mockLogger, mockPrisma, mockInteraction, mockClient } from "../../../helpers.js";
+import { mockLogger, mockDb, mockDbChain, mockInteraction, mockClient } from "../../../helpers.js";
 
 describe("admin activity remove command", () => {
   afterEach(() => {
@@ -10,28 +9,28 @@ describe("admin activity remove command", () => {
 
   async function loadModule() {
     const logger = mockLogger();
-    const prisma = mockPrisma();
+    const db = mockDb();
 
-    const mod = await esmock("../../../../src/commands/admin/activity/remove.js", {
-      "../../../../src/utils/logger.js": { default: logger },
-      "../../../../src/database/index.js": { prisma },
-      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().returns(true) },
-    });
+    mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../../../src/database/index.js", () => ({ db }));
+    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().returns(true) }));
 
-    return { handler: mod.default, logger, prisma };
+    const mod = await import("../../../../src/commands/admin/activity/remove.js");
+
+    return { handler: mod.default, logger, db };
   }
 
   async function loadModuleNotPermitted() {
     const logger = mockLogger();
-    const prisma = mockPrisma();
+    const db = mockDb();
 
-    const mod = await esmock("../../../../src/commands/admin/activity/remove.js", {
-      "../../../../src/utils/logger.js": { default: logger },
-      "../../../../src/database/index.js": { prisma },
-      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().returns(false) },
-    });
+    mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../../../src/database/index.js", () => ({ db }));
+    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().returns(false) }));
 
-    return { handler: mod.default, logger, prisma };
+    const mod = await import("../../../../src/commands/admin/activity/remove.js");
+
+    return { handler: mod.default, logger, db };
   }
 
   function makeInteraction(activityId: string) {
@@ -47,7 +46,7 @@ describe("admin activity remove command", () => {
 
     await handler(mockClient() as never, interaction as never, interaction.options as never);
 
-    expect((interaction.reply as sinon.SinonStub).called).to.be.false;
+    expect((interaction.reply as sinon.SinonStub).called).toBe(false);
   });
 
   it("should reply when empty activity ID provided", async () => {
@@ -57,41 +56,45 @@ describe("admin activity remove command", () => {
     await handler(mockClient() as never, interaction as never, interaction.options as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("valid activity ID");
+    expect(replyArgs.content).toContain("valid activity ID");
   });
 
   it("should reply when activity not found", async () => {
-    const { handler, prisma } = await loadModule();
-    prisma.discordActivity.findUnique.resolves(null);
+    const { handler, db } = await loadModule();
+    // findUnique equivalent: select().from().where().limit(1) returns empty array -> destructures to undefined
+    db.select.returns(mockDbChain([]));
 
     const interaction = makeInteraction("a-nonexistent");
     await handler(mockClient() as never, interaction as never, interaction.options as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("No activity found");
+    expect(replyArgs.content).toContain("No activity found");
   });
 
   it("should delete activity and reply on success", async () => {
-    const { handler, prisma } = await loadModule();
-    prisma.discordActivity.findUnique.resolves({ id: "a1", activity: "Gaming", type: "Playing" });
+    const { handler, db } = await loadModule();
+    // findUnique equivalent returns the activity
+    db.select.returns(mockDbChain([{ id: "a1", activity: "Gaming", type: "Playing" }]));
 
     const interaction = makeInteraction("a1");
     await handler(mockClient() as never, interaction as never, interaction.options as never);
 
-    expect(prisma.discordActivity.delete.calledOnce).to.be.true;
+    expect(db.delete.calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("deleted");
+    expect(replyArgs.content).toContain("deleted");
   });
 
   it("should reply with error on database failure", async () => {
-    const { handler, prisma, logger } = await loadModule();
-    prisma.discordActivity.findUnique.rejects(new Error("DB error"));
+    const { handler, db, logger } = await loadModule();
+    const chain = mockDbChain();
+    chain.rejects(new Error("DB error"));
+    db.select.returns(chain);
 
     const interaction = makeInteraction("a1");
     await handler(mockClient() as never, interaction as never, interaction.options as never);
 
-    expect(logger.commands.error.calledOnce).to.be.true;
+    expect(logger.commands.error.calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("error occurred");
+    expect(replyArgs.content).toContain("error occurred");
   });
 });

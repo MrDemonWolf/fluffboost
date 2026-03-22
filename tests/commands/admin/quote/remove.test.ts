@@ -1,7 +1,6 @@
-import { expect } from "chai";
+import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import esmock from "esmock";
-import { mockLogger, mockPrisma, mockInteraction, mockClient, mockEnv } from "../../../helpers.js";
+import { mockLogger, mockDb, mockDbChain, mockInteraction, mockClient, mockEnv } from "../../../helpers.js";
 
 describe("admin quote remove command", () => {
   afterEach(() => {
@@ -10,32 +9,32 @@ describe("admin quote remove command", () => {
 
   async function loadModule() {
     const logger = mockLogger();
-    const prisma = mockPrisma();
+    const db = mockDb();
     const env = mockEnv();
 
-    const mod = await esmock("../../../../src/commands/admin/quote/remove.js", {
-      "../../../../src/utils/logger.js": { default: logger },
-      "../../../../src/database/index.js": { prisma },
-      "../../../../src/utils/env.js": { default: env },
-      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().returns(true) },
-    });
+    mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../../../src/database/index.js", () => ({ db }));
+    mock.module("../../../../src/utils/env.js", () => ({ default: env }));
+    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().returns(true) }));
 
-    return { handler: mod.default, logger, prisma, env };
+    const mod = await import("../../../../src/commands/admin/quote/remove.js");
+
+    return { handler: mod.default, logger, db, env };
   }
 
   async function loadModuleNotPermitted() {
     const logger = mockLogger();
-    const prisma = mockPrisma();
+    const db = mockDb();
     const env = mockEnv();
 
-    const mod = await esmock("../../../../src/commands/admin/quote/remove.js", {
-      "../../../../src/utils/logger.js": { default: logger },
-      "../../../../src/database/index.js": { prisma },
-      "../../../../src/utils/env.js": { default: env },
-      "../../../../src/utils/permissions.js": { isUserPermitted: sinon.stub().resolves(false) },
-    });
+    mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../../../src/database/index.js", () => ({ db }));
+    mock.module("../../../../src/utils/env.js", () => ({ default: env }));
+    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().resolves(false) }));
 
-    return { handler: mod.default, logger, prisma, env };
+    const mod = await import("../../../../src/commands/admin/quote/remove.js");
+
+    return { handler: mod.default, logger, db, env };
   }
 
   function makeInteraction(quoteId: string) {
@@ -51,23 +50,25 @@ describe("admin quote remove command", () => {
 
     await handler(mockClient() as never, interaction as never, interaction.options as never);
 
-    expect((interaction.reply as sinon.SinonStub).called).to.be.false;
+    expect((interaction.reply as sinon.SinonStub).called).toBe(false);
   });
 
   it("should reply when quote not found", async () => {
-    const { handler, prisma } = await loadModule();
-    prisma.motivationQuote.findUnique.resolves(null);
+    const { handler, db } = await loadModule();
+    // select returns empty array -> destructures to undefined
+    db.select.returns(mockDbChain([]));
 
     const interaction = makeInteraction("q-nonexistent");
     await handler(mockClient() as never, interaction as never, interaction.options as never);
 
     const replyArg = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArg.content).to.include("not found");
+    expect(replyArg.content).toContain("not found");
   });
 
   it("should delete quote and reply on success", async () => {
-    const { handler, prisma } = await loadModule();
-    prisma.motivationQuote.findUnique.resolves({ id: "q1", quote: "Be brave", author: "Anon" });
+    const { handler, db } = await loadModule();
+    // select returns the quote
+    db.select.returns(mockDbChain([{ id: "q1", quote: "Be brave", author: "Anon" }]));
 
     const channel = {
       isTextBased: sinon.stub().returns(true),
@@ -80,14 +81,14 @@ describe("admin quote remove command", () => {
     const interaction = makeInteraction("q1");
     await handler(client as never, interaction as never, interaction.options as never);
 
-    expect(prisma.motivationQuote.delete.calledOnce).to.be.true;
+    expect(db.delete.calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("deleted");
+    expect(replyArgs.content).toContain("deleted");
   });
 
   it("should send notification to main channel on delete", async () => {
-    const { handler, prisma } = await loadModule();
-    prisma.motivationQuote.findUnique.resolves({ id: "q1", quote: "Be brave", author: "Anon" });
+    const { handler, db } = await loadModule();
+    db.select.returns(mockDbChain([{ id: "q1", quote: "Be brave", author: "Anon" }]));
 
     const channel = {
       isTextBased: sinon.stub().returns(true),
@@ -100,18 +101,20 @@ describe("admin quote remove command", () => {
     const interaction = makeInteraction("q1");
     await handler(client as never, interaction as never, interaction.options as never);
 
-    expect(channel.send.calledOnce).to.be.true;
+    expect(channel.send.calledOnce).toBe(true);
   });
 
   it("should reply with error on database failure", async () => {
-    const { handler, prisma, logger } = await loadModule();
-    prisma.motivationQuote.findUnique.rejects(new Error("DB error"));
+    const { handler, db, logger } = await loadModule();
+    const chain = mockDbChain();
+    chain.rejects(new Error("DB error"));
+    db.select.returns(chain);
 
     const interaction = makeInteraction("q1");
     await handler(mockClient() as never, interaction as never, interaction.options as never);
 
-    expect(logger.commands.error.calledOnce).to.be.true;
+    expect(logger.commands.error.calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("error occurred");
+    expect(replyArgs.content).toContain("error occurred");
   });
 });

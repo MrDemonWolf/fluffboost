@@ -132,7 +132,7 @@ dist
 # macOS Files
 .DS_Store
 
-# Prisma ORM files generated in src (see prisma/schema.prisma)
-src/generated/prisma/
+# Drizzle ORM
+drizzle/meta/
 # Claude Code
 .claude

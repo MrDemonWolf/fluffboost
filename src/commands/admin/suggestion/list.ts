@@ -1,11 +1,14 @@
 import { Client, CommandInteraction, MessageFlags } from "discord.js";
 
 import type { CommandInteractionOptionResolver } from "discord.js";
-import type { SuggestionQuote } from "../../../generated/prisma/client.js";
+import { eq, desc } from "drizzle-orm";
+
+import type { SuggestionQuote } from "../../../database/schema.js";
 
 import logger from "../../../utils/logger.js";
 import { isUserPermitted } from "../../../utils/permissions.js";
-import { prisma } from "../../../database/index.js";
+import { db } from "../../../database/index.js";
+import { suggestionQuotes } from "../../../database/schema.js";
 
 export default async function (
   _client: Client,
@@ -27,11 +30,10 @@ export default async function (
 
     const status = options.getString("status");
 
-    const where = status ? { status } : {};
-    const suggestions = await prisma.suggestionQuote.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-    });
+    const query = db.select().from(suggestionQuotes).orderBy(desc(suggestionQuotes.createdAt));
+    const suggestions = status
+      ? await query.where(eq(suggestionQuotes.status, status))
+      : await query;
 
     if (suggestions.length === 0) {
       await interaction.reply({

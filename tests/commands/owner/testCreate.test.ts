@@ -1,6 +1,5 @@
-import { expect } from "chai";
+import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import esmock from "esmock";
 import { mockLogger, mockEnv, mockInteraction, mockClient } from "../../helpers.js";
 
 describe("owner premium test-create command", () => {
@@ -12,13 +11,13 @@ describe("owner premium test-create command", () => {
     const logger = mockLogger();
     const env = mockEnv(envOverrides);
 
-    const mod = await esmock("../../../src/commands/owner/premium/testCreate.js", {
-      "../../../src/utils/logger.js": { default: logger },
-      "../../../src/utils/env.js": { default: env },
-      "../../../src/utils/premium.js": {
-        getPremiumSkuId: sinon.stub().returns(env.DISCORD_PREMIUM_SKU_ID),
-      },
-    });
+    mock.module("../../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../../src/utils/env.js", () => ({ default: env }));
+    mock.module("../../../src/utils/premium.js", () => ({
+      getPremiumSkuId: sinon.stub().returns(env.DISCORD_PREMIUM_SKU_ID),
+    }));
+
+    const mod = await import("../../../src/commands/owner/premium/testCreate.js");
 
     return { testCreate: mod.default, logger, env };
   }
@@ -37,9 +36,9 @@ describe("owner premium test-create command", () => {
     const client = mockClient();
     await testCreate(client as never, interaction as never, options as never);
 
-    expect((interaction.reply as sinon.SinonStub).calledOnce).to.be.true;
+    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("Test entitlement created");
+    expect(replyArgs.content).toContain("Test entitlement created");
   });
 
   it("should use current guild when no guild option provided", async () => {
@@ -60,8 +59,8 @@ describe("owner premium test-create command", () => {
     const createTestCall = (
       client.application as { entitlements: { createTest: sinon.SinonStub } }
     ).entitlements.createTest;
-    expect(createTestCall.calledOnce).to.be.true;
-    expect(createTestCall.firstCall.args[0].guild).to.equal("current-guild-123");
+    expect(createTestCall.calledOnce).toBe(true);
+    expect(createTestCall.firstCall.args[0].guild).toBe("current-guild-123");
   });
 
   it("should reject non-owner users", async () => {
@@ -76,7 +75,7 @@ describe("owner premium test-create command", () => {
     await testCreate(mockClient() as never, interaction as never, options as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("Only the bot owner");
+    expect(replyArgs.content).toContain("Only the bot owner");
   });
 
   it("should reject when no SKU configured", async () => {
@@ -91,7 +90,7 @@ describe("owner premium test-create command", () => {
     await testCreate(mockClient() as never, interaction as never, options as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("DISCORD_PREMIUM_SKU_ID is not configured");
+    expect(replyArgs.content).toContain("DISCORD_PREMIUM_SKU_ID is not configured");
   });
 
   it("should reject when no guild context and no guild param", async () => {
@@ -109,7 +108,7 @@ describe("owner premium test-create command", () => {
     await testCreate(mockClient() as never, interaction as never, options as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("Could not determine guild");
+    expect(replyArgs.content).toContain("Could not determine guild");
   });
 
   it("should show actual error on failure", async () => {
@@ -129,6 +128,6 @@ describe("owner premium test-create command", () => {
     await testCreate(client as never, interaction as never, options as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).to.include("API Error: rate limited");
+    expect(replyArgs.content).toContain("API Error: rate limited");
   });
 });

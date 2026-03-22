@@ -7,10 +7,12 @@ import {
 } from "discord.js";
 
 
+import { eq } from "drizzle-orm";
+
 import logger from "../utils/logger.js";
-import { prisma } from "../database/index.js";
+import { db } from "../database/index.js";
+import { guilds, suggestionQuotes } from "../database/schema.js";
 import env from "../utils/env.js";
-import posthog from "../utils/posthog.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("suggestion")
@@ -70,11 +72,11 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
      * Check if the guild is setup
      * If not, return an error message
      */
-    const guild = await prisma.guild.findUnique({
-      where: {
-        guildId: interaction.guildId,
-      },
-    });
+    const [guild] = await db
+      .select()
+      .from(guilds)
+      .where(eq(guilds.guildId, interaction.guildId))
+      .limit(1);
 
     if (!guild) {
       await interaction.reply({
@@ -84,19 +86,24 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
       return;
     }
 
-    const newQuote = await prisma.suggestionQuote.create({
-      data: {
+    const [newQuote] = await db
+      .insert(suggestionQuotes)
+      .values({
         quote,
         author,
         addedBy: interaction.user.id,
         status: "Pending",
-      },
-    });
+      })
+      .returning();
 
     await interaction.reply({
       content: "Quote suggestion created owner will review it soon!",
       flags: MessageFlags.Ephemeral,
     });
+
+    if (!newQuote) {
+      return;
+    }
 
     /**
      * Send the quote suggestion to the main channel for review
@@ -139,19 +146,6 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
       interaction.user.username,
       interaction.user.id
     );
-
-    posthog.capture({
-      distinctId: interaction.user.id,
-      event: "suggestion command used",
-      properties: {
-        quote,
-        author,
-        guildId: interaction.guildId,
-        environment: env.NODE_ENV,
-        userId: interaction.user.id,
-        username: interaction.user.username,
-      },
-    });
   } catch (err) {
     logger.commands.error(
       "suggestion",

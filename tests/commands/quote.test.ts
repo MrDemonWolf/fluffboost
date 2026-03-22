@@ -1,7 +1,6 @@
-import { expect } from "chai";
+import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import esmock from "esmock";
-import { mockLogger, mockPrisma, mockPosthog, mockClient, mockInteraction } from "../helpers.js";
+import { mockLogger, mockDb, mockDbChain, mockClient, mockInteraction } from "../helpers.js";
 
 describe("quote command", () => {
   afterEach(() => {
@@ -10,70 +9,58 @@ describe("quote command", () => {
 
   async function loadModule() {
     const logger = mockLogger();
-    const prisma = mockPrisma();
-    const posthog = mockPosthog();
+    const db = mockDb();
 
-    const mod = await esmock("../../src/commands/quote.js", {
-      "../../src/utils/logger.js": { default: logger },
-      "../../src/database/index.js": { prisma },
-      "../../src/utils/posthog.js": { default: posthog },
-    });
+    mock.module("../../src/utils/logger.js", () => ({ default: logger }));
+    mock.module("../../src/database/index.js", () => ({ db }));
 
-    return { execute: mod.execute, logger, prisma, posthog };
+    const mod = await import("../../src/commands/quote.js");
+
+    return { execute: mod.execute, logger, db };
   }
 
   it("should reply when no quotes found", async () => {
-    const { execute, prisma } = await loadModule();
-    prisma.motivationQuote.count.resolves(0);
-    prisma.motivationQuote.findMany.resolves([]);
+    const { execute, db } = await loadModule();
+    // First select: count query returns 0
+    db.select.onCall(0).returns(mockDbChain([{ value: 0 }]));
+    // Second select: findMany returns empty
+    db.select.onCall(1).returns(mockDbChain([]));
 
     const interaction = mockInteraction();
     await execute(mockClient() as never, interaction as never);
 
-    expect((interaction.reply as sinon.SinonStub).calledOnce).to.be.true;
+    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
     const arg = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(arg).to.include("No motivation quote found");
+    expect(arg).toContain("No motivation quote found");
   });
 
   it("should reply with quote embed", async () => {
-    const { execute, prisma } = await loadModule();
-    prisma.motivationQuote.count.resolves(1);
-    prisma.motivationQuote.findMany.resolves([
+    const { execute, db } = await loadModule();
+    db.select.onCall(0).returns(mockDbChain([{ value: 1 }]));
+    db.select.onCall(1).returns(mockDbChain([
       { id: "q1", quote: "Be brave", author: "Anon", addedBy: "user-1", createdAt: new Date() },
-    ]);
+    ]));
 
     const client = mockClient();
     const interaction = mockInteraction();
     await execute(client as never, interaction as never);
 
-    expect((interaction.reply as sinon.SinonStub).calledOnce).to.be.true;
+    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.embeds).to.be.an("array").with.lengthOf(1);
-  });
-
-  it("should capture posthog event on success", async () => {
-    const { execute, prisma, posthog } = await loadModule();
-    prisma.motivationQuote.count.resolves(1);
-    prisma.motivationQuote.findMany.resolves([
-      { id: "q1", quote: "Be brave", author: "Anon", addedBy: "user-1", createdAt: new Date() },
-    ]);
-
-    const client = mockClient();
-    const interaction = mockInteraction();
-    await execute(client as never, interaction as never);
-
-    expect(posthog.capture.calledOnce).to.be.true;
-    expect(posthog.capture.firstCall.args[0].event).to.equal("quote command used");
+    expect(Array.isArray(replyArgs.embeds)).toBe(true);
+    expect(replyArgs.embeds).toHaveLength(1);
   });
 
   it("should reply with error on failure", async () => {
-    const { execute, prisma, logger } = await loadModule();
-    prisma.motivationQuote.count.rejects(new Error("DB error"));
+    const { execute, db, logger } = await loadModule();
+    const chain = mockDbChain();
+    chain.rejects(new Error("DB error"));
+    db.select.returns(chain);
 
     const interaction = mockInteraction();
     await execute(mockClient() as never, interaction as never);
 
-    expect(logger.commands.error.calledOnce).to.be.true;
-    expect((interaction.reply as sinon.SinonStub).calledOnce).to.be.true;
+    expect(logger.commands.error.calledOnce).toBe(true);
+    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
   });
 });
