@@ -14,6 +14,7 @@ import type {
 } from "discord.js";
 
 import logger from "../../utils/logger.js";
+import { safeErrorReply } from "../../utils/commandErrors.js";
 
 /**
  * Import subcommands
@@ -119,12 +120,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       command: "setup",
     });
 
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({
-        content: "An error occurred while processing your request.",
-        flags: MessageFlags.Ephemeral,
-      });
-    }
+    await safeErrorReply(interaction);
   }
 }
 

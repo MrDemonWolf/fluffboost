@@ -1,10 +1,11 @@
-import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 
 import type { Client, ChatInputCommandInteraction } from "discord.js";
 
 import { count } from "drizzle-orm";
 
 import logger from "../utils/logger.js";
+import { safeErrorReply } from "../utils/commandErrors.js";
 import { db } from "../database/index.js";
 import { motivationQuotes } from "../database/schema.js";
 
@@ -95,12 +96,7 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
       command: "quote",
     });
 
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({
-        content: "An error occurred while processing your request.",
-        flags: MessageFlags.Ephemeral,
-      });
-    }
+    await safeErrorReply(interaction);
   }
 }
 

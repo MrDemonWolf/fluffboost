@@ -4,6 +4,7 @@ import type { Client, ChatInputCommandInteraction, AutocompleteInteraction } fro
 import { eq } from "drizzle-orm";
 
 import logger from "../../utils/logger.js";
+import { safeErrorReply } from "../../utils/commandErrors.js";
 import { db } from "../../database/index.js";
 import { guilds } from "../../database/schema.js";
 import type { MotivationFrequency } from "../../database/schema.js";
@@ -141,17 +142,7 @@ export default async function schedule(_client: Client, interaction: ChatInputCo
       command: "setup schedule",
     });
 
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({
-        content: "An error occurred while setting up the schedule.",
-        flags: MessageFlags.Ephemeral,
-      });
-    } else {
-      await interaction.reply({
-        content: "An error occurred while setting up the schedule.",
-        flags: MessageFlags.Ephemeral,
-      });
-    }
+    await safeErrorReply(interaction);
   }
 }
 

@@ -3,6 +3,7 @@ import type { Client, CommandInteraction } from "discord.js";
 import { SlashCommandBuilder, MessageFlags } from "discord.js";
 
 import logger from "../utils/logger.js";
+import { safeErrorReply } from "../utils/commandErrors.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("help")
@@ -47,12 +48,7 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
       command: "help",
     });
 
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({
-        content: "An error occurred while processing your request.",
-        flags: MessageFlags.Ephemeral,
-      });
-    }
+    await safeErrorReply(interaction);
   }
 }
 

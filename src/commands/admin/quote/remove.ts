@@ -12,7 +12,8 @@ import logger from "../../../utils/logger.js";
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
 import { motivationQuotes } from "../../../database/schema.js";
-import env from "../../../utils/env.js";
+import { sendToMainChannel } from "../../../utils/mainChannel.js";
+import { safeErrorReply } from "../../../utils/commandErrors.js";
 
 export default async function (
   client: Client,
@@ -49,15 +50,10 @@ export default async function (
 
     await db.delete(motivationQuotes).where(eq(motivationQuotes.id, quoteId));
 
-    // send message to main channel
-    if (env.MAIN_CHANNEL_ID) {
-      const mainChannel = await client.channels.fetch(env.MAIN_CHANNEL_ID);
-      if (mainChannel?.isTextBased() && !mainChannel.isDMBased()) {
-        await mainChannel.send(
-          `Quote deleted by ${interaction.user.username} with id: ${quoteId}`
-        );
-      }
-    }
+    await sendToMainChannel(
+      client,
+      `Quote deleted by ${interaction.user.username} with id: ${quoteId}`
+    );
 
     await interaction.reply({
       content: `Quote deleted with id: ${quoteId}`,
@@ -77,11 +73,6 @@ export default async function (
       err
     );
 
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({
-        content: "An error occurred while processing your request.",
-        flags: MessageFlags.Ephemeral,
-      });
-    }
+    await safeErrorReply(interaction);
   }
 }

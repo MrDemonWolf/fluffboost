@@ -1,10 +1,7 @@
 import type { Entitlement } from "discord.js";
 
 import logger from "../utils/logger.js";
-import { eq } from "drizzle-orm";
-
-import { db } from "../database/index.js";
-import { guilds } from "../database/schema.js";
+import { updateGuildPremiumStatus } from "../utils/entitlementHelpers.js";
 
 export async function entitlementDeleteEvent(entitlement: Entitlement): Promise<void> {
   logger.info("Discord - Event (Entitlement Delete)", "Premium entitlement removed", {
@@ -14,13 +11,5 @@ export async function entitlementDeleteEvent(entitlement: Entitlement): Promise<
     timestamp: new Date().toISOString(),
   });
 
-  if (entitlement.guildId) {
-    try {
-      await db.update(guilds).set({ isPremium: false }).where(eq(guilds.guildId, entitlement.guildId));
-    } catch (err) {
-      logger.error("Discord - Event (Entitlement Delete)", "Failed to update guild premium status", err, {
-        guildId: entitlement.guildId,
-      });
-    }
-  }
+  await updateGuildPremiumStatus(entitlement, false, "Entitlement Delete");
 }

@@ -12,8 +12,9 @@ import { eq } from "drizzle-orm";
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
 import { motivationQuotes, suggestionQuotes } from "../../../database/schema.js";
-import env from "../../../utils/env.js";
 import logger from "../../../utils/logger.js";
+import { sendToMainChannel } from "../../../utils/mainChannel.js";
+import { safeErrorReply } from "../../../utils/commandErrors.js";
 
 export default async function (
   client: Client,
@@ -88,12 +89,7 @@ export default async function (
       .setFooter({ text: `Suggestion ID: ${suggestionId}` })
       .setTimestamp();
 
-    if (env.MAIN_CHANNEL_ID) {
-      const channel = await client.channels.fetch(env.MAIN_CHANNEL_ID);
-      if (channel?.isTextBased() && !channel.isDMBased()) {
-        await channel.send({ embeds: [embed] });
-      }
-    }
+    await sendToMainChannel(client, { embeds: [embed] });
 
     try {
       const submitter = await client.users.fetch(suggestion.addedBy);
@@ -135,11 +131,6 @@ export default async function (
       err,
     );
 
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({
-        content: "An error occurred while processing your request.",
-        flags: MessageFlags.Ephemeral,
-      });
-    }
+    await safeErrorReply(interaction);
   }
 }
