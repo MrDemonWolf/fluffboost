@@ -99,16 +99,25 @@ client.login(env.DISCORD_APPLICATION_BOT_TOKEN);
  * Initialize BullMQ worker to handle background jobs.
  */
 import { Queue } from "bullmq";
-import worker from "./worker/index.js";
+import type { ConnectionOptions } from "bullmq";
+import startWorker from "./worker/index.js";
+import redisClient from "./redis/index.js";
 
 const queueName = "fluffboost-jobs";
 
 const queue = new Queue(queueName, {
-  connection: env.REDIS_URL
-    ? { url: env.REDIS_URL }
-    : { host: "localhost", port: 6379 },
+  connection: redisClient as unknown as ConnectionOptions,
 });
 
-worker(queue);
+// Gate worker startup on ClientReady. Otherwise BullMQ can dequeue jobs
+// (e.g. send-motivation) before Discord login completes, causing
+// client.channels.fetch / client.users.fetch calls inside job handlers to
+// fail against an un-authenticated client.
+client.once(Events.ClientReady, () => {
+  startWorker(queue).catch((err) => {
+    logger.error("Worker", "Failed to start worker", err);
+    process.exit(1);
+  });
+});
 
 export default client;

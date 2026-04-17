@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockLogger, mockClient, mockInteraction, mockEnv } from "../helpers.js";
+import { mockLogger, mockClient, mockInteraction, mockEnv, stubBuildPremiumUpsell } from "../helpers.js";
 
 describe("premium command", () => {
   afterEach(() => {
@@ -19,6 +19,7 @@ describe("premium command", () => {
       isPremiumEnabled: sinon.stub().returns(overrides.premiumEnabled ?? false),
       hasEntitlement: sinon.stub().returns(overrides.hasEntitlement ?? false),
       getPremiumSkuId: sinon.stub().returns(overrides.skuId),
+      buildPremiumUpsell: stubBuildPremiumUpsell(overrides.skuId),
     }));
 
     const mod = await import("../../src/commands/premium.js");

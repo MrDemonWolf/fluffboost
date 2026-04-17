@@ -13,7 +13,7 @@ describe("admin suggestion approve command", () => {
     const env = mockEnv(overrides.env);
 
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../../../src/database/index.js", () => ({ db }));
+    mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../../../src/utils/env.js", () => ({ default: env }));
     mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().resolves(true) }));
 

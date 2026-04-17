@@ -12,7 +12,7 @@ describe("guildCreateEvent", () => {
     const logger = mockLogger();
     db.insert.returns(mockDbChain([{ guildId: "g1" }]));
 
-    mock.module("../../src/database/index.js", () => ({ db }));
+    mock.module("../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
     const { guildCreateEvent } = await import("../../src/events/guildCreate.js");
 
@@ -30,7 +30,7 @@ describe("guildCreateEvent", () => {
     chain.rejects(new Error("DB error"));
     db.insert.returns(chain);
 
-    mock.module("../../src/database/index.js", () => ({ db }));
+    mock.module("../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
     const { guildCreateEvent } = await import("../../src/events/guildCreate.js");
 

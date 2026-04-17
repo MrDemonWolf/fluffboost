@@ -1,73 +1,32 @@
-import { Client, CommandInteraction, MessageFlags } from "discord.js";
+import type { Client, CommandInteraction } from "discord.js";
 
 import { desc } from "drizzle-orm";
 
-import type { MotivationQuote } from "../../../database/schema.js";
-
-import logger from "../../../utils/logger.js";
-import { safeErrorReply } from "../../../utils/commandErrors.js";
+import { withCommandLogging } from "../../../utils/commandErrors.js";
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
 import { motivationQuotes } from "../../../database/schema.js";
+import { replyWithTextFile } from "../../../utils/replyHelpers.js";
 
 export default async function (
   _client: Client,
   interaction: CommandInteraction
 ): Promise<void> {
-  try {
-    logger.commands.executing(
-      "admin quote list",
-      interaction.user.username,
-      interaction.user.id
-    );
-
-    const isAllowed = await isUserPermitted(interaction);
-
-    if (!isAllowed) {
-      return;
-    }
+  await withCommandLogging("admin quote list", interaction, async () => {
+    if (!(await isUserPermitted(interaction))) {return;}
 
     const quotes = await db
       .select()
       .from(motivationQuotes)
       .orderBy(desc(motivationQuotes.createdAt));
 
-    if (quotes.length === 0) {
-      await interaction.reply({
-        content: "No quotes found. Feel free to add some!",
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
-
-    let text = "ID - Quote - Author\n";
-    quotes.forEach((quote: MotivationQuote) => {
-      text += `${quote.id} - ${quote.quote} - ${quote.author}\n`;
+    await replyWithTextFile({
+      interaction,
+      rows: quotes,
+      header: "ID - Quote - Author",
+      formatRow: (q) => `${q.id} - ${q.quote} - ${q.author}`,
+      filename: "quotes.txt",
+      emptyMessage: "No quotes found. Feel free to add some!",
     });
-
-    await interaction.reply({
-      files: [
-        {
-          attachment: Buffer.from(text),
-          name: "quotes.txt",
-        },
-      ],
-      flags: MessageFlags.Ephemeral,
-    });
-
-    logger.commands.success(
-      "admin quote list",
-      interaction.user.username,
-      interaction.user.id
-    );
-  } catch (err) {
-    logger.commands.error(
-      "admin quote list",
-      interaction.user.username,
-      interaction.user.id,
-      err
-    );
-
-    await safeErrorReply(interaction);
-  }
+  });
 }

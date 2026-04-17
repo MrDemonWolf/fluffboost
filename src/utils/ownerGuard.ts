@@ -1,6 +1,6 @@
 import { MessageFlags } from "discord.js";
 
-import type { CommandInteraction } from "discord.js";
+import type { ClientApplication, Client, CommandInteraction } from "discord.js";
 
 import env from "./env.js";
 import logger from "./logger.js";
@@ -25,4 +25,24 @@ export async function requireOwner(
     flags: MessageFlags.Ephemeral,
   });
   return false;
+}
+
+/**
+ * Ensure `client.application` is populated before invoking application-scoped APIs
+ * (entitlements, commands, etc). Returns the application if ready, otherwise replies
+ * and returns `null`.
+ */
+export async function requireApplication(
+  client: Client,
+  interaction: CommandInteraction
+): Promise<ClientApplication | null> {
+  if (client.application) {
+    return client.application;
+  }
+
+  await interaction.reply({
+    content: "Bot application is not ready. Please try again in a moment.",
+    flags: MessageFlags.Ephemeral,
+  });
+  return null;
 }

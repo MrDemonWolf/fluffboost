@@ -1,76 +1,93 @@
-import { EmbedBuilder } from "discord.js";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
 import type { Client } from "discord.js";
-import { eq, isNotNull, asc, count } from "drizzle-orm";
+import { and, eq, isNotNull, or, lt, isNull } from "drizzle-orm";
 
 import { db } from "../../database/index.js";
-import { guilds, motivationQuotes } from "../../database/schema.js";
+import { guilds } from "../../database/schema.js";
+import type { Guild } from "../../database/schema.js";
 import { isGuildDueForMotivation } from "../../utils/scheduleEvaluator.js";
+import { buildMotivationEmbed, getRandomMotivationQuote, resolveQuoteAuthor } from "../../utils/quoteHelpers.js";
 import logger from "../../utils/logger.js";
 
-export default async function sendMotivation(client: Client) {
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+/**
+ * Compute the start of the current delivery period in the guild's timezone.
+ * Returns a UTC `Date` suitable for comparing against `lastMotivationSentAt`.
+ */
+function periodStart(guild: Guild): Date {
+  const now = dayjs().tz(guild.timezone);
+  switch (guild.motivationFrequency) {
+    case "Daily":
+      return now.startOf("day").utc().toDate();
+    case "Weekly":
+      return now.startOf("week").utc().toDate();
+    case "Monthly":
+      return now.startOf("month").utc().toDate();
+  }
+}
+
+/**
+ * Atomically claim a guild for delivery this period. Returns true if this
+ * worker won the race, false if another worker (or a previous job tick)
+ * already updated the row.
+ */
+async function claimGuild(guild: Guild): Promise<boolean> {
+  const claimed = await db
+    .update(guilds)
+    .set({ lastMotivationSentAt: new Date() })
+    .where(
+      and(
+        eq(guilds.id, guild.id),
+        or(isNull(guilds.lastMotivationSentAt), lt(guilds.lastMotivationSentAt, periodStart(guild)))
+      )
+    )
+    .returning({ id: guilds.id });
+
+  return claimed.length > 0;
+}
+
+export default async function sendMotivation(client: Client): Promise<void> {
   const allGuilds = await db
     .select()
     .from(guilds)
-    .where(isNotNull(guilds.motivationChannelId))
-    .orderBy(asc(guilds.guildId));
+    .where(isNotNull(guilds.motivationChannelId));
 
   if (allGuilds.length === 0) {
     return;
   }
 
-  // Filter to only guilds that are due for a motivation quote right now
-  const dueGuilds = allGuilds.filter((g) => isGuildDueForMotivation(g));
-
+  const dueGuilds = allGuilds.filter(isGuildDueForMotivation);
   if (dueGuilds.length === 0) {
     return;
   }
 
   logger.info("Worker", `${dueGuilds.length} guild(s) due for motivation out of ${allGuilds.length} total`);
 
-  const [countResult] = await db.select({ value: count() }).from(motivationQuotes);
-  const motivationQuoteCount = countResult?.value ?? 0;
-  const skip = Math.floor(Math.random() * motivationQuoteCount);
-  const motivationQuote = await db.select().from(motivationQuotes).offset(skip).limit(1);
-
-  if (!motivationQuote[0]) {
-    logger.error("Worker", "No motivation quote found in the database");
+  const quote = await getRandomMotivationQuote();
+  if (!quote) {
+    logger.warn("Worker", "Motivation table is empty — nothing to send");
     return;
   }
 
-  let addedBy;
-  try {
-    addedBy = await client.users.fetch(motivationQuote[0].addedBy);
-  } catch (error) {
-    logger.error("Worker", "Failed to fetch user who added the quote", error, {
-      userId: motivationQuote[0].addedBy,
-      quoteId: motivationQuote[0].id,
-    });
-    addedBy = null;
-  }
-
-  const motivationEmbed = new EmbedBuilder()
-    .setColor(0xfadb7f)
-    .setTitle("Motivation quote of the day \u{1F4C5}")
-    .setDescription(
-      `**"${motivationQuote[0].quote}"**\n by ${motivationQuote[0].author}`
-    )
-    .setAuthor({
-      name: addedBy ? addedBy.username : "Unknown User",
-      iconURL: addedBy ? addedBy.displayAvatarURL() : undefined,
-    })
-    .setFooter({
-      text: "Powered by MrDemonWolf, Inc.",
-      iconURL: client.user?.displayAvatarURL(),
-    });
+  const author = await resolveQuoteAuthor(client, quote.addedBy);
 
   const results = await Promise.allSettled(
-    dueGuilds.map(async (g): Promise<"sent" | "skipped"> => {
+    dueGuilds.map(async (g): Promise<"sent" | "skipped" | "raced"> => {
       if (!g.motivationChannelId) {
         return "skipped";
       }
 
-      const channel = await client.channels.fetch(g.motivationChannelId);
+      // Atomic claim: only the worker that flips lastMotivationSentAt wins.
+      const won = await claimGuild(g);
+      if (!won) {
+        return "raced";
+      }
 
+      const channel = await client.channels.fetch(g.motivationChannelId);
       if (!channel || !channel.isTextBased() || channel.isDMBased()) {
         logger.warn("Worker", "Motivation channel is not a valid text channel", {
           guildId: g.guildId,
@@ -79,16 +96,15 @@ export default async function sendMotivation(client: Client) {
         return "skipped";
       }
 
-      await channel.send({ embeds: [motivationEmbed] });
-
-      // Update lastMotivationSentAt after successful send
-      await db.update(guilds).set({ lastMotivationSentAt: new Date() }).where(eq(guilds.guildId, g.guildId));
-
+      // Fresh embed per guild so Discord.js cannot mutate a shared instance.
+      await channel.send({ embeds: [buildMotivationEmbed(quote, author, client)] });
       return "sent";
     })
   );
 
   let sent = 0;
+  let skipped = 0;
+  let raced = 0;
   let failed = 0;
 
   for (const result of results) {
@@ -97,8 +113,15 @@ export default async function sendMotivation(client: Client) {
       logger.error("Worker", "Failed to send motivation to a guild", result.reason);
     } else if (result.value === "sent") {
       sent++;
+    } else if (result.value === "raced") {
+      raced++;
+    } else {
+      skipped++;
     }
   }
 
-  logger.success("Worker", `Motivation sent to ${sent} guild(s), ${failed} failed`);
+  logger.success(
+    "Worker",
+    `Motivation: sent=${sent} skipped=${skipped} raced=${raced} failed=${failed}`
+  );
 }

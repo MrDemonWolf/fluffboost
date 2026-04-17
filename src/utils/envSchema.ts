@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+const SNOWFLAKE = /^\d{17,20}$/;
+const SNOWFLAKE_LIST = /^\d{17,20}(,\d{17,20})*$/;
+
 export const envSchema = z.object({
   DATABASE_URL: z
     .string()
@@ -16,14 +19,15 @@ export const envSchema = z.object({
         return false;
       }
     }, "Invalid PostgreSQL database URL"),
+  DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(100).default(10),
   REDIS_URL: z
     .string()
     .min(1, "Redis URL is required")
     .refine((url) => {
       try {
-        const parsedUrl = new URL(url); // Ensure it's a valid URL
+        const parsedUrl = new URL(url);
         return (
-          parsedUrl.protocol === "redis:" || parsedUrl.protocol === "rediss:" // Support both redis and rediss protocols
+          parsedUrl.protocol === "redis:" || parsedUrl.protocol === "rediss:"
         );
       } catch {
         return false;
@@ -31,7 +35,7 @@ export const envSchema = z.object({
     }, "Invalid Redis URL"),
   DISCORD_APPLICATION_ID: z
     .string()
-    .min(1, "Discord application ID is required"),
+    .regex(SNOWFLAKE, "DISCORD_APPLICATION_ID must be a Discord snowflake"),
   DISCORD_APPLICATION_PUBLIC_KEY: z
     .string()
     .min(1, "Discord application public key is required"),
@@ -51,13 +55,19 @@ export const envSchema = z.object({
     .max(1440)
     .default(15),
   DISCORD_DEFAULT_MOTIVATIONAL_DAILY_TIME: z.string().default("0 8 * * *"),
-  ALLOWED_USERS: z.string().optional(),
-  OWNER_ID: z.string().min(1, "Owner ID is required"),
-  MAIN_GUILD_ID: z.string().min(1, "Main guild ID is required"),
-  MAIN_CHANNEL_ID: z.string().min(1, "Main channel ID is required"),
+  ALLOWED_USERS: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || SNOWFLAKE_LIST.test(v.split(",").map((s) => s.trim()).join(",")),
+      "ALLOWED_USERS must be a comma-separated list of Discord snowflakes"
+    ),
+  OWNER_ID: z.string().regex(SNOWFLAKE, "OWNER_ID must be a Discord snowflake"),
+  MAIN_GUILD_ID: z.string().regex(SNOWFLAKE, "MAIN_GUILD_ID must be a Discord snowflake"),
+  MAIN_CHANNEL_ID: z.string().regex(SNOWFLAKE, "MAIN_CHANNEL_ID must be a Discord snowflake"),
   HOST: z.string().optional(),
   PORT: z.string().optional(),
-  VERSION: z.string().default("1.9.0"),
+  VERSION: z.string().default("0.0.0-dev"),
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
@@ -65,7 +75,11 @@ export const envSchema = z.object({
     .string()
     .default("false")
     .transform((val) => val.toLowerCase() === "true"),
-  DISCORD_PREMIUM_SKU_ID: z.string().optional(),
+  DISCORD_PREMIUM_SKU_ID: z
+    .string()
+    .regex(SNOWFLAKE, "DISCORD_PREMIUM_SKU_ID must be a Discord snowflake")
+    .optional(),
+  WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(100).default(4),
 })
   .refine(
     (data) => !data.PREMIUM_ENABLED || data.DISCORD_PREMIUM_SKU_ID,
@@ -73,5 +87,4 @@ export const envSchema = z.object({
       message: "DISCORD_PREMIUM_SKU_ID is required when PREMIUM_ENABLED is true",
       path: ["DISCORD_PREMIUM_SKU_ID"],
     }
-  )
-;
+  );

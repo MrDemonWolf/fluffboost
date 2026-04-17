@@ -111,13 +111,13 @@ describe("owner premium test-create command", () => {
     expect(replyArgs.content).toContain("Could not determine guild");
   });
 
-  it("should show actual error on failure", async () => {
-    const { testCreate } = await loadModule({
-      OWNER_ID: "owner-123",
-      DISCORD_PREMIUM_SKU_ID: "sku-1",
+  it("should reply with generic failure message and log error on failure", async () => {
+    const { testCreate, logger } = await loadModule({
+      OWNER_ID: "100000000000000999",
+      DISCORD_PREMIUM_SKU_ID: "200000000000000001",
     });
 
-    const interaction = mockInteraction({ user: { id: "owner-123", username: "owner" } });
+    const interaction = mockInteraction({ user: { id: "100000000000000999", username: "owner" } });
     const options = { getString: sinon.stub().returns(null) };
 
     const client = mockClient();
@@ -127,7 +127,8 @@ describe("owner premium test-create command", () => {
 
     await testCreate(client as never, interaction as never, options as never);
 
+    expect(logger.commands.error.called).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).toContain("API Error: rate limited");
+    expect(replyArgs.content).toContain("Failed to create test entitlement");
   });
 });

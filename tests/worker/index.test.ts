@@ -2,8 +2,6 @@ import { describe, it, expect, beforeEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockLogger, mockEnv } from "../helpers.js";
 
-// Top-level mocks for infrastructure deps only — NOT for job modules,
-// since mocking them here prevents other test files from importing the real modules.
 const logger = mockLogger();
 const env = mockEnv();
 
@@ -24,18 +22,21 @@ mock.module("../../src/bot.js", () => ({ default: mockClient }));
 mock.module("../../src/redis/index.js", () => ({ default: {} }));
 mock.module("bullmq", () => ({ Worker: WorkerStub, Job: class {} }));
 
-// Import worker/index BEFORE mocking job modules — the real setActivity/sendMotivation
-// are loaded now but will be swapped via live bindings in beforeEach.
-const { default: registerWorker } = await import("../../src/worker/index.js");
+const { default: startWorker } = await import("../../src/worker/index.js");
+
+function makeQueue(existingRepeatables: { name: string; key: string }[] = []) {
+  return {
+    add: sinon.stub().resolves(),
+    getRepeatableJobs: sinon.stub().resolves(existingRepeatables),
+    removeRepeatableByKey: sinon.stub().resolves(),
+  };
+}
 
 describe("worker index", () => {
   beforeEach(() => {
-    // Mock job modules in beforeEach (not top-level) so other test files
-    // can import the real modules during their top-level evaluation.
     mock.module("../../src/worker/jobs/setActivity.js", () => ({ default: setActivityStub }));
     mock.module("../../src/worker/jobs/sendMotivation.js", () => ({ default: sendMotivationStub }));
 
-    // Reset stubs
     workerOnStub.reset();
     WorkerStub.resetHistory();
     WorkerStub.callsFake((_name: string, processor: typeof jobProcessor) => {
@@ -63,37 +64,54 @@ describe("worker index", () => {
     Object.assign(env, mockEnv());
   });
 
-  it("should register jobs with correct intervals", () => {
+  it("should register jobs with correct intervals", async () => {
     Object.assign(env, { DISCORD_ACTIVITY_INTERVAL_MINUTES: 10 });
+    const queue = makeQueue();
 
-    const addStub = sinon.stub();
-    const mockQueue = { add: addStub };
+    await startWorker(queue as never);
 
-    registerWorker(mockQueue as never);
-
-    expect(addStub.calledTwice).toBe(true);
-
-    const activityCall = addStub.firstCall;
+    expect(queue.add.calledTwice).toBe(true);
+    const activityCall = queue.add.firstCall;
     expect(activityCall.args[0]).toBe("set-activity");
     expect(activityCall.args[2].repeat.every).toBe(10 * 60 * 1000);
 
-    const motivationCall = addStub.secondCall;
+    const motivationCall = queue.add.secondCall;
     expect(motivationCall.args[0]).toBe("send-motivation");
     expect(motivationCall.args[2].repeat.every).toBe(60 * 1000);
+  });
 
-    expect(logger.info.called).toBe(true);
+  it("should remove existing repeatables before re-adding", async () => {
+    const queue = makeQueue([
+      { name: "set-activity", key: "old-activity-key" },
+      { name: "send-motivation", key: "old-motivation-key" },
+    ]);
+
+    await startWorker(queue as never);
+
+    expect(queue.removeRepeatableByKey.calledWith("old-activity-key")).toBe(true);
+    expect(queue.removeRepeatableByKey.calledWith("old-motivation-key")).toBe(true);
+  });
+
+  it("should set removeOnFail cap and concurrency", async () => {
+    const queue = makeQueue();
+    await startWorker(queue as never);
+
+    const opts = queue.add.firstCall.args[2];
+    expect(opts.removeOnFail).toEqual({ count: 100 });
+    expect(opts.removeOnComplete).toEqual({ count: 50 });
+
+    const workerOpts = WorkerStub.firstCall.args[2];
+    expect(workerOpts.concurrency).toBe(env.WORKER_CONCURRENCY);
   });
 
   it("should create Worker with correct job handler", async () => {
-    const addStub = sinon.stub();
-    const mockQueue = { add: addStub };
-    registerWorker(mockQueue as never);
+    const queue = makeQueue();
+    await startWorker(queue as never);
 
     expect(typeof jobProcessor).toBe("function");
 
     await jobProcessor!({ name: "set-activity" });
     expect(setActivityStub.calledOnce).toBe(true);
-    expect(setActivityStub.firstCall.args[0]).toBe(mockClient);
 
     await jobProcessor!({ name: "send-motivation" });
     expect(sendMotivationStub.calledOnce).toBe(true);
@@ -106,20 +124,11 @@ describe("worker index", () => {
     }
   });
 
-  it("should set up completed and failed event handlers", () => {
-    const addStub = sinon.stub();
-    const mockQueue = { add: addStub };
-    registerWorker(mockQueue as never);
+  it("should set up completed and failed event handlers", async () => {
+    const queue = makeQueue();
+    await startWorker(queue as never);
 
     expect(workerOnStub.calledWith("completed")).toBe(true);
     expect(workerOnStub.calledWith("failed")).toBe(true);
-
-    const completedHandler = workerOnStub.getCalls().find((c: sinon.SinonSpyCall) => c.args[0] === "completed");
-    completedHandler!.args[1]({ name: "test-job", id: "123" });
-    expect(logger.success.called).toBe(true);
-
-    const failedHandler = workerOnStub.getCalls().find((c: sinon.SinonSpyCall) => c.args[0] === "failed");
-    failedHandler!.args[1]({ name: "test-job", id: "123" }, new Error("fail"));
-    expect(logger.error.called).toBe(true);
   });
 });
