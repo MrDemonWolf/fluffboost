@@ -2,7 +2,7 @@ import { EmbedBuilder, MessageFlags } from "discord.js";
 
 import type { Client, CommandInteraction, CommandInteractionOptionResolver } from "discord.js";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
@@ -26,14 +26,25 @@ export default async function (
     const suggestion = await fetchPendingSuggestion(suggestionId, interaction);
     if (!suggestion) {return;}
 
-    await db
+    // Atomic conditional UPDATE so two concurrent rejects can't both proceed
+    // to post the embed + DM + reply.
+    const updated = await db
       .update(suggestionQuotes)
       .set({
         status: "Rejected",
         reviewedBy: interaction.user.id,
         reviewedAt: new Date(),
       })
-      .where(eq(suggestionQuotes.id, suggestionId));
+      .where(and(eq(suggestionQuotes.id, suggestionId), eq(suggestionQuotes.status, "Pending")))
+      .returning({ id: suggestionQuotes.id });
+
+    if (updated.length === 0) {
+      await interaction.reply({
+        content: "This suggestion was just reviewed by someone else.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
 
     const embedFields = [
       { name: "Quote", value: suggestion.quote },

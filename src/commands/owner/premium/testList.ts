@@ -30,7 +30,10 @@ export default async function (client: Client, interaction: CommandInteraction):
       });
 
       const header = `**Entitlements (${entitlements.size}):**\n`;
-      const maxLength = 2000 - header.length;
+      // Reserve headroom for the "\n...and N more" overflow marker so the
+      // final payload can't exceed Discord's 2000-char limit.
+      const OVERFLOW_RESERVE = 32;
+      const maxLength = 2000 - header.length - OVERFLOW_RESERVE;
       const truncatedLines: string[] = [];
       let currentLength = 0;
 

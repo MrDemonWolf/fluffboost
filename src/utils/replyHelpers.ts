@@ -27,7 +27,7 @@ export async function replyWithTextFile<T>({
   if (rows.length === 0) {
     await interaction.reply({
       content: emptyMessage,
-      flags: MessageFlags.Ephemeral,
+      ...(ephemeral ? { flags: MessageFlags.Ephemeral } : {}),
     });
     return;
   }

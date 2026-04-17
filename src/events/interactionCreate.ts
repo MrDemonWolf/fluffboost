@@ -1,6 +1,6 @@
 import { MessageFlags } from "discord.js";
 
-import type { Client, Interaction, CommandInteraction } from "discord.js";
+import type { Client, Interaction } from "discord.js";
 
 import logger from "../utils/logger.js";
 import { commandRegistry, setupAutocomplete } from "./commandRegistry.js";
@@ -52,24 +52,27 @@ export async function interactionCreateEvent(
       guildId,
     });
 
-    try {
-      const errInteraction = interaction as CommandInteraction;
-      if (errInteraction.replied || errInteraction.deferred) {
-        await errInteraction.followUp({
-          content: "There was an error while executing this command!",
-          flags: MessageFlags.Ephemeral,
-        });
-      } else {
-        await errInteraction.reply({
-          content: "There was an error while executing this command!",
-          flags: MessageFlags.Ephemeral,
+    // Only command interactions are repliable; autocomplete errors are logged
+    // but cannot prompt a user reply.
+    if (interaction.isCommand()) {
+      try {
+        if (interaction.replied || interaction.deferred) {
+          await interaction.followUp({
+            content: "There was an error while executing this command!",
+            flags: MessageFlags.Ephemeral,
+          });
+        } else {
+          await interaction.reply({
+            content: "There was an error while executing this command!",
+            flags: MessageFlags.Ephemeral,
+          });
+        }
+      } catch (replyErr) {
+        logger.error("Discord - Command", "Failed to send error response to user", replyErr, {
+          interactionId,
+          guildId,
         });
       }
-    } catch (replyErr) {
-      logger.error("Discord - Command", "Failed to send error response to user", replyErr, {
-        interactionId,
-        guildId,
-      });
     }
   }
 }

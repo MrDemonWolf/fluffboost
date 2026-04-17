@@ -74,7 +74,7 @@ describe("admin suggestion reject command", () => {
       status: "Pending",
     });
     const { client, channel, submitter } = makeClient();
-    db.update.returns(mockDbChain([]));
+    db.update.returns(mockDbChain([{ id: "s1" }]));
 
     const interaction = makeInteraction("s1", "Not appropriate");
     await handler(client as never, interaction as never, interaction.options as never);
@@ -97,7 +97,7 @@ describe("admin suggestion reject command", () => {
       status: "Pending",
     });
     const { client, submitter } = makeClient();
-    db.update.returns(mockDbChain([]));
+    db.update.returns(mockDbChain([{ id: "s1" }]));
 
     const interaction = makeInteraction("s1");
     await handler(client as never, interaction as never, interaction.options as never);
@@ -105,6 +105,27 @@ describe("admin suggestion reject command", () => {
     expect(db.update.calledOnce).toBe(true);
     const dmEmbed = submitter.send.firstCall.args[0].embeds[0];
     expect(dmEmbed.data.description).not.toContain("Reason");
+  });
+
+  it("should short-circuit when atomic UPDATE affects zero rows (concurrent review)", async () => {
+    const { handler, db } = await loadModule({
+      id: "s1",
+      quote: "Some quote",
+      author: "Anon",
+      addedBy: "user-1",
+      status: "Pending",
+    });
+    const { client, channel, submitter } = makeClient();
+    db.update.returns(mockDbChain([])); // zero rows — another admin beat us
+
+    const interaction = makeInteraction("s1");
+    await handler(client as never, interaction as never, interaction.options as never);
+
+    expect(db.update.calledOnce).toBe(true);
+    expect(channel.send.called).toBe(false);
+    expect(submitter.send.called).toBe(false);
+    const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
+    expect(replyArgs.content).toContain("just reviewed");
   });
 
   it("should not break if submitter DM fails", async () => {
@@ -116,7 +137,7 @@ describe("admin suggestion reject command", () => {
       status: "Pending",
     });
     const { client } = makeClient();
-    db.update.returns(mockDbChain([]));
+    db.update.returns(mockDbChain([{ id: "s1" }]));
     (client.users.fetch as sinon.SinonStub).rejects(new Error("Cannot send DM"));
 
     const interaction = makeInteraction("s1");

@@ -1,3 +1,4 @@
+import { MessageFlags } from "discord.js";
 import type { Client, CommandInteraction, CommandInteractionOptionResolver } from "discord.js";
 
 import { eq, desc } from "drizzle-orm";
@@ -20,9 +21,14 @@ export default async function (
     if (!(await isUserPermitted(interaction))) {return;}
 
     const status = options.getString("status");
-    const validStatus = status && (VALID_STATUSES as string[]).includes(status)
-      ? (status as SuggestionStatus)
-      : null;
+    if (status && !(VALID_STATUSES as string[]).includes(status)) {
+      await interaction.reply({
+        content: `Invalid status: ${status}. Must be one of: ${VALID_STATUSES.join(", ")}.`,
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+    const validStatus = status ? (status as SuggestionStatus) : null;
 
     const baseQuery = db.select().from(suggestionQuotes).orderBy(desc(suggestionQuotes.createdAt));
     const suggestions = validStatus
@@ -35,7 +41,7 @@ export default async function (
       header: "ID - Quote - Author - Status - Submitted By",
       formatRow: (s) => `${s.id} - ${s.quote} - ${s.author} - ${s.status} - ${s.addedBy}`,
       filename: "suggestions.txt",
-      emptyMessage: status ? `No suggestions found with status: ${status}` : "No suggestions found.",
+      emptyMessage: validStatus ? `No suggestions found with status: ${validStatus}` : "No suggestions found.",
     });
   });
 }

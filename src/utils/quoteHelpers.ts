@@ -5,6 +5,7 @@ import { sql } from "drizzle-orm";
 import { db } from "../database/index.js";
 import { motivationQuotes } from "../database/schema.js";
 import type { MotivationQuote } from "../database/schema.js";
+import logger from "./logger.js";
 
 /**
  * Fetch a single random motivation quote in one round-trip.
@@ -28,7 +29,10 @@ export async function resolveQuoteAuthor(
 ): Promise<User | null> {
   try {
     return await client.users.fetch(addedById);
-  } catch {
+  } catch (err) {
+    // Log rather than swallow so transient outages, rate limits, and token
+    // issues are distinguishable from the expected unknown/deleted-user case.
+    logger.warn("Discord", "Failed to resolve quote author", { addedById, error: err });
     return null;
   }
 }

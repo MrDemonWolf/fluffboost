@@ -109,9 +109,15 @@ const queue = new Queue(queueName, {
   connection: redisClient as unknown as ConnectionOptions,
 });
 
-startWorker(queue).catch((err) => {
-  logger.error("Worker", "Failed to start worker", err);
-  process.exit(1);
+// Gate worker startup on ClientReady. Otherwise BullMQ can dequeue jobs
+// (e.g. send-motivation) before Discord login completes, causing
+// client.channels.fetch / client.users.fetch calls inside job handlers to
+// fail against an un-authenticated client.
+client.once(Events.ClientReady, () => {
+  startWorker(queue).catch((err) => {
+    logger.error("Worker", "Failed to start worker", err);
+    process.exit(1);
+  });
 });
 
 export default client;
