@@ -19,7 +19,11 @@ describe("setup schedule command", () => {
       getPremiumSkuId: sinon.stub().returns("sku-1"),
       buildPremiumUpsell: stubBuildPremiumUpsell("sku-1"),
     }));
-    mock.module("../../../src/utils/guildDatabase.js", () => ({ guildExists: sinon.stub().resolves(true) }));
+    mock.module("../../../src/utils/guildDatabase.js", () => ({
+      guildExists: sinon.stub().resolves(true),
+      pruneGuilds: sinon.stub().resolves(),
+      ensureGuildExists: sinon.stub().resolves(),
+    }));
     mock.module("../../../src/utils/timezones.js", () => ({
       isValidTimezone: sinon.stub().callsFake((tz: string) => {
         return ["America/Chicago", "America/New_York", "Europe/London", "UTC"].includes(tz);
@@ -167,7 +171,11 @@ describe("setup schedule command", () => {
       getPremiumSkuId: sinon.stub().returns("sku-1"),
       buildPremiumUpsell: stubBuildPremiumUpsell("sku-1"),
     }));
-    mock.module("../../../src/utils/guildDatabase.js", () => ({ guildExists: sinon.stub().resolves(true) }));
+    mock.module("../../../src/utils/guildDatabase.js", () => ({
+      guildExists: sinon.stub().resolves(true),
+      pruneGuilds: sinon.stub().resolves(),
+      ensureGuildExists: sinon.stub().resolves(),
+    }));
     mock.module("../../../src/utils/timezones.js", () => ({
       isValidTimezone: sinon.stub().returns(true),
       filterTimezones: sinon.stub().throws(new Error("timezone error")),

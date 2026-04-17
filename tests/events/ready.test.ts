@@ -14,7 +14,11 @@ describe("ready event", () => {
     const setActivity = sinon.stub().resolves();
 
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../src/utils/guildDatabase.js", () => ({ pruneGuilds, ensureGuildExists }));
+    mock.module("../../src/utils/guildDatabase.js", () => ({
+      pruneGuilds,
+      ensureGuildExists,
+      guildExists: sinon.stub().resolves(true),
+    }));
     mock.module("../../src/worker/jobs/setActivity.js", () => ({ default: setActivity }));
     mock.module("../../src/commands/help.js", () => ({ default: { slashCommand: { name: "help" } } }));
     mock.module("../../src/commands/about.js", () => ({ default: { slashCommand: { name: "about" } } }));
