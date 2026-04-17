@@ -16,7 +16,24 @@ interface GuildSchedule {
 }
 
 /**
+ * Parse an "HH:mm" string into validated hour/minute components.
+ * Returns null on any malformed or out-of-range input — the caller should
+ * treat that guild as not-due rather than coercing to a default time.
+ */
+export function parseHourMinute(value: string): { hour: number; minute: number } | null {
+  const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(value);
+  if (!match) {
+    return null;
+  }
+  return { hour: Number(match[1]), minute: Number(match[2]) };
+}
+
+/**
  * Get the current time components in a specific timezone using dayjs.
+ *
+ * Note on weekly dedup: dayjs's `isSame(now, "week")` uses Sunday as the
+ * week start regardless of guild locale. This is intentional and consistent
+ * for the bot's purpose (guarding against duplicate sends within a 7-day window).
  */
 export function getCurrentTimeInTimezone(tz: string) {
   const now = dayjs().tz(tz);
@@ -38,9 +55,11 @@ export function getCurrentTimeInTimezone(tz: string) {
 export function isGuildDueForMotivation(guild: Pick<Guild, keyof GuildSchedule>): boolean {
   const { motivationFrequency, motivationTime, motivationDay, timezone: tz, lastMotivationSentAt } = guild;
 
-  const [targetHourStr, targetMinuteStr] = motivationTime.split(":");
-  const targetHour = parseInt(targetHourStr ?? "8", 10);
-  const targetMinute = parseInt(targetMinuteStr ?? "0", 10);
+  const parsed = parseHourMinute(motivationTime);
+  if (!parsed) {
+    return false;
+  }
+  const { hour: targetHour, minute: targetMinute } = parsed;
 
   const current = getCurrentTimeInTimezone(tz);
 

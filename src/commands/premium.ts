@@ -1,33 +1,21 @@
-import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  EmbedBuilder,
-  MessageFlags,
-  SlashCommandBuilder,
-} from "discord.js";
+import { EmbedBuilder, MessageFlags, SlashCommandBuilder } from "discord.js";
 
 import type { Client, CommandInteraction } from "discord.js";
 
-import logger from "../utils/logger.js";
-import { safeErrorReply } from "../utils/commandErrors.js";
-import { isPremiumEnabled, hasEntitlement, getPremiumSkuId } from "../utils/premium.js";
+import { withCommandLogging } from "../utils/commandErrors.js";
+import { buildPremiumUpsell, hasEntitlement, isPremiumEnabled } from "../utils/premium.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("premium")
   .setDescription("View premium subscription info and status");
 
-export async function execute(_client: Client, interaction: CommandInteraction) {
-  try {
-    logger.commands.executing("premium", interaction.user.username, interaction.user.id);
-
+export async function execute(_client: Client, interaction: CommandInteraction): Promise<void> {
+  await withCommandLogging("premium", interaction, async () => {
     if (!isPremiumEnabled()) {
       await interaction.reply({
         content: "Premium subscriptions are not currently available.",
         flags: MessageFlags.Ephemeral,
       });
-
-      logger.commands.success("premium", interaction.user.username, interaction.user.id);
       return;
     }
 
@@ -36,66 +24,28 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
         .setColor(0x57f287)
         .setTitle("Premium Active")
         .setDescription("You have an active premium subscription! Thank you for supporting FluffBoost.")
-        .addFields({
-          name: "Status",
-          value: "Active",
-          inline: true,
-        })
+        .addFields({ name: "Status", value: "Active", inline: true })
         .setFooter({ text: "Manage your subscription in User Settings > Subscriptions" });
 
-      await interaction.reply({
-        embeds: [embed],
-        flags: MessageFlags.Ephemeral,
-      });
-    } else {
-      const skuId = getPremiumSkuId();
-
-      const embed = new EmbedBuilder()
-        .setColor(0xfadb7f)
-        .setTitle("FluffBoost Premium")
-        .setDescription("Upgrade to Premium to unlock exclusive features!")
-        .addFields(
-          { name: "Price", value: "$1.99/month", inline: true },
-          {
-            name: "Benefits",
-            value: [
-              "- Priority quote delivery",
-              "- Exclusive premium quotes",
-              "- Early access to new features",
-            ].join("\n"),
-          }
-        )
-        .setFooter({ text: "Subscribe to support FluffBoost development!" });
-
-      const components: ActionRowBuilder<ButtonBuilder>[] = [];
-      if (skuId) {
-        components.push(
-          new ActionRowBuilder<ButtonBuilder>().addComponents(
-            new ButtonBuilder().setStyle(ButtonStyle.Premium).setSKUId(skuId)
-          )
-        );
-      }
-
-      await interaction.reply({
-        embeds: [embed],
-        components,
-        flags: MessageFlags.Ephemeral,
-      });
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+      return;
     }
 
-    logger.commands.success("premium", interaction.user.username, interaction.user.id);
-  } catch (err) {
-    logger.commands.error("premium", interaction.user.username, interaction.user.id, err);
-    logger.error("Discord - Command", "Error executing premium command", err, {
-      user: { username: interaction.user.username, id: interaction.user.id },
-      command: "premium",
+    const upsell = buildPremiumUpsell({
+      title: "FluffBoost Premium",
+      description: "Upgrade to Premium to unlock exclusive features!",
+      fields: [
+        { name: "Price", value: "$1.99/month", inline: true },
+        {
+          name: "Benefits",
+          value: ["- Priority quote delivery", "- Exclusive premium quotes", "- Early access to new features"].join("\n"),
+        },
+      ],
+      footerText: "Subscribe to support FluffBoost development!",
     });
 
-    await safeErrorReply(interaction);
-  }
+    await interaction.reply({ ...upsell, flags: MessageFlags.Ephemeral });
+  });
 }
 
-export default {
-  slashCommand,
-  execute,
-};
+export default { slashCommand, execute };

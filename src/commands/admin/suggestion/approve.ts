@@ -1,11 +1,6 @@
-import {
-  Client,
-  CommandInteraction,
-  EmbedBuilder,
-  MessageFlags,
-} from "discord.js";
+import { EmbedBuilder, MessageFlags } from "discord.js";
 
-import type { CommandInteractionOptionResolver } from "discord.js";
+import type { Client, CommandInteraction, CommandInteractionOptionResolver } from "discord.js";
 
 import { eq } from "drizzle-orm";
 
@@ -14,49 +9,21 @@ import { db } from "../../../database/index.js";
 import { motivationQuotes, suggestionQuotes } from "../../../database/schema.js";
 import logger from "../../../utils/logger.js";
 import { sendToMainChannel } from "../../../utils/mainChannel.js";
-import { safeErrorReply } from "../../../utils/commandErrors.js";
+import { withCommandLogging } from "../../../utils/commandErrors.js";
+import { fetchPendingSuggestion } from "../../../utils/suggestionHelpers.js";
 
 export default async function (
   client: Client,
   interaction: CommandInteraction,
   options: CommandInteractionOptionResolver,
 ): Promise<void> {
-  try {
-    logger.commands.executing(
-      "admin suggestion approve",
-      interaction.user.username,
-      interaction.user.id,
-    );
-
-    const isAllowed = await isUserPermitted(interaction);
-
-    if (!isAllowed) {
-      return;
-    }
+  await withCommandLogging("admin suggestion approve", interaction, async () => {
+    if (!(await isUserPermitted(interaction))) {return;}
 
     const suggestionId = options.getString("suggestion_id", true);
 
-    const [suggestion] = await db
-      .select()
-      .from(suggestionQuotes)
-      .where(eq(suggestionQuotes.id, suggestionId))
-      .limit(1);
-
-    if (!suggestion) {
-      await interaction.reply({
-        content: `Suggestion with ID ${suggestionId} not found.`,
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
-
-    if (suggestion.status !== "Pending") {
-      await interaction.reply({
-        content: `This suggestion has already been ${suggestion.status.toLowerCase()}.`,
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
+    const suggestion = await fetchPendingSuggestion(suggestionId, interaction);
+    if (!suggestion) {return;}
 
     await db.transaction(async (tx) => {
       await tx.insert(motivationQuotes).values({
@@ -117,20 +84,5 @@ export default async function (
       content: `Suggestion ${suggestionId} approved and added to motivation quotes.`,
       flags: MessageFlags.Ephemeral,
     });
-
-    logger.commands.success(
-      "admin suggestion approve",
-      interaction.user.username,
-      interaction.user.id,
-    );
-  } catch (err) {
-    logger.commands.error(
-      "admin suggestion approve",
-      interaction.user.username,
-      interaction.user.id,
-      err,
-    );
-
-    await safeErrorReply(interaction);
-  }
+  });
 }

@@ -6,14 +6,10 @@ import redis from "./redis/index.js";
 import env from "./utils/env.js";
 import logger from "./utils/logger.js";
 
-/**
- * Load environment variables from .env file.
- */
 config();
 
-/**
- * Verify database connectivity via a simple query.
- */
+let redisReady = false;
+
 queryClient`SELECT 1`
   .then(() => {
     logger.database.connected("PostgreSQL");
@@ -23,16 +19,22 @@ queryClient`SELECT 1`
     process.exit(1);
   });
 
-/**
- * Load Redis connection and connect to Redis Server if failed to connect, throw error.
- */
 redis
-  .on("connect", () => {
+  .on("ready", () => {
+    redisReady = true;
     logger.database.connected("Redis");
   })
+  .on("end", () => {
+    logger.warn("Database", "Redis connection closed");
+  })
   .on("error", (err: Error) => {
-    logger.database.error("Redis", err);
-    process.exit(1);
+    // ioredis emits transient errors during reconnect attempts; only escalate
+    // if we never managed to connect at all.
+    if (!redisReady) {
+      logger.database.error("Redis", err);
+    } else {
+      logger.warn("Database", `Redis transient error: ${err.message}`);
+    }
   });
 
 const server = api.listen(api.get("port"), () => {
@@ -44,12 +46,10 @@ server.on("error", (err: unknown) => {
   process.exit(1);
 });
 
-/**
- * Discord.js Sharding Manager
- */
 const manager = new ShardingManager("./src/bot.ts", {
   token: env.DISCORD_APPLICATION_BOT_TOKEN,
   totalShards: "auto",
+  respawn: true,
 });
 
 manager.on("shardCreate", (shard) => {
@@ -60,4 +60,46 @@ manager.on("shardCreate", (shard) => {
   }
 });
 
-manager.spawn();
+void manager.spawn();
+
+let shuttingDown = false;
+
+async function shutdown(signal: string): Promise<void> {
+  if (shuttingDown) {return;}
+  shuttingDown = true;
+  logger.info("App", `Received ${signal}, shutting down gracefully`);
+
+  // Stop accepting new HTTP work first.
+  await new Promise<void>((resolve) => {
+    server.close(() => resolve());
+    setTimeout(resolve, 5000).unref();
+  });
+  logger.info("App", "HTTP server closed");
+
+  // Tell every shard to log out cleanly.
+  try {
+    await Promise.all(manager.shards.map((s) => s.kill()));
+    logger.info("App", "Shards terminated");
+  } catch (err) {
+    logger.warn("App", "Error terminating shards", { error: err });
+  }
+
+  try {
+    await queryClient.end({ timeout: 5 });
+    logger.info("App", "Postgres pool closed");
+  } catch (err) {
+    logger.warn("App", "Error closing Postgres", { error: err });
+  }
+
+  try {
+    redis.disconnect();
+    logger.info("App", "Redis disconnected");
+  } catch (err) {
+    logger.warn("App", "Error disconnecting Redis", { error: err });
+  }
+
+  process.exit(0);
+}
+
+process.on("SIGTERM", () => void shutdown("SIGTERM"));
+process.on("SIGINT", () => void shutdown("SIGINT"));

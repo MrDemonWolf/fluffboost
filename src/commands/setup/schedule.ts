@@ -4,12 +4,12 @@ import type { Client, ChatInputCommandInteraction, AutocompleteInteraction } fro
 import { eq } from "drizzle-orm";
 
 import logger from "../../utils/logger.js";
-import { safeErrorReply } from "../../utils/commandErrors.js";
+import { withCommandLogging } from "../../utils/commandErrors.js";
 import { db } from "../../database/index.js";
 import { guilds } from "../../database/schema.js";
 import type { MotivationFrequency } from "../../database/schema.js";
 import { guildExists } from "../../utils/guildDatabase.js";
-import { hasEntitlement, isPremiumEnabled, getPremiumSkuId } from "../../utils/premium.js";
+import { buildPremiumUpsell, hasEntitlement, isPremiumEnabled } from "../../utils/premium.js";
 import { isValidTimezone, filterTimezones } from "../../utils/timezones.js";
 
 const DAY_OF_WEEK_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -26,45 +26,26 @@ function formatScheduleDescription(frequency: string, time: string, timezone: st
   return parts.join("\n");
 }
 
-export default async function schedule(_client: Client, interaction: ChatInputCommandInteraction) {
-  try {
-    logger.commands.executing("setup schedule", interaction.user.username, interaction.user.id);
+export default async function schedule(_client: Client, interaction: ChatInputCommandInteraction): Promise<void> {
+  await withCommandLogging("setup schedule", interaction, async () => {
+    if (!interaction.guildId) {return;}
 
-    if (!interaction.guildId) {
-      return;
-    }
-
-    // Premium gate
     if (isPremiumEnabled() && !hasEntitlement(interaction)) {
-      const skuId = getPremiumSkuId();
-      const embed = new EmbedBuilder()
-        .setColor(0xfadb7f)
-        .setTitle("Premium Feature")
-        .setDescription(
+      const upsell = buildPremiumUpsell({
+        title: "Premium Feature",
+        description:
           "Custom quote scheduling is a premium feature! " +
-            "Subscribe to FluffBoost Premium to customize when your server receives motivational quotes."
-        )
-        .addFields(
-          { name: "Default Schedule", value: "Daily at 8:00 AM (America/Chicago)", inline: false },
+          "Subscribe to FluffBoost Premium to customize when your server receives motivational quotes.",
+        fields: [
+          { name: "Default Schedule", value: "Daily at 8:00 AM (America/Chicago)" },
           {
             name: "Premium Unlocks",
             value: "- Custom delivery time\n- Custom timezone\n- Weekly or monthly frequency",
-            inline: false,
-          }
-        );
-
-      await interaction.reply({
-        embeds: [embed],
-        components: skuId
-          ? [
-              {
-                type: 1,
-                components: [{ type: 2, style: 6, sku_id: skuId }],
-              },
-            ]
-          : [],
-        flags: MessageFlags.Ephemeral,
+          },
+        ],
       });
+
+      await interaction.reply({ ...upsell, flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -74,7 +55,6 @@ export default async function schedule(_client: Client, interaction: ChatInputCo
     const timezone = options.getString("timezone") ?? "America/Chicago";
     const day = options.getInteger("day");
 
-    // Validate time format (HH:mm)
     const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
     if (!timeRegex.test(time)) {
       await interaction.reply({
@@ -84,7 +64,6 @@ export default async function schedule(_client: Client, interaction: ChatInputCo
       return;
     }
 
-    // Validate timezone
     if (!isValidTimezone(timezone)) {
       await interaction.reply({
         content: "Invalid timezone. Please use a valid IANA timezone (e.g., `America/New_York`, `Europe/London`).",
@@ -93,7 +72,6 @@ export default async function schedule(_client: Client, interaction: ChatInputCo
       return;
     }
 
-    // Validate day based on frequency
     if (frequency === "Weekly") {
       if (day === null || day < 0 || day > 6) {
         await interaction.reply({
@@ -129,24 +107,11 @@ export default async function schedule(_client: Client, interaction: ChatInputCo
       .setTitle("Schedule Updated")
       .setDescription(formatScheduleDescription(frequency, time, timezone, frequency === "Daily" ? null : day));
 
-    await interaction.reply({
-      embeds: [embed],
-      flags: MessageFlags.Ephemeral,
-    });
-
-    logger.commands.success("setup schedule", interaction.user.username, interaction.user.id);
-  } catch (err) {
-    logger.commands.error("setup schedule", interaction.user.username, interaction.user.id, err);
-    logger.error("Discord - Command", "Error executing setup schedule command", err, {
-      user: { username: interaction.user.username, id: interaction.user.id },
-      command: "setup schedule",
-    });
-
-    await safeErrorReply(interaction);
-  }
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+  });
 }
 
-export async function autocomplete(interaction: AutocompleteInteraction) {
+export async function autocomplete(interaction: AutocompleteInteraction): Promise<void> {
   try {
     const focused = interaction.options.getFocused(true);
 
