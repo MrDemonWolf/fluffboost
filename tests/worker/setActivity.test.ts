@@ -3,12 +3,13 @@ import sinon from "sinon";
 import { mockLogger, mockDb, mockDbChain, mockEnv, mockClient } from "../helpers.js";
 
 // Mock schema to prevent real DB connection during import
-mock.module("../../src/database/index.js", () => ({ db: {} }));
+mock.module("../../src/database/index.js", () => ({ db: {}, queryClient: () => Promise.resolve([]) }));
 mock.module("../../src/utils/env.js", () => ({ default: {} }));
 mock.module("../../src/utils/logger.js", () => ({ default: {} }));
 
-// Import the core function that accepts deps directly — no mock.module needed for testing
-const { setActivityCore } = await import("../../src/worker/jobs/setActivity.js");
+// setActivityCore lives in its own module so it cannot be clobbered by test
+// files that mock `setActivity.js` to verify worker job dispatch.
+const { setActivityCore } = await import("../../src/worker/jobs/setActivityCore.js");
 
 describe("setActivity", () => {
   it("should warn and return when client.user is undefined", async () => {

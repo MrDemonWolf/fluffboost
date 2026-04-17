@@ -1,16 +1,18 @@
 import { describe, it, expect } from "bun:test";
 import { envSchema } from "../../src/utils/envSchema.js";
 
+const SKU = "200000000000000001";
+
 function validEnv(overrides: Record<string, unknown> = {}) {
   return {
     DATABASE_URL: "postgres://user:pass@localhost:5432/testdb",
     REDIS_URL: "redis://localhost:6379",
-    DISCORD_APPLICATION_ID: "app-123",
+    DISCORD_APPLICATION_ID: "100000000000000001",
     DISCORD_APPLICATION_PUBLIC_KEY: "key-123",
     DISCORD_APPLICATION_BOT_TOKEN: "token-123",
-    OWNER_ID: "owner-123",
-    MAIN_GUILD_ID: "guild-123",
-    MAIN_CHANNEL_ID: "channel-123",
+    OWNER_ID: "100000000000000999",
+    MAIN_GUILD_ID: "100000000000000100",
+    MAIN_CHANNEL_ID: "100000000000000200",
     ...overrides,
   };
 }
@@ -44,14 +46,14 @@ describe("envSchema", () => {
 
   it("should pass when PREMIUM_ENABLED is true with DISCORD_PREMIUM_SKU_ID", () => {
     const result = envSchema.safeParse(
-      validEnv({ PREMIUM_ENABLED: "true", DISCORD_PREMIUM_SKU_ID: "sku-123" })
+      validEnv({ PREMIUM_ENABLED: "true", DISCORD_PREMIUM_SKU_ID: SKU })
     );
     expect(result.success).toBe(true);
   });
 
   it("should coerce PREMIUM_ENABLED string 'true' to boolean true", () => {
     const result = envSchema.safeParse(
-      validEnv({ PREMIUM_ENABLED: "true", DISCORD_PREMIUM_SKU_ID: "sku-123" })
+      validEnv({ PREMIUM_ENABLED: "true", DISCORD_PREMIUM_SKU_ID: SKU })
     );
     expect(result.success).toBe(true);
     if (result.success) {
@@ -81,4 +83,35 @@ describe("envSchema", () => {
     }
   });
 
+  it("should reject non-snowflake OWNER_ID", () => {
+    const result = envSchema.safeParse(validEnv({ OWNER_ID: "owner-123" }));
+    expect(result.success).toBe(false);
+  });
+
+  it("should reject non-snowflake DISCORD_PREMIUM_SKU_ID", () => {
+    const result = envSchema.safeParse(
+      validEnv({ PREMIUM_ENABLED: "true", DISCORD_PREMIUM_SKU_ID: "sku-not-a-snowflake" })
+    );
+    expect(result.success).toBe(false);
+  });
+
+  it("should accept ALLOWED_USERS as comma-separated snowflakes", () => {
+    const result = envSchema.safeParse(
+      validEnv({ ALLOWED_USERS: "100000000000000123,100000000000000456" })
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it("should reject ALLOWED_USERS containing non-snowflake entries", () => {
+    const result = envSchema.safeParse(validEnv({ ALLOWED_USERS: "user-123,user-456" }));
+    expect(result.success).toBe(false);
+  });
+
+  it("should default DATABASE_POOL_MAX to 10 when unset", () => {
+    const result = envSchema.safeParse(validEnv());
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.DATABASE_POOL_MAX).toBe(10);
+    }
+  });
 });

@@ -2,92 +2,55 @@ import { MessageFlags } from "discord.js";
 
 import type { Client, CommandInteraction, CommandInteractionOptionResolver } from "discord.js";
 
-import logger from "../../../utils/logger.js";
 import { getPremiumSkuId } from "../../../utils/premium.js";
-import { requireOwner } from "../../../utils/ownerGuard.js";
-import { safeErrorReply } from "../../../utils/commandErrors.js";
+import { requireApplication, requireOwner } from "../../../utils/ownerGuard.js";
+import { withCommandLogging } from "../../../utils/commandErrors.js";
 
 export default async function (
   client: Client,
   interaction: CommandInteraction,
   options: CommandInteractionOptionResolver
 ): Promise<void> {
-  try {
-    logger.commands.executing(
-      "owner premium test-create",
-      interaction.user.username,
-      interaction.user.id
-    );
+  await withCommandLogging(
+    "owner premium test-create",
+    interaction,
+    async () => {
+      if (!(await requireOwner(interaction, "owner premium test-create"))) {return;}
 
-    if (!(await requireOwner(interaction, "owner premium test-create"))) {
-      return;
-    }
-
-    const skuId = getPremiumSkuId();
-    if (!skuId) {
-      await interaction.reply({
-        content: "DISCORD_PREMIUM_SKU_ID is not configured.",
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
-
-    const guildId = options.getString("guild") ?? interaction.guildId;
-
-    if (!guildId) {
-      await interaction.reply({
-        content: "Could not determine guild. Run this in a server or pass a guild ID.",
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
-
-    if (!client.application) {
-      await interaction.reply({
-        content: "Bot application is not ready. Please try again in a moment.",
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
-
-    const entitlement = await client.application.entitlements.createTest({
-      sku: skuId,
-      guild: guildId,
-    });
-
-    await interaction.reply({
-      content:
-        `Test entitlement created for guild \`${guildId}\`\n` +
-        `Entitlement ID: \`${entitlement.id}\`\n` +
-        `SKU: \`${entitlement.skuId}\``,
-      flags: MessageFlags.Ephemeral,
-    });
-
-    logger.commands.success(
-      "owner premium test-create",
-      interaction.user.username,
-      interaction.user.id
-    );
-  } catch (err) {
-    logger.commands.error(
-      "owner premium test-create",
-      interaction.user.username,
-      interaction.user.id,
-      err
-    );
-    logger.error(
-      "Discord - Command",
-      "Error executing owner premium test-create command",
-      err,
-      {
-        user: { username: interaction.user.username, id: interaction.user.id },
-        command: "owner premium test-create",
+      const skuId = getPremiumSkuId();
+      if (!skuId) {
+        await interaction.reply({
+          content: "DISCORD_PREMIUM_SKU_ID is not configured.",
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
       }
-    );
 
-    await safeErrorReply(
-      interaction,
-      `Failed to create test entitlement: ${err instanceof Error ? err.message : String(err)}`
-    );
-  }
+      const guildId = options.getString("guild") ?? interaction.guildId;
+      if (!guildId) {
+        await interaction.reply({
+          content: "Could not determine guild. Run this in a server or pass a guild ID.",
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+
+      const application = await requireApplication(client, interaction);
+      if (!application) {return;}
+
+      const entitlement = await application.entitlements.createTest({
+        sku: skuId,
+        guild: guildId,
+      });
+
+      await interaction.reply({
+        content:
+          `Test entitlement created for guild \`${guildId}\`\n` +
+          `Entitlement ID: \`${entitlement.id}\`\n` +
+          `SKU: \`${entitlement.skuId}\``,
+        flags: MessageFlags.Ephemeral,
+      });
+    },
+    "Failed to create test entitlement. Check bot logs for details."
+  );
 }

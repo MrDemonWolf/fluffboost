@@ -5,6 +5,7 @@ import { eq, count } from "drizzle-orm";
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
 import { suggestionQuotes } from "../../../database/schema.js";
+import type { SuggestionStatus } from "../../../database/schema.js";
 import logger from "../../../utils/logger.js";
 import { safeErrorReply } from "../../../utils/commandErrors.js";
 
@@ -25,7 +26,7 @@ export default async function (
       return;
     }
 
-    const countByStatus = async (status: string) => {
+    const countByStatus = async (status: SuggestionStatus) => {
       const [result] = await db
         .select({ value: count() })
         .from(suggestionQuotes)

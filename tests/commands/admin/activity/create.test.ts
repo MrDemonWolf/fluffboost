@@ -12,7 +12,7 @@ describe("admin activity create command", () => {
     const db = mockDb();
 
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../../../src/database/index.js", () => ({ db }));
+    mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().resolves(true) }));
 
     const mod = await import("../../../../src/commands/admin/activity/create.js");
@@ -25,7 +25,7 @@ describe("admin activity create command", () => {
     const db = mockDb();
 
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../../../src/database/index.js", () => ({ db }));
+    mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().resolves(false) }));
 
     const mod = await import("../../../../src/commands/admin/activity/create.js");

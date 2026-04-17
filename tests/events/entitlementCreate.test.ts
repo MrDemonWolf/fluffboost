@@ -11,7 +11,7 @@ describe("entitlementCreateEvent", () => {
     const db = mockDb();
     const logger = mockLogger();
 
-    mock.module("../../src/database/index.js", () => ({ db }));
+    mock.module("../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
     const { entitlementCreateEvent } = await import("../../src/events/entitlementCreate.js");
 
@@ -23,7 +23,7 @@ describe("entitlementCreateEvent", () => {
   it("should not update DB for user-level entitlement (no guildId)", async () => {
     const db = mockDb();
 
-    mock.module("../../src/database/index.js", () => ({ db }));
+    mock.module("../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../src/utils/logger.js", () => ({ default: mockLogger() }));
     const { entitlementCreateEvent } = await import("../../src/events/entitlementCreate.js");
 
@@ -38,7 +38,7 @@ describe("entitlementCreateEvent", () => {
     chain.rejects(new Error("DB error"));
     db.update.returns(chain);
 
-    mock.module("../../src/database/index.js", () => ({ db }));
+    mock.module("../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
     const { entitlementCreateEvent } = await import("../../src/events/entitlementCreate.js");
 

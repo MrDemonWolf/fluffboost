@@ -11,7 +11,7 @@ describe("guildDeleteEvent", () => {
     const db = mockDb();
     const logger = mockLogger();
 
-    mock.module("../../src/database/index.js", () => ({ db }));
+    mock.module("../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
     const { guildDeleteEvent } = await import("../../src/events/guildDelete.js");
 
@@ -28,7 +28,7 @@ describe("guildDeleteEvent", () => {
     chain.rejects(new Error("DB error"));
     db.delete.returns(chain);
 
-    mock.module("../../src/database/index.js", () => ({ db }));
+    mock.module("../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
     const { guildDeleteEvent } = await import("../../src/events/guildDelete.js");
 

@@ -1,12 +1,28 @@
-import { CommandInteraction, MessageFlags } from "discord.js";
+import { MessageFlags } from "discord.js";
+import type { CommandInteraction } from "discord.js";
 
-import { trimArray } from "./trimArray.js";
 import env from "./env.js";
 import logger from "./logger.js";
 
-export async function isUserPermitted(interaction: CommandInteraction) {
-  const allowedUsersArray = env.ALLOWED_USERS?.split(",") ?? [];
-  const allowedUsers = trimArray(allowedUsersArray);
+let warned = false;
+
+function getAllowedUsers(): string[] {
+  const raw = env.ALLOWED_USERS?.trim() ?? "";
+  if (!raw) {
+    if (!warned) {
+      logger.warn(
+        "Security",
+        "ALLOWED_USERS is empty — every admin command will be rejected. Set ALLOWED_USERS to enable admin access."
+      );
+      warned = true;
+    }
+    return [];
+  }
+  return raw.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+export async function isUserPermitted(interaction: CommandInteraction): Promise<boolean> {
+  const allowedUsers = getAllowedUsers();
 
   if (!allowedUsers.includes(interaction.user.id)) {
     logger.unauthorized(
