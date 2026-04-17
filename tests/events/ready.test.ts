@@ -20,16 +20,14 @@ describe("ready event", () => {
       guildExists: sinon.stub().resolves(true),
     }));
     mock.module("../../src/worker/jobs/setActivity.js", () => ({ default: setActivity }));
-    mock.module("../../src/commands/help.js", () => ({ default: { slashCommand: { name: "help" } } }));
-    mock.module("../../src/commands/about.js", () => ({ default: { slashCommand: { name: "about" } } }));
-    mock.module("../../src/commands/quote.js", () => ({ default: { slashCommand: { name: "quote" } } }));
-    mock.module("../../src/commands/suggestion.js", () => ({ default: { slashCommand: { name: "suggestion" } } }));
-    mock.module("../../src/commands/invite.js", () => ({ default: { slashCommand: { name: "invite" } } }));
-    mock.module("../../src/commands/setup/index.js", () => ({ default: { slashCommand: { name: "setup" } }, setupAutocomplete: sinon.stub() }));
-    mock.module("../../src/commands/admin/index.js", () => ({ default: { slashCommand: { name: "admin" } } }));
-    mock.module("../../src/commands/changelog.js", () => ({ default: { slashCommand: { name: "changelog" } } }));
-    mock.module("../../src/commands/premium.js", () => ({ default: { slashCommand: { name: "premium" } } }));
-    mock.module("../../src/commands/owner/index.js", () => ({ default: { slashCommand: { name: "owner" } } }));
+    // Mock the command registry (single module) instead of each command module
+    // so command test files aren't poisoned by bun:test's process-global
+    // mock.module registry.
+    mock.module("../../src/events/commandRegistry.js", () => ({
+      commandRegistry: {},
+      setupAutocomplete: sinon.stub(),
+      slashCommands: Array.from({ length: 10 }, (_, i) => ({ name: `cmd${i}` })),
+    }));
     const mod = await import("../../src/events/ready.js");
 
     return { readyEvent: mod.readyEvent, logger, pruneGuilds, ensureGuildExists, setActivity };

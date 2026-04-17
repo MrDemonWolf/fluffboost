@@ -7,23 +7,26 @@ const logger = mockLogger();
 const executeStub = sinon.stub().resolves();
 const setupAutocomplete = sinon.stub().resolves();
 
-// Top-level mocks to avoid cross-file interference
+// Mock only the registry + logger. Command modules themselves are NOT mocked
+// here, so other test files that import real command modules aren't affected
+// by bun:test's process-global mock.module registry.
 mock.module("../../src/utils/logger.js", () => ({ default: logger }));
-mock.module("../../src/commands/help.js", () => ({ default: { execute: executeStub }, execute: executeStub, slashCommand: { name: "help" } }));
-mock.module("../../src/commands/about.js", () => ({ default: { execute: executeStub }, execute: executeStub, slashCommand: { name: "about" } }));
-mock.module("../../src/commands/changelog.js", () => ({ default: { execute: executeStub }, execute: executeStub, slashCommand: { name: "changelog" } }));
-mock.module("../../src/commands/quote.js", () => ({ default: { execute: executeStub }, execute: executeStub, slashCommand: { name: "quote" } }));
-mock.module("../../src/commands/suggestion.js", () => ({ default: { execute: executeStub }, execute: executeStub, slashCommand: { name: "suggestion" } }));
-mock.module("../../src/commands/invite.js", () => ({ default: { execute: executeStub }, execute: executeStub, slashCommand: { name: "invite" } }));
-mock.module("../../src/commands/admin/index.js", () => ({ default: { execute: executeStub }, execute: executeStub, slashCommand: { name: "admin" } }));
-mock.module("../../src/commands/setup/index.js", () => ({
-  default: { execute: executeStub },
-  execute: executeStub,
+mock.module("../../src/events/commandRegistry.js", () => ({
+  commandRegistry: {
+    help: { execute: executeStub },
+    about: { execute: executeStub },
+    changelog: { execute: executeStub },
+    quote: { execute: executeStub, requiresChatInput: true },
+    invite: { execute: executeStub },
+    suggestion: { execute: executeStub, requiresChatInput: true },
+    admin: { execute: executeStub },
+    setup: { execute: executeStub },
+    premium: { execute: executeStub },
+    owner: { execute: executeStub },
+  },
   setupAutocomplete,
-  slashCommand: { name: "setup" },
+  slashCommands: Array.from({ length: 10 }, (_, i) => ({ name: `cmd${i}` })),
 }));
-mock.module("../../src/commands/premium.js", () => ({ default: { execute: executeStub }, execute: executeStub, slashCommand: { name: "premium" } }));
-mock.module("../../src/commands/owner/index.js", () => ({ default: { execute: executeStub }, execute: executeStub, slashCommand: { name: "owner" } }));
 
 const { interactionCreateEvent } = await import("../../src/events/interactionCreate.js");
 
