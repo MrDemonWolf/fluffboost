@@ -1,9 +1,8 @@
 import type { Client } from "discord.js";
 
-import setActivity from "../worker/jobs/setActivity.js";
-import { pruneGuilds, ensureGuildExists } from "../utils/guildDatabase.js";
 import logger from "../utils/logger.js";
 import { slashCommands } from "./commandRegistry.js";
+import { pruneGuilds, ensureGuildExists, setActivity } from "./readyDeps.js";
 
 export async function readyEvent(client: Client) {
   try {

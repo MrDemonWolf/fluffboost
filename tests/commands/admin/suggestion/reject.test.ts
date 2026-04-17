@@ -7,9 +7,7 @@ describe("admin suggestion reject command", () => {
     sinon.restore();
   });
 
-  async function loadModule(
-    fetchResult: { status?: string; id?: string; quote?: string; author?: string; addedBy?: string } | null
-  ) {
+  async function loadModule() {
     const logger = mockLogger();
     const db = mockDb();
     const env = mockEnv();
@@ -18,17 +16,6 @@ describe("admin suggestion reject command", () => {
     mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../../../src/utils/env.js", () => ({ default: env }));
     mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().returns(true) }));
-
-    // fetchPendingSuggestion mocked to return the pre-validated suggestion or null.
-    mock.module("../../../../src/utils/suggestionHelpers.js", () => ({
-      fetchPendingSuggestion: sinon.stub().callsFake(async (_id: string, interaction: { reply: sinon.SinonStub }) => {
-        if (fetchResult === null) {
-          await interaction.reply({ content: "not found", flags: 64 });
-          return null;
-        }
-        return fetchResult;
-      }),
-    }));
 
     const mod = await import("../../../../src/commands/admin/suggestion/reject.js");
     return { handler: mod.default, logger, db };
@@ -55,10 +42,19 @@ describe("admin suggestion reject command", () => {
     return { client, channel, submitter };
   }
 
-  it("should return early when helper reports missing/non-pending", async () => {
-    const { handler, db } = await loadModule(null);
-    const interaction = makeInteraction("nonexistent");
+  const PENDING_ROW = {
+    id: "s1",
+    quote: "Bad quote",
+    author: "Anon",
+    addedBy: "user-1",
+    status: "Pending",
+  };
 
+  it("should return early when suggestion not found", async () => {
+    const { handler, db } = await loadModule();
+    db.select.returns(mockDbChain([]));
+
+    const interaction = makeInteraction("nonexistent");
     await handler({} as never, interaction as never, interaction.options as never);
 
     expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
@@ -66,16 +62,11 @@ describe("admin suggestion reject command", () => {
   });
 
   it("should reject suggestion with reason", async () => {
-    const { handler, db } = await loadModule({
-      id: "s1",
-      quote: "Bad quote",
-      author: "Anon",
-      addedBy: "user-1",
-      status: "Pending",
-    });
-    const { client, channel, submitter } = makeClient();
+    const { handler, db } = await loadModule();
+    db.select.returns(mockDbChain([PENDING_ROW]));
     db.update.returns(mockDbChain([{ id: "s1" }]));
 
+    const { client, channel, submitter } = makeClient();
     const interaction = makeInteraction("s1", "Not appropriate");
     await handler(client as never, interaction as never, interaction.options as never);
 
@@ -89,16 +80,11 @@ describe("admin suggestion reject command", () => {
   });
 
   it("should reject suggestion without reason (no reason in DM)", async () => {
-    const { handler, db } = await loadModule({
-      id: "s1",
-      quote: "Some quote",
-      author: "Anon",
-      addedBy: "user-1",
-      status: "Pending",
-    });
-    const { client, submitter } = makeClient();
+    const { handler, db } = await loadModule();
+    db.select.returns(mockDbChain([PENDING_ROW]));
     db.update.returns(mockDbChain([{ id: "s1" }]));
 
+    const { client, submitter } = makeClient();
     const interaction = makeInteraction("s1");
     await handler(client as never, interaction as never, interaction.options as never);
 
@@ -108,16 +94,11 @@ describe("admin suggestion reject command", () => {
   });
 
   it("should short-circuit when atomic UPDATE affects zero rows (concurrent review)", async () => {
-    const { handler, db } = await loadModule({
-      id: "s1",
-      quote: "Some quote",
-      author: "Anon",
-      addedBy: "user-1",
-      status: "Pending",
-    });
-    const { client, channel, submitter } = makeClient();
+    const { handler, db } = await loadModule();
+    db.select.returns(mockDbChain([PENDING_ROW]));
     db.update.returns(mockDbChain([])); // zero rows — another admin beat us
 
+    const { client, channel, submitter } = makeClient();
     const interaction = makeInteraction("s1");
     await handler(client as never, interaction as never, interaction.options as never);
 
@@ -129,15 +110,11 @@ describe("admin suggestion reject command", () => {
   });
 
   it("should not break if submitter DM fails", async () => {
-    const { handler, db } = await loadModule({
-      id: "s1",
-      quote: "Some quote",
-      author: "Anon",
-      addedBy: "user-1",
-      status: "Pending",
-    });
-    const { client } = makeClient();
+    const { handler, db } = await loadModule();
+    db.select.returns(mockDbChain([PENDING_ROW]));
     db.update.returns(mockDbChain([{ id: "s1" }]));
+
+    const { client } = makeClient();
     (client.users.fetch as sinon.SinonStub).rejects(new Error("Cannot send DM"));
 
     const interaction = makeInteraction("s1");

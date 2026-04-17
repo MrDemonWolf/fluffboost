@@ -14,15 +14,14 @@ describe("ready event", () => {
     const setActivity = sinon.stub().resolves();
 
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../src/utils/guildDatabase.js", () => ({
+    // Mock the thin dep-shim instead of guildDatabase.js / setActivity.js so
+    // utility test files aren't poisoned by bun:test's process-global
+    // mock.module registry.
+    mock.module("../../src/events/readyDeps.js", () => ({
       pruneGuilds,
       ensureGuildExists,
-      guildExists: sinon.stub().resolves(true),
+      setActivity,
     }));
-    mock.module("../../src/worker/jobs/setActivity.js", () => ({ default: setActivity }));
-    // Mock the command registry (single module) instead of each command module
-    // so command test files aren't poisoned by bun:test's process-global
-    // mock.module registry.
     mock.module("../../src/events/commandRegistry.js", () => ({
       commandRegistry: {},
       setupAutocomplete: sinon.stub(),
