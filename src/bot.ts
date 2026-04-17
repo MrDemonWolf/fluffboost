@@ -99,16 +99,19 @@ client.login(env.DISCORD_APPLICATION_BOT_TOKEN);
  * Initialize BullMQ worker to handle background jobs.
  */
 import { Queue } from "bullmq";
-import worker from "./worker/index.js";
+import type { ConnectionOptions } from "bullmq";
+import startWorker from "./worker/index.js";
+import redisClient from "./redis/index.js";
 
 const queueName = "fluffboost-jobs";
 
 const queue = new Queue(queueName, {
-  connection: env.REDIS_URL
-    ? { url: env.REDIS_URL }
-    : { host: "localhost", port: 6379 },
+  connection: redisClient as unknown as ConnectionOptions,
 });
 
-worker(queue);
+startWorker(queue).catch((err) => {
+  logger.error("Worker", "Failed to start worker", err);
+  process.exit(1);
+});
 
 export default client;

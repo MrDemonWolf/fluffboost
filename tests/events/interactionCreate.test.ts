@@ -69,7 +69,6 @@ describe("interactionCreateEvent", () => {
 
     await interactionCreateEvent(client, interaction);
     expect(executeStub.called).toBe(true);
-    expect(logger.commands.success.called).toBe(true);
   });
 
   it("should handle autocomplete interactions for setup", async () => {

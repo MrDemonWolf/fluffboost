@@ -204,8 +204,9 @@ export function mockEntitlement(overrides: Record<string, unknown> = {}) {
 export function mockEnv(overrides: Record<string, unknown> = {}) {
   return {
     DATABASE_URL: "postgres://user:pass@localhost:5432/test",
+    DATABASE_POOL_MAX: 10,
     REDIS_URL: "redis://localhost:6379",
-    DISCORD_APPLICATION_ID: "app-123",
+    DISCORD_APPLICATION_ID: "100000000000000001",
     DISCORD_APPLICATION_PUBLIC_KEY: "key-123",
     DISCORD_APPLICATION_BOT_TOKEN: "token-123",
     DISCORD_DEFAULT_STATUS: "Spreading Paw-sitivity",
@@ -213,16 +214,17 @@ export function mockEnv(overrides: Record<string, unknown> = {}) {
     DEFAULT_ACTIVITY_URL: undefined,
     DISCORD_ACTIVITY_INTERVAL_MINUTES: 15,
     DISCORD_DEFAULT_MOTIVATIONAL_DAILY_TIME: "0 8 * * *",
-    ALLOWED_USERS: "user-123, user-456",
-    OWNER_ID: "owner-123",
-    MAIN_GUILD_ID: "main-guild-123",
-    MAIN_CHANNEL_ID: "main-channel-123",
+    ALLOWED_USERS: "100000000000000123,100000000000000456",
+    OWNER_ID: "100000000000000999",
+    MAIN_GUILD_ID: "100000000000000100",
+    MAIN_CHANNEL_ID: "100000000000000200",
     HOST: "localhost",
     PORT: "3000",
     VERSION: "1.0.0",
     NODE_ENV: "test",
     PREMIUM_ENABLED: false,
     DISCORD_PREMIUM_SKU_ID: undefined,
+    WORKER_CONCURRENCY: 4,
     ...overrides,
   };
 }
@@ -232,3 +234,25 @@ export function mockEnv(overrides: Record<string, unknown> = {}) {
 export type MockLogger = ReturnType<typeof mockLogger>;
 export type MockDb = ReturnType<typeof mockDb>;
 export type StubFn = SinonStub;
+
+// ── Premium upsell stub (matches real premium.buildPremiumUpsell shape) ────
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
+
+export function stubBuildPremiumUpsell(skuId?: string) {
+  return (opts: { title?: string; description?: string; fields?: { name: string; value: string; inline?: boolean }[] } = {}) => {
+    const embed = new EmbedBuilder()
+      .setColor(0xfadb7f)
+      .setTitle(opts.title ?? "FluffBoost Premium")
+      .setDescription(opts.description ?? "upsell");
+    if (opts.fields) embed.addFields(opts.fields);
+    const components: ActionRowBuilder<ButtonBuilder>[] = [];
+    if (skuId) {
+      components.push(
+        new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder().setStyle(ButtonStyle.Premium).setSKUId(skuId)
+        )
+      );
+    }
+    return { embeds: [embed], components };
+  };
+}

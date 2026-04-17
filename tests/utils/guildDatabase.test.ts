@@ -32,7 +32,7 @@ function createCollectionCache<V>(entries: [string, V][] = []) {
 const db = mockDb();
 const logger = mockLogger();
 
-mock.module("../../src/database/index.js", () => ({ db }));
+mock.module("../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
 mock.module("../../src/utils/logger.js", () => ({ default: logger }));
 
 const { pruneGuilds, ensureGuildExists, guildExists } = await import("../../src/utils/guildDatabase.js");

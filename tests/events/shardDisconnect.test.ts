@@ -7,7 +7,7 @@ describe("shardDisconnect event", () => {
     sinon.restore();
   });
 
-  it("should log error and exit process", async () => {
+  it("should log a warning without exiting the process", async () => {
     const logger = mockLogger();
     const exitStub = sinon.stub(process, "exit");
 
@@ -16,9 +16,8 @@ describe("shardDisconnect event", () => {
 
     mod.shardDisconnectEvent();
 
-    expect(logger.error.calledOnce).toBe(true);
-    expect(logger.error.firstCall.args[0]).toContain("Shard Disconnect");
-    expect(exitStub.calledOnce).toBe(true);
-    expect(exitStub.firstCall.args[0]).toBe(1);
+    expect(logger.warn.calledOnce).toBe(true);
+    expect(logger.warn.firstCall.args[0]).toContain("Shard Disconnect");
+    expect(exitStub.called).toBe(false);
   });
 });

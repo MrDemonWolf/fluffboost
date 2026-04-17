@@ -1,79 +1,41 @@
-import { Client, CommandInteraction, MessageFlags } from "discord.js";
+import type { Client, CommandInteraction, CommandInteractionOptionResolver } from "discord.js";
 
-import type { CommandInteractionOptionResolver } from "discord.js";
 import { eq, desc } from "drizzle-orm";
 
-import type { SuggestionQuote } from "../../../database/schema.js";
-
-import logger from "../../../utils/logger.js";
-import { safeErrorReply } from "../../../utils/commandErrors.js";
+import { withCommandLogging } from "../../../utils/commandErrors.js";
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
 import { suggestionQuotes } from "../../../database/schema.js";
+import type { SuggestionStatus } from "../../../database/schema.js";
+import { replyWithTextFile } from "../../../utils/replyHelpers.js";
+
+const VALID_STATUSES: SuggestionStatus[] = ["Pending", "Approved", "Rejected"];
 
 export default async function (
   _client: Client,
   interaction: CommandInteraction,
   options: CommandInteractionOptionResolver,
 ): Promise<void> {
-  try {
-    logger.commands.executing(
-      "admin suggestion list",
-      interaction.user.username,
-      interaction.user.id,
-    );
-
-    const isAllowed = await isUserPermitted(interaction);
-
-    if (!isAllowed) {
-      return;
-    }
+  await withCommandLogging("admin suggestion list", interaction, async () => {
+    if (!(await isUserPermitted(interaction))) {return;}
 
     const status = options.getString("status");
+    const validStatus = status && (VALID_STATUSES as string[]).includes(status)
+      ? (status as SuggestionStatus)
+      : null;
 
-    const query = db.select().from(suggestionQuotes).orderBy(desc(suggestionQuotes.createdAt));
-    const suggestions = status
-      ? await query.where(eq(suggestionQuotes.status, status))
-      : await query;
+    const baseQuery = db.select().from(suggestionQuotes).orderBy(desc(suggestionQuotes.createdAt));
+    const suggestions = validStatus
+      ? await baseQuery.where(eq(suggestionQuotes.status, validStatus))
+      : await baseQuery;
 
-    if (suggestions.length === 0) {
-      await interaction.reply({
-        content: status
-          ? `No suggestions found with status: ${status}`
-          : "No suggestions found.",
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
-
-    let text = "ID - Quote - Author - Status - Submitted By\n";
-    suggestions.forEach((s: SuggestionQuote) => {
-      text += `${s.id} - ${s.quote} - ${s.author} - ${s.status} - ${s.addedBy}\n`;
+    await replyWithTextFile({
+      interaction,
+      rows: suggestions,
+      header: "ID - Quote - Author - Status - Submitted By",
+      formatRow: (s) => `${s.id} - ${s.quote} - ${s.author} - ${s.status} - ${s.addedBy}`,
+      filename: "suggestions.txt",
+      emptyMessage: status ? `No suggestions found with status: ${status}` : "No suggestions found.",
     });
-
-    await interaction.reply({
-      files: [
-        {
-          attachment: Buffer.from(text),
-          name: "suggestions.txt",
-        },
-      ],
-      flags: MessageFlags.Ephemeral,
-    });
-
-    logger.commands.success(
-      "admin suggestion list",
-      interaction.user.username,
-      interaction.user.id,
-    );
-  } catch (err) {
-    logger.commands.error(
-      "admin suggestion list",
-      interaction.user.username,
-      interaction.user.id,
-      err,
-    );
-
-    await safeErrorReply(interaction);
-  }
+  });
 }

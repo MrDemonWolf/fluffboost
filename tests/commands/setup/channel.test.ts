@@ -12,7 +12,7 @@ describe("setup channel command", () => {
     const db = mockDb();
 
     mock.module("../../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../../src/database/index.js", () => ({ db }));
+    mock.module("../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../../src/utils/guildDatabase.js", () => ({ guildExists: sinon.stub().resolves(true) }));
 
     const mod = await import("../../../src/commands/setup/channel.js");

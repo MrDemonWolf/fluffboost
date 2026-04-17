@@ -1,82 +1,39 @@
-import {
-  Client,
-  CommandInteraction,
-  EmbedBuilder,
-  MessageFlags,
-} from "discord.js";
+import { EmbedBuilder, MessageFlags } from "discord.js";
 
-import type { CommandInteractionOptionResolver } from "discord.js";
+import type { Client, CommandInteraction, CommandInteractionOptionResolver } from "discord.js";
 
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
 import { suggestionQuotes } from "../../../database/schema.js";
 import logger from "../../../utils/logger.js";
 import { sendToMainChannel } from "../../../utils/mainChannel.js";
-import { safeErrorReply } from "../../../utils/commandErrors.js";
+import { withCommandLogging } from "../../../utils/commandErrors.js";
+import { fetchPendingSuggestion } from "../../../utils/suggestionHelpers.js";
 
 export default async function (
   client: Client,
   interaction: CommandInteraction,
   options: CommandInteractionOptionResolver,
 ): Promise<void> {
-  try {
-    logger.commands.executing(
-      "admin suggestion reject",
-      interaction.user.username,
-      interaction.user.id,
-    );
-
-    const isAllowed = await isUserPermitted(interaction);
-
-    if (!isAllowed) {
-      return;
-    }
+  await withCommandLogging("admin suggestion reject", interaction, async () => {
+    if (!(await isUserPermitted(interaction))) {return;}
 
     const suggestionId = options.getString("suggestion_id", true);
     const reason = options.getString("reason");
 
-    const result = await db
+    const suggestion = await fetchPendingSuggestion(suggestionId, interaction);
+    if (!suggestion) {return;}
+
+    await db
       .update(suggestionQuotes)
       .set({
         status: "Rejected",
         reviewedBy: interaction.user.id,
         reviewedAt: new Date(),
       })
-      .where(and(eq(suggestionQuotes.id, suggestionId), eq(suggestionQuotes.status, "Pending")))
-      .returning();
-
-    if (result.length === 0) {
-      const [existing] = await db
-        .select()
-        .from(suggestionQuotes)
-        .where(eq(suggestionQuotes.id, suggestionId))
-        .limit(1);
-
-      if (!existing) {
-        await interaction.reply({
-          content: `Suggestion with ID ${suggestionId} not found.`,
-          flags: MessageFlags.Ephemeral,
-        });
-      } else {
-        await interaction.reply({
-          content: `This suggestion has already been ${existing.status.toLowerCase()}.`,
-          flags: MessageFlags.Ephemeral,
-        });
-      }
-      return;
-    }
-
-    const [suggestion] = await db
-      .select()
-      .from(suggestionQuotes)
-      .where(eq(suggestionQuotes.id, suggestionId))
-      .limit(1);
-
-    if (!suggestion) {
-      return;
-    }
+      .where(eq(suggestionQuotes.id, suggestionId));
 
     const embedFields = [
       { name: "Quote", value: suggestion.quote },
@@ -130,20 +87,5 @@ export default async function (
       content: `Suggestion ${suggestionId} has been rejected.`,
       flags: MessageFlags.Ephemeral,
     });
-
-    logger.commands.success(
-      "admin suggestion reject",
-      interaction.user.username,
-      interaction.user.id,
-    );
-  } catch (err) {
-    logger.commands.error(
-      "admin suggestion reject",
-      interaction.user.username,
-      interaction.user.id,
-      err,
-    );
-
-    await safeErrorReply(interaction);
-  }
+  });
 }

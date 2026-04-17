@@ -3,7 +3,7 @@ import sinon from "sinon";
 import { mockLogger, mockDb, mockDbChain, mockEnv, mockClient } from "../helpers.js";
 
 // Mock schema to prevent real DB connection during import
-mock.module("../../src/database/index.js", () => ({ db: {} }));
+mock.module("../../src/database/index.js", () => ({ db: {}, queryClient: () => Promise.resolve([]) }));
 mock.module("../../src/utils/env.js", () => ({ default: {} }));
 mock.module("../../src/utils/logger.js", () => ({ default: {} }));
 

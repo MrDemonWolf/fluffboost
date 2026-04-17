@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockLogger, mockDb, mockDbChain, mockInteraction } from "../../helpers.js";
+import { mockLogger, mockDb, mockDbChain, mockInteraction, stubBuildPremiumUpsell } from "../../helpers.js";
 
 describe("setup schedule command", () => {
   afterEach(() => {
@@ -12,11 +12,12 @@ describe("setup schedule command", () => {
     const db = mockDb();
 
     mock.module("../../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../../src/database/index.js", () => ({ db }));
+    mock.module("../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../../src/utils/premium.js", () => ({
       isPremiumEnabled: sinon.stub().returns(overrides.premiumEnabled ?? false),
       hasEntitlement: sinon.stub().returns(overrides.hasEntitlement ?? false),
       getPremiumSkuId: sinon.stub().returns("sku-1"),
+      buildPremiumUpsell: stubBuildPremiumUpsell("sku-1"),
     }));
     mock.module("../../../src/utils/guildDatabase.js", () => ({ guildExists: sinon.stub().resolves(true) }));
     mock.module("../../../src/utils/timezones.js", () => ({
@@ -159,11 +160,12 @@ describe("setup schedule command", () => {
     const db = mockDb();
 
     mock.module("../../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../../src/database/index.js", () => ({ db }));
+    mock.module("../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../../src/utils/premium.js", () => ({
       isPremiumEnabled: sinon.stub().returns(false),
       hasEntitlement: sinon.stub().returns(false),
       getPremiumSkuId: sinon.stub().returns("sku-1"),
+      buildPremiumUpsell: stubBuildPremiumUpsell("sku-1"),
     }));
     mock.module("../../../src/utils/guildDatabase.js", () => ({ guildExists: sinon.stub().resolves(true) }));
     mock.module("../../../src/utils/timezones.js", () => ({
