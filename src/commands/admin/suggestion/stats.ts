@@ -1,4 +1,4 @@
-import { Client, CommandInteraction, EmbedBuilder, MessageFlags } from "discord.js";
+import { Client, CommandInteraction, MessageFlags } from "discord.js";
 
 import { eq, count } from "drizzle-orm";
 
@@ -6,23 +6,15 @@ import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
 import { suggestionQuotes } from "../../../database/schema.js";
 import type { SuggestionStatus } from "../../../database/schema.js";
-import logger from "../../../utils/logger.js";
-import { safeErrorReply } from "../../../utils/commandErrors.js";
+import { withCommandLogging } from "../../../utils/commandErrors.js";
+import { buildBrandedEmbed } from "../../../utils/embedHelpers.js";
 
 export default async function (
   _client: Client,
   interaction: CommandInteraction,
 ): Promise<void> {
-  try {
-    logger.commands.executing(
-      "admin suggestion stats",
-      interaction.user.username,
-      interaction.user.id,
-    );
-
-    const isAllowed = await isUserPermitted(interaction);
-
-    if (!isAllowed) {
+  await withCommandLogging("admin suggestion stats", interaction, async () => {
+    if (!(await isUserPermitted(interaction))) {
       return;
     }
 
@@ -43,36 +35,21 @@ export default async function (
     const total = pending + approved + rejected;
     const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
 
-    const embed = new EmbedBuilder()
-      .setColor(0xfadb7f)
-      .setTitle("Suggestion Statistics")
-      .addFields(
+    const embed = buildBrandedEmbed({
+      title: "Suggestion Statistics",
+      fields: [
         { name: "Pending", value: `${pending}`, inline: true },
         { name: "Approved", value: `${approved}`, inline: true },
         { name: "Rejected", value: `${rejected}`, inline: true },
         { name: "Total", value: `${total}`, inline: true },
         { name: "Approval Rate", value: `${approvalRate}%`, inline: true },
-      )
-      .setTimestamp();
+      ],
+      timestamp: true,
+    });
 
     await interaction.reply({
       embeds: [embed],
       flags: MessageFlags.Ephemeral,
     });
-
-    logger.commands.success(
-      "admin suggestion stats",
-      interaction.user.username,
-      interaction.user.id,
-    );
-  } catch (err) {
-    logger.commands.error(
-      "admin suggestion stats",
-      interaction.user.username,
-      interaction.user.id,
-      err,
-    );
-
-    await safeErrorReply(interaction);
-  }
+  });
 }

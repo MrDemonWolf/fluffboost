@@ -1,26 +1,20 @@
-import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
+import { SlashCommandBuilder, MessageFlags } from "discord.js";
 
 import type { Client, CommandInteraction } from "discord.js";
 
-import logger from "../utils/logger.js";
-import { safeErrorReply } from "../utils/commandErrors.js";
+import { withCommandLogging } from "../utils/commandErrors.js";
+import { buildBrandedEmbed } from "../utils/embedHelpers.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("changelog")
   .setDescription("See the latest changes to the bot");
 
-export async function execute(_client: Client, interaction: CommandInteraction) {
-  try {
-    logger.commands.executing(
-      "changelog",
-      interaction.user.username,
-      interaction.user.id
-    );
-    const embed = new EmbedBuilder()
-      .setColor(0xfadb7f)
-      .setTitle("FluffBoost Changelog - v2.2.0")
-      .setDescription("Premium subscriptions and custom quote scheduling are here!")
-      .addFields(
+export async function execute(_client: Client, interaction: CommandInteraction): Promise<void> {
+  await withCommandLogging("changelog", interaction, async () => {
+    const embed = buildBrandedEmbed({
+      title: "FluffBoost Changelog - v2.2.0",
+      description: "Premium subscriptions and custom quote scheduling are here!",
+      fields: [
         {
           name: "Premium Subscriptions",
           value:
@@ -48,42 +42,17 @@ export async function execute(_client: Client, interaction: CommandInteraction) 
             "`/setup schedule` - Customize quote delivery (premium)\n" +
             "`/owner premium test-create` - Create a test entitlement (owner only)\n" +
             "`/owner premium test-delete` - Delete a test entitlement (owner only)",
-        }
-      )
-      .setTimestamp()
-      .setFooter({
-        text: "Powered by MrDemonWolf, Inc.",
-      });
+        },
+      ],
+      timestamp: true,
+      footer: "Powered by MrDemonWolf, Inc.",
+    });
 
     await interaction.reply({
       embeds: [embed],
       flags: MessageFlags.Ephemeral,
     });
-
-    logger.commands.success(
-      "changelog",
-      interaction.user.username,
-      interaction.user.id
-    );
-  } catch (err) {
-    logger.commands.error(
-      "changelog",
-      interaction.user.username,
-      interaction.user.id,
-      err
-    );
-    logger.error(
-      "Discord - Command",
-      "Error executing changelog command",
-      err,
-      {
-        user: { username: interaction.user.username, id: interaction.user.id },
-        command: "changelog",
-      }
-    );
-
-    await safeErrorReply(interaction);
-  }
+  });
 }
 
 export default {

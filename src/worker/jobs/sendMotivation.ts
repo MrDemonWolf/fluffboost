@@ -8,7 +8,7 @@ import { db } from "../../database/index.js";
 import { guilds } from "../../database/schema.js";
 import type { Guild } from "../../database/schema.js";
 import { isGuildDueForMotivation } from "../../utils/scheduleEvaluator.js";
-import { buildMotivationEmbed, getRandomMotivationQuote, resolveQuoteAuthor } from "../../utils/quoteHelpers.js";
+import { buildMotivationEmbed, getRandomMotivationQuote, resolveQuoteAuthor } from "./sendMotivationDeps.js";
 import logger from "../../utils/logger.js";
 
 dayjs.extend(utc);
