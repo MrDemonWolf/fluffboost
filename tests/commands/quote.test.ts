@@ -16,7 +16,7 @@ describe("quote command", () => {
     const authorStub = sinon.stub().resolves(overrides.author ?? null);
 
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../src/utils/quoteHelpers.js", () => ({
+    mock.module("../../src/commands/quoteDeps.js", () => ({
       getRandomMotivationQuote: randomStub,
       resolveQuoteAuthor: authorStub,
       buildMotivationEmbed: () => ({ fake: true }),

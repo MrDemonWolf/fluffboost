@@ -7,7 +7,7 @@ import {
   buildMotivationEmbed,
   getRandomMotivationQuote,
   resolveQuoteAuthor,
-} from "../utils/quoteHelpers.js";
+} from "./quoteDeps.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("quote")

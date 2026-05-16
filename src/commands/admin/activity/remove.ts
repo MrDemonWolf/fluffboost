@@ -4,8 +4,7 @@ import type { CommandInteractionOptionResolver } from "discord.js";
 
 import { eq } from "drizzle-orm";
 
-import logger from "../../../utils/logger.js";
-import { safeErrorReply } from "../../../utils/commandErrors.js";
+import { withCommandLogging } from "../../../utils/commandErrors.js";
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
 import { discordActivities } from "../../../database/schema.js";
@@ -15,16 +14,8 @@ export default async function (
   interaction: CommandInteraction,
   options: CommandInteractionOptionResolver
 ): Promise<void> {
-  try {
-    logger.commands.executing(
-      "admin activity delete",
-      interaction.user.username,
-      interaction.user.id
-    );
-
-    const isAllowed = await isUserPermitted(interaction);
-
-    if (!isAllowed) {
+  await withCommandLogging("admin activity delete", interaction, async () => {
+    if (!(await isUserPermitted(interaction))) {
       return;
     }
 
@@ -58,20 +49,5 @@ export default async function (
       content: `Activity with ID: ${activityId} has been deleted`,
       flags: MessageFlags.Ephemeral,
     });
-
-    logger.commands.success(
-      "admin activity delete",
-      interaction.user.username,
-      interaction.user.id
-    );
-  } catch (err) {
-    logger.commands.error(
-      "admin activity delete",
-      interaction.user.username,
-      interaction.user.id,
-      err
-    );
-
-    await safeErrorReply(interaction);
-  }
+  });
 }

@@ -1,11 +1,11 @@
-import { EmbedBuilder } from "discord.js";
-import type { Client, User } from "discord.js";
+import type { Client, User, EmbedBuilder } from "discord.js";
 import { sql } from "drizzle-orm";
 
 import { db } from "../database/index.js";
 import { motivationQuotes } from "../database/schema.js";
 import type { MotivationQuote } from "../database/schema.js";
 import logger from "./logger.js";
+import { buildBrandedEmbed, BRAND_FOOTER } from "./embedHelpers.js";
 
 /**
  * Fetch a single random motivation quote in one round-trip.
@@ -46,16 +46,15 @@ export function buildMotivationEmbed(
   addedBy: User | null,
   client: Client
 ): EmbedBuilder {
-  return new EmbedBuilder()
-    .setColor(0xfadb7f)
-    .setTitle("Motivation quote of the day \u{1F4C5}")
-    .setDescription(`**"${quote.quote}"**\n by ${quote.author}`)
-    .setAuthor({
-      name: addedBy ? addedBy.username : "Unknown User",
-      iconURL: addedBy ? addedBy.displayAvatarURL() : undefined,
-    })
-    .setFooter({
-      text: "Powered by MrDemonWolf, Inc.",
+  return buildBrandedEmbed({
+    title: "Motivation quote of the day \u{1F4C5}",
+    description: `**"${quote.quote}"**\n by ${quote.author}`,
+    footer: {
+      text: BRAND_FOOTER,
       iconURL: client.user?.displayAvatarURL(),
-    });
+    },
+  }).setAuthor({
+    name: addedBy ? addedBy.username : "Unknown User",
+    iconURL: addedBy ? addedBy.displayAvatarURL() : undefined,
+  });
 }

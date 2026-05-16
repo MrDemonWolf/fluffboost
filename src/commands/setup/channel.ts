@@ -8,8 +8,7 @@ import type {
 
 import { eq } from "drizzle-orm";
 
-import logger from "../../utils/logger.js";
-import { safeErrorReply } from "../../utils/commandErrors.js";
+import { withCommandLogging } from "../../utils/commandErrors.js";
 import { db } from "../../database/index.js";
 import { guilds } from "../../database/schema.js";
 import { guildExists } from "../../utils/guildDatabase.js";
@@ -17,21 +16,13 @@ import { guildExists } from "../../utils/guildDatabase.js";
 export default async function (
   _client: Client,
   interaction: ChatInputCommandInteraction
-) {
-  try {
-    logger.commands.executing(
-      "setup channel",
-      interaction.user.username,
-      interaction.user.id
-    );
-
+): Promise<void> {
+  await withCommandLogging("setup channel", interaction, async () => {
     if (!interaction.guildId) {
       return;
     }
 
-    const options = interaction.options;
-
-    const motivationChannel = options.getChannel(
+    const motivationChannel = interaction.options.getChannel(
       "channel",
       true
     ) as TextChannel;
@@ -47,29 +38,5 @@ export default async function (
       content: `The motivation channel has been set to <#${motivationChannel.id}>`,
       flags: MessageFlags.Ephemeral,
     });
-
-    logger.commands.success(
-      "setup",
-      interaction.user.username,
-      interaction.user.id
-    );
-  } catch (err) {
-    logger.commands.error(
-      "setup",
-      interaction.user.username,
-      interaction.user.id,
-      err
-    );
-    logger.error(
-      "Discord - Command",
-      "Error executing setup channel command",
-      err,
-      {
-        user: { username: interaction.user.username, id: interaction.user.id },
-        command: "setup channel",
-      }
-    );
-
-    await safeErrorReply(interaction);
-  }
+  });
 }

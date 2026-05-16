@@ -1,34 +1,21 @@
-import {
-  Client,
-  CommandInteraction,
-  EmbedBuilder,
-  MessageFlags,
-} from "discord.js";
+import { Client, CommandInteraction, MessageFlags } from "discord.js";
 
 import type { CommandInteractionOptionResolver } from "discord.js";
 
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
 import { motivationQuotes } from "../../../database/schema.js";
-import logger from "../../../utils/logger.js";
 import { sendToMainChannel } from "../../../utils/mainChannel.js";
-import { safeErrorReply } from "../../../utils/commandErrors.js";
+import { withCommandLogging } from "../../../utils/commandErrors.js";
+import { buildBrandedEmbed } from "../../../utils/embedHelpers.js";
 
 export default async function (
   client: Client,
   interaction: CommandInteraction,
   options: CommandInteractionOptionResolver
 ): Promise<void> {
-  try {
-    logger.commands.executing(
-      "admin quote create",
-      interaction.user.username,
-      interaction.user.id
-    );
-
-    const isAllowed = await isUserPermitted(interaction);
-
-    if (!isAllowed) {
+  await withCommandLogging("admin quote create", interaction, async () => {
+    if (!(await isUserPermitted(interaction))) {
       return;
     }
 
@@ -63,26 +50,18 @@ export default async function (
       return;
     }
 
-    /**
-     * Send a message to the main channelof the owner guild
-     * to notify that a new quote has been added.
-     * This is useful for tracking purposes and to keep the owner informed.
-     */
-    const embed = new EmbedBuilder()
-      .setColor(0xfadb7f)
-      .setTitle("New Quote Created")
-      .setAuthor({
-        name: interaction.user.username,
-        iconURL: interaction.user.displayAvatarURL(),
-      })
-      .addFields(
+    const embed = buildBrandedEmbed({
+      title: "New Quote Created",
+      fields: [
         { name: "Quote", value: newQuote.quote },
-        { name: "Author", value: newQuote.author }
-      )
-      .setFooter({
-        text: `Quote ID: ${newQuote.id}`,
-      })
-      .setTimestamp();
+        { name: "Author", value: newQuote.author },
+      ],
+      footer: `Quote ID: ${newQuote.id}`,
+      timestamp: true,
+    }).setAuthor({
+      name: interaction.user.username,
+      iconURL: interaction.user.displayAvatarURL(),
+    });
 
     await sendToMainChannel(client, { embeds: [embed] });
 
@@ -90,20 +69,5 @@ export default async function (
       content: `Quote created with id: ${newQuote.id}`,
       flags: MessageFlags.Ephemeral,
     });
-
-    logger.commands.success(
-      "admin quote create",
-      interaction.user.username,
-      interaction.user.id
-    );
-  } catch (err) {
-    logger.commands.error(
-      "admin quote create",
-      interaction.user.username,
-      interaction.user.id,
-      err
-    );
-
-    await safeErrorReply(interaction);
-  }
+  });
 }

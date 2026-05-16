@@ -27,7 +27,7 @@ describe("sendMotivation", () => {
     mock.module("../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../src/utils/scheduleEvaluator.js", () => ({ isGuildDueForMotivation: isGuildDueStub }));
-    mock.module("../../src/utils/quoteHelpers.js", () => ({
+    mock.module("../../src/worker/jobs/sendMotivationDeps.js", () => ({
       getRandomMotivationQuote: randomQuoteStub,
       buildMotivationEmbed: () => ({}),
       resolveQuoteAuthor: authorStub,
