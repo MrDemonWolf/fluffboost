@@ -11,6 +11,7 @@ import type {
 } from "discord.js";
 
 import env from "./env.js";
+import { buildBrandedEmbed } from "./embedHelpers.js";
 
 /**
  * Check if premium subscriptions are enabled via environment config.
@@ -54,21 +55,14 @@ export function buildPremiumUpsell(options: UpsellEmbedOptions = {}): {
 } {
   const skuId = getPremiumSkuId();
 
-  const embed = new EmbedBuilder()
-    .setColor(0xfadb7f)
-    .setTitle(options.title ?? "FluffBoost Premium")
-    .setDescription(
+  const embed = buildBrandedEmbed({
+    title: options.title ?? "FluffBoost Premium",
+    description:
       options.description ??
-        "Upgrade to Premium to unlock exclusive features and support FluffBoost development!"
-    );
-
-  if (options.fields && options.fields.length > 0) {
-    embed.addFields(options.fields);
-  }
-
-  if (options.footerText) {
-    embed.setFooter({ text: options.footerText });
-  }
+      "Upgrade to Premium to unlock exclusive features and support FluffBoost development!",
+    fields: options.fields,
+    ...(options.footerText ? { footer: options.footerText } : {}),
+  });
 
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
   if (skuId) {
