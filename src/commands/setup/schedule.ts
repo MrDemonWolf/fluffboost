@@ -1,4 +1,4 @@
-import { EmbedBuilder, MessageFlags } from "discord.js";
+import { MessageFlags } from "discord.js";
 import type { Client, ChatInputCommandInteraction, AutocompleteInteraction } from "discord.js";
 
 import { eq } from "drizzle-orm";
@@ -11,6 +11,7 @@ import type { MotivationFrequency } from "../../database/schema.js";
 import { guildExists } from "../../utils/guildDatabase.js";
 import { buildPremiumUpsell, hasEntitlement, isPremiumEnabled } from "../../utils/premium.js";
 import { isValidTimezone, filterTimezones } from "../../utils/timezones.js";
+import { buildBrandedEmbed } from "../../utils/embedHelpers.js";
 
 const DAY_OF_WEEK_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -102,10 +103,10 @@ export default async function schedule(_client: Client, interaction: ChatInputCo
       })
       .where(eq(guilds.guildId, interaction.guildId));
 
-    const embed = new EmbedBuilder()
-      .setColor(0xfadb7f)
-      .setTitle("Schedule Updated")
-      .setDescription(formatScheduleDescription(frequency, time, timezone, frequency === "Daily" ? null : day));
+    const embed = buildBrandedEmbed({
+      title: "Schedule Updated",
+      description: formatScheduleDescription(frequency, time, timezone, frequency === "Daily" ? null : day),
+    });
 
     await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   });

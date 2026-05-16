@@ -1,32 +1,23 @@
-import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder } from "discord.js";
 
 import type { Client, CommandInteraction, User } from "discord.js";
 
 import env from "../utils/env.js";
-import logger from "../utils/logger.js";
-import { safeErrorReply } from "../utils/commandErrors.js";
+import { withCommandLogging } from "../utils/commandErrors.js";
+import { buildBrandedEmbed } from "../utils/embedHelpers.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("about")
   .setDescription("Learn more about the bot and its creator");
 
-export async function execute(client: Client, interaction: CommandInteraction) {
-  try {
-    logger.commands.executing(
-      "about",
-      interaction.user.username,
-      interaction.user.id
-    );
-
+export async function execute(client: Client, interaction: CommandInteraction): Promise<void> {
+  await withCommandLogging("about", interaction, async () => {
     const { username } = client.user as User;
 
-    const embed = new EmbedBuilder()
-      .setColor(0xfadb7f)
-      .setTitle(`About ${username} 🐾`)
-      .setDescription(
-        `Hi! I'm ${username}, a discord bot created by MrDemonWolf, Inc. I was created to help you with your daily tasks and to make your life easier. I'm currently in ${client.guilds.cache.size} guilds.`
-      )
-      .addFields(
+    const embed = buildBrandedEmbed({
+      title: `About ${username} 🐾`,
+      description: `Hi! I'm ${username}, a discord bot created by MrDemonWolf, Inc. I was created to help you with your daily tasks and to make your life easier. I'm currently in ${client.guilds.cache.size} guilds.`,
+      fields: [
         {
           name: "Project GitHub",
           value: "[GitHub](https://www.github.com/mrdemonwolf/fluffboost)",
@@ -51,34 +42,13 @@ export async function execute(client: Client, interaction: CommandInteraction) {
           name: "Version",
           value: env.VERSION || process.env["npm_package_version"] || "unknown",
           inline: true,
-        }
-      )
-      .setFooter({
-        text: "Made with ❤️ by MrDemonWolf, Inc.",
-      });
-    await interaction.reply({
-      embeds: [embed],
+        },
+      ],
+      footer: "Made with ❤️ by MrDemonWolf, Inc.",
     });
 
-    logger.commands.success(
-      "about",
-      interaction.user.username,
-      interaction.user.id
-    );
-  } catch (err) {
-    logger.commands.error(
-      "about",
-      interaction.user.username,
-      interaction.user.id,
-      err
-    );
-    logger.error("Discord - Command", "Error executing about command", err, {
-      user: { username: interaction.user.username, id: interaction.user.id },
-      command: "about",
-    });
-
-    await safeErrorReply(interaction);
-  }
+    await interaction.reply({ embeds: [embed] });
+  });
 }
 
 export default {
