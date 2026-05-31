@@ -1,6 +1,17 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockDb, mockDbChain, mockClient } from "../helpers.js";
+import { mockDb, mockDbChain, mockClient, mockEnv } from "../helpers.js";
+
+mock.module("../../src/utils/env.js", () => ({ default: mockEnv() }));
+mock.module("../../src/utils/logger.js", () => ({
+  default: {
+    warn: () => {},
+    info: () => {},
+    error: () => {},
+    debug: () => {},
+    success: () => {},
+  },
+}));
 
 describe("quoteHelpers", () => {
   afterEach(() => {
