@@ -1,0 +1,29 @@
+name: Update License Year
+
+on:
+  schedule:
+    - cron: "0 0 1 1 *"
+  workflow_dispatch:
+
+jobs:
+  update-year:
+    name: Update Copyright Year
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Update copyright year
+        run: |
+          YEAR=$(date +%Y)
+          sed -i "s/FluffBoost — Copyright (C) [0-9]\{4\} MrDemonWolf, Inc/FluffBoost — Copyright (C) $YEAR MrDemonWolf, Inc/" LICENSE
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git diff --quiet LICENSE || (git add LICENSE && git commit -m "chore: update license copyright year to $(date +%Y)")
+          git push
