@@ -150,6 +150,22 @@ describe("sendMotivation", () => {
     expect(logger.error.called).toBe(true);
   });
 
+  it("should keep the claim on permanent Discord errors (Unknown Channel)", async () => {
+    const { deps, db, logger } = makeDeps();
+    configureAllGuildsQuery(db, [guildRow()]);
+    db.update.returns(mockDbChain([{ id: "uuid1" }]));
+
+    const client = mockClient();
+    const unknownChannel = Object.assign(new Error("Unknown Channel"), { code: 10003 });
+    (client.channels.fetch as sinon.SinonStub).rejects(unknownChannel);
+
+    await sendMotivationCore(client as never, deps);
+
+    // Claim only — no release, so the config problem isn't retried every tick.
+    expect(db.update.callCount).toBe(1);
+    expect(logger.warn.called).toBe(true);
+  });
+
   it("should isolate per-guild send failures via Promise.allSettled", async () => {
     const { deps, db, logger } = makeDeps();
     configureAllGuildsQuery(db, [guildRow(), guildRow({ id: "uuid2", guildId: "g2", motivationChannelId: "ch2" })]);

@@ -107,6 +107,10 @@ describe("suggestionHelpers.notifySuggestionReviewed", () => {
     });
 
     expect(submitter.send.calledOnce).toBe(true);
+    const dmPayload = submitter.send.getCall(0).args[0];
+    const description = dmPayload.embeds[0].data.description as string;
+    expect(description).toContain("Reason");
+    expect(description).toContain("duplicate");
   });
 
   it("swallows and warns on main-channel failure, still attempting the DM", async () => {

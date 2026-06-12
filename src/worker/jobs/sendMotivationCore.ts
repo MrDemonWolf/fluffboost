@@ -132,6 +132,21 @@ export async function sendMotivationCore(client: Client, deps: SendMotivationDep
         await channel.send({ embeds: [deps.buildMotivationEmbed(quote, author, client)] });
         return "sent";
       } catch (err) {
+        // Permanent Discord API errors are config problems, not transient
+        // failures: keep the claim so we don't retry every tick for the rest
+        // of the catch-up window. 10003 = Unknown Channel, 50001 = Missing
+        // Access. (Duck-typed to keep this module free of runtime discord.js
+        // imports.)
+        const code = (err as { code?: number }).code;
+        if (code === 10003 || code === 50001) {
+          _logger.warn("Worker", "Motivation channel is gone or inaccessible — keeping claim", {
+            guildId: g.guildId,
+            channelId: g.motivationChannelId,
+            code,
+          });
+          return "skipped";
+        }
+
         try {
           await releaseClaim(_db, g, claimedAt);
         } catch (releaseErr) {
