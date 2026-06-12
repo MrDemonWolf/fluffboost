@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "discord.js";
 
-import type { Client, CommandInteraction, User } from "discord.js";
+import type { Client, CommandInteraction } from "discord.js";
 
 import env from "../utils/env.js";
 import { withCommandLogging } from "../utils/commandErrors.js";
@@ -12,11 +12,19 @@ export const slashCommand = new SlashCommandBuilder()
 
 export async function execute(client: Client, interaction: CommandInteraction): Promise<void> {
   await withCommandLogging("about", interaction, async () => {
-    const { username } = client.user as User;
+    const username = client.user?.username ?? "FluffBoost";
+
+    // Per-shard cache only holds this shard's guilds; sum across shards.
+    const guildCount = client.shard
+      ? (await client.shard.fetchClientValues("guilds.cache.size")).reduce(
+          (total: number, size) => total + (size as number),
+          0
+        )
+      : client.guilds.cache.size;
 
     const embed = buildBrandedEmbed({
       title: `About ${username} 🐾`,
-      description: `Hi! I'm ${username}, a discord bot created by MrDemonWolf, Inc. I was created to help you with your daily tasks and to make your life easier. I'm currently in ${client.guilds.cache.size} guilds.`,
+      description: `Hi! I'm ${username}, a discord bot created by MrDemonWolf, Inc. I was created to help you with your daily tasks and to make your life easier. I'm currently in ${guildCount} guilds.`,
       fields: [
         {
           name: "Project GitHub",
@@ -30,7 +38,7 @@ export async function execute(client: Client, interaction: CommandInteraction): 
         },
         {
           name: "Creator Website",
-          value: "[Website](https://www.mrdmeonwolf.com)",
+          value: "[Website](https://www.mrdemonwolf.com)",
           inline: true,
         },
         {

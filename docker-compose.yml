@@ -31,17 +31,21 @@ services:
       interval: 5s
       timeout: 20s
       retries: 10
-  bot: 
+  bot:
     build:
       context: .
       dockerfile: Dockerfile
+    init: true
     env_file:
       - .env
     ports:
-      - '8080:8080'
+      - '3000:3000'
     depends_on:
-      - postgres
-      - redis
-      
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+
 volumes:
   fluffboost-postgres-data:

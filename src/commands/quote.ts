@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder, MessageFlags } from "discord.js";
 
 import type { Client, ChatInputCommandInteraction } from "discord.js";
 
@@ -17,7 +17,10 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
   await withCommandLogging("quote", interaction, async () => {
     const quote = await getRandomMotivationQuote();
     if (!quote) {
-      await interaction.reply("No motivation quote found.  Please try again later!");
+      await interaction.reply({
+        content: "No motivation quote found. Please try again later!",
+        flags: MessageFlags.Ephemeral,
+      });
       return;
     }
 

@@ -25,7 +25,6 @@ app.use(
     legacyHeaders: false,
   })
 );
-app.set("x-powered-by", "MrDemonWolf, Inc., Community Bot");
 
 /**
  * Use verbose logs in development, concise logs in production

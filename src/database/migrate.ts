@@ -4,6 +4,8 @@ import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { sql } from "drizzle-orm";
 import postgres from "postgres";
 
+// console.* is intentional here: this script runs standalone at container
+// startup, before the structured logger (and validated env it needs) exists.
 const migrationsFolder = "./drizzle";
 const journalPath = `${migrationsFolder}/meta/_journal.json`;
 

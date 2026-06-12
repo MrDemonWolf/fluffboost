@@ -1,8 +1,12 @@
 import { Client, Events, GatewayIntentBits } from "discord.js";
+import { Queue } from "bullmq";
+import type { Worker } from "bullmq";
 
 import env from "./utils/env.js";
 import logger from "./utils/logger.js";
 import { isPremiumEnabled } from "./utils/premium.js";
+import redisClient, { bullConnection } from "./redis/index.js";
+import startWorker from "./worker/index.js";
 
 /**
  * Import events from the events folder.
@@ -25,7 +29,7 @@ const client = new Client({
  */
 client.on(Events.ClientReady, async () => {
   try {
-    readyEvent(client);
+    await readyEvent(client);
   } catch (err) {
     logger.error(
       "Discord - Event (Ready)",
@@ -64,10 +68,14 @@ client.on(Events.InteractionCreate, (interaction) => {
 });
 
 /**
- * Handle discord ShardDisconnect event.
+ * Handle discord shard lifecycle events.
  */
-client.on(Events.ShardError, () => {
+client.on(Events.ShardDisconnect, () => {
   shardDisconnectEvent();
+});
+
+client.on(Events.ShardError, (err) => {
+  logger.error("Discord - Shard", "Shard websocket error", err);
 });
 
 /**
@@ -93,31 +101,71 @@ if (isPremiumEnabled()) {
   });
 }
 
-client.login(env.DISCORD_APPLICATION_BOT_TOKEN);
-
 /**
  * Initialize BullMQ worker to handle background jobs.
  */
-import { Queue } from "bullmq";
-import type { ConnectionOptions } from "bullmq";
-import startWorker from "./worker/index.js";
-import redisClient from "./redis/index.js";
-
 const queueName = "fluffboost-jobs";
 
 const queue = new Queue(queueName, {
-  connection: redisClient as unknown as ConnectionOptions,
+  connection: bullConnection,
 });
+
+let worker: Worker | null = null;
 
 // Gate worker startup on ClientReady. Otherwise BullMQ can dequeue jobs
 // (e.g. send-motivation) before Discord login completes, causing
 // client.channels.fetch / client.users.fetch calls inside job handlers to
 // fail against an un-authenticated client.
 client.once(Events.ClientReady, () => {
-  startWorker(queue).catch((err) => {
-    logger.error("Worker", "Failed to start worker", err);
-    process.exit(1);
-  });
+  startWorker(queue, client)
+    .then((startedWorker) => {
+      worker = startedWorker;
+    })
+    .catch((err) => {
+      logger.error("Worker", "Failed to start worker", err);
+      process.exit(1);
+    });
 });
+
+client.login(env.DISCORD_APPLICATION_BOT_TOKEN).catch((err) => {
+  logger.error("Discord", "Failed to log in", err);
+  process.exit(1);
+});
+
+/**
+ * Graceful shutdown. The ShardingManager kills shards with SIGTERM on
+ * redeploy; without a handler, BullMQ jobs die mid-flight (stalled-job
+ * retries can double-send motivation) and the Discord session is never
+ * cleanly closed. Order: worker (finish in-flight jobs) → queue → Discord
+ * session → Redis.
+ */
+let shuttingDown = false;
+
+async function shutdown(signal: string): Promise<void> {
+  if (shuttingDown) {
+    return;
+  }
+  shuttingDown = true;
+  logger.info("Discord", `Received ${signal}, shutting down shard`);
+
+  // Watchdog so a wedged close never outlives the orchestrator's kill grace.
+  setTimeout(() => process.exit(1), 20_000).unref();
+
+  try {
+    if (worker) {
+      await worker.close();
+    }
+    await queue.close();
+    await client.destroy();
+    await redisClient.quit().catch(() => redisClient.disconnect());
+    process.exit(0);
+  } catch (err) {
+    logger.error("Discord", "Error during shard shutdown", err);
+    process.exit(1);
+  }
+}
+
+process.on("SIGTERM", () => void shutdown("SIGTERM"));
+process.on("SIGINT", () => void shutdown("SIGINT"));
 
 export default client;

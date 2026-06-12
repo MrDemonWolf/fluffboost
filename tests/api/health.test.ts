@@ -16,7 +16,7 @@ describe("Health API", () => {
     mock.module("../../src/database/index.js", () => ({ queryClient: dbStub, db: {} }));
 
     redisPingStub = sinon.stub().resolves("PONG");
-    mock.module("../../src/redis/index.js", () => ({ default: { ping: redisPingStub } }));
+    mock.module("../../src/redis/index.js", () => ({ default: { ping: redisPingStub }, bullConnection: {} }));
 
     const route = (await import("../../src/api/routes/health.js")).default;
     const app = express();

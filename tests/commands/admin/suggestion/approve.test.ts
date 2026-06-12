@@ -90,10 +90,12 @@ describe("admin suggestion approve command", () => {
       status: "Pending",
     }]));
 
-    // Capture what happens inside the transaction
+    // Capture what happens inside the transaction. The conditional UPDATE must
+    // report a row was claimed (status was still Pending) for approve to proceed.
     let txDb: ReturnType<typeof mockDb>;
     db.transaction.callsFake(async (fn: (tx: ReturnType<typeof mockDb>) => Promise<unknown>) => {
       txDb = mockDb();
+      txDb.update.returns(mockDbChain([{ id: "s1" }]));
       return fn(txDb);
     });
 
@@ -102,7 +104,7 @@ describe("admin suggestion approve command", () => {
     // Transaction was called
     expect(db.transaction.calledOnce).toBe(true);
 
-    // Inside transaction: insert (motivation quote) and update (suggestion status)
+    // Inside transaction: update (claim Pending suggestion) and insert (motivation quote)
     expect(txDb!.insert.calledOnce).toBe(true);
     expect(txDb!.update.calledOnce).toBe(true);
 
@@ -130,12 +132,48 @@ describe("admin suggestion approve command", () => {
       status: "Pending",
     }]));
 
+    db.transaction.callsFake(async (fn: (tx: ReturnType<typeof mockDb>) => Promise<unknown>) => {
+      const txDb = mockDb();
+      txDb.update.returns(mockDbChain([{ id: "s1" }]));
+      return fn(txDb);
+    });
+
     // Make user fetch throw to simulate DMs disabled
     (client.users.fetch as sinon.SinonStub).rejects(new Error("Cannot send DM"));
 
     await handler(client as never, interaction as never, interaction.options as never);
 
     // Should still reply successfully
+    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
+    const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
+    expect(replyArgs.content).toContain("approved");
+  });
+
+  it("should not break if the main-channel announcement fails", async () => {
+    const { handler, db } = await loadModule();
+    const interaction = makeInteraction("s1");
+    const { client } = makeClient();
+
+    db.select.returns(mockDbChain([{
+      id: "s1",
+      quote: "Be kind",
+      author: "Anon",
+      addedBy: "user-1",
+      status: "Pending",
+    }]));
+
+    db.transaction.callsFake(async (fn: (tx: ReturnType<typeof mockDb>) => Promise<unknown>) => {
+      const txDb = mockDb();
+      txDb.update.returns(mockDbChain([{ id: "s1" }]));
+      return fn(txDb);
+    });
+
+    // Symmetric to the DM-failure case: the main-channel announce is
+    // best-effort, so a deleted/unfetchable channel must not fail the command.
+    (client.channels.fetch as sinon.SinonStub).rejects(new Error("Unknown Channel"));
+
+    await handler(client as never, interaction as never, interaction.options as never);
+
     expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
     expect(replyArgs.content).toContain("approved");

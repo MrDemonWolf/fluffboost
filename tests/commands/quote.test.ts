@@ -33,7 +33,7 @@ describe("quote command", () => {
 
     expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
     const arg = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(arg).toContain("No motivation quote found");
+    expect(arg.content).toContain("No motivation quote found");
   });
 
   it("should reply with embed when a quote is found", async () => {

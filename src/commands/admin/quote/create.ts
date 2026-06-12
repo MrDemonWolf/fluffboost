@@ -5,6 +5,7 @@ import type { CommandInteractionOptionResolver } from "discord.js";
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
 import { motivationQuotes } from "../../../database/schema.js";
+import logger from "../../../utils/logger.js";
 import { sendToMainChannel } from "../../../utils/mainChannel.js";
 import { withCommandLogging } from "../../../utils/commandErrors.js";
 import { buildBrandedEmbed } from "../../../utils/embedHelpers.js";
@@ -50,6 +51,13 @@ export default async function (
       return;
     }
 
+    // Reply before the main-channel notification: the DB write is committed,
+    // and the announce can outlive the 3-second interaction deadline.
+    await interaction.reply({
+      content: `Quote created with id: ${newQuote.id}`,
+      flags: MessageFlags.Ephemeral,
+    });
+
     const embed = buildBrandedEmbed({
       title: "New Quote Created",
       fields: [
@@ -63,11 +71,14 @@ export default async function (
       iconURL: interaction.user.displayAvatarURL(),
     });
 
-    await sendToMainChannel(client, { embeds: [embed] });
-
-    await interaction.reply({
-      content: `Quote created with id: ${newQuote.id}`,
-      flags: MessageFlags.Ephemeral,
-    });
+    // Best-effort: the quote already exists and the user was told so.
+    try {
+      await sendToMainChannel(client, { embeds: [embed] });
+    } catch (err) {
+      logger.warn("Discord - Command", "Failed to announce new quote to main channel", {
+        quoteId: newQuote.id,
+        error: err,
+      });
+    }
   });
 }
