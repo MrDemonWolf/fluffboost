@@ -37,14 +37,16 @@ export default async function (
 
     await db.delete(motivationQuotes).where(eq(motivationQuotes.id, quoteId));
 
-    await sendToMainChannel(
-      client,
-      `Quote deleted by ${interaction.user.username} with id: ${quoteId}`
-    );
-
+    // Reply before the main-channel notification: the DB write is committed,
+    // and the announce can outlive the 3-second interaction deadline.
     await interaction.reply({
       content: `Quote deleted with id: ${quoteId}`,
       flags: MessageFlags.Ephemeral,
     });
+
+    await sendToMainChannel(
+      client,
+      `Quote deleted by ${interaction.user.username} with id: ${quoteId}`
+    );
   });
 }

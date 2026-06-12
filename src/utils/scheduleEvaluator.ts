@@ -46,11 +46,22 @@ export function getCurrentTimeInTimezone(tz: string) {
 }
 
 /**
+ * How far past the scheduled time a send may still fire. A worker tick can be
+ * delayed or skipped entirely (deploys, Redis blips, shard respawns resetting
+ * the repeatable slot); an exact-minute match would silently drop that
+ * period's send for every affected guild. The window lets late ticks catch up
+ * without re-delivering long-stale slots. lastMotivationSentAt still dedupes
+ * within the period, so a late send happens at most once.
+ */
+export const CATCH_UP_WINDOW_MS = 6 * 60 * 60 * 1000;
+
+/**
  * Determines if a guild is due to receive a motivation quote right now.
  *
- * Checks the current time in the guild's timezone against their configured
- * schedule (frequency, time, and day). Also verifies the guild hasn't already
- * received a quote for this period via lastMotivationSentAt.
+ * Computes the current period's scheduled occurrence in the guild's timezone
+ * and treats the guild as due when that occurrence has passed (within
+ * CATCH_UP_WINDOW_MS) and no quote was sent this period yet
+ * (via lastMotivationSentAt).
  */
 export function isGuildDueForMotivation(guild: Pick<Guild, keyof GuildSchedule>): boolean {
   const { motivationFrequency, motivationTime, motivationDay, timezone: tz, lastMotivationSentAt } = guild;
@@ -59,30 +70,33 @@ export function isGuildDueForMotivation(guild: Pick<Guild, keyof GuildSchedule>)
   if (!parsed) {
     return false;
   }
-  const { hour: targetHour, minute: targetMinute } = parsed;
 
-  const current = getCurrentTimeInTimezone(tz);
+  const now = dayjs().tz(tz);
+  // Note: inside a DST spring-forward gap dayjs shifts the nonexistent local
+  // time forward, so such schedules still fire (slightly later) that day.
+  let scheduled = now.hour(parsed.hour).minute(parsed.minute).second(0).millisecond(0);
 
-  // Check if current time matches the target time (exact minute match)
-  if (current.hour !== targetHour || current.minute !== targetMinute) {
-    return false;
-  }
-
-  // Check frequency-specific day constraints
   switch (motivationFrequency) {
     case "Daily":
       // No day constraint for daily
       break;
     case "Weekly":
-      if (motivationDay === null || current.dayOfWeek !== motivationDay) {
+      if (motivationDay === null) {
         return false;
       }
+      scheduled = scheduled.day(motivationDay); // within current Sunday-start week
       break;
     case "Monthly":
-      if (motivationDay === null || current.dayOfMonth !== motivationDay) {
+      if (motivationDay === null) {
         return false;
       }
+      scheduled = scheduled.date(motivationDay);
       break;
+  }
+
+  const sinceScheduled = now.valueOf() - scheduled.valueOf();
+  if (sinceScheduled < 0 || sinceScheduled > CATCH_UP_WINDOW_MS) {
+    return false;
   }
 
   // Check if already sent during this period

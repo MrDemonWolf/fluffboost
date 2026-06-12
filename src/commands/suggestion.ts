@@ -2,18 +2,16 @@ import {
   Client,
   ChatInputCommandInteraction,
   SlashCommandBuilder,
-  EmbedBuilder,
   MessageFlags,
 } from "discord.js";
 
-
 import { eq } from "drizzle-orm";
 
-import logger from "../utils/logger.js";
 import { db } from "../database/index.js";
 import { guilds, suggestionQuotes } from "../database/schema.js";
 import { sendToMainChannel } from "../utils/mainChannel.js";
-import { safeErrorReply } from "../utils/commandErrors.js";
+import { withCommandLogging } from "../utils/commandErrors.js";
+import { buildBrandedEmbed } from "../utils/embedHelpers.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("suggestion")
@@ -34,13 +32,7 @@ export const slashCommand = new SlashCommandBuilder()
   );
 
 export async function execute(client: Client, interaction: ChatInputCommandInteraction): Promise<void> {
-  try {
-    logger.commands.executing(
-      "suggestion",
-      interaction.user.username,
-      interaction.user.id
-    );
-
+  await withCommandLogging("suggestion", interaction, async () => {
     const options = interaction.options;
 
     const quote = options.getString("quote");
@@ -109,49 +101,22 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
     /**
      * Send the quote suggestion to the main channel for review
      */
-    const embed = new EmbedBuilder()
-      .setColor(0xfadb7f)
-      .setTitle("New Quote Suggestion")
-      .setAuthor({
-        name: interaction.user.username,
-        iconURL: interaction.user.displayAvatarURL(),
-      })
-      .addFields(
-        {
-          name: "Quote",
-          value: quote,
-        },
-        {
-          name: "Quote Author",
-          value: author,
-        },
-        {
-          name: "Status",
-          value: newQuote.status,
-        }
-      )
-      .setTimestamp()
-      .setFooter({
-        text: `Created with ID ${newQuote.id}`,
-      });
+    const embed = buildBrandedEmbed({
+      title: "New Quote Suggestion",
+      fields: [
+        { name: "Quote", value: quote },
+        { name: "Quote Author", value: author },
+        { name: "Status", value: newQuote.status },
+      ],
+      footer: `Created with ID ${newQuote.id}`,
+      timestamp: true,
+    }).setAuthor({
+      name: interaction.user.username,
+      iconURL: interaction.user.displayAvatarURL(),
+    });
 
     await sendToMainChannel(client, { embeds: [embed] });
-
-    logger.commands.success(
-      "suggestion",
-      interaction.user.username,
-      interaction.user.id
-    );
-  } catch (err) {
-    logger.commands.error(
-      "suggestion",
-      interaction.user.username,
-      interaction.user.id,
-      err
-    );
-
-    await safeErrorReply(interaction);
-  }
+  });
 }
 
 export default {

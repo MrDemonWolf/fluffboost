@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockDb, mockDbChain, mockInteraction } from "../helpers.js";
+import { mockDb, mockDbChain, mockInteraction, mockEnv, mockLogger } from "../helpers.js";
 
 describe("suggestionHelpers.fetchPendingSuggestion", () => {
   afterEach(() => {
@@ -11,6 +11,10 @@ describe("suggestionHelpers.fetchPendingSuggestion", () => {
     const db = mockDb();
     db.select.returns(mockDbChain(rows));
     mock.module("../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
+    // suggestionHelpers pulls in mainChannel → env/logger; keep them mocked so
+    // the real env validation never runs under test.
+    mock.module("../../src/utils/env.js", () => ({ default: mockEnv() }));
+    mock.module("../../src/utils/logger.js", () => ({ default: mockLogger() }));
     const mod = await import("../../src/utils/suggestionHelpers.js");
     return { fetchPendingSuggestion: mod.fetchPendingSuggestion };
   }

@@ -1,8 +1,8 @@
 import { Worker, Job } from "bullmq";
-import type { ConnectionOptions, Queue } from "bullmq";
+import type { Queue } from "bullmq";
+import type { Client } from "discord.js";
 
-import client from "../bot.js";
-import redisClient from "../redis/index.js";
+import { bullConnection } from "../redis/index.js";
 import env from "../utils/env.js";
 import logger from "../utils/logger.js";
 
@@ -33,7 +33,7 @@ async function ensureRepeatable(
   });
 }
 
-export default async function startWorker(queue: Queue): Promise<Worker> {
+export default async function startWorker(queue: Queue, client: Client): Promise<Worker> {
   const worker = new Worker(
     QUEUE_NAME,
     async (job: Job) => {
@@ -47,9 +47,7 @@ export default async function startWorker(queue: Queue): Promise<Worker> {
       }
     },
     {
-      // ioredis instance type clashes with bullmq's bundled ioredis types,
-      // but bullmq accepts the runtime instance directly.
-      connection: redisClient as unknown as ConnectionOptions,
+      connection: bullConnection,
       concurrency: env.WORKER_CONCURRENCY,
     }
   );
@@ -62,20 +60,31 @@ export default async function startWorker(queue: Queue): Promise<Worker> {
     logger.error("Worker", `Job "${job?.name}" failed (${job?.id}): ${err.message}`, err);
   });
 
-  await ensureRepeatable(
-    queue,
-    "set-activity",
-    { client: null },
-    env.DISCORD_ACTIVITY_INTERVAL_MINUTES * 60 * 1000
-  );
+  // Only one shard may (re)register repeatables: ensureRepeatable's
+  // drop-and-recreate races itself when every shard runs it concurrently
+  // (a shard can delete another's freshly added repeatable or duplicate it).
+  // Shard 0 owns queue scheduling; unsharded processes always register.
+  const isScheduler = client.shard?.ids.includes(0) ?? true;
+  if (isScheduler) {
+    await ensureRepeatable(
+      queue,
+      "set-activity",
+      { client: null },
+      env.DISCORD_ACTIVITY_INTERVAL_MINUTES * 60 * 1000
+    );
 
-  await ensureRepeatable(queue, "send-motivation", {}, 60 * 1000);
+    await ensureRepeatable(queue, "send-motivation", {}, 60 * 1000);
 
-  logger.info("Worker", "Jobs registered", {
-    activityInterval: `${env.DISCORD_ACTIVITY_INTERVAL_MINUTES}m`,
-    motivationCheck: "every 1m (per-guild schedule evaluation)",
-    concurrency: env.WORKER_CONCURRENCY,
-  });
+    logger.info("Worker", "Jobs registered", {
+      activityInterval: `${env.DISCORD_ACTIVITY_INTERVAL_MINUTES}m`,
+      motivationCheck: "every 1m (per-guild schedule evaluation)",
+      concurrency: env.WORKER_CONCURRENCY,
+    });
+  } else {
+    logger.info("Worker", "Worker started (repeatable registration owned by shard 0)", {
+      concurrency: env.WORKER_CONCURRENCY,
+    });
+  }
 
   return worker;
 }

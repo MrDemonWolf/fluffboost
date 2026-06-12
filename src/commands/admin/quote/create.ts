@@ -50,6 +50,13 @@ export default async function (
       return;
     }
 
+    // Reply before the main-channel notification: the DB write is committed,
+    // and the announce can outlive the 3-second interaction deadline.
+    await interaction.reply({
+      content: `Quote created with id: ${newQuote.id}`,
+      flags: MessageFlags.Ephemeral,
+    });
+
     const embed = buildBrandedEmbed({
       title: "New Quote Created",
       fields: [
@@ -64,10 +71,5 @@ export default async function (
     });
 
     await sendToMainChannel(client, { embeds: [embed] });
-
-    await interaction.reply({
-      content: `Quote created with id: ${newQuote.id}`,
-      flags: MessageFlags.Ephemeral,
-    });
   });
 }

@@ -112,10 +112,6 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       interaction.user.id,
       err
     );
-    logger.error("Discord - Command", "Error executing owner command", err, {
-      user: { username: interaction.user.username, id: interaction.user.id },
-      command: "owner",
-    });
 
     await safeErrorReply(interaction);
   }

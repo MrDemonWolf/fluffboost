@@ -83,17 +83,34 @@ describe("scheduleEvaluator", () => {
       expect(isGuildDueForMotivation(guild)).toBe(true);
     });
 
-    it("should return false when time does not match", () => {
-      // 2024-01-15 15:00:00 UTC → 09:00 CST (target is 08:00)
-      clock = sinon.useFakeTimers(new Date("2024-01-15T15:00:00Z").getTime());
+    it("should return false before the scheduled time", () => {
+      // 2024-01-15 13:30:00 UTC → 07:30 CST (target is 08:00)
+      clock = sinon.useFakeTimers(new Date("2024-01-15T13:30:00Z").getTime());
       const guild = makeGuild();
       expect(isGuildDueForMotivation(guild)).toBe(false);
     });
 
-    it("should return false when hour matches but minute does not", () => {
-      // 2024-01-15 14:30:00 UTC → 08:30 CST (target is 08:00)
-      clock = sinon.useFakeTimers(new Date("2024-01-15T14:30:00Z").getTime());
+    it("should return true within the catch-up window after the scheduled time", () => {
+      // 2024-01-15 15:00:00 UTC → 09:00 CST (target 08:00, 1h late — a missed
+      // tick must catch up instead of dropping the day's send)
+      clock = sinon.useFakeTimers(new Date("2024-01-15T15:00:00Z").getTime());
       const guild = makeGuild();
+      expect(isGuildDueForMotivation(guild)).toBe(true);
+    });
+
+    it("should return false once past the catch-up window", () => {
+      // 2024-01-15 21:00:00 UTC → 15:00 CST (target 08:00, 7h late > 6h window)
+      clock = sinon.useFakeTimers(new Date("2024-01-15T21:00:00Z").getTime());
+      const guild = makeGuild();
+      expect(isGuildDueForMotivation(guild)).toBe(false);
+    });
+
+    it("should not send twice within the catch-up window", () => {
+      // 09:00 CST, already sent at 08:00 CST today
+      clock = sinon.useFakeTimers(new Date("2024-01-15T15:00:00Z").getTime());
+      const guild = makeGuild({
+        lastMotivationSentAt: new Date("2024-01-15T14:00:00Z"),
+      });
       expect(isGuildDueForMotivation(guild)).toBe(false);
     });
 

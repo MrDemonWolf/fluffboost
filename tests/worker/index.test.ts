@@ -18,8 +18,7 @@ const WorkerStub = sinon.stub().callsFake((_name: string, processor: typeof jobP
 
 mock.module("../../src/utils/logger.js", () => ({ default: logger }));
 mock.module("../../src/utils/env.js", () => ({ default: env }));
-mock.module("../../src/bot.js", () => ({ default: mockClient }));
-mock.module("../../src/redis/index.js", () => ({ default: {} }));
+mock.module("../../src/redis/index.js", () => ({ default: {}, bullConnection: {} }));
 mock.module("bullmq", () => ({ Worker: WorkerStub, Job: class {} }));
 
 const { default: startWorker } = await import("../../src/worker/index.js");
@@ -68,7 +67,7 @@ describe("worker index", () => {
     Object.assign(env, { DISCORD_ACTIVITY_INTERVAL_MINUTES: 10 });
     const queue = makeQueue();
 
-    await startWorker(queue as never);
+    await startWorker(queue as never, mockClient as never);
 
     expect(queue.add.calledTwice).toBe(true);
     const activityCall = queue.add.firstCall;
@@ -86,7 +85,7 @@ describe("worker index", () => {
       { name: "send-motivation", key: "old-motivation-key" },
     ]);
 
-    await startWorker(queue as never);
+    await startWorker(queue as never, mockClient as never);
 
     expect(queue.removeRepeatableByKey.calledWith("old-activity-key")).toBe(true);
     expect(queue.removeRepeatableByKey.calledWith("old-motivation-key")).toBe(true);
@@ -94,7 +93,7 @@ describe("worker index", () => {
 
   it("should set removeOnFail cap and concurrency", async () => {
     const queue = makeQueue();
-    await startWorker(queue as never);
+    await startWorker(queue as never, mockClient as never);
 
     const opts = queue.add.firstCall.args[2];
     expect(opts.removeOnFail).toEqual({ count: 100 });
@@ -106,7 +105,7 @@ describe("worker index", () => {
 
   it("should create Worker with correct job handler", async () => {
     const queue = makeQueue();
-    await startWorker(queue as never);
+    await startWorker(queue as never, mockClient as never);
 
     expect(typeof jobProcessor).toBe("function");
 
@@ -126,9 +125,21 @@ describe("worker index", () => {
 
   it("should set up completed and failed event handlers", async () => {
     const queue = makeQueue();
-    await startWorker(queue as never);
+    await startWorker(queue as never, mockClient as never);
 
     expect(workerOnStub.calledWith("completed")).toBe(true);
     expect(workerOnStub.calledWith("failed")).toBe(true);
+  });
+
+  it("should not register repeatables on non-zero shards", async () => {
+    const queue = makeQueue();
+    const shardClient = { user: { id: "bot-123" }, shard: { ids: [1], count: 2 } };
+
+    await startWorker(queue as never, shardClient as never);
+
+    expect(queue.getRepeatableJobs.called).toBe(false);
+    expect(queue.add.called).toBe(false);
+    // Worker still consumes jobs on this shard
+    expect(WorkerStub.calledOnce).toBe(true);
   });
 });

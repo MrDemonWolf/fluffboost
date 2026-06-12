@@ -10,6 +10,9 @@ on:
   pull_request:
     branches: [main, dev]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Test & Typecheck
@@ -22,7 +25,15 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.3.14
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -30,14 +41,16 @@ jobs:
       - name: Run tests with coverage
         run: bun test:coverage
         env:
+          # Values must pass the Zod env schema (snowflake regex etc.) in case
+          # a test transitively loads the real src/utils/env.ts.
           DATABASE_URL: postgres://ci:ci@localhost:5432/fluffboost
           REDIS_URL: redis://localhost:6379
-          DISCORD_APPLICATION_ID: ci-test-app-id
+          DISCORD_APPLICATION_ID: "123456789012345678"
           DISCORD_APPLICATION_PUBLIC_KEY: ci-test-public-key
           DISCORD_APPLICATION_BOT_TOKEN: ci-test-bot-token
-          OWNER_ID: ci-test-owner-id
-          MAIN_GUILD_ID: ci-test-guild-id
-          MAIN_CHANNEL_ID: ci-test-channel-id
+          OWNER_ID: "123456789012345678"
+          MAIN_GUILD_ID: "123456789012345678"
+          MAIN_CHANNEL_ID: "123456789012345678"
 
       - name: Run ESLint
         run: bun run lint:check
@@ -63,14 +76,21 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.3.14
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
       - name: Run security audit
         run: bun pm audit
-        continue-on-error: true
 
       - name: Check for outdated packages
         run: bun pm outdated

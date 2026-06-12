@@ -6,14 +6,19 @@ export async function entitlementUpdateEvent(
   _oldEntitlement: Entitlement | null,
   newEntitlement: Entitlement
 ): Promise<void> {
-  const isCancelled = newEntitlement.endsAt !== null;
+  // Active subscriptions carry a populated endsAt for the current billing
+  // period and ENTITLEMENT_UPDATE fires on renewal, so a non-null endsAt does
+  // NOT mean cancelled. The entitlement is active until endsAt has passed;
+  // actual revocation arrives via ENTITLEMENT_DELETE or a past endsAt.
+  const endsAt = newEntitlement.endsAt;
+  const isActive = endsAt === null || endsAt.getTime() > Date.now();
 
   logEntitlementEvent(
     "Entitlement Update",
-    isCancelled ? "Premium subscription cancelled" : "Premium subscription renewed",
+    isActive ? "Premium subscription renewed" : "Premium subscription expired",
     newEntitlement,
-    { endsAt: newEntitlement.endsAt?.toISOString() }
+    { endsAt: endsAt?.toISOString() }
   );
 
-  await updateGuildPremiumStatus(newEntitlement, !isCancelled, "Entitlement Update");
+  await updateGuildPremiumStatus(newEntitlement, isActive, "Entitlement Update");
 }

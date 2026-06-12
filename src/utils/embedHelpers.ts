@@ -2,6 +2,8 @@ import { EmbedBuilder } from "discord.js";
 import type { APIEmbedField } from "discord.js";
 
 export const BRAND_COLOR = 0xfadb7f;
+export const SUCCESS_COLOR = 0x57f287;
+export const DANGER_COLOR = 0xed4245;
 export const BRAND_FOOTER = "Powered by MrDemonWolf, Inc.";
 
 export interface BrandedEmbedOptions {

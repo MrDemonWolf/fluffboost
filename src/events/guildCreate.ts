@@ -13,13 +13,24 @@ export async function guildCreateEvent(guild: Guild): Promise<void> {
     logger.discord.guildJoined(guild.name, guild.id, guild.memberCount);
 
     /**
-     * Add the guild to the database.
+     * Add the guild to the database. Idempotent: a rejoin while the row still
+     * exists (missed guildDelete, race with ensureGuildExists) is not an error.
      */
-    const [guildData] = await db.insert(guilds).values({ guildId: guild.id }).returning();
+    const [guildData] = await db
+      .insert(guilds)
+      .values({ guildId: guild.id })
+      .onConflictDoNothing({ target: guilds.guildId })
+      .returning();
 
-    logger.database.operation("Guild added to database", {
-      guildId: guildData?.guildId,
-    });
+    if (guildData) {
+      logger.database.operation("Guild added to database", {
+        guildId: guildData.guildId,
+      });
+    } else {
+      logger.info("Discord - Event (Guild Create)", "Guild already in database", {
+        guildId: guild.id,
+      });
+    }
 
   } catch (err) {
     logger.error(

@@ -24,13 +24,15 @@ describe("setup channel command", () => {
     return { handler: mod.default, logger, db };
   }
 
-  it("should return early when no guildId", async () => {
+  it("should reply ephemerally when no guildId", async () => {
     const { handler } = await loadModule();
     const interaction = mockInteraction({ guildId: null });
 
     await handler(mockClient() as never, interaction as never);
 
-    expect((interaction.reply as sinon.SinonStub).called).toBe(false);
+    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
+    const arg = (interaction.reply as sinon.SinonStub).firstCall.args[0];
+    expect(arg.content).toContain("only be used in a server");
   });
 
   it("should update guild with channel and reply", async () => {

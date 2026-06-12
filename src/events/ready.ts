@@ -25,29 +25,31 @@ export async function readyEvent(client: Client) {
     await ensureGuildExists(client);
 
     /**
-     * Register slash commands.
+     * Register slash commands. They are global (application-level), so only
+     * shard 0 registers — otherwise every shard performs the same bulk
+     * overwrite on every startup.
      */
-    logger.info("Discord - Slash Commands", "Registering commands");
+    if (client.shard?.ids.includes(0) ?? true) {
+      logger.info("Discord - Slash Commands", "Registering commands");
 
-    await client.application?.commands.set(slashCommands);
+      const commands = await client.application?.commands.set(slashCommands);
+      const commandNames = commands?.map((command) => command.name) || [];
 
-    const commands = await client.application?.commands.fetch();
-    const commandNames = commands?.map((command) => command.name) || [];
+      logger.success(
+        "Discord - Slash Commands",
+        `Registered ${commandNames.length} commands`,
+        {
+          commands: commandNames,
+          timestamp: new Date().toISOString(),
+        }
+      );
+    }
 
-    logger.success(
-      "Discord - Slash Commands",
-      `Registered ${commandNames.length} commands`,
-      {
-        commands: commandNames,
-        timestamp: new Date().toISOString(),
-      }
-    );
+    /**
+     * Apply the bot's activity status on first run then the worker will handle it every configured interval.
+     */
+    await setActivity(client);
   } catch (err) {
     logger.error("Discord - Event (Ready)", "Error during ready event", err);
   }
-
-  /**
-   * Apply the bot's activity status on first run then the worker will handle it every configured interval.
-   */
-  await setActivity(client);
 }

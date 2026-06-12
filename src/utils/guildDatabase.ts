@@ -30,8 +30,30 @@ export async function pruneGuilds(client: Client) {
       );
       return;
     }
+
+    /**
+     * Under ShardingManager each process only caches its own shard's guilds,
+     * so "not in cache" may only be evaluated for guilds routed to this shard
+     * — otherwise every shard deletes every other shard's rows. Discord routes
+     * a guild to shard (guildId >> 22) % shardCount.
+     */
+    const shardIds = client.shard?.ids ?? null;
+    const shardCount = client.shard?.count ?? 1;
+    const belongsToThisShard = (guildId: string): boolean => {
+      if (shardIds === null) {
+        return true;
+      }
+      try {
+        return shardIds.includes(Number(BigInt(guildId) >> 22n) % shardCount);
+      } catch {
+        // Malformed (non-numeric) guildId row — leave it alone.
+        return false;
+      }
+    };
+
     const guildsToRemove = guildsInDb.filter(
-      (guild: { guildId: string }) => client.guilds.cache.get(guild.guildId) === undefined
+      (guild: { guildId: string }) =>
+        belongsToThisShard(guild.guildId) && client.guilds.cache.get(guild.guildId) === undefined
     );
 
     if (guildsToRemove.length === 0) {

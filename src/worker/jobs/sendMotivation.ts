@@ -35,10 +35,10 @@ function periodStart(guild: Guild): Date {
  * worker won the race, false if another worker (or a previous job tick)
  * already updated the row.
  */
-async function claimGuild(guild: Guild): Promise<boolean> {
+async function claimGuild(guild: Guild, claimedAt: Date): Promise<boolean> {
   const claimed = await db
     .update(guilds)
-    .set({ lastMotivationSentAt: new Date() })
+    .set({ lastMotivationSentAt: claimedAt })
     .where(
       and(
         eq(guilds.id, guild.id),
@@ -48,6 +48,18 @@ async function claimGuild(guild: Guild): Promise<boolean> {
     .returning({ id: guilds.id });
 
   return claimed.length > 0;
+}
+
+/**
+ * Roll a failed delivery's claim back so the next tick inside the catch-up
+ * window can retry, instead of a transient send error eating the whole
+ * period. Only releases if the row still carries our claim timestamp.
+ */
+async function releaseClaim(guild: Guild, claimedAt: Date): Promise<void> {
+  await db
+    .update(guilds)
+    .set({ lastMotivationSentAt: guild.lastMotivationSentAt })
+    .where(and(eq(guilds.id, guild.id), eq(guilds.lastMotivationSentAt, claimedAt)));
 }
 
 export default async function sendMotivation(client: Client): Promise<void> {
@@ -82,23 +94,37 @@ export default async function sendMotivation(client: Client): Promise<void> {
       }
 
       // Atomic claim: only the worker that flips lastMotivationSentAt wins.
-      const won = await claimGuild(g);
+      const claimedAt = new Date();
+      const won = await claimGuild(g, claimedAt);
       if (!won) {
         return "raced";
       }
 
-      const channel = await client.channels.fetch(g.motivationChannelId);
-      if (!channel || !channel.isTextBased() || channel.isDMBased()) {
-        logger.warn("Worker", "Motivation channel is not a valid text channel", {
-          guildId: g.guildId,
-          channelId: g.motivationChannelId,
-        });
-        return "skipped";
-      }
+      try {
+        const channel = await client.channels.fetch(g.motivationChannelId);
+        if (!channel || !channel.isTextBased() || channel.isDMBased()) {
+          // Keep the claim: an invalid channel is a config problem, not a
+          // transient failure — retrying every tick would just spam warnings.
+          logger.warn("Worker", "Motivation channel is not a valid text channel", {
+            guildId: g.guildId,
+            channelId: g.motivationChannelId,
+          });
+          return "skipped";
+        }
 
-      // Fresh embed per guild so Discord.js cannot mutate a shared instance.
-      await channel.send({ embeds: [buildMotivationEmbed(quote, author, client)] });
-      return "sent";
+        // Fresh embed per guild so Discord.js cannot mutate a shared instance.
+        await channel.send({ embeds: [buildMotivationEmbed(quote, author, client)] });
+        return "sent";
+      } catch (err) {
+        try {
+          await releaseClaim(g, claimedAt);
+        } catch (releaseErr) {
+          logger.error("Worker", "Failed to release motivation claim", releaseErr, {
+            guildId: g.guildId,
+          });
+        }
+        throw err;
+      }
     })
   );
 

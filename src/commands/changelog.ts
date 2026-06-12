@@ -2,8 +2,9 @@ import { SlashCommandBuilder, MessageFlags } from "discord.js";
 
 import type { Client, CommandInteraction } from "discord.js";
 
+import env from "../utils/env.js";
 import { withCommandLogging } from "../utils/commandErrors.js";
-import { buildBrandedEmbed } from "../utils/embedHelpers.js";
+import { buildBrandedEmbed, BRAND_FOOTER } from "../utils/embedHelpers.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("changelog")
@@ -12,7 +13,7 @@ export const slashCommand = new SlashCommandBuilder()
 export async function execute(_client: Client, interaction: CommandInteraction): Promise<void> {
   await withCommandLogging("changelog", interaction, async () => {
     const embed = buildBrandedEmbed({
-      title: "FluffBoost Changelog - v2.2.0",
+      title: `FluffBoost Changelog - v${env.VERSION}`,
       description: "Premium subscriptions and custom quote scheduling are here!",
       fields: [
         {
@@ -45,7 +46,7 @@ export async function execute(_client: Client, interaction: CommandInteraction):
         },
       ],
       timestamp: true,
-      footer: "Powered by MrDemonWolf, Inc.",
+      footer: BRAND_FOOTER,
     });
 
     await interaction.reply({
