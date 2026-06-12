@@ -20,6 +20,11 @@ mock.module("../../src/utils/logger.js", () => ({ default: logger }));
 mock.module("../../src/utils/env.js", () => ({ default: env }));
 mock.module("../../src/redis/index.js", () => ({ default: {}, bullConnection: {} }));
 mock.module("bullmq", () => ({ Worker: WorkerStub, Job: class {} }));
+// Job modules must be mocked BEFORE importing worker/index.js — otherwise the
+// real setActivity/sendMotivation modules get evaluated here and cached with
+// this file's mocks, breaking their own test files depending on run order.
+mock.module("../../src/worker/jobs/setActivity.js", () => ({ default: setActivityStub }));
+mock.module("../../src/worker/jobs/sendMotivation.js", () => ({ default: sendMotivationStub }));
 
 const { default: startWorker } = await import("../../src/worker/index.js");
 
