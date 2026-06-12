@@ -77,14 +77,28 @@ describe("guildDatabase", () => {
       expect(db.delete.called).toBe(false);
     });
 
-    it("should return early when guild cache is empty", async () => {
+    it("should prune stale rows even when the guild cache is empty", async () => {
+      // A shard can legitimately sit in zero guilds (e.g. the bot was kicked
+      // from all of them) — its stale rows must still be cleaned up.
       db.select.returns(mockDbChain([{ guildId: "g1" }]));
 
       const cache = createCollectionCache();
       const client = { guilds: { cache } };
       await pruneGuilds(client as never);
-      expect(logger.info.called).toBe(true);
-      expect(db.delete.called).toBe(false);
+      expect(db.delete.calledOnce).toBe(true);
+    });
+
+    it("should only prune rows routed to this shard when sharded", async () => {
+      // Discord routes guildId >> 22 % shardCount. "1" >> 22 = 0 → shard 0;
+      // "4194304" (2^22) >> 22 = 1 → shard 1. A shard-0 client with an empty
+      // cache must delete only its own stale row.
+      db.select.returns(mockDbChain([{ guildId: "1" }, { guildId: "4194304" }]));
+
+      const cache = createCollectionCache();
+      const client = { guilds: { cache }, shard: { ids: [0], count: 2 } };
+      await pruneGuilds(client as never);
+
+      expect(db.delete.calledOnce).toBe(true);
     });
 
     it("should delete guilds that are not in cache", async () => {

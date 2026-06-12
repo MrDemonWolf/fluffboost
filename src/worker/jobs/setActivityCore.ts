@@ -19,14 +19,48 @@ export interface SetActivityDeps {
   logger: typeof logger;
 }
 
-export async function setActivityCore(client: Client, { db: _db, env: _env, logger: _logger }: SetActivityDeps) {
+export interface SetActivityOptions {
+  /**
+   * "all" (default) fans the presence out to every shard via broadcastEval —
+   * presence is per-shard gateway state and each queue tick is consumed by a
+   * single shard's worker. "local" only touches this shard's gateway; used at
+   * shard ready, when sibling shards may not be spawned yet.
+   */
+  scope?: "all" | "local";
+}
+
+async function applyActivity(
+  client: Client,
+  name: string,
+  type: ActivityType,
+  url: string | undefined,
+  scope: "all" | "local"
+): Promise<void> {
+  if (client.shard && scope === "all") {
+    await client.shard.broadcastEval(
+      (c, ctx) => {
+        c.user?.setActivity(ctx.name, { type: ctx.type, url: ctx.url ?? undefined });
+      },
+      { context: { name, type, url: url ?? null } }
+    );
+  } else {
+    client.user?.setActivity(name, { type, url });
+  }
+}
+
+export async function setActivityCore(
+  client: Client,
+  { db: _db, env: _env, logger: _logger }: SetActivityDeps,
+  { scope = "all" }: SetActivityOptions = {}
+): Promise<boolean> {
   try {
     const defaultActivity = _env.DISCORD_DEFAULT_STATUS;
     const defaultActivityType = _env.DISCORD_DEFAULT_ACTIVITY_TYPE;
     const defaultActivityUrl = _env.DEFAULT_ACTIVITY_URL;
 
     if (!client.user) {
-      return _logger.warn("Worker", "Client user is not defined, cannot set activity");
+      _logger.warn("Worker", "Client user is not defined, cannot set activity");
+      return false;
     }
 
     const activities = await _db
@@ -37,10 +71,7 @@ export async function setActivityCore(client: Client, { db: _db, env: _env, logg
     if (activities.length === 0) {
       _logger.warn("Worker", "No custom discord activity found, using default activity");
       const safeActivityType = getActivityType(defaultActivityType);
-      client.user.setActivity(defaultActivity, {
-        type: safeActivityType,
-        url: defaultActivityUrl,
-      });
+      await applyActivity(client, defaultActivity, safeActivityType, defaultActivityUrl, scope);
       _logger.success("Worker", "Activity has been set", {
         activity: defaultActivity,
         type: safeActivityType,
@@ -59,13 +90,12 @@ export async function setActivityCore(client: Client, { db: _db, env: _env, logg
 
     const randomIndex = Math.floor(Math.random() * activities.length);
     const activity = activities[randomIndex];
-    if (!activity) {return;}
+    if (!activity) {
+      return false;
+    }
 
     const safeActivityType = getActivityType(activity.type);
-    client.user.setActivity(activity.activity, {
-      type: safeActivityType,
-      url: activity.url ? activity.url : undefined,
-    });
+    await applyActivity(client, activity.activity, safeActivityType, activity.url ?? undefined, scope);
 
     _logger.success("Worker", "Activity has been set", {
       activity: activity.activity,
@@ -73,6 +103,9 @@ export async function setActivityCore(client: Client, { db: _db, env: _env, logg
     });
     return true;
   } catch (err) {
+    // Rethrow so the BullMQ job is marked failed instead of silently
+    // reporting completed on every error.
     _logger.error("Worker", "Error setting custom discord activity", err);
+    throw err;
   }
 }

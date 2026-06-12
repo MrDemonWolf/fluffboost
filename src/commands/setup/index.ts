@@ -29,7 +29,7 @@ export const slashCommand = new SlashCommandBuilder()
     return subCommand
       .setName("channel")
       .setDescription(
-        "Setup the channel in which the bot will send the message to every day at 8am CST"
+        "Set the channel where motivation quotes are delivered on this server's schedule"
       )
       .addChannelOption((option) =>
         option
@@ -115,10 +115,6 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       interaction.user.id,
       err
     );
-    logger.error("Discord - Command", "Error executing setup command", err, {
-      user: { username: interaction.user.username, id: interaction.user.id },
-      command: "setup",
-    });
 
     await safeErrorReply(interaction);
   }

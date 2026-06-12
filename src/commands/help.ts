@@ -13,8 +13,10 @@ export async function execute(_client: Client, interaction: CommandInteraction):
     await interaction.reply({
       content: `**Commands**\n
             \`/about\` - Learn more about the bot
+            \`/changelog\` - See the latest changes to the bot
             \`/invite\` - Invite me to your server!
             \`/quote\` - Get a random quote
+            \`/suggestion\` - Suggest a quote for review
             \`/setup channel\` - Set the channel for quotes (admin only)
             \`/setup schedule\` - Customize quote delivery schedule (premium)
             \`/admin\` - Admin commands (selected users only)

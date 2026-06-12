@@ -183,11 +183,12 @@ Tests use **bun:test** + **Sinon**, configured in `bunfig.toml`. Test files live
 
 - `tests/helpers.ts` — Shared mock factories (mockLogger, mockDb, mockDbChain, mockInteraction, mockClient, mockEnv, etc.)
 - `tests/utils/timezones.test.ts` — Timezone utilities (ALL_TIMEZONES, isValidTimezone, filterTimezones)
-- `tests/utils/scheduleEvaluator.test.ts` — Schedule evaluator (getCurrentTimeInTimezone, isGuildDueForMotivation)
-- `tests/utils/cronParser.test.ts` — Cron parser utilities (cronToText, isValidCron, getCronDetails)
-- `tests/utils/trimArray.test.ts` — Array trimming utility
+- `tests/utils/scheduleEvaluator.test.ts` — Schedule evaluator (getCurrentTimeInTimezone, isGuildDueForMotivation, catch-up window)
 - `tests/utils/premium.test.ts` — Premium utilities (isPremiumEnabled, getPremiumSkuId, hasEntitlement)
 - `tests/utils/permissions.test.ts` — Permission checks (isUserPermitted)
+- `tests/utils/ownerGuard.test.ts` — Owner gate (requireOwner, requireApplication)
+- `tests/utils/entitlementHelpers.test.ts` — Entitlement helpers (logEntitlementEvent, updateGuildPremiumStatus)
+- `tests/utils/suggestionHelpers.test.ts` — Suggestion helpers (fetchPendingSuggestion)
 - `tests/utils/guildDatabase.test.ts` — Guild database operations (pruneGuilds, ensureGuildExists, guildExists)
 - `tests/events/guildCreate.test.ts` — Guild join event handler
 - `tests/events/guildDelete.test.ts` — Guild leave event handler
@@ -195,6 +196,7 @@ Tests use **bun:test** + **Sinon**, configured in `bunfig.toml`. Test files live
 - `tests/events/entitlementDelete.test.ts` — Entitlement deleted event
 - `tests/events/entitlementUpdate.test.ts` — Entitlement updated event (cancellation/renewal)
 - `tests/events/interactionCreate.test.ts` — Command routing and error handling
+- `tests/worker/index.test.ts` — Worker startup (job registration, shard-0 scheduler gating)
 - `tests/worker/sendMotivation.test.ts` — Motivation job (schedule evaluation, embed sending, error isolation)
 - `tests/worker/setActivity.test.ts` — Activity rotation job
 - `tests/api/health.test.ts` — Health endpoint (supertest)

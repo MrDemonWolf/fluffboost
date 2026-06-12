@@ -54,7 +54,7 @@ describe("setActivity", () => {
     }
   });
 
-  it("should handle database fetch errors gracefully", async () => {
+  it("should log and rethrow database fetch errors so the job fails", async () => {
     const logger = mockLogger();
     const db = mockDb();
     const env = mockEnv();
@@ -63,7 +63,9 @@ describe("setActivity", () => {
     db.select.returns(chain);
 
     const client = mockClient();
-    await setActivityCore(client as never, { db, env, logger } as never);
+    await expect(
+      setActivityCore(client as never, { db, env, logger } as never)
+    ).rejects.toThrow("DB error");
 
     expect(logger.error.calledOnce).toBe(true);
   });

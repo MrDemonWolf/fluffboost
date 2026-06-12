@@ -10,6 +10,7 @@ import { guilds } from "../../database/schema.js";
 import type { MotivationFrequency } from "../../database/schema.js";
 import { guildExists } from "../../utils/guildDatabase.js";
 import { buildPremiumUpsell, hasEntitlement, isPremiumEnabled } from "../../utils/premium.js";
+import { parseHourMinute } from "../../utils/scheduleEvaluator.js";
 import { isValidTimezone, filterTimezones } from "../../utils/timezones.js";
 import { buildBrandedEmbed } from "../../utils/embedHelpers.js";
 
@@ -56,8 +57,7 @@ export default async function schedule(_client: Client, interaction: ChatInputCo
     const timezone = options.getString("timezone") ?? "America/Chicago";
     const day = options.getInteger("day");
 
-    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
-    if (!timeRegex.test(time)) {
+    if (parseHourMinute(time) === null) {
       await interaction.reply({
         content: "Invalid time format. Please use HH:mm format (e.g., `09:00`, `14:30`).",
         flags: MessageFlags.Ephemeral,

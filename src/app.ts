@@ -1,12 +1,9 @@
 import { ShardingManager } from "discord.js";
-import { config } from "dotenv";
 import { queryClient } from "./database/index.js";
 import api from "./api/index.js";
 import redis from "./redis/index.js";
 import env from "./utils/env.js";
 import logger from "./utils/logger.js";
-
-config();
 
 let redisReady = false;
 
@@ -60,7 +57,10 @@ manager.on("shardCreate", (shard) => {
   }
 });
 
-void manager.spawn();
+manager.spawn().catch((err) => {
+  logger.error("App", "Failed to spawn shards", err);
+  process.exit(1);
+});
 
 let shuttingDown = false;
 
@@ -76,7 +76,9 @@ async function shutdown(signal: string): Promise<void> {
   });
   logger.info("App", "HTTP server closed");
 
-  // Tell every shard to log out cleanly.
+  // Stop respawning before killing so a crashed shard doesn't re-spawn
+  // mid-teardown, then send SIGTERM to each shard.
+  manager.respawn = false;
   try {
     await Promise.all(manager.shards.map((s) => s.kill()));
     logger.info("App", "Shards terminated");
@@ -92,7 +94,7 @@ async function shutdown(signal: string): Promise<void> {
   }
 
   try {
-    redis.disconnect();
+    await redis.quit().catch(() => redis.disconnect());
     logger.info("App", "Redis disconnected");
   } catch (err) {
     logger.warn("App", "Error disconnecting Redis", { error: err });

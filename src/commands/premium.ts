@@ -4,7 +4,7 @@ import type { Client, CommandInteraction } from "discord.js";
 
 import { withCommandLogging } from "../utils/commandErrors.js";
 import { buildPremiumUpsell, hasEntitlement, isPremiumEnabled } from "../utils/premium.js";
-import { buildBrandedEmbed } from "../utils/embedHelpers.js";
+import { buildBrandedEmbed, SUCCESS_COLOR } from "../utils/embedHelpers.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("premium")
@@ -22,7 +22,7 @@ export async function execute(_client: Client, interaction: CommandInteraction):
 
     if (hasEntitlement(interaction)) {
       const embed = buildBrandedEmbed({
-        color: 0x57f287,
+        color: SUCCESS_COLOR,
         title: "Premium Active",
         description: "You have an active premium subscription! Thank you for supporting FluffBoost.",
         fields: [{ name: "Status", value: "Active", inline: true }],
