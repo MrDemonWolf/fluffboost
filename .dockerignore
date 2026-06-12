@@ -1,5 +1,6 @@
 node_modules
 dist
+coverage
 .git
 .github
 .vscode
@@ -7,5 +8,8 @@ dist
 .env
 .env.*
 *.md
+*.log
 tests
 eslint.config.js
+Dockerfile
+docker-compose.yml

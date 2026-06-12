@@ -9,12 +9,6 @@ export async function pruneGuilds(client: Client) {
   try {
     const guildsInDb = await db.select().from(guilds).orderBy(asc(guilds.guildId));
 
-    const guildsInCache = client.guilds.cache.map((guild) => guild.id);
-
-    /**
-     * Double check if there are guilds in the database and cache. If not, return early.
-     * This is to prevent issues if cache is empty or database is empty.
-     */
     if (guildsInDb.length === 0) {
       logger.info(
         "Discord Event Logger",
@@ -23,15 +17,34 @@ export async function pruneGuilds(client: Client) {
       return;
     }
 
-    if (guildsInCache.length === 0) {
-      logger.info(
-        "Discord Event Logger",
-        "No guilds found in the cache for cleanup"
-      );
-      return;
-    }
+    /**
+     * Note: an empty guild cache is NOT an early-return — by the time ready
+     * fires the cache is authoritative for this shard, and a shard with zero
+     * guilds must still be able to prune its stale rows.
+     */
+    /**
+     * Under ShardingManager each process only caches its own shard's guilds,
+     * so "not in cache" may only be evaluated for guilds routed to this shard
+     * — otherwise every shard deletes every other shard's rows. Discord routes
+     * a guild to shard (guildId >> 22) % shardCount.
+     */
+    const shardIds = client.shard?.ids ?? null;
+    const shardCount = client.shard?.count ?? 1;
+    const belongsToThisShard = (guildId: string): boolean => {
+      if (shardIds === null) {
+        return true;
+      }
+      try {
+        return shardIds.includes(Number(BigInt(guildId) >> 22n) % shardCount);
+      } catch {
+        // Malformed (non-numeric) guildId row — leave it alone.
+        return false;
+      }
+    };
+
     const guildsToRemove = guildsInDb.filter(
-      (guild: { guildId: string }) => client.guilds.cache.get(guild.guildId) === undefined
+      (guild: { guildId: string }) =>
+        belongsToThisShard(guild.guildId) && client.guilds.cache.get(guild.guildId) === undefined
     );
 
     if (guildsToRemove.length === 0) {

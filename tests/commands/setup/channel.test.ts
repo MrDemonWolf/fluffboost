@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
+import { MessageFlags } from "discord.js";
 import sinon from "sinon";
 import { mockLogger, mockDb, mockDbChain, mockClient, mockInteraction } from "../../helpers.js";
 
@@ -24,13 +25,16 @@ describe("setup channel command", () => {
     return { handler: mod.default, logger, db };
   }
 
-  it("should return early when no guildId", async () => {
+  it("should reply ephemerally when no guildId", async () => {
     const { handler } = await loadModule();
     const interaction = mockInteraction({ guildId: null });
 
     await handler(mockClient() as never, interaction as never);
 
-    expect((interaction.reply as sinon.SinonStub).called).toBe(false);
+    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
+    const arg = (interaction.reply as sinon.SinonStub).firstCall.args[0];
+    expect(arg.content).toContain("only be used in a server");
+    expect(arg.flags).toBe(MessageFlags.Ephemeral);
   });
 
   it("should update guild with channel and reply", async () => {
