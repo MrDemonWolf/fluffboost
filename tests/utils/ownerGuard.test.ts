@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, mock } from "bun:test";
+import { MessageFlags } from "discord.js";
 import sinon from "sinon";
 import { mockEnv, mockLogger, mockInteraction, mockClient } from "../helpers.js";
 
@@ -37,6 +38,7 @@ describe("ownerGuard", () => {
       expect(logger.commands.unauthorized.calledOnce).toBe(true);
       const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
       expect(replyArgs.content).toContain("Only the bot owner");
+      expect(replyArgs.flags).toBe(MessageFlags.Ephemeral);
     });
   });
 
@@ -60,6 +62,7 @@ describe("ownerGuard", () => {
       expect(result).toBeNull();
       const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
       expect(replyArgs.content).toContain("not ready");
+      expect(replyArgs.flags).toBe(MessageFlags.Ephemeral);
     });
   });
 });

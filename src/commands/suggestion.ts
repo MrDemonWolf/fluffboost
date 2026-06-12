@@ -9,6 +9,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "../database/index.js";
 import { guilds, suggestionQuotes } from "../database/schema.js";
+import logger from "../utils/logger.js";
 import { sendToMainChannel } from "../utils/mainChannel.js";
 import { withCommandLogging } from "../utils/commandErrors.js";
 import { buildBrandedEmbed } from "../utils/embedHelpers.js";
@@ -115,7 +116,15 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
       iconURL: interaction.user.displayAvatarURL(),
     });
 
-    await sendToMainChannel(client, { embeds: [embed] });
+    // Best-effort: the suggestion is saved and the user was told so.
+    try {
+      await sendToMainChannel(client, { embeds: [embed] });
+    } catch (err) {
+      logger.warn("Discord - Command", "Failed to announce suggestion to main channel", {
+        suggestionId: newQuote.id,
+        error: err,
+      });
+    }
   });
 }
 

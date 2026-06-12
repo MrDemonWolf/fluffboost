@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
+import { MessageFlags } from "discord.js";
 import sinon from "sinon";
 import { mockLogger, mockDb, mockDbChain, mockClient, mockInteraction } from "../../helpers.js";
 
@@ -33,6 +34,7 @@ describe("setup channel command", () => {
     expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
     const arg = (interaction.reply as sinon.SinonStub).firstCall.args[0];
     expect(arg.content).toContain("only be used in a server");
+    expect(arg.flags).toBe(MessageFlags.Ephemeral);
   });
 
   it("should update guild with channel and reply", async () => {

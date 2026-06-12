@@ -127,7 +127,10 @@ client.once(Events.ClientReady, () => {
     });
 });
 
-client.login(env.DISCORD_APPLICATION_BOT_TOKEN);
+client.login(env.DISCORD_APPLICATION_BOT_TOKEN).catch((err) => {
+  logger.error("Discord", "Failed to log in", err);
+  process.exit(1);
+});
 
 /**
  * Graceful shutdown. The ShardingManager kills shards with SIGTERM on

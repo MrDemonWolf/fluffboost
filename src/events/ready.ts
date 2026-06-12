@@ -46,9 +46,11 @@ export async function readyEvent(client: Client) {
     }
 
     /**
-     * Apply the bot's activity status on first run then the worker will handle it every configured interval.
+     * Apply this shard's initial activity (local-only: sibling shards may not
+     * be ready yet, and each shard runs this for itself). The worker's
+     * set-activity ticks handle the cross-shard rotation afterwards.
      */
-    await setActivity(client);
+    await setActivity(client, { scope: "local" });
   } catch (err) {
     logger.error("Discord - Event (Ready)", "Error during ready event", err);
   }

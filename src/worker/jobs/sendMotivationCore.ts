@@ -1,6 +1,3 @@
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc.js";
-import timezone from "dayjs/plugin/timezone.js";
 import type { Client } from "discord.js";
 import { and, eq, isNotNull, or, lt, isNull } from "drizzle-orm";
 
@@ -9,16 +6,16 @@ import { and, eq, isNotNull, or, lt, isNull } from "drizzle-orm";
 import type { db } from "../../database/index.js";
 import { guilds } from "../../database/schema.js";
 import type { Guild } from "../../database/schema.js";
-import type { isGuildDueForMotivation } from "../../utils/scheduleEvaluator.js";
+import type {
+  isGuildDueForMotivation,
+  mostRecentScheduledOccurrence,
+} from "../../utils/scheduleEvaluator.js";
 import type {
   buildMotivationEmbed,
   getRandomMotivationQuote,
   resolveQuoteAuthor,
 } from "./sendMotivationDeps.js";
 import type logger from "../../utils/logger.js";
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
 
 /**
  * Injected dependencies, mirroring setActivityCore: tests pass stubs directly
@@ -29,40 +26,32 @@ export interface SendMotivationDeps {
   db: typeof db;
   logger: typeof logger;
   isGuildDueForMotivation: typeof isGuildDueForMotivation;
+  mostRecentScheduledOccurrence: typeof mostRecentScheduledOccurrence;
   getRandomMotivationQuote: typeof getRandomMotivationQuote;
   resolveQuoteAuthor: typeof resolveQuoteAuthor;
   buildMotivationEmbed: typeof buildMotivationEmbed;
 }
 
 /**
- * Compute the start of the current delivery period in the guild's timezone.
- * Returns a UTC `Date` suitable for comparing against `lastMotivationSentAt`.
+ * Atomically claim a guild for this scheduled occurrence. Anchored to the
+ * same occurrence the evaluator used for due-ness, so a delayed send that
+ * crosses a midnight/week/month boundary still claims (and dedupes) against
+ * the slot it is actually delivering. Returns true if this worker won the
+ * race, false if another worker (or a previous tick) already delivered it.
  */
-function periodStart(guild: Guild): Date {
-  const now = dayjs().tz(guild.timezone);
-  switch (guild.motivationFrequency) {
-    case "Daily":
-      return now.startOf("day").utc().toDate();
-    case "Weekly":
-      return now.startOf("week").utc().toDate();
-    case "Monthly":
-      return now.startOf("month").utc().toDate();
-  }
-}
-
-/**
- * Atomically claim a guild for delivery this period. Returns true if this
- * worker won the race, false if another worker (or a previous job tick)
- * already updated the row.
- */
-async function claimGuild(_db: SendMotivationDeps["db"], guild: Guild, claimedAt: Date): Promise<boolean> {
+async function claimGuild(
+  _db: SendMotivationDeps["db"],
+  guild: Guild,
+  claimedAt: Date,
+  occurrence: Date
+): Promise<boolean> {
   const claimed = await _db
     .update(guilds)
     .set({ lastMotivationSentAt: claimedAt })
     .where(
       and(
         eq(guilds.id, guild.id),
-        or(isNull(guilds.lastMotivationSentAt), lt(guilds.lastMotivationSentAt, periodStart(guild)))
+        or(isNull(guilds.lastMotivationSentAt), lt(guilds.lastMotivationSentAt, occurrence))
       )
     )
     .returning({ id: guilds.id });
@@ -115,9 +104,14 @@ export async function sendMotivationCore(client: Client, deps: SendMotivationDep
         return "skipped";
       }
 
+      const occurrence = deps.mostRecentScheduledOccurrence(g);
+      if (!occurrence) {
+        return "skipped";
+      }
+
       // Atomic claim: only the worker that flips lastMotivationSentAt wins.
       const claimedAt = new Date();
-      const won = await claimGuild(_db, g, claimedAt);
+      const won = await claimGuild(_db, g, claimedAt, occurrence);
       if (!won) {
         return "raced";
       }

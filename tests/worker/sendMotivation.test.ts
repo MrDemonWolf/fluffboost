@@ -19,6 +19,9 @@ describe("sendMotivation", () => {
     const logger = (overrides.logger as ReturnType<typeof mockLogger>) ?? mockLogger();
     const isGuildDueForMotivation =
       (overrides.isGuildDueForMotivation as sinon.SinonStub) ?? sinon.stub().returns(true);
+    const mostRecentScheduledOccurrence =
+      (overrides.mostRecentScheduledOccurrence as sinon.SinonStub) ??
+      sinon.stub().returns(new Date(Date.now() - 60_000));
     const getRandomMotivationQuote =
       (overrides.getRandomMotivationQuote as sinon.SinonStub) ??
       sinon.stub().resolves({ id: "q1", quote: "Stay strong", author: "Author", addedBy: "u1", createdAt: new Date() });
@@ -31,6 +34,7 @@ describe("sendMotivation", () => {
       db,
       logger,
       isGuildDueForMotivation,
+      mostRecentScheduledOccurrence,
       getRandomMotivationQuote,
       resolveQuoteAuthor,
       buildMotivationEmbed,

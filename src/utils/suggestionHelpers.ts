@@ -52,8 +52,9 @@ export interface SuggestionReviewNotice {
 
 /**
  * Post the review-result embed to the main channel and DM the submitter.
- * Shared by approve/reject. DM failures are logged, never thrown — closed
- * DMs must not fail the command.
+ * Shared by approve/reject. Entirely best-effort: it runs after the DB write
+ * and the ephemeral reply, so a notification failure must never reject the
+ * command path and rewrite an already-successful outcome.
  */
 export async function notifySuggestionReviewed(
   client: Client,
@@ -81,7 +82,14 @@ export async function notifySuggestionReviewed(
     iconURL: reviewer.displayAvatarURL(),
   });
 
-  await sendToMainChannel(client, { embeds: [embed] });
+  try {
+    await sendToMainChannel(client, { embeds: [embed] });
+  } catch (err) {
+    logger.warn("Discord - Command", `Failed to announce ${status.toLowerCase()} suggestion to main channel`, {
+      suggestionId,
+      error: err,
+    });
+  }
 
   try {
     const submitter = await client.users.fetch(suggestion.addedBy);

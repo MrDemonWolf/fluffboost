@@ -51,79 +51,83 @@ export function getCurrentTimeInTimezone(tz: string) {
  * the repeatable slot); an exact-minute match would silently drop that
  * period's send for every affected guild. The window lets late ticks catch up
  * without re-delivering long-stale slots. lastMotivationSentAt still dedupes
- * within the period, so a late send happens at most once.
+ * against the occurrence, so a late send happens at most once.
  */
 export const CATCH_UP_WINDOW_MS = 6 * 60 * 60 * 1000;
 
 /**
- * Determines if a guild is due to receive a motivation quote right now.
+ * Resolve the most recent scheduled occurrence at or before now in the
+ * guild's timezone. This single anchor drives the catch-up window, the
+ * lastMotivationSentAt dedupe, AND the worker's atomic claim — anchoring all
+ * three to the same instant is what keeps delayed sends correct across
+ * midnight/week/month boundaries (e.g. a daily 23:59 slot evaluated at 00:03
+ * must resolve to *yesterday's* 23:59, not today's).
  *
- * Computes the current period's scheduled occurrence in the guild's timezone
- * and treats the guild as due when that occurrence has passed (within
- * CATCH_UP_WINDOW_MS) and no quote was sent this period yet
- * (via lastMotivationSentAt).
+ * Returns null for malformed times or missing day configuration.
  */
-export function isGuildDueForMotivation(guild: Pick<Guild, keyof GuildSchedule>): boolean {
-  const { motivationFrequency, motivationTime, motivationDay, timezone: tz, lastMotivationSentAt } = guild;
-
-  const parsed = parseHourMinute(motivationTime);
+export function mostRecentScheduledOccurrence(
+  guild: Pick<Guild, "motivationFrequency" | "motivationTime" | "motivationDay" | "timezone">
+): Date | null {
+  const parsed = parseHourMinute(guild.motivationTime);
   if (!parsed) {
-    return false;
+    return null;
   }
 
-  const now = dayjs().tz(tz);
+  const now = dayjs().tz(guild.timezone);
   // Note: inside a DST spring-forward gap dayjs shifts the nonexistent local
   // time forward, so such schedules still fire (slightly later) that day.
-  let scheduled = now.hour(parsed.hour).minute(parsed.minute).second(0).millisecond(0);
+  let occurrence = now.hour(parsed.hour).minute(parsed.minute).second(0).millisecond(0);
 
-  switch (motivationFrequency) {
+  switch (guild.motivationFrequency) {
     case "Daily":
-      // No day constraint for daily
+      if (occurrence.isAfter(now)) {
+        occurrence = occurrence.subtract(1, "day");
+      }
       break;
     case "Weekly":
-      if (motivationDay === null) {
-        return false;
+      if (guild.motivationDay === null) {
+        return null;
       }
-      scheduled = scheduled.day(motivationDay); // within current Sunday-start week
+      occurrence = occurrence.day(guild.motivationDay); // within current Sunday-start week
+      if (occurrence.isAfter(now)) {
+        occurrence = occurrence.subtract(7, "day");
+      }
       break;
     case "Monthly":
-      if (motivationDay === null) {
-        return false;
+      if (guild.motivationDay === null) {
+        return null;
       }
-      scheduled = scheduled.date(motivationDay);
+      occurrence = occurrence.date(guild.motivationDay);
+      if (occurrence.isAfter(now)) {
+        // motivationDay is constrained to 1-28, so it exists in every month.
+        occurrence = occurrence.subtract(1, "month").date(guild.motivationDay);
+      }
       break;
   }
 
-  const sinceScheduled = now.valueOf() - scheduled.valueOf();
-  if (sinceScheduled < 0 || sinceScheduled > CATCH_UP_WINDOW_MS) {
+  return occurrence.toDate();
+}
+
+/**
+ * Determines if a guild is due to receive a motivation quote right now: the
+ * most recent scheduled occurrence is within CATCH_UP_WINDOW_MS, and nothing
+ * has been sent at or after that occurrence yet.
+ */
+export function isGuildDueForMotivation(guild: Pick<Guild, keyof GuildSchedule>): boolean {
+  const occurrence = mostRecentScheduledOccurrence(guild);
+  if (!occurrence) {
     return false;
   }
 
-  // Check if already sent during this period
-  if (lastMotivationSentAt) {
-    const lastSent = dayjs(lastMotivationSentAt).tz(tz);
-    const now = dayjs().tz(tz);
+  const sinceScheduled = dayjs().valueOf() - occurrence.getTime();
+  if (sinceScheduled > CATCH_UP_WINDOW_MS) {
+    return false;
+  }
 
-    switch (motivationFrequency) {
-      case "Daily":
-        // Already sent today in guild's timezone
-        if (lastSent.isSame(now, "day")) {
-          return false;
-        }
-        break;
-      case "Weekly":
-        // Already sent this week (locale-aware, Sunday-start week)
-        if (lastSent.isSame(now, "week")) {
-          return false;
-        }
-        break;
-      case "Monthly":
-        // Already sent this month
-        if (lastSent.isSame(now, "month")) {
-          return false;
-        }
-        break;
-    }
+  // Already delivered for this occurrence (sends always stamp at/after it).
+  const { lastMotivationSentAt } = guild;
+  if (lastMotivationSentAt && lastMotivationSentAt.getTime() >= occurrence.getTime()) {
+    return false;
   }
 
   return true;

@@ -19,18 +19,24 @@ export interface SetActivityDeps {
   logger: typeof logger;
 }
 
-/**
- * Apply a presence on every shard. Presence is per-shard gateway state and
- * each queue tick is consumed by a single shard's worker, so a plain
- * client.user.setActivity() would leave every other shard's status stale.
- */
+export interface SetActivityOptions {
+  /**
+   * "all" (default) fans the presence out to every shard via broadcastEval —
+   * presence is per-shard gateway state and each queue tick is consumed by a
+   * single shard's worker. "local" only touches this shard's gateway; used at
+   * shard ready, when sibling shards may not be spawned yet.
+   */
+  scope?: "all" | "local";
+}
+
 async function applyActivity(
   client: Client,
   name: string,
   type: ActivityType,
-  url: string | undefined
+  url: string | undefined,
+  scope: "all" | "local"
 ): Promise<void> {
-  if (client.shard) {
+  if (client.shard && scope === "all") {
     await client.shard.broadcastEval(
       (c, ctx) => {
         c.user?.setActivity(ctx.name, { type: ctx.type, url: ctx.url ?? undefined });
@@ -44,7 +50,8 @@ async function applyActivity(
 
 export async function setActivityCore(
   client: Client,
-  { db: _db, env: _env, logger: _logger }: SetActivityDeps
+  { db: _db, env: _env, logger: _logger }: SetActivityDeps,
+  { scope = "all" }: SetActivityOptions = {}
 ): Promise<boolean> {
   try {
     const defaultActivity = _env.DISCORD_DEFAULT_STATUS;
@@ -64,7 +71,7 @@ export async function setActivityCore(
     if (activities.length === 0) {
       _logger.warn("Worker", "No custom discord activity found, using default activity");
       const safeActivityType = getActivityType(defaultActivityType);
-      await applyActivity(client, defaultActivity, safeActivityType, defaultActivityUrl);
+      await applyActivity(client, defaultActivity, safeActivityType, defaultActivityUrl, scope);
       _logger.success("Worker", "Activity has been set", {
         activity: defaultActivity,
         type: safeActivityType,
@@ -88,7 +95,7 @@ export async function setActivityCore(
     }
 
     const safeActivityType = getActivityType(activity.type);
-    await applyActivity(client, activity.activity, safeActivityType, activity.url ?? undefined);
+    await applyActivity(client, activity.activity, safeActivityType, activity.url ?? undefined, scope);
 
     _logger.success("Worker", "Activity has been set", {
       activity: activity.activity,

@@ -9,12 +9,6 @@ export async function pruneGuilds(client: Client) {
   try {
     const guildsInDb = await db.select().from(guilds).orderBy(asc(guilds.guildId));
 
-    const guildsInCache = client.guilds.cache.map((guild) => guild.id);
-
-    /**
-     * Double check if there are guilds in the database and cache. If not, return early.
-     * This is to prevent issues if cache is empty or database is empty.
-     */
     if (guildsInDb.length === 0) {
       logger.info(
         "Discord Event Logger",
@@ -23,14 +17,11 @@ export async function pruneGuilds(client: Client) {
       return;
     }
 
-    if (guildsInCache.length === 0) {
-      logger.info(
-        "Discord Event Logger",
-        "No guilds found in the cache for cleanup"
-      );
-      return;
-    }
-
+    /**
+     * Note: an empty guild cache is NOT an early-return — by the time ready
+     * fires the cache is authoritative for this shard, and a shard with zero
+     * guilds must still be able to prune its stale rows.
+     */
     /**
      * Under ShardingManager each process only caches its own shard's guilds,
      * so "not in cache" may only be evaluated for guilds routed to this shard
