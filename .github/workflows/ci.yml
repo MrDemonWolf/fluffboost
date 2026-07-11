@@ -39,7 +39,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Run tests with coverage
-        run: bun test:coverage
+        run: bun run test:coverage
         env:
           # Values must pass the Zod env schema (snowflake regex etc.) in case
           # a test transitively loads the real src/utils/env.ts.
@@ -62,7 +62,8 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: coverage-report
-          path: coverage/
+          path: apps/discord/coverage/
+          if-no-files-found: ignore
           retention-days: 14
 
   security:
@@ -112,6 +113,7 @@ jobs:
         uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5
         with:
           context: .
+          file: apps/discord/Dockerfile
           push: false
           tags: fluffboost:test
           cache-from: type=gha
