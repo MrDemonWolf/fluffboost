@@ -9,9 +9,9 @@ import { eq } from "drizzle-orm";
 
 import { db } from "../database/index.js";
 import { guilds, suggestionQuotes } from "../database/schema.js";
-import logger from "../utils/logger.js";
-import { sendToMainChannel } from "../utils/mainChannel.js";
+import { announceToMainChannel } from "../utils/mainChannel.js";
 import { withCommandLogging } from "../utils/commandErrors.js";
+import { requireGuildId } from "../utils/permissions.js";
 import { buildBrandedEmbed } from "../utils/embedHelpers.js";
 
 export const slashCommand = new SlashCommandBuilder()
@@ -53,11 +53,8 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
       });
       return;
     }
-    if (!interaction.guildId) {
-      await interaction.reply({
-        content: "This command can only be used in a server",
-        flags: MessageFlags.Ephemeral,
-      });
+    const guildId = await requireGuildId(interaction);
+    if (!guildId) {
       return;
     }
 
@@ -69,7 +66,7 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
     const [guild] = await db
       .select()
       .from(guilds)
-      .where(eq(guilds.guildId, interaction.guildId))
+      .where(eq(guilds.guildId, guildId))
       .limit(1);
 
     if (!guild) {
@@ -117,14 +114,12 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
     });
 
     // Best-effort: the suggestion is saved and the user was told so.
-    try {
-      await sendToMainChannel(client, { embeds: [embed] });
-    } catch (err) {
-      logger.warn("Discord - Command", "Failed to announce suggestion to main channel", {
-        suggestionId: newQuote.id,
-        error: err,
-      });
-    }
+    await announceToMainChannel(
+      client,
+      { embeds: [embed] },
+      "Failed to announce suggestion to main channel",
+      { suggestionId: newQuote.id }
+    );
   });
 }
 

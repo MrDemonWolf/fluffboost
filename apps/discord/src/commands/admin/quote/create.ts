@@ -5,8 +5,7 @@ import type { CommandInteractionOptionResolver } from "discord.js";
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
 import { motivationQuotes } from "../../../database/schema.js";
-import logger from "../../../utils/logger.js";
-import { sendToMainChannel } from "../../../utils/mainChannel.js";
+import { announceToMainChannel } from "../../../utils/mainChannel.js";
 import { withCommandLogging } from "../../../utils/commandErrors.js";
 import { buildBrandedEmbed } from "../../../utils/embedHelpers.js";
 
@@ -72,13 +71,11 @@ export default async function (
     });
 
     // Best-effort: the quote already exists and the user was told so.
-    try {
-      await sendToMainChannel(client, { embeds: [embed] });
-    } catch (err) {
-      logger.warn("Discord - Command", "Failed to announce new quote to main channel", {
-        quoteId: newQuote.id,
-        error: err,
-      });
-    }
+    await announceToMainChannel(
+      client,
+      { embeds: [embed] },
+      "Failed to announce new quote to main channel",
+      { quoteId: newQuote.id }
+    );
   });
 }

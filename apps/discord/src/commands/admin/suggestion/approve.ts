@@ -2,13 +2,15 @@ import { MessageFlags } from "discord.js";
 
 import type { Client, CommandInteraction, CommandInteractionOptionResolver } from "discord.js";
 
-import { and, eq } from "drizzle-orm";
-
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
-import { motivationQuotes, suggestionQuotes } from "../../../database/schema.js";
+import { motivationQuotes } from "../../../database/schema.js";
 import { withCommandLogging } from "../../../utils/commandErrors.js";
-import { fetchPendingSuggestion, notifySuggestionReviewed } from "../../../utils/suggestionHelpers.js";
+import {
+  fetchPendingSuggestion,
+  notifySuggestionReviewed,
+  markSuggestionReviewed,
+} from "../../../utils/suggestionHelpers.js";
 
 export default async function (
   client: Client,
@@ -28,17 +30,8 @@ export default async function (
     // and against an approve racing a reject (would overwrite Rejected status).
     let approved = false;
     await db.transaction(async (tx) => {
-      const [updated] = await tx
-        .update(suggestionQuotes)
-        .set({
-          status: "Approved",
-          reviewedBy: interaction.user.id,
-          reviewedAt: new Date(),
-        })
-        .where(and(eq(suggestionQuotes.id, suggestionId), eq(suggestionQuotes.status, "Pending")))
-        .returning({ id: suggestionQuotes.id });
-
-      if (!updated) {return;}
+      const claimed = await markSuggestionReviewed(tx, suggestionId, "Approved", interaction.user.id);
+      if (!claimed) {return;}
       approved = true;
 
       await tx.insert(motivationQuotes).values({

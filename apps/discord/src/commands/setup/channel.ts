@@ -9,6 +9,7 @@ import type {
 import { eq } from "drizzle-orm";
 
 import { withCommandLogging } from "../../utils/commandErrors.js";
+import { requireGuildId } from "../../utils/permissions.js";
 import { db } from "../../database/index.js";
 import { guilds } from "../../database/schema.js";
 import { guildExists } from "../../utils/guildDatabase.js";
@@ -18,11 +19,8 @@ export default async function (
   interaction: ChatInputCommandInteraction
 ): Promise<void> {
   await withCommandLogging("setup channel", interaction, async () => {
-    if (!interaction.guildId) {
-      await interaction.reply({
-        content: "This command can only be used in a server",
-        flags: MessageFlags.Ephemeral,
-      });
+    const guildId = await requireGuildId(interaction);
+    if (!guildId) {
       return;
     }
 
@@ -31,12 +29,12 @@ export default async function (
       true
     ) as TextChannel;
 
-    await guildExists(interaction.guildId);
+    await guildExists(guildId);
 
     await db
       .update(guilds)
       .set({ motivationChannelId: motivationChannel.id })
-      .where(eq(guilds.guildId, interaction.guildId));
+      .where(eq(guilds.guildId, guildId));
 
     await interaction.reply({
       content: `The motivation channel has been set to <#${motivationChannel.id}>`,

@@ -39,3 +39,20 @@ export async function isUserPermitted(interaction: CommandInteraction): Promise<
   }
   return true;
 }
+
+/**
+ * Guard for guild-only commands. Replies ephemerally and returns null when the
+ * interaction isn't in a server; otherwise returns the guild id.
+ */
+export async function requireGuildId(
+  interaction: CommandInteraction
+): Promise<string | null> {
+  if (!interaction.guildId) {
+    await interaction.reply({
+      content: "This command can only be used in a server",
+      flags: MessageFlags.Ephemeral,
+    });
+    return null;
+  }
+  return interaction.guildId;
+}

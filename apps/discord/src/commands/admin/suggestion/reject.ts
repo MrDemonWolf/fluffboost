@@ -2,13 +2,14 @@ import { MessageFlags } from "discord.js";
 
 import type { Client, CommandInteraction, CommandInteractionOptionResolver } from "discord.js";
 
-import { and, eq } from "drizzle-orm";
-
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
-import { suggestionQuotes } from "../../../database/schema.js";
 import { withCommandLogging } from "../../../utils/commandErrors.js";
-import { fetchPendingSuggestion, notifySuggestionReviewed } from "../../../utils/suggestionHelpers.js";
+import {
+  fetchPendingSuggestion,
+  notifySuggestionReviewed,
+  markSuggestionReviewed,
+} from "../../../utils/suggestionHelpers.js";
 
 export default async function (
   client: Client,
@@ -26,17 +27,9 @@ export default async function (
 
     // Atomic conditional UPDATE so two concurrent rejects can't both proceed
     // to post the embed + DM + reply.
-    const updated = await db
-      .update(suggestionQuotes)
-      .set({
-        status: "Rejected",
-        reviewedBy: interaction.user.id,
-        reviewedAt: new Date(),
-      })
-      .where(and(eq(suggestionQuotes.id, suggestionId), eq(suggestionQuotes.status, "Pending")))
-      .returning({ id: suggestionQuotes.id });
+    const claimed = await markSuggestionReviewed(db, suggestionId, "Rejected", interaction.user.id);
 
-    if (updated.length === 0) {
+    if (!claimed) {
       await interaction.reply({
         content: "This suggestion was just reviewed by someone else.",
         flags: MessageFlags.Ephemeral,

@@ -1,12 +1,12 @@
 import { MessageFlags } from "discord.js";
 import type { Client, CommandInteraction, User } from "discord.js";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { db } from "../database/index.js";
 import { suggestionQuotes } from "../database/schema.js";
 import type { SuggestionQuote } from "../database/schema.js";
 import { buildBrandedEmbed, SUCCESS_COLOR, DANGER_COLOR } from "./embedHelpers.js";
-import { sendToMainChannel } from "./mainChannel.js";
+import { announceToMainChannel } from "./mainChannel.js";
 import logger from "./logger.js";
 
 /**
@@ -82,14 +82,12 @@ export async function notifySuggestionReviewed(
     iconURL: reviewer.displayAvatarURL(),
   });
 
-  try {
-    await sendToMainChannel(client, { embeds: [embed] });
-  } catch (err) {
-    logger.warn("Discord - Command", `Failed to announce ${status.toLowerCase()} suggestion to main channel`, {
-      suggestionId,
-      error: err,
-    });
-  }
+  await announceToMainChannel(
+    client,
+    { embeds: [embed] },
+    `Failed to announce ${status.toLowerCase()} suggestion to main channel`,
+    { suggestionId }
+  );
 
   try {
     const submitter = await client.users.fetch(suggestion.addedBy);
@@ -116,4 +114,26 @@ export async function notifySuggestionReviewed(
       error: err,
     });
   }
+}
+
+/**
+ * Atomically flip a Pending suggestion to a reviewed state. The conditional
+ * WHERE (id AND status = 'Pending') guards against two admins reviewing the
+ * same suggestion concurrently. Returns whether this call actually claimed the
+ * row. Accepts `db` or a transaction, so approve can run it inside the same
+ * transaction that inserts the motivation quote.
+ */
+export async function markSuggestionReviewed(
+  executor: Pick<typeof db, "update">,
+  suggestionId: string,
+  status: "Approved" | "Rejected",
+  reviewerId: string
+): Promise<boolean> {
+  const updated = await executor
+    .update(suggestionQuotes)
+    .set({ status, reviewedBy: reviewerId, reviewedAt: new Date() })
+    .where(and(eq(suggestionQuotes.id, suggestionId), eq(suggestionQuotes.status, "Pending")))
+    .returning({ id: suggestionQuotes.id });
+
+  return updated.length > 0;
 }

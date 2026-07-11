@@ -7,8 +7,7 @@ import { eq } from "drizzle-orm";
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
 import { motivationQuotes } from "../../../database/schema.js";
-import logger from "../../../utils/logger.js";
-import { sendToMainChannel } from "../../../utils/mainChannel.js";
+import { announceToMainChannel } from "../../../utils/mainChannel.js";
 import { withCommandLogging } from "../../../utils/commandErrors.js";
 
 export default async function (
@@ -46,16 +45,11 @@ export default async function (
     });
 
     // Best-effort: the delete already succeeded and the user was told so.
-    try {
-      await sendToMainChannel(
-        client,
-        `Quote deleted by ${interaction.user.username} with id: ${quoteId}`
-      );
-    } catch (err) {
-      logger.warn("Discord - Command", "Failed to announce quote deletion to main channel", {
-        quoteId,
-        error: err,
-      });
-    }
+    await announceToMainChannel(
+      client,
+      `Quote deleted by ${interaction.user.username} with id: ${quoteId}`,
+      "Failed to announce quote deletion to main channel",
+      { quoteId }
+    );
   });
 }

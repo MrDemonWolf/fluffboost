@@ -25,3 +25,21 @@ export async function sendToMainChannel(
     });
   }
 }
+
+/**
+ * Best-effort announce to the main channel. Swallows any failure into a
+ * `logger.warn` — used after a command has already committed its DB write and
+ * replied to the user, so a channel-send failure must never fail the command.
+ */
+export async function announceToMainChannel(
+  client: Client,
+  content: { embeds: EmbedBuilder[] } | string,
+  warnMessage: string,
+  logContext?: Record<string, unknown>
+): Promise<void> {
+  try {
+    await sendToMainChannel(client, content);
+  } catch (err) {
+    logger.warn("Discord - Command", warnMessage, { ...logContext, error: err });
+  }
+}
