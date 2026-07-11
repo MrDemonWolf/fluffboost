@@ -97,8 +97,9 @@ const faqs = [
 /* ------------------------------------------------------------------ */
 
 export default function HomePage() {
+  // HomeLayout already provides the <main> landmark, so this is a plain wrapper.
   return (
-    <main className="flex-1">
+    <div className="flex-1">
       <Hero />
       <Ribbon />
       <Features />
@@ -108,7 +109,7 @@ export default function HomePage() {
       <Faq />
       <FinalCta />
       <SiteFooter />
-    </main>
+    </div>
   );
 }
 
@@ -129,7 +130,7 @@ function Hero() {
           </p>
 
           <h1
-            className="fb-rise mt-6 font-display text-[clamp(2.6rem,6vw,4.4rem)] font-semibold leading-[1.03] tracking-tight text-ink"
+            className="fb-rise mt-6 text-balance font-display text-[clamp(2.6rem,6vw,4.4rem)] font-semibold leading-[1.03] tracking-tight text-ink"
             style={{ ["--d" as string]: "80ms" }}
           >
             Your daily dose of{" "}
@@ -141,7 +142,7 @@ function Hero() {
           </h1>
 
           <p
-            className="fb-rise mt-6 max-w-xl text-lg leading-relaxed text-ink-soft"
+            className="fb-rise mt-6 max-w-xl text-pretty text-lg leading-relaxed text-ink-soft"
             style={{ ["--d" as string]: "160ms" }}
           >
             FluffBoost drops one warm, uplifting quote into your server every
@@ -397,7 +398,7 @@ function FinalCta() {
           <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-honey text-[#2b1e12]">
             <PawMark className="size-7" />
           </span>
-          <h2 className="mx-auto mt-6 max-w-2xl font-display text-[clamp(2rem,4vw,3rem)] font-semibold leading-tight text-ink">
+          <h2 className="mx-auto mt-6 max-w-2xl text-balance font-display text-[clamp(2rem,4vw,3rem)] font-semibold leading-tight text-ink">
             Give your server a little more warmth tomorrow morning.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-lg text-ink-soft">
@@ -448,11 +449,13 @@ function Section({
           <p className="font-mono text-sm font-semibold uppercase tracking-widest text-honey-ink">
             {eyebrow}
           </p>
-          <h2 className="mt-3 font-display text-[clamp(1.8rem,3.5vw,2.6rem)] font-semibold leading-tight text-ink">
+          <h2 className="mt-3 text-balance font-display text-[clamp(1.8rem,3.5vw,2.6rem)] font-semibold leading-tight text-ink">
             {title}
           </h2>
           {lede ? (
-            <p className="mt-3 text-lg leading-relaxed text-ink-soft">{lede}</p>
+            <p className="mt-3 text-pretty text-lg leading-relaxed text-ink-soft">
+              {lede}
+            </p>
           ) : null}
         </div>
         {children}
