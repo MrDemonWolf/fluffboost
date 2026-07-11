@@ -43,8 +43,8 @@
         "typescript": "^5.9.3",
       },
     },
-    "apps/web": {
-      "name": "@fluffboost/web",
+    "apps/docs": {
+      "name": "@fluffboost/docs",
       "version": "2.0.0",
       "dependencies": {
         "fumadocs-core": "^16.11.0",
@@ -187,7 +187,7 @@
 
     "@fluffboost/discord": ["@fluffboost/discord@workspace:apps/discord"],
 
-    "@fluffboost/web": ["@fluffboost/web@workspace:apps/web"],
+    "@fluffboost/docs": ["@fluffboost/docs@workspace:apps/docs"],
 
     "@fuma-translate/react": ["@fuma-translate/react@1.0.2", "", { "peerDependencies": { "@types/react": "*", "react": "^19.2.0", "react-dom": "^19.2.0" }, "optionalPeers": ["@types/react"] }, "sha512-uOiOtBx3nRXR8Nu1GzBf1tApgF1FErDBTHxRIAQeyQdyOoZbrNRN6H4kDCWObY4qyGeGbHydG0DHzgeUgFDMIw=="],
 

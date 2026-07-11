@@ -1,5 +1,5 @@
 // WCAG contrast check for the FluffBoost palette.
-// Run: bun apps/web/scripts/contrast-check.mjs
+// Run: bun apps/docs/scripts/contrast-check.mjs
 // AA needs >= 4.5 for normal text, >= 3.0 for large/bold text and UI.
 
 const L = {

@@ -2,7 +2,7 @@
 
 This release restructures the repository into a Bun-workspace + Turborepo
 monorepo. The Discord bot moved from the repo root into `apps/discord/`, and a
-new `apps/web/` holds the marketing site and documentation.
+new `apps/docs/` holds the marketing site and documentation.
 
 **The bot's runtime behavior is unchanged.** Only build paths moved. This guide
 covers the one production change you need to make.
@@ -61,7 +61,7 @@ docker compose up -d        # Postgres + Redis (compose stayed at the root)
 cp apps/discord/.env.example apps/discord/.env
 bun run db:push             # delegates to apps/discord
 bun run dev:discord         # the bot, with hot reload
-bun run dev:web             # the docs / marketing site
+bun run dev:docs            # the docs / marketing site
 ```
 
 Workspace-wide checks (`bun run test`, `bun run typecheck`, `bun run lint:check`)
@@ -79,7 +79,8 @@ against a copy of production first.
 
 ## The website
 
-`apps/web` is a static Next.js + Fumadocs site deployed to GitHub Pages by
-`.github/workflows/deploy-web.yml`. It's independent of the bot's deployment.
+`apps/docs` is a static Next.js + Fumadocs site deployed to GitHub Pages by
+`.github/workflows/deploy-docs.yml`. It's independent of the bot's deployment.
+(`apps/web` is reserved for a future web dashboard.)
 The site lives under `/fluffboost` on GitHub Pages (`NEXT_PUBLIC_BASE_PATH`);
 clear that variable if you move it to a custom domain.

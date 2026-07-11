@@ -16,7 +16,7 @@ WORKDIR /usr/src/app
 
 # ----------------------------------------------------------------------------
 # Pruner — isolate @fluffboost/discord + its deps from the monorepo so the
-# runtime image never pulls in apps/web (Next.js) dependencies.
+# runtime image never pulls in apps/docs (Next.js) dependencies.
 # ----------------------------------------------------------------------------
 FROM base AS pruner
 COPY . .

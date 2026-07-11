@@ -156,7 +156,7 @@ Run everything from the repository root — Bun resolves the whole workspace.
 Run these from the repository root; they fan out through Turborepo.
 
 - `bun run dev:discord` — Start the bot with hot reload
-- `bun run dev:web` — Start the marketing/docs site
+- `bun run dev:docs` — Start the marketing/docs site
 - `bun run lint` / `bun run lint:check` — ESLint (with / without fixes)
 - `bun run format` — Format code with Prettier
 - `bun run typecheck` — TypeScript type checking
@@ -194,9 +194,10 @@ fluffboost/
 │   │   ├── drizzle/          # Drizzle migration SQL files
 │   │   ├── Dockerfile        # Multi-stage build (turbo prune)
 │   │   └── docker-entrypoint.sh
-│   └── web/                  # Marketing site + docs (Next.js + Fumadocs)
-│       ├── app/              # Landing page + docs routes
-│       └── content/          # user/ (Guide) + developer/ docs (MDX)
+│   ├── docs/                 # Marketing site + docs (Next.js + Fumadocs)
+│   │   ├── app/              # Landing page + docs routes
+│   │   └── content/          # user/ (Guide) + developer/ docs (MDX)
+│   └── web/                  # (reserved) web dashboard — coming soon
 ├── docker-compose.yml        # Local PostgreSQL + Redis
 ├── turbo.json                # Turborepo pipeline
 └── package.json              # Bun workspace root
@@ -204,11 +205,11 @@ fluffboost/
 
 ## Documentation
 
-Full docs live in `apps/web` and publish to GitHub Pages, split by audience:
+Full docs live in `apps/docs` and publish to GitHub Pages, split by audience:
 
-- **Guide** (`apps/web/content/user/`) — for server owners: setup, scheduling,
+- **Guide** (`apps/docs/content/user/`) — for server owners: setup, scheduling,
   suggestions, premium, and a command reference.
-- **Developers** (`apps/web/content/developer/`) — self-hosting, configuration,
+- **Developers** (`apps/docs/content/developer/`) — self-hosting, configuration,
   database, deployment, testing, and contributing.
 
 Upgrading an existing deployment to this monorepo layout? See

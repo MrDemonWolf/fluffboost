@@ -1,5 +1,5 @@
 {
-  "name": "@fluffboost/web",
+  "name": "@fluffboost/docs",
   "version": "2.0.0",
   "private": true,
   "description": "FluffBoost marketing site and documentation (Next.js + Fumadocs).",

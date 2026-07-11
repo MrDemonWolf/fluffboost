@@ -1,6 +1,6 @@
-# UI/UX Review: FluffBoost site (apps/web)
+# UI/UX Review: FluffBoost site (apps/docs)
 
-**Reviewed:** 2026-07-10 · **Input:** live local build (`/`, `/docs`, `/docs/commands`, `/developers`, `/developers/deployment`) + source in `apps/web` · **Method:** NN/g heuristic evaluation + WCAG 2.1 checks, measured from rendered HTML/CSS.
+**Reviewed:** 2026-07-10 · **Input:** live local build (`/`, `/docs`, `/docs/commands`, `/developers`, `/developers/deployment`) + source in `apps/docs` · **Method:** NN/g heuristic evaluation + WCAG 2.1 checks, measured from rendered HTML/CSS.
 
 ## Executive summary
 
@@ -17,7 +17,7 @@
 
 #### 1. Duplicate `<main>` landmark on the landing page — FIXED
 - **What:** The page exposed two `<main>` landmarks — Fumadocs' `HomeLayout` renders `<main id="nd-home-layout">` and the page component nested a second `<main>`. Screen-reader users get an ambiguous "main" navigation target.
-- **Where:** `apps/web/app/(home)/page.tsx` (`HomePage`).
+- **Where:** `apps/docs/app/(home)/page.tsx` (`HomePage`).
 - **Guideline:** WCAG 2.1 SC 1.3.1 Info & Relationships / ARIA landmark practice — a page should expose exactly one `main` landmark.
 - **Evidence:** [W3C ARIA Authoring Practices — Landmark Regions](https://www.w3.org/WAI/ARIA/apg/practices/landmark-regions/) — there should be one and only one `main` landmark per page.
 - **Fix:**
@@ -27,7 +27,7 @@
 
 #### 2. Hero `<h1>` wrapped with an orphaned word — FIXED
 - **What:** At desktop widths the hero wrapped as "Your daily dose" / "of" / "furry motivation.", leaving "of" orphaned on its own line — a ragged, slightly awkward hero.
-- **Where:** `apps/web/app/(home)/page.tsx` hero `<h1>` and section `<h2>`.
+- **Where:** `apps/docs/app/(home)/page.tsx` hero `<h1>` and section `<h2>`.
 - **Guideline:** NN/g Typography & Visual Hierarchy — the primary headline is the strongest hierarchy signal and should read cleanly.
 - **Evidence:** [Typography Terms Cheat Sheet (nngroup.com)](https://www.nngroup.com/articles/typography-terms-ux/) — orphans/rivers hurt legibility of display text.
 - **Fix:**
@@ -37,7 +37,7 @@
 
 #### 3. Footer links are color-only at rest (underline on hover)
 - **What:** Footer links use the muted ink color and only underline on hover/focus. They still pass contrast and are grouped under labeled `<nav>` headings, but aren't underlined at rest.
-- **Where:** `apps/web/components/site-footer.tsx`.
+- **Where:** `apps/docs/components/site-footer.tsx`.
 - **Guideline:** NN/g — links should be visually distinguishable; underlining is the most unambiguous signal.
 - **Evidence:** [Guidelines for Visualizing Links (nngroup.com)](https://www.nngroup.com/articles/guidelines-for-visualizing-links/) — in dense body text underline links; in clearly-navigational regions (nav, footer) color grouping is acceptable.
 - **Fix (optional):** Leave as-is — footers are a recognized navigational region — or add a persistent underline if you want maximum affordance.

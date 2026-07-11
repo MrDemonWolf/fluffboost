@@ -11,7 +11,8 @@ FluffBoost is a Discord bot (Discord.js v14) that delivers daily motivational qu
 This is a **Bun-workspace + Turborepo monorepo**. Run all commands from the repository root.
 
 - `apps/discord/` — the Discord bot. **Every `src/…`, `tests/…`, and `drizzle/…` path in this document lives under `apps/discord/`** (e.g. `src/app.ts` → `apps/discord/src/app.ts`). The bot package is `@fluffboost/discord`.
-- `apps/web/` — the marketing site + docs (Next.js 16 + Fumadocs, static export → GitHub Pages). Docs are split into `content/user/` (Guide, for server owners) and `content/developer/`. Package `@fluffboost/web`.
+- `apps/docs/` — the marketing site + docs (Next.js 16 + Fumadocs, static export → GitHub Pages). Docs are split into `content/user/` (Guide, for server owners) and `content/developer/`. Package `@fluffboost/docs`.
+- `apps/web/` — **reserved** for a future web dashboard (not created yet). Add a `@fluffboost/web` package here when it's built.
 - Root `package.json` is the private workspace root; `turbo.json` defines the pipeline. Security `overrides` pins live at the root.
 
 ## Commands
@@ -19,7 +20,7 @@ This is a **Bun-workspace + Turborepo monorepo**. Run all commands from the repo
 ```bash
 # Development (run from the repo root)
 bun run dev:discord       # Bot with --watch (hot reload)
-bun run dev:web           # Marketing/docs site
+bun run dev:docs          # Marketing/docs site
 
 # Linting & formatting (turbo, workspace-wide)
 bun run lint              # ESLint with auto-fix
@@ -115,15 +116,15 @@ The bot is deployed via **Dokploy** as a Docker image. Since Bun runs TypeScript
 
 ### Key files
 
-- `apps/discord/Dockerfile` — Multi-stage build: base → **pruner** (`turbo prune @fluffboost/discord --docker`, so the image excludes `apps/web`) → installer (frozen prod install) → slim runtime. Runtime `WORKDIR` is `apps/discord`, so the entrypoint's relative paths resolve unchanged.
+- `apps/discord/Dockerfile` — Multi-stage build: base → **pruner** (`turbo prune @fluffboost/discord --docker`, so the image excludes `apps/docs`) → installer (frozen prod install) → slim runtime. Runtime `WORKDIR` is `apps/discord`, so the entrypoint's relative paths resolve unchanged.
 - `apps/discord/docker-entrypoint.sh` — Runs `bun run src/database/migrate.ts` (programmatic Drizzle migration, no `drizzle-kit` needed) then starts the app with `bun run src/app.ts`. Set `SKIP_MIGRATIONS=true` to skip.
 - `.dockerignore` (repo root) — build context is the root, so this is the one that applies.
 
 **Migrations caveat:** `migrate.ts` skips when `drizzle/meta/_journal.json` is absent; the repo ships the SQL without that journal, so startup migrations are currently a no-op and the schema is managed via `db:push`. Don't "fix" this against prod without generating the journal and testing on a DB copy first.
 
-### The website (apps/web)
+### The website (apps/docs)
 
-Static Next.js + Fumadocs, deployed to GitHub Pages by `.github/workflows/deploy-web.yml` (`bun run --filter=@fluffboost/web build` with `NEXT_PUBLIC_BASE_PATH=/fluffboost`). Independent of the bot deployment. Build with webpack (`next build --webpack`) — fumadocs-mdx's generated `.source` doesn't transform under Turbopack here. The `.source` dir and `next-env.d.ts` are generated (gitignored).
+Static Next.js + Fumadocs, deployed to GitHub Pages by `.github/workflows/deploy-docs.yml` (`bun run --filter=@fluffboost/docs build` with `NEXT_PUBLIC_BASE_PATH=/fluffboost`). Independent of the bot deployment. Build with webpack (`next build --webpack`) — fumadocs-mdx's generated `.source` doesn't transform under Turbopack here. The `.source` dir and `next-env.d.ts` are generated (gitignored).
 
 ## Git Branching
 

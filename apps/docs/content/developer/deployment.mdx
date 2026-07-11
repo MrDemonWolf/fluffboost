@@ -10,7 +10,7 @@ production dependencies.
 ## How it works
 
 - **`apps/discord/Dockerfile`** builds the image. It uses `turbo prune` so the
-  bot image only contains the bot and its dependencies, never `apps/web`.
+  bot image only contains the bot and its dependencies, never `apps/docs`.
 - **Build context is the repository root** (not `apps/discord`) — the Bun
   workspace lockfile lives at the root and Turborepo needs the whole graph to
   prune.
