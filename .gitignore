@@ -86,6 +86,10 @@ web_modules/
 # Turborepo
 .turbo
 
+# fumadocs-mdx generated output + Next env types
+.source/
+next-env.d.ts
+
 # Next.js build output
 .next
 out
