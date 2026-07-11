@@ -1,0 +1,96 @@
+---
+title: Deployment (Dokploy)
+description: How the bot is deployed, and how to migrate an existing deployment to the monorepo layout.
+---
+
+FluffBoost deploys as a **Docker image on Dokploy**. Because Bun runs TypeScript
+directly, there's no build step — the image just needs the bot's source and its
+production dependencies.
+
+## How it works
+
+- **`apps/discord/Dockerfile`** builds the image. It uses `turbo prune` so the
+  bot image only contains the bot and its dependencies, never `apps/web`.
+- **Build context is the repository root** (not `apps/discord`) — the Bun
+  workspace lockfile lives at the root and Turborepo needs the whole graph to
+  prune.
+- The container's entrypoint runs database migrations, then starts the bot with
+  `bun run src/app.ts`.
+- A **health check** hits `GET /api/health` on `PORT` (default `3000`).
+- All configuration is injected as environment variables — see
+  [Configuration](/developers/configuration).
+
+## Migrating an existing deployment
+
+<Callout type="warn">
+  This applies to deployments created **before** the monorepo move, when the
+  `Dockerfile` lived at the repository root. The bot's runtime behavior is
+  unchanged — only the build path moves.
+</Callout>
+
+The only thing that changed is **where the Dockerfile lives**. Update your
+Dokploy application:
+
+<Steps>
+
+<Step>
+
+### Keep the build context at the repo root
+
+Base directory / build context stays `.` (the repository root). Do **not** point
+it at `apps/discord` — the workspace lockfile is at the root.
+
+</Step>
+
+<Step>
+
+### Point the Dockerfile path at the app
+
+Change the Dockerfile path from `Dockerfile` to:
+
+```text
+apps/discord/Dockerfile
+```
+
+</Step>
+
+<Step>
+
+### Leave everything else as-is
+
+Environment variables, ports, and the health check path (`/api/health`) are
+unchanged. No new variables are required.
+
+</Step>
+
+<Step>
+
+### Redeploy and watch the logs
+
+Trigger a deploy. Confirm the bot boots, connects to Postgres and Redis, and the
+health check goes green.
+
+</Step>
+
+</Steps>
+
+### Local sanity check
+
+Before touching production, verify the image builds with the new path:
+
+```bash
+docker build -f apps/discord/Dockerfile -t fluffboost:test .
+```
+
+(Note the trailing `.` — the context is the repo root.)
+
+### Rollback
+
+If anything looks wrong, redeploy the previous commit. Nothing in this migration
+touches the database, the environment, or the health check, so a rollback is
+just a redeploy of the old image.
+
+## Environment files
+
+Local Docker Compose reads `apps/discord/.env`. Production does **not** use a
+`.env` file — inject the variables through Dokploy directly.

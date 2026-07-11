@@ -1,0 +1,13 @@
+{
+  "title": "Developers",
+  "description": "Run, configure, and contribute to FluffBoost.",
+  "pages": [
+    "index",
+    "self-hosting",
+    "configuration",
+    "database",
+    "deployment",
+    "testing",
+    "contributing"
+  ]
+}

@@ -1,0 +1,96 @@
+---
+title: Run it locally
+description: Get the FluffBoost bot running on your machine with Bun and Docker Compose.
+---
+
+## Prerequisites
+
+- **Bun** (the project runs TypeScript directly — no build step)
+- **PostgreSQL 16** and **Redis 7** (or just use the bundled Docker Compose)
+- A **Discord application** with a bot token
+
+## Setup
+
+<Steps>
+
+<Step>
+
+### Clone and install
+
+Install once at the workspace root — Bun resolves every app in the monorepo.
+
+```bash
+git clone https://github.com/MrDemonWolf/fluffboost.git
+cd fluffboost
+bun install
+```
+
+</Step>
+
+<Step>
+
+### Start local infrastructure
+
+```bash
+docker compose up -d
+```
+
+This brings up PostgreSQL and Redis on `localhost` with the defaults the bot
+expects.
+
+</Step>
+
+<Step>
+
+### Configure the bot
+
+```bash
+cp apps/discord/.env.example apps/discord/.env
+```
+
+Fill in your Discord credentials and IDs. See
+[Configuration](/developers/configuration) for every variable.
+
+</Step>
+
+<Step>
+
+### Sync the database schema
+
+```bash
+bun run db:push
+```
+
+</Step>
+
+<Step>
+
+### Run in watch mode
+
+```bash
+bun run dev:discord
+```
+
+</Step>
+
+</Steps>
+
+## Handy workspace scripts
+
+Run these from the repo root — they fan out through Turborepo:
+
+| Script                    | What it does                                  |
+| ------------------------- | --------------------------------------------- |
+| `bun run dev:discord`     | Bot with hot reload                           |
+| `bun run dev:web`         | This docs/marketing site                      |
+| `bun run test`            | Test suites across the workspace              |
+| `bun run typecheck`       | TypeScript checks                             |
+| `bun run lint:check`      | ESLint (no fixes)                             |
+| `bun run db:push`         | Push schema changes to the dev database       |
+| `bun run db:studio`       | Open Drizzle Studio                           |
+
+<Callout type="info">
+  The bot uses Discord's `ShardingManager`: `apps/discord/src/app.ts` is the
+  supervisor process that spawns shard processes running
+  `apps/discord/src/bot.ts`.
+</Callout>

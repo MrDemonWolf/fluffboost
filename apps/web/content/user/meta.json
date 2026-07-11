@@ -1,0 +1,13 @@
+{
+  "title": "Guide",
+  "description": "Using FluffBoost in your Discord server.",
+  "pages": [
+    "index",
+    "setup",
+    "scheduling",
+    "suggestions",
+    "premium",
+    "commands",
+    "faq"
+  ]
+}
