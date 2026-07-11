@@ -96,8 +96,10 @@ FluffBoost uses Discord slash commands grouped by role.
 | Job Queue        | BullMQ with Redis 7                      |
 | HTTP Server      | Express 5                                |
 | Containerization | Docker (multi-stage, Bun)                |
+| Monorepo         | Bun workspaces + Turborepo               |
+| Marketing & docs | Next.js 16 + Fumadocs (static → GitHub Pages) |
 | CI/CD            | GitHub Actions                           |
-| Deployment       | Coolify                                  |
+| Deployment       | Docker on Dokploy                        |
 
 ## Development
 
@@ -109,6 +111,8 @@ FluffBoost uses Discord slash commands grouped by role.
 - A Discord application with bot token
 
 ### Setup
+
+Run everything from the repository root — Bun resolves the whole workspace.
 
 1. Clone the repository:
 
@@ -132,7 +136,7 @@ FluffBoost uses Discord slash commands grouped by role.
 4. Copy and configure environment variables:
 
    ```bash
-   cp .env.example .env
+   cp apps/discord/.env.example apps/discord/.env
    ```
 
 5. Sync the database schema:
@@ -141,26 +145,26 @@ FluffBoost uses Discord slash commands grouped by role.
    bun run db:push
    ```
 
-6. Start the development server:
+6. Start the bot in watch mode:
 
    ```bash
-   bun dev
+   bun run dev:discord
    ```
 
-### Development Scripts
+### Workspace Scripts
 
-- `bun dev` — Start development server with hot reload
-- `bun start` — Run src/app.ts directly
-- `bun run lint` — Run ESLint with auto-fix
-- `bun run lint:check` — Check linting without fixing
+Run these from the repository root; they fan out through Turborepo.
+
+- `bun run dev:discord` — Start the bot with hot reload
+- `bun run dev:web` — Start the marketing/docs site
+- `bun run lint` / `bun run lint:check` — ESLint (with / without fixes)
 - `bun run format` — Format code with Prettier
-- `bun run typecheck` — Run TypeScript type checking
+- `bun run typecheck` — TypeScript type checking
+- `bun run test` / `bun run test:coverage` — Test suites (with coverage)
 - `bun run db:push` — Sync schema to database (dev)
 - `bun run db:generate` — Generate a Drizzle migration
 - `bun run db:migrate` — Run migrations (production)
 - `bun run db:studio` — Open Drizzle Studio UI
-- `bun test` — Run test suite
-- `bun test --coverage` — Run tests with coverage
 
 ### Code Quality
 
@@ -176,29 +180,40 @@ FluffBoost uses Discord slash commands grouped by role.
 
 ```
 fluffboost/
-├── src/
-│   ├── api/              # Express health-check API
-│   │   └── routes/       # API route handlers
-│   ├── commands/         # Discord slash commands
-│   │   ├── admin/        # Admin command group
-│   │   │   ├── activity/ # Bot activity management
-│   │   │   ├── quote/    # Quote management
-│   │   │   └── suggestion/ # Suggestion review
-│   │   ├── owner/        # Owner-only commands
-│   │   │   └── premium/  # Test entitlement commands
-│   │   └── setup/        # Server setup commands
-│   ├── database/         # Drizzle ORM instance and schema
-│   ├── events/           # Discord event handlers
-│   ├── redis/            # Redis/IORedis connection
-│   ├── utils/            # Shared utilities
-│   └── worker/           # BullMQ worker and jobs
-│       └── jobs/         # Job handlers
-├── tests/                # Test suite (mirrors src/)
-├── drizzle/              # Drizzle migration SQL files
-├── Dockerfile            # Multi-stage production build
-├── docker-compose.yml    # Local PostgreSQL + Redis
-└── docker-entrypoint.sh  # Migration runner for deploy
+├── apps/
+│   ├── discord/              # The Discord bot
+│   │   ├── src/
+│   │   │   ├── api/          # Express health-check API
+│   │   │   ├── commands/     # Slash commands (admin/, owner/, setup/)
+│   │   │   ├── database/     # Drizzle ORM instance and schema
+│   │   │   ├── events/       # Discord event handlers
+│   │   │   ├── redis/        # Redis/IORedis connection
+│   │   │   ├── utils/        # Shared utilities
+│   │   │   └── worker/       # BullMQ worker and jobs
+│   │   ├── tests/            # Test suite (mirrors src/)
+│   │   ├── drizzle/          # Drizzle migration SQL files
+│   │   ├── Dockerfile        # Multi-stage build (turbo prune)
+│   │   └── docker-entrypoint.sh
+│   └── web/                  # Marketing site + docs (Next.js + Fumadocs)
+│       ├── app/              # Landing page + docs routes
+│       └── content/          # user/ (Guide) + developer/ docs (MDX)
+├── docker-compose.yml        # Local PostgreSQL + Redis
+├── turbo.json                # Turborepo pipeline
+└── package.json              # Bun workspace root
 ```
+
+## Documentation
+
+Full docs live in `apps/web` and publish to GitHub Pages, split by audience:
+
+- **Guide** (`apps/web/content/user/`) — for server owners: setup, scheduling,
+  suggestions, premium, and a command reference.
+- **Developers** (`apps/web/content/developer/`) — self-hosting, configuration,
+  database, deployment, testing, and contributing.
+
+Upgrading an existing deployment to this monorepo layout? See
+[MIGRATION.md](MIGRATION.md) — the only production change is the Dokploy
+Dockerfile path.
 
 ## Changelog
 
