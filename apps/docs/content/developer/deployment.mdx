@@ -1,6 +1,6 @@
 ---
 title: Deployment (Dokploy)
-description: How the bot is deployed, and how to migrate an existing deployment to the monorepo layout.
+description: Set up the bot on Dokploy from scratch, or migrate an existing deployment to the monorepo layout.
 ---
 
 FluffBoost deploys as a **Docker image on Dokploy**. Because Bun runs TypeScript
@@ -19,6 +19,94 @@ production dependencies.
 - A **health check** hits `GET /api/health` on `PORT` (default `3000`).
 - All configuration is injected as environment variables — see
   [Configuration](/developers/configuration).
+
+## Setting up a fresh deployment
+
+Starting from a clean server? Work through these in order.
+
+<Steps>
+
+<Step>
+
+### Provision PostgreSQL and Redis
+
+Create a **PostgreSQL 16** and a **Redis 7** service in Dokploy (or point at
+existing ones). Copy each connection string — they become `DATABASE_URL` and
+`REDIS_URL`.
+
+</Step>
+
+<Step>
+
+### Create the application
+
+Add a new **Docker / Dockerfile** application pointing at this repository, then
+set exactly two build fields:
+
+| Field                            | Value                     |
+| -------------------------------- | ------------------------- |
+| Build context / base directory    | `.` (the repository root) |
+| Dockerfile path                  | `apps/discord/Dockerfile` |
+
+The context **must** stay at the root — the Bun workspace lockfile lives there
+and `turbo prune` needs the whole graph.
+
+</Step>
+
+<Step>
+
+### Add the environment variables
+
+Set the required variables — `DATABASE_URL`, `REDIS_URL`,
+`DISCORD_APPLICATION_ID`, `DISCORD_APPLICATION_PUBLIC_KEY`,
+`DISCORD_APPLICATION_BOT_TOKEN`, `OWNER_ID`, `MAIN_GUILD_ID`,
+`MAIN_CHANNEL_ID` — plus any optional ones you want. The full table (with
+defaults) is in [Configuration](/developers/configuration).
+
+Production does **not** read a `.env` file; inject these through Dokploy.
+
+<Callout type="warn">
+  Invalid or missing config exits the process immediately at startup — that's by
+  design. If the container dies instantly, read the logs: the Zod error names the
+  exact variable.
+</Callout>
+
+</Step>
+
+<Step>
+
+### Expose the port and health check
+
+The container listens on `PORT` (default `3000`) and answers
+`GET /api/health`. Point Dokploy's health check at that path.
+
+</Step>
+
+<Step>
+
+### Create the database schema
+
+The image's entrypoint runs the migration script, but it is currently a no-op
+(see the caveat at the bottom of this page), so create the schema once from your
+machine against the production database:
+
+```bash
+DATABASE_URL='<your-production-url>' bun run db:push
+```
+
+</Step>
+
+<Step>
+
+### Deploy and verify
+
+Trigger the deploy. Watch the logs for a successful Postgres + Redis connection
+and the shards logging in, and confirm the health check goes green. Then, in
+Discord, run `/setup channel` in your server to pick the quote channel.
+
+</Step>
+
+</Steps>
 
 ## Migrating an existing deployment
 

@@ -25,6 +25,14 @@ live in the root `package.json` (Bun reads `overrides` from the workspace root).
 Removed dead files: `entrypoint.sh` (referenced `pnpm`) and
 `ecosystem.config.js` (PM2, unused — deployment is Docker-only).
 
+## Setting up a brand-new server instead?
+
+If there's no existing deployment to migrate — fresh server, or you're rebuilding
+from scratch — skip this section. Follow **Setting up a fresh deployment** in
+`apps/docs/content/developer/deployment.mdx` instead: it covers provisioning
+Postgres + Redis, the two build fields, the environment variables, the health
+check, and creating the schema with `db:push`.
+
 ## Update the Dokploy deployment (one change)
 
 The production bot deploys as a Docker image on Dokploy. The **only** change:
