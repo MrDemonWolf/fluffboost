@@ -11,7 +11,7 @@ FluffBoost is a Discord bot (Discord.js v14) that delivers daily motivational qu
 This is a **Bun-workspace + Turborepo monorepo**. Run all commands from the repository root.
 
 - `apps/discord/` — the Discord bot. **Every `src/…`, `tests/…`, and `drizzle/…` path in this document lives under `apps/discord/`** (e.g. `src/app.ts` → `apps/discord/src/app.ts`). The bot package is `@fluffboost/discord`.
-- `apps/docs/` — the marketing site + docs (Next.js 16 + Fumadocs, static export → GitHub Pages). Docs are split into `content/user/` (Guide, for server owners) and `content/developer/`. Package `@fluffboost/docs`.
+- `apps/docs/` — the marketing site + docs (Next.js 16 + Fumadocs, static export → GitHub Pages), **live at https://mrdemonwolf.github.io/fluffboost/**. Docs are split into `content/user/` (Guide, for server owners) and `content/developer/`. Package `@fluffboost/docs`.
 - `apps/web/` — **reserved** for a future web dashboard (not created yet). Add a `@fluffboost/web` package here when it's built.
 - Root `package.json` is the private workspace root; `turbo.json` defines the pipeline. Security `overrides` pins live at the root.
 
@@ -32,6 +32,7 @@ bun run db:generate       # Generate a new Drizzle migration
 bun run db:push           # Push schema changes to database (dev)
 bun run db:migrate        # Run migrations (production)
 bun run db:studio         # Open Drizzle Studio UI
+bun run db:seed           # Load the starter quote library (idempotent)
 
 # Type checking & tests (turbo, workspace-wide)
 bun run typecheck         # tsc --noEmit
@@ -64,6 +65,7 @@ Each shard (`src/bot.ts`) creates a Discord client, registers event listeners, i
 - `src/database/schema.ts` — Drizzle schema definitions (tables, enums, types). This is the source of truth for the database schema.
 - `src/utils/env.ts` — Zod schema validating all environment variables at startup. The process exits immediately on invalid config.
 - `src/utils/logger.ts` — Structured consola-based logger with context-specific sub-loggers (`logger.commands.*`, `logger.database.*`, `logger.api.*`, `logger.discord.*`).
+- `scripts/` — One-off maintenance scripts, run via workspace commands rather than by path (e.g. `scripts/seedQuotes.ts` → `bun run db:seed`). Covered by `tsconfig.json`'s `include`, so they typecheck and lint in CI.
 
 ### Command Pattern
 
@@ -124,7 +126,7 @@ The bot is deployed via **Dokploy** as a Docker image. Since Bun runs TypeScript
 
 ### The website (apps/docs)
 
-Static Next.js + Fumadocs, deployed to GitHub Pages by `.github/workflows/deploy-docs.yml` (`bun run --filter=@fluffboost/docs build` with `NEXT_PUBLIC_BASE_PATH=/fluffboost`). Independent of the bot deployment. Build with webpack (`next build --webpack`) — fumadocs-mdx's generated `.source` doesn't transform under Turbopack here. The `.source` dir and `next-env.d.ts` are generated (gitignored).
+Live at **https://mrdemonwolf.github.io/fluffboost/**. Static Next.js + Fumadocs, deployed to GitHub Pages by `.github/workflows/deploy-docs.yml` (`bun run --filter=@fluffboost/docs build` with `NEXT_PUBLIC_BASE_PATH=/fluffboost`). Independent of the bot deployment. Build with webpack (`next build --webpack`) — fumadocs-mdx's generated `.source` doesn't transform under Turbopack here. The `.source` dir and `next-env.d.ts` are generated (gitignored).
 
 ## Git Branching
 
