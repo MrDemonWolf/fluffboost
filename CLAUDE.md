@@ -112,7 +112,7 @@ GitHub Actions runs on push/PR to `main` and `dev`: test execution with Bun's bu
 
 The bot is deployed via **Dokploy** as a Docker image. Since Bun runs TypeScript directly, there is no build step. Migrations run at container startup via `docker-entrypoint.sh`.
 
-**Dokploy settings:** build context / base directory = the **repository root** (`.`); Dockerfile path = **`apps/discord/Dockerfile`**. The context must be the root because the Bun workspace lockfile is there and `turbo prune` needs the whole graph. See [MIGRATION.md](MIGRATION.md) for migrating an existing (pre-monorepo) deployment — it's a one-field change.
+**Dokploy settings:** build context / base directory = the **repository root** (`.`); Dockerfile path = **`apps/discord/Dockerfile`**. The context must be the root because the Bun workspace lockfile is there and `turbo prune` needs the whole graph. See `apps/docs/content/developer/deployment.mdx` (published at https://mrdemonwolf.github.io/fluffboost/developers/deployment/) for both a fresh Dokploy setup and migrating an existing (pre-monorepo) deployment — the latter is a one-field change.
 
 ### Key files
 
