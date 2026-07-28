@@ -1,0 +1,88 @@
+name: Deploy
+
+# Triggers a Dokploy deploy of the `bot` service on ash-01.
+#
+# Why a workflow instead of Dokploy's Auto Deploy webhook: the panel sits behind
+# Cloudflare Access. GitHub's webhook servers have no browser and no Access
+# session, and GitHub's webhook UI cannot attach custom headers, so Access
+# rejects every delivery. Pushes appear to do nothing and the only evidence is
+# GitHub's webhook delivery log. A workflow controls its own headers, so it can
+# present a Cloudflare service token and Access stays fully enforced.
+#
+# Leave Dokploy's "Auto Deploy" toggle OFF — it only re-creates the broken path.
+
+on:
+  # Deploy only after CI passes. Deploying on raw `push` would ship a red build
+  # to production. Drop this block for push-triggered deploys if that tradeoff
+  # ever stops being worth the wait.
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Trigger Dokploy deploy
+    runs-on: ubuntu-latest
+    # workflow_run fires on failure too; workflow_dispatch has no workflow_run
+    # context, so allow it through explicitly.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Trigger deploy
+        env:
+          DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
+          DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
+          DOKPLOY_APP_ID: ${{ secrets.DOKPLOY_APP_ID }}
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: |
+          set -euo pipefail
+
+          for var in DOKPLOY_URL DOKPLOY_API_KEY DOKPLOY_APP_ID \
+                     CF_ACCESS_CLIENT_ID CF_ACCESS_CLIENT_SECRET; do
+            if [ -z "${!var}" ]; then
+              echo "::error::Repository secret $var is not set."
+              exit 1
+            fi
+          done
+
+          # The response body is never printed on success: Dokploy's application
+          # payload can echo back the service's environment, which would land the
+          # bot token in a CI log.
+          code=$(curl -sS --max-time 60 \
+            -o response.txt -w '%{http_code}' \
+            -X POST "${DOKPLOY_URL%/}/api/application.deploy" \
+            -H "x-api-key: ${DOKPLOY_API_KEY}" \
+            -H "CF-Access-Client-Id: ${CF_ACCESS_CLIENT_ID}" \
+            -H "CF-Access-Client-Secret: ${CF_ACCESS_CLIENT_SECRET}" \
+            -H 'Content-Type: application/json' \
+            -H 'Accept: application/json' \
+            -d "{\"applicationId\":\"${DOKPLOY_APP_ID}\"}")
+
+          # A rejected request does NOT arrive as a 4xx. Access answers an
+          # unauthenticated call with a 302 to its sign-in page, and curl's -f
+          # only trips on >=400 — so the naive version of this step exits 0 and
+          # reports a deploy that never happened. Demand exactly 200, and treat
+          # an HTML body as proof Access answered instead of Dokploy.
+          if [ "$code" != "200" ]; then
+            echo "::error::Dokploy returned HTTP $code"
+            head -c 500 response.txt
+            exit 1
+          fi
+
+          if head -c 200 response.txt | grep -qi '<html\|<!doctype'; then
+            echo "::error::Got an HTML page instead of JSON — Cloudflare Access rejected this request. Check that the Access application covering /api/application.deploy has a Service Auth policy including this service token, and that CF_ACCESS_CLIENT_ID/SECRET are current."
+            exit 1
+          fi
+
+          echo "Deploy triggered."
