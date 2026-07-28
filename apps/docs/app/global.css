@@ -1,0 +1,210 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+/* Pull class names out of the Fumadocs UI package for Tailwind v4. */
+@source "../node_modules/fumadocs-ui/dist/**/*.js";
+
+/* ------------------------------------------------------------------ *
+ * FluffBoost — "cozy woodland dawn" palette.
+ * Every text/background pair below is checked to meet WCAG AA (most
+ * body pairs clear AAA). See scripts/contrast-check.mjs.
+ * ------------------------------------------------------------------ */
+:root {
+  --fb-paper: #fbf4e9; /* page */
+  --fb-paper-2: #f4e7d2; /* alternating band */
+  --fb-card: #fffdf8; /* raised card */
+  --fb-ink: #2b1e12; /* primary text  (13.9:1 on paper) */
+  --fb-ink-soft: #5a4632; /* muted text    (6.0:1 on paper) */
+  --fb-honey: #e07c05; /* brand fill */
+  --fb-honey-ink: #955000; /* honey text    (4.8:1 on paper) */
+  --fb-berry: #b4194a; /* accent fill   (5.9:1 white text) */
+  --fb-berry-ink: #a3153f; /* berry text    (6.7:1 on paper) */
+  --fb-pine: #0e6e56; /* secondary     (4.6:1 on paper) */
+  --fb-line: #e6d4b8; /* hairline border */
+  --fb-glow: 224 124 5;
+}
+
+.dark {
+  --fb-paper: #17110b;
+  --fb-paper-2: #1f1710;
+  --fb-card: #23190f;
+  --fb-ink: #f6ead7; /* 14.6:1 on paper */
+  --fb-ink-soft: #c8b39a; /* 8.1:1 on paper */
+  --fb-honey: #f7a63a;
+  --fb-honey-ink: #f9b862; /* 8.9:1 on paper */
+  --fb-berry: #ff7ca0;
+  --fb-berry-ink: #ff8fae; /* 7.6:1 on paper */
+  --fb-pine: #57d3af; /* 8.8:1 on paper */
+  --fb-line: #3a2c1d;
+  --fb-glow: 247 166 58;
+}
+
+/* Fonts + colors as Tailwind utilities. `inline` keeps them bound to the
+ * CSS variables above so dark mode switches without recompiling. */
+@theme inline {
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-code), ui-monospace, "SFMono-Regular", monospace;
+
+  --color-paper: var(--fb-paper);
+  --color-paper-2: var(--fb-paper-2);
+  --color-card: var(--fb-card);
+  --color-ink: var(--fb-ink);
+  --color-ink-soft: var(--fb-ink-soft);
+  --color-honey: var(--fb-honey);
+  --color-honey-ink: var(--fb-honey-ink);
+  --color-berry: var(--fb-berry);
+  --color-berry-ink: var(--fb-berry-ink);
+  --color-pine: var(--fb-pine);
+  --color-line: var(--fb-line);
+}
+
+/* ------------------------------------------------------------------ *
+ * Retheme Fumadocs docs UI onto the warm palette so the docs never
+ * look like the stock template.
+ * ------------------------------------------------------------------ */
+:root {
+  --color-fd-background: var(--fb-paper);
+  --color-fd-foreground: var(--fb-ink);
+  --color-fd-muted: var(--fb-paper-2);
+  --color-fd-muted-foreground: var(--fb-ink-soft);
+  --color-fd-popover: var(--fb-card);
+  --color-fd-popover-foreground: var(--fb-ink);
+  --color-fd-card: var(--fb-card);
+  --color-fd-card-foreground: var(--fb-ink);
+  --color-fd-border: var(--fb-line);
+  --color-fd-primary: var(--fb-honey-ink);
+  --color-fd-primary-foreground: #fffdf8;
+  --color-fd-secondary: var(--fb-paper-2);
+  --color-fd-secondary-foreground: var(--fb-ink);
+  --color-fd-accent: var(--fb-paper-2);
+  --color-fd-accent-foreground: var(--fb-ink);
+  --color-fd-ring: var(--fb-honey);
+}
+
+.dark {
+  --color-fd-primary: var(--fb-honey);
+  --color-fd-primary-foreground: #17110b;
+}
+
+body {
+  background-color: var(--fb-paper);
+  color: var(--fb-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--fb-honey) 30%, transparent);
+  color: var(--fb-ink);
+}
+
+/* Respect reduced-motion for every decorative animation below. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Atmosphere utilities
+ * ------------------------------------------------------------------ */
+
+/* Warm paper grain — subtle, keeps large flat areas from feeling flat/AI. */
+.fb-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.28'/%3E%3C/svg%3E");
+}
+.dark .fb-grain::before {
+  mix-blend-mode: screen;
+  opacity: 0.06;
+}
+
+/* Sunrise glow behind the hero. */
+.fb-dawn {
+  background:
+    radial-gradient(
+      120% 90% at 50% -10%,
+      rgb(var(--fb-glow) / 0.28),
+      transparent 55%
+    ),
+    radial-gradient(
+      80% 60% at 85% 10%,
+      color-mix(in srgb, var(--fb-berry) 16%, transparent),
+      transparent 60%
+    );
+}
+
+/* A dashed, sticker-like frame used on quote cards. */
+.fb-ticket {
+  border: 1.5px dashed color-mix(in srgb, var(--fb-ink) 22%, transparent);
+}
+
+.fb-shadow {
+  box-shadow: 0 1px 0 0 var(--fb-line), 0 18px 40px -24px rgba(43, 30, 18, 0.45);
+}
+.dark .fb-shadow {
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.04),
+    0 24px 50px -28px rgba(0, 0, 0, 0.7);
+}
+
+/* Staggered page-load reveal. Add .fb-rise and an inline --d delay. */
+@keyframes fb-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.fb-rise {
+  animation: fb-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+
+@keyframes fb-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(2deg);
+  }
+}
+.fb-float {
+  animation: fb-float 6s ease-in-out infinite;
+}
+
+@keyframes fb-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.fb-marquee {
+  animation: fb-marquee 40s linear infinite;
+}
+.fb-marquee-track:hover .fb-marquee {
+  animation-play-state: paused;
+}
+
+/* Focus ring that stays on-brand and always visible for keyboard users. */
+:where(a, button, input, [tabindex]):focus-visible {
+  outline: 3px solid var(--fb-honey);
+  outline-offset: 2px;
+  border-radius: 6px;
+}

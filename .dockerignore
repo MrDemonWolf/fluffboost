@@ -1,15 +1,18 @@
-node_modules
-dist
-coverage
-.git
+# Build context is the repo root. Keep source (turbo prune needs the graph),
+# drop everything that bloats the context or leaks secrets.
+**/node_modules
+**/.git
+**/.turbo
+**/dist
+**/.next
+**/out
+**/coverage
+**/*.log
+**/.DS_Store
 .github
-.vscode
 .claude
-.env
-.env.*
-*.md
-*.log
-tests
-eslint.config.js
-Dockerfile
-docker-compose.yml
+.vscode
+**/.env
+**/.env.*
+!**/.env.example
+banner.jpg

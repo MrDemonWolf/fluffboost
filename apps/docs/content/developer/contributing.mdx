@@ -1,0 +1,49 @@
+---
+title: Contributing
+description: Conventions, branches, and the checks your PR needs to pass.
+---
+
+Contributions are welcome. A little house style keeps the codebase consistent.
+
+## Conventions
+
+- **ESM everywhere.** The project is `"type": "module"`; local imports use `.js`
+  extensions even in TypeScript source (`import env from "./utils/env.js"`).
+- **Strict TypeScript.** `noUnusedLocals`, `noUnusedParameters`,
+  `noImplicitReturns`, and `noUncheckedIndexedAccess` are all on.
+- **Use the logger.** Import `logger` from `src/utils/logger.ts` and pick the
+  right sub-logger (`logger.commands.*`, `logger.database.*`, etc.) — never raw
+  `console.log`.
+- **Max line length 120** (enforced by ESLint).
+- **Bun only** — no npm, yarn, or pnpm.
+
+## Adding a slash command
+
+1. Create a file in `apps/discord/src/commands/` exporting `slashCommand`
+   (a `SlashCommandBuilder`) and `execute(client, interaction)`.
+2. Add a `case` to the switch in
+   `apps/discord/src/events/interactionCreate.ts`.
+3. Register it where commands are pushed to Discord in
+   `apps/discord/src/events/ready.ts`.
+
+## Branches
+
+| Branch          | Role                          |
+| --------------- | ----------------------------- |
+| `main`          | Production                    |
+| `dev`           | Development integration       |
+| `FLUFF-{n}-...` | Feature branches              |
+
+## Before you open a PR
+
+Run the same checks CI does:
+
+```bash
+bun run lint:check
+bun run typecheck
+bun run test
+```
+
+Green across the board? Open the PR against `dev` (or `main` for hotfixes) and
+describe the change. Thanks for helping FluffBoost spread a little more
+paw-sitivity. 🐾

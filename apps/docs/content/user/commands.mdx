@@ -1,0 +1,52 @@
+---
+title: Command reference
+description: Every FluffBoost slash command, grouped by who can use it.
+---
+
+FluffBoost uses Discord slash commands. Type `/` in your server to see them with
+inline help.
+
+## General
+
+Anyone can use these.
+
+| Command       | Description                           |
+| ------------- | ------------------------------------- |
+| `/about`      | Learn about the bot and its creators  |
+| `/help`       | View available commands               |
+| `/invite`     | Get the bot invite link               |
+| `/quote`      | Receive an instant motivational quote |
+| `/suggestion` | Suggest a quote for review            |
+| `/premium`    | View premium subscription info        |
+| `/changelog`  | View recent changes                   |
+
+## Setup
+
+Requires **Manage Server**.
+
+| Command           | Description                              |
+| ----------------- | ---------------------------------------- |
+| `/setup channel`  | Set the quote delivery channel           |
+| `/setup schedule` | Customize delivery frequency and time (premium) |
+
+## Admin
+
+For server admins managing content.
+
+| Command                     | Description                   |
+| --------------------------- | ----------------------------- |
+| `/admin quote create`       | Add a new motivational quote  |
+| `/admin quote list`         | List all quotes               |
+| `/admin quote remove`       | Remove a quote                |
+| `/admin activity create`    | Add a bot status activity     |
+| `/admin activity list`      | List all activities           |
+| `/admin activity remove`    | Remove an activity            |
+| `/admin suggestion approve` | Approve a suggested quote     |
+| `/admin suggestion reject`  | Reject a suggested quote      |
+| `/admin suggestion list`    | List pending suggestions      |
+| `/admin suggestion stats`   | View suggestion statistics    |
+
+<Callout type="info">
+  Owner-only commands (test entitlements for premium) live in the
+  [Developers](/developers) docs, since they're for whoever runs the bot.
+</Callout>

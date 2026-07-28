@@ -1,0 +1,42 @@
+---
+title: Testing
+description: How the bot is tested — bun:test, Sinon, and module mocking.
+---
+
+Tests use **`bun:test`** with **Sinon**, configured in
+`apps/discord/bunfig.toml`. Test files live in `apps/discord/tests/`, mirroring
+`src/`, and use the `.test.ts` suffix.
+
+## Running tests
+
+```bash
+bun run test            # whole workspace, via Turborepo
+bun run test:coverage   # with a coverage report
+```
+
+Run just the bot's suite from its package:
+
+```bash
+bun --filter @fluffboost/discord test
+```
+
+## Patterns
+
+- **Module mocking** — `mock.module()` from `bun:test` replaces imports at load
+  time, so dependencies like the database and logger are swapped for fakes.
+- **Time control** — schedule-sensitive tests use `sinon.useFakeTimers()` to pin
+  `dayjs()` to a fixed moment.
+- **Shared fakes** — `tests/helpers.ts` provides factories (`mockLogger`,
+  `mockDb`, `mockInteraction`, `mockClient`, `mockEnv`, and friends) so each test
+  stays short.
+
+<Callout type="info">
+  Because commands and jobs are isolated behind these mocks, tests never touch a
+  real database, Redis, or the Discord API.
+</Callout>
+
+## In CI
+
+GitHub Actions runs the test suite with coverage, an ESLint check, a TypeScript
+type check, a dependency audit, and a Docker build test on every push and PR to
+`main` and `dev`.

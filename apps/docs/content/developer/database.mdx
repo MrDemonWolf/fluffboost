@@ -1,0 +1,67 @@
+---
+title: Database & schema
+description: The Drizzle schema, the tables, and how migrations work.
+---
+
+FluffBoost uses **PostgreSQL** through **Drizzle ORM**. The schema in
+`apps/discord/src/database/schema.ts` is the single source of truth — Drizzle
+reads it at runtime, so there's no code-generation step.
+
+## Tables
+
+| Table               | Purpose                                                             |
+| ------------------- | ------------------------------------------------------------------- |
+| `guilds`            | Per-server config: channel, schedule (frequency/time/timezone/day), premium status, `lastMotivationSentAt` |
+| `motivationQuotes`  | The approved quote library                                          |
+| `suggestionQuotes`  | User-submitted quotes pending admin review                          |
+| `discordActivities` | Bot status entries, with a type enum                                |
+
+Two enums back these: `motivationFrequencyEnum` (Daily / Weekly / Monthly) and
+`discordActivityTypeEnum` (Custom / Listening / Streaming / Playing).
+
+## Working with the schema
+
+After editing `schema.ts`:
+
+<Tabs items={["Development", "Production"]}>
+
+<Tab value="Development">
+
+```bash
+bun run db:push
+```
+
+Pushes the schema straight to your dev database. Fast, no migration files.
+
+</Tab>
+
+<Tab value="Production">
+
+```bash
+bun run db:generate   # create a migration from the schema diff
+bun run db:migrate    # apply pending migrations
+```
+
+</Tab>
+
+</Tabs>
+
+Open a visual browser with `bun run db:studio`.
+
+## How scheduling reads the data
+
+The `send-motivation` worker job runs every minute and asks
+`isGuildDueForMotivation()` (in `apps/discord/src/utils/scheduleEvaluator.ts`,
+powered by dayjs with timezone support) which guilds are due right now. After a
+successful send it updates `lastMotivationSentAt` so a quote is never delivered
+twice.
+
+<Callout type="warn">
+  **Migrations at deploy time.** The container entrypoint runs
+  `apps/discord/src/database/migrate.ts`, which **skips** if
+  `drizzle/meta/_journal.json` is absent. The repository currently ships the
+  migration SQL without that journal, so startup migrations are effectively a
+  no-op and the schema is managed via `db:push`. If you want deploy-time
+  migrations to actually run, generate and commit the Drizzle journal — and test
+  it against a copy of production first.
+</Callout>
