@@ -94,6 +94,14 @@ machine against the production database:
 DATABASE_URL='<your-production-url>' bun run db:push
 ```
 
+Then load the starter quote library, or the bot will have nothing to post:
+
+```bash
+DATABASE_URL='<your-production-url>' OWNER_ID='<your-discord-id>' bun run db:seed
+```
+
+`db:seed` skips quotes that already exist, so it's safe to re-run.
+
 </Step>
 
 <Step>

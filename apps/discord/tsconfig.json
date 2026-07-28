@@ -8,7 +8,8 @@
 
     // Output settings
     "outDir": "./dist",
-    "rootDir": "./src",
+    // "./" (not "./src") because `include` spans both src/ and scripts/.
+    "rootDir": "./",
     "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"],
@@ -62,6 +63,6 @@
     // Type definitions
     "types": ["@types/bun"]
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "scripts/**/*.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }
