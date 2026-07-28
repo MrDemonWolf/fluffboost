@@ -140,6 +140,9 @@ dist
 .DS_Store
 
 # Drizzle ORM
-drizzle/meta/
+# NOTE: drizzle/meta/ is deliberately NOT ignored. src/database/migrate.ts skips
+# every migration when meta/_journal.json is absent, so ignoring it ships a
+# container that boots against an empty database.
+
 # Claude Code
 .claude
