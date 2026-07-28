@@ -54,9 +54,6 @@ export const envSchema = z.object({
     .min(1)
     .max(1440)
     .default(15),
-  // Legacy env var — no longer read by any code path; kept optional so
-  // existing deployments with it set don't fail validation on restart.
-  DISCORD_DEFAULT_MOTIVATIONAL_DAILY_TIME: z.string().optional(),
   ALLOWED_USERS: z
     .string()
     .optional()
