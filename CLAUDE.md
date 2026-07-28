@@ -122,7 +122,7 @@ The bot is deployed via **Dokploy** as a Docker image. Since Bun runs TypeScript
 - `apps/discord/docker-entrypoint.sh` — Runs `bun run src/database/migrate.ts` (programmatic Drizzle migration, no `drizzle-kit` needed) then starts the app with `bun run src/app.ts`. Set `SKIP_MIGRATIONS=true` to skip.
 - `.dockerignore` (repo root) — build context is the root, so this is the one that applies.
 
-**Migrations caveat:** `migrate.ts` skips when `drizzle/meta/_journal.json` is absent; the repo ships the SQL without that journal, so startup migrations are currently a no-op and the schema is managed via `db:push`. Don't "fix" this against prod without generating the journal and testing on a DB copy first.
+**Migrations:** the entrypoint runs `migrate.ts` before the app starts, so deploys apply pending migrations automatically (`SKIP_MIGRATIONS=true` opts out). The repo ships both the SQL and `drizzle/meta/_journal.json` — `migrate.ts` silently skips when that journal is missing, so keep it committed. Use `db:push` for local dev only: it mutates the schema without recording migration history, so mixing it into production can make a later `db:migrate` fail or drift.
 
 ### The website (apps/docs)
 
