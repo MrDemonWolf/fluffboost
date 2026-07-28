@@ -84,17 +84,22 @@ The container listens on `PORT` (default `3000`) and answers
 
 <Step>
 
-### Create the database schema
+### Deploy and verify
 
-The image's entrypoint runs the migration script, but it is currently a no-op
-(see the caveat at the bottom of this page), so create the schema once from your
-machine against the production database:
+Trigger the deploy. The container applies the database migrations before the bot
+starts, so the schema is created for you on this first run — watch the logs for
+`Running database migrations...`, then a successful Postgres + Redis connection
+and the shards logging in. Confirm the health check goes green.
 
-```bash
-DATABASE_URL='<your-production-url>' bun run db:push
-```
+</Step>
 
-Then load the starter quote library, or the bot will have nothing to post:
+<Step>
+
+### Load the starter quotes
+
+The quote library is **not** seeded automatically, and without it the bot has
+nothing to post. Now that the tables exist, run this once from your machine
+against the production database:
 
 ```bash
 DATABASE_URL='<your-production-url>' OWNER_ID='<your-discord-id>' bun run db:seed
@@ -106,11 +111,10 @@ DATABASE_URL='<your-production-url>' OWNER_ID='<your-discord-id>' bun run db:see
 
 <Step>
 
-### Deploy and verify
+### Point the bot at a channel
 
-Trigger the deploy. Watch the logs for a successful Postgres + Redis connection
-and the shards logging in, and confirm the health check goes green. Then, in
-Discord, run `/setup channel` in your server to pick the quote channel.
+In Discord, run `/setup channel` in your server to choose where the daily quote
+lands, then `/quote` to confirm the library loaded.
 
 </Step>
 
