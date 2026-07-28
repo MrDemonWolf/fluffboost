@@ -1,0 +1,192 @@
+---
+title: Deployment (Dokploy)
+description: Set up the bot on Dokploy from scratch, or migrate an existing deployment to the monorepo layout.
+---
+
+FluffBoost deploys as a **Docker image on Dokploy**. Because Bun runs TypeScript
+directly, there's no build step — the image just needs the bot's source and its
+production dependencies.
+
+## How it works
+
+- **`apps/discord/Dockerfile`** builds the image. It uses `turbo prune` so the
+  bot image only contains the bot and its dependencies, never `apps/docs`.
+- **Build context is the repository root** (not `apps/discord`) — the Bun
+  workspace lockfile lives at the root and Turborepo needs the whole graph to
+  prune.
+- The container's entrypoint runs database migrations, then starts the bot with
+  `bun run src/app.ts`.
+- A **health check** hits `GET /api/health` on `PORT` (default `3000`).
+- All configuration is injected as environment variables — see
+  [Configuration](/developers/configuration).
+
+## Setting up a fresh deployment
+
+Starting from a clean server? Work through these in order.
+
+<Steps>
+
+<Step>
+
+### Provision PostgreSQL and Redis
+
+Create a **PostgreSQL 16** and a **Redis 7** service in Dokploy (or point at
+existing ones). Copy each connection string — they become `DATABASE_URL` and
+`REDIS_URL`.
+
+</Step>
+
+<Step>
+
+### Create the application
+
+Add a new **Docker / Dockerfile** application pointing at this repository, then
+set exactly two build fields:
+
+| Field                            | Value                     |
+| -------------------------------- | ------------------------- |
+| Build context / base directory    | `.` (the repository root) |
+| Dockerfile path                  | `apps/discord/Dockerfile` |
+
+The context **must** stay at the root — the Bun workspace lockfile lives there
+and `turbo prune` needs the whole graph.
+
+</Step>
+
+<Step>
+
+### Add the environment variables
+
+Set the required variables — `DATABASE_URL`, `REDIS_URL`,
+`DISCORD_APPLICATION_ID`, `DISCORD_APPLICATION_PUBLIC_KEY`,
+`DISCORD_APPLICATION_BOT_TOKEN`, `OWNER_ID`, `MAIN_GUILD_ID`,
+`MAIN_CHANNEL_ID` — plus any optional ones you want. The full table (with
+defaults) is in [Configuration](/developers/configuration).
+
+Production does **not** read a `.env` file; inject these through Dokploy.
+
+<Callout type="warn">
+  Invalid or missing config exits the process immediately at startup — that's by
+  design. If the container dies instantly, read the logs: the Zod error names the
+  exact variable.
+</Callout>
+
+</Step>
+
+<Step>
+
+### Expose the port and health check
+
+The container listens on `PORT` (default `3000`) and answers
+`GET /api/health`. Point Dokploy's health check at that path.
+
+</Step>
+
+<Step>
+
+### Create the database schema
+
+The image's entrypoint runs the migration script, but it is currently a no-op
+(see the caveat at the bottom of this page), so create the schema once from your
+machine against the production database:
+
+```bash
+DATABASE_URL='<your-production-url>' bun run db:push
+```
+
+Then load the starter quote library, or the bot will have nothing to post:
+
+```bash
+DATABASE_URL='<your-production-url>' OWNER_ID='<your-discord-id>' bun run db:seed
+```
+
+`db:seed` skips quotes that already exist, so it's safe to re-run.
+
+</Step>
+
+<Step>
+
+### Deploy and verify
+
+Trigger the deploy. Watch the logs for a successful Postgres + Redis connection
+and the shards logging in, and confirm the health check goes green. Then, in
+Discord, run `/setup channel` in your server to pick the quote channel.
+
+</Step>
+
+</Steps>
+
+## Migrating an existing deployment
+
+<Callout type="warn">
+  This applies to deployments created **before** the monorepo move, when the
+  `Dockerfile` lived at the repository root. The bot's runtime behavior is
+  unchanged — only the build path moves.
+</Callout>
+
+The only thing that changed is **where the Dockerfile lives**. Update your
+Dokploy application:
+
+<Steps>
+
+<Step>
+
+### Keep the build context at the repo root
+
+Base directory / build context stays `.` (the repository root). Do **not** point
+it at `apps/discord` — the workspace lockfile is at the root.
+
+</Step>
+
+<Step>
+
+### Point the Dockerfile path at the app
+
+Change the Dockerfile path from `Dockerfile` to:
+
+```text
+apps/discord/Dockerfile
+```
+
+</Step>
+
+<Step>
+
+### Leave everything else as-is
+
+Environment variables, ports, and the health check path (`/api/health`) are
+unchanged. No new variables are required.
+
+</Step>
+
+<Step>
+
+### Redeploy and watch the logs
+
+Trigger a deploy. Confirm the bot boots, connects to Postgres and Redis, and the
+health check goes green.
+
+</Step>
+
+</Steps>
+
+### Local sanity check
+
+Before touching production, verify the image builds with the new path:
+
+```bash
+docker build -f apps/discord/Dockerfile -t fluffboost:test .
+```
+
+(Note the trailing `.` — the context is the repo root.)
+
+### Rollback
+
+If anything looks wrong, redeploy the previous commit. Nothing in this migration
+touches the database, the environment, or the health check, so a rollback is
+just a redeploy of the old image.
+
+## Environment files
+
+Local Docker Compose reads `apps/discord/.env`. Production does **not** use a
+`.env` file — inject the variables through Dokploy directly.

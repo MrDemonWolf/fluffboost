@@ -1,0 +1,47 @@
+---
+title: Change when quotes arrive
+description: The default schedule, and how premium servers customize frequency, time, and timezone.
+---
+
+## The default schedule
+
+Every server starts on the same free schedule:
+
+- **Frequency:** daily
+- **Time:** 8:00 AM
+- **Timezone:** America/Chicago
+
+That's it — no configuration needed. Set your channel and the quote shows up
+each morning.
+
+## Custom schedules (premium)
+
+[Premium](/docs/premium) servers can reshape the schedule with `/setup schedule`:
+
+| Option      | Values                                             |
+| ----------- | -------------------------------------------------- |
+| `frequency` | Daily, Weekly, or Monthly                          |
+| `time`      | `HH:mm`, 24-hour (e.g. `09:30`)                    |
+| `timezone`  | Any IANA timezone (autocompletes as you type)      |
+| `day`       | Day of week (0–6) for weekly; day of month (1–28) for monthly |
+
+```text
+/setup schedule frequency:Weekly time:09:00 timezone:America/New_York day:1
+```
+
+<Callout type="info">
+  Timezones use the IANA database (like `Europe/London` or `Asia/Tokyo`), so
+  daylight-saving shifts are handled for you.
+</Callout>
+
+### Weekly and monthly
+
+- **Weekly** — set `day` to a weekday, where `0` is Sunday through `6` is Saturday.
+- **Monthly** — set `day` to a date from `1` to `28` (kept at 28 so every month
+  has that day).
+
+## If premium lapses
+
+Your custom schedule is **kept**, not reset — but it stops being applied until
+premium is active again, and delivery falls back to the default daily 8:00 AM
+America/Chicago. Re-subscribe and your saved schedule resumes.

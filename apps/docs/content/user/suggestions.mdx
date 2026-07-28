@@ -1,0 +1,39 @@
+---
+title: Suggest & review quotes
+description: Let members propose quotes and give admins a simple review queue.
+---
+
+FluffBoost's quote library grows with your community. Anyone can suggest a
+quote; admins decide what makes the cut.
+
+## Suggest a quote (anyone)
+
+```text
+/suggestion quote:"Rest is productive too." author:"MossyPaws"
+```
+
+The suggestion goes into a pending review queue — it isn't posted until an admin
+approves it.
+
+## Review suggestions (admins)
+
+Admins manage the queue with the `/admin suggestion` commands:
+
+| Command                        | What it does                          |
+| ------------------------------ | ------------------------------------- |
+| `/admin suggestion list`       | Show pending suggestions              |
+| `/admin suggestion approve`    | Approve a suggestion into the library |
+| `/admin suggestion reject`     | Decline a suggestion                  |
+| `/admin suggestion stats`      | See suggestion counts at a glance     |
+
+<Callout type="info">
+  Approved quotes join the same pool the daily quote is drawn from, so your
+  server's voice shows up in the morning rotation over time.
+</Callout>
+
+## Tips for good suggestions
+
+- Keep it short and genuinely encouraging.
+- Attribute it if you know the source; leave the author off if it's original.
+- Avoid inside references that only make sense to a handful of members — the
+  quote may surface on any day.

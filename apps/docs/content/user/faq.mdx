@@ -1,0 +1,44 @@
+---
+title: FAQ & troubleshooting
+description: Quick answers to the questions server owners ask most.
+---
+
+## Is FluffBoost free?
+
+Yes. The daily quote and all core commands are free forever. The only paid
+feature is [custom scheduling](/docs/premium).
+
+## The quote didn't show up — what happened?
+
+Run through these:
+
+- Did you set a channel with `/setup channel`?
+- Can FluffBoost **see** and **send messages** in that channel?
+- Is it a normal **text channel** (not forum/voice/category)?
+- Is the current time actually your scheduled time in your timezone?
+
+<Callout type="warn">
+  If FluffBoost's role can't view the channel, the daily post fails silently.
+  Check the channel's permissions for the bot's role first.
+</Callout>
+
+## Where do the quotes come from?
+
+A curated starter library plus quotes your own members suggest with
+`/suggestion` and your admins approve. See [Suggestions](/docs/suggestions).
+
+## Can I change the delivery time?
+
+The free schedule is daily at 8:00 AM America/Chicago. Custom times, frequencies,
+and timezones are a [premium](/docs/premium) feature via `/setup schedule`.
+
+## What data does FluffBoost store?
+
+Only what it needs to run: your server's ID, the channel you chose, your schedule
+settings, and the quotes/suggestions in your server. It doesn't read message
+history or DM your members.
+
+## How do I get help?
+
+Join the [community Discord](https://mrdwolf.net/discord) — the fastest way to
+reach the team and other server owners.
