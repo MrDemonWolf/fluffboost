@@ -226,9 +226,10 @@ and split by audience:
 The site is a static export built from `apps/docs` and deployed by
 `.github/workflows/deploy-docs.yml` on every push to `main`.
 
-Upgrading an existing deployment to this monorepo layout? See
-[MIGRATION.md](MIGRATION.md) — the only production change is the Dokploy
-Dockerfile path.
+Deploying the bot? The
+[deployment guide](https://mrdemonwolf.github.io/fluffboost/developers/deployment/)
+covers both a fresh Dokploy setup and upgrading an existing pre-monorepo
+deployment — where the only production change is the Dockerfile path.
 
 ## Changelog
 
