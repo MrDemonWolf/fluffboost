@@ -27,6 +27,11 @@ export async function execute(client: Client, interaction: CommandInteraction): 
       description: `Hi! I'm ${username}, a discord bot created by MrDemonWolf, Inc. I was created to help you with your daily tasks and to make your life easier. I'm currently in ${guildCount} guilds.`,
       fields: [
         {
+          name: "Documentation",
+          value: "[Guide](https://mrdemonwolf.github.io/fluffboost/docs/)",
+          inline: true,
+        },
+        {
           name: "Project GitHub",
           value: "[GitHub](https://www.github.com/mrdemonwolf/fluffboost)",
           inline: true,

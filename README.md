@@ -11,6 +11,8 @@ and community-driven quotes.
 
 Spread joy, one quote at a time.
 
+**[Website & documentation →](https://mrdemonwolf.github.io/fluffboost/)**
+
 ## Features
 
 - **Scheduled Motivational Quotes** — Automatically delivered
@@ -39,6 +41,9 @@ Spread joy, one quote at a time.
 2. Use `/setup channel` to configure which channel receives
    quotes.
 3. Enjoy daily motivation delivered to your server.
+
+Step-by-step walkthrough:
+[the Guide](https://mrdemonwolf.github.io/fluffboost/docs/).
 
 ## Usage
 
@@ -205,12 +210,21 @@ fluffboost/
 
 ## Documentation
 
-Full docs live in `apps/docs` and publish to GitHub Pages, split by audience:
+Documentation is published at
+**[mrdemonwolf.github.io/fluffboost](https://mrdemonwolf.github.io/fluffboost/)**
+and split by audience:
 
-- **Guide** (`apps/docs/content/user/`) — for server owners: setup, scheduling,
-  suggestions, premium, and a command reference.
-- **Developers** (`apps/docs/content/developer/`) — self-hosting, configuration,
-  database, deployment, testing, and contributing.
+- **[Guide](https://mrdemonwolf.github.io/fluffboost/docs/)** — for server
+  owners: setup, scheduling, suggestions, premium, and a
+  [command reference](https://mrdemonwolf.github.io/fluffboost/docs/commands/).
+  Source: `apps/docs/content/user/`.
+- **[Developers](https://mrdemonwolf.github.io/fluffboost/developers/)** —
+  self-hosting, configuration, database,
+  [deployment](https://mrdemonwolf.github.io/fluffboost/developers/deployment/),
+  testing, and contributing. Source: `apps/docs/content/developer/`.
+
+The site is a static export built from `apps/docs` and deployed by
+`.github/workflows/deploy-docs.yml` on every push to `main`.
 
 Upgrading an existing deployment to this monorepo layout? See
 [MIGRATION.md](MIGRATION.md) — the only production change is the Dokploy
@@ -229,6 +243,7 @@ For detailed changelog information, see
 
 If you have any questions, suggestions, or feedback:
 
+- Website & docs: [mrdemonwolf.github.io/fluffboost](https://mrdemonwolf.github.io/fluffboost/)
 - Discord: [Join my server](https://mrdwolf.net/discord)
 
 Made with love by [MrDemonWolf, Inc.](https://www.mrdemonwolf.com)
