@@ -56,12 +56,20 @@ powered by dayjs with timezone support) which guilds are due right now. After a
 successful send it updates `lastMotivationSentAt` so a quote is never delivered
 twice.
 
+<Callout type="info">
+  **Migrations run at deploy time.** The container entrypoint runs
+  `apps/discord/src/database/migrate.ts` before starting the bot, so a fresh
+  database is created and kept up to date automatically. The repository ships
+  both the migration SQL and `drizzle/meta/_journal.json`, which is what the
+  script looks for — if that journal ever goes missing, the script silently
+  skips and the schema stops being applied. Set `SKIP_MIGRATIONS=true` to opt
+  out for a single deploy.
+</Callout>
+
 <Callout type="warn">
-  **Migrations at deploy time.** The container entrypoint runs
-  `apps/discord/src/database/migrate.ts`, which **skips** if
-  `drizzle/meta/_journal.json` is absent. The repository currently ships the
-  migration SQL without that journal, so startup migrations are effectively a
-  no-op and the schema is managed via `db:push`. If you want deploy-time
-  migrations to actually run, generate and commit the Drizzle journal — and test
-  it against a copy of production first.
+  **Don't mix `db:push` with migrations in production.** `db:push` reshapes the
+  database directly without recording anything in the migration history, so a
+  later `db:migrate` can find the schema already changed and fail or drift. Use
+  `db:push` for local development only; let production go through generated
+  migrations.
 </Callout>
