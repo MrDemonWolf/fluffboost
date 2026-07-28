@@ -1,0 +1,55 @@
+---
+title: Set up the daily channel
+description: Point FluffBoost at the channel where the daily quote should be posted.
+---
+
+FluffBoost posts to exactly one channel per server. You choose which one with
+the `/setup channel` command.
+
+## Requirements
+
+- You need the **Manage Server** permission to run setup commands.
+- The target channel must be a **text channel** (not a voice, forum, or category).
+- FluffBoost needs permission to **View Channel** and **Send Messages** there.
+
+<Callout type="info">
+  Using a private staff channel to test? Make sure FluffBoost's role can actually
+  see it — if the bot can't view the channel, the quote silently won't arrive.
+</Callout>
+
+## Set the channel
+
+<Steps>
+
+<Step>
+
+### Run the command
+
+In the channel you want (or anywhere, then pick it in the option), run:
+
+```text
+/setup channel channel:#daily-motivation
+```
+
+</Step>
+
+<Step>
+
+### Confirm
+
+FluffBoost replies to confirm the channel is saved. From now on, the daily quote
+lands there.
+
+</Step>
+
+</Steps>
+
+## Change the channel later
+
+Run `/setup channel` again with a different channel. The new choice replaces the
+old one — there's only ever one active channel per server.
+
+## What's next
+
+- Want the quote at a different time? See [Scheduling](/docs/scheduling).
+- Want members to contribute quotes? See [Suggestions](/docs/suggestions).

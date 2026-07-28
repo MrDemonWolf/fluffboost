@@ -1,0 +1,50 @@
+---
+title: Configuration
+description: Every environment variable, validated by Zod at startup.
+---
+
+All configuration lives in environment variables, validated by a Zod schema in
+`apps/discord/src/utils/envSchema.ts`. **Invalid config exits the process
+immediately** — a missing or malformed value fails fast instead of misbehaving
+later.
+
+Locally these come from `apps/discord/.env`. In production, inject them through
+your platform (see [Deployment](/developers/deployment)).
+
+## Required
+
+| Variable                         | Notes                                   |
+| -------------------------------- | --------------------------------------- |
+| `DATABASE_URL`                   | PostgreSQL connection string            |
+| `REDIS_URL`                      | Redis connection string                 |
+| `DISCORD_APPLICATION_ID`         | Discord snowflake                       |
+| `DISCORD_APPLICATION_PUBLIC_KEY` | From the Discord Developer Portal       |
+| `DISCORD_APPLICATION_BOT_TOKEN`  | Bot token                               |
+| `OWNER_ID`                       | Snowflake of the bot owner              |
+| `MAIN_GUILD_ID`                  | Primary/support guild snowflake         |
+| `MAIN_CHANNEL_ID`                | Primary channel snowflake               |
+
+## Optional (with defaults)
+
+| Variable                            | Default                    | Notes                                        |
+| ----------------------------------- | -------------------------- | -------------------------------------------- |
+| `DATABASE_POOL_MAX`                 | `10`                       | Max Postgres pool size per process           |
+| `WORKER_CONCURRENCY`                | `4`                        | BullMQ worker concurrency per shard          |
+| `DISCORD_DEFAULT_STATUS`            | `Spreading Paw-sitivity 🐾` | Fallback presence text                       |
+| `DISCORD_DEFAULT_ACTIVITY_TYPE`     | `Custom`                   | `Playing`, `Streaming`, `Listening`, `Custom`|
+| `DEFAULT_ACTIVITY_URL`              | —                          | Stream URL (for `Streaming`)                 |
+| `DISCORD_ACTIVITY_INTERVAL_MINUTES` | `15`                       | Presence rotation interval (1–1440)          |
+| `ALLOWED_USERS`                     | —                          | Comma-separated snowflakes                    |
+| `HOST` / `PORT`                     | — / `3000`                 | Express health API bind                       |
+| `VERSION`                           | `0.0.0-dev`                | Reported version string                       |
+| `NODE_ENV`                          | `development`              | `development`, `production`, `test`          |
+| `PREMIUM_ENABLED`                   | `false`                    | Master toggle for premium features           |
+| `DISCORD_PREMIUM_SKU_ID`            | —                          | **Required when `PREMIUM_ENABLED=true`**      |
+
+<Callout type="warn">
+  If `PREMIUM_ENABLED=true`, `DISCORD_PREMIUM_SKU_ID` must be set — the schema
+  rejects the config otherwise.
+</Callout>
+
+The current template always lives in
+[`apps/discord/.env.example`](https://github.com/MrDemonWolf/fluffboost/blob/main/apps/discord/.env.example).
