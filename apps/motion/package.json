@@ -1,0 +1,36 @@
+{
+  "name": "@fluffboost/motion",
+  "version": "1.0.0",
+  "description": "Reproducible FluffBoost brand animations and Discord exports",
+  "repository": {},
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@remotion/cli": "4.0.532",
+    "@remotion/bundler": "4.0.532",
+    "@remotion/renderer": "4.0.532",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "remotion": "4.0.532",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@typescript-eslint/eslint-plugin": "^8.50.1",
+    "@typescript-eslint/parser": "^8.50.1",
+    "@types/react": "^19.2.0",
+    "@types/node": "22.20.1",
+    "eslint": "9.39.5",
+    "typescript": "5.9.3"
+  },
+  "scripts": {
+    "dev": "remotion studio src/index.ts",
+    "build": "remotion bundle src/index.ts --out-dir=dist",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src scripts",
+    "lint:check": "eslint src scripts",
+    "render": "bun scripts/render.ts",
+    "test": "bun scripts/verify.ts"
+  }
+}
