@@ -4,6 +4,7 @@ Local Remotion source for production, DEV, STAGING and Premium paw animations.
 The banners are logo-free sunrise scenery with moving clouds, stationary mountains
 and lake shimmer. Icons retain the approved wolf or paw with orbiting glints.
 The banners loop over 32 seconds for slow cloud drift. Icons loop over eight seconds.
+All environments use the same warm banner. Rendering any banner renders the production banner first and copies its PNG/GIF/MP4 bytes to the requested environment filenames.
 The final frame leads into the first without a camera cut. There is no audio.
 
 From the repository root, preview the compositions:

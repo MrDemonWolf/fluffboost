@@ -90,16 +90,16 @@
       "sha256": "b8a40d660c6faf6eb01e0e7f036628746907dccad826fe10324841eda3cbc0e8"
     },
     "fluffboost-dev-banner.png": {
-      "bytes": 176111,
-      "sha256": "7af45c622257ffcffa70b65b7f3ca8daca1ac643864c3086a8faa5e0da460b06"
+      "bytes": 176910,
+      "sha256": "48de6b0bbc253cd2dcfeb254421df27f40d31fe4188edbc0e7ba48372dd313f8"
     },
     "fluffboost-dev-banner.mp4": {
-      "bytes": 135194,
-      "sha256": "430a2c5b010bacc7a9bdb7acc25a44d70bf77964304f51d93c0d18e5eb1a6865"
+      "bytes": 138355,
+      "sha256": "be86b4b80a2688882d35f62ca3d0da56d06cf764abceadfbb2852133d6aa2841"
     },
     "fluffboost-dev-banner.gif": {
-      "bytes": 1204516,
-      "sha256": "f45d57f1abdd15675f2ecba2149481b45ef4683e3fd259c1cbf6a969151574b6"
+      "bytes": 1256389,
+      "sha256": "7f38c1d00e17872d06be08759829774c70529effe5f1b85fb4f2b0931d752dac"
     },
     "fluffboost-dev-icon.png": {
       "bytes": 727413,
@@ -114,16 +114,16 @@
       "sha256": "30087d6f9e52b90f7bc52feea59ed2513f8166b187ed5ec82c4b9a87391cf81b"
     },
     "fluffboost-staging-banner.png": {
-      "bytes": 175683,
-      "sha256": "4c18896e2bcae2b9b7e6f2b5e2755375d146c33a38c44f99e318b75df13c9cc4"
+      "bytes": 176910,
+      "sha256": "48de6b0bbc253cd2dcfeb254421df27f40d31fe4188edbc0e7ba48372dd313f8"
     },
     "fluffboost-staging-banner.mp4": {
-      "bytes": 136563,
-      "sha256": "630a0c020c85f0a42aec17790880d1d15b2c730b327762cbc38460caf746b223"
+      "bytes": 138355,
+      "sha256": "be86b4b80a2688882d35f62ca3d0da56d06cf764abceadfbb2852133d6aa2841"
     },
     "fluffboost-staging-banner.gif": {
-      "bytes": 1266505,
-      "sha256": "2afa3f19d9f60259216651c0cba56f24c5012452ded633317888f5ea4859cf8a"
+      "bytes": 1256389,
+      "sha256": "7f38c1d00e17872d06be08759829774c70529effe5f1b85fb4f2b0931d752dac"
     },
     "fluffboost-staging-icon.png": {
       "bytes": 727398,
