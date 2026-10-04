@@ -46,7 +46,10 @@ describe("setup channel command", () => {
     const chain = mockDbChain([]);
     db.update.returns(chain);
 
-    await handler(mockClient() as never, interaction as never);
+    const client = mockClient();
+    client.channels.fetch.resolves({ ...channel, guildId: interaction.guildId,
+      isTextBased: () => true, isDMBased: () => false, permissionsFor: () => ({ has: () => true }) });
+    await handler(client as never, interaction as never);
 
     expect(db.update.calledOnce).toBe(true);
     expect((chain.set as sinon.SinonStub).calledOnce).toBe(true);
@@ -63,9 +66,24 @@ describe("setup channel command", () => {
     const interaction = mockInteraction();
     (interaction.options.getChannel as sinon.SinonStub).withArgs("channel", true).returns({ id: "ch-123" });
 
-    await handler(mockClient() as never, interaction as never);
+    const client = mockClient();
+    client.channels.fetch.resolves({ id: "ch-123", guildId: interaction.guildId,
+      isTextBased: () => true, isDMBased: () => false, permissionsFor: () => ({ has: () => true }) });
+    await handler(client as never, interaction as never);
 
     expect(logger.commands.error.calledOnce).toBe(true);
     expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
+  });
+
+  it("rejects an inaccessible channel without saving it", async () => {
+    const { handler, db } = await loadModule();
+    const interaction = mockInteraction();
+    interaction.options.getChannel.returns({ id: "restricted" });
+    const client = mockClient();
+    client.channels.fetch.resolves({ id: "restricted", guildId: interaction.guildId,
+      isTextBased: () => true, isDMBased: () => false, permissionsFor: () => ({ has: () => false }) });
+    await handler(client as never, interaction as never);
+    expect(db.update.called).toBe(false);
+    expect(interaction.reply.firstCall.args[0].content).toContain("Embed Links");
   });
 });

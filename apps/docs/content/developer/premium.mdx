@@ -1,0 +1,85 @@
+---
+title: Enable Premium as the operator
+description: Connect Discord's server subscription SKU, enable entitlement handling, and verify paid scheduling.
+---
+
+This guide is for the **bot operator**. Server owners buying the hosted bot's
+subscription should use the [Premium activation guide](/docs/premium).
+
+## 1. Create or confirm the server subscription
+
+Open your application in the
+[Discord Developer Portal](https://discord.com/developers/applications).
+Complete Premium Apps onboarding if required, then create or inspect the
+**guild/server subscription** SKU. A personal subscription is a different product
+and does not match FluffBoost's server scheduling model.
+
+Describe only what the bot implements: custom delivery frequency, time, and
+timezone. Publish the SKU for purchase and add it to the app's store when ready.
+Copy that SKU's ID, not the application ID or an entitlement ID.
+
+Follow Discord's current
+[SKU and Store Setup guide](https://support-dev.discord.com/hc/en-us/articles/17298449675927-Premium-Apps-SKU-and-Store-Setup)
+for onboarding, eligibility, publishing, and store requirements.
+
+## 2. Configure the matching bot application
+
+Set these environment variables in the bot's deployment:
+
+```dotenv
+PREMIUM_ENABLED=true
+DISCORD_PREMIUM_SKU_ID=YOUR_SERVER_SUBSCRIPTION_SKU_ID
+NODE_ENV=production
+```
+
+The SKU must belong to the same Discord application as
+`DISCORD_APPLICATION_ID` and its bot token. Keep dev, staging, and production
+application credentials separate. Do not commit `.env` files or tokens.
+
+Invalid configuration stops startup. Restart or redeploy after changing these
+values: entitlement event handlers are registered when the bot starts. At startup
+and on server join, the bot reconciles active entitlements before scheduled
+delivery. Production ignores test entitlements.
+
+## 3. Verify the server flow
+
+1. Run `/premium` in a server without a subscription. Expect the custom
+   scheduling explanation and Discord's Premium purchase button.
+2. Complete checkout for that server on Discord desktop or in a browser.
+3. Run `/premium` again in the same server. Expect **Premium Active**.
+4. As a server administrator, run `/setup channel`, then `/setup schedule`.
+   Expect **Schedule Updated** with the selected frequency, time, and timezone.
+5. Confirm an actual scheduled quote reaches the chosen channel and that a
+   different unsubscribed server still sees the Premium gate.
+
+The repository's automated tests use isolated service dependencies and simulated
+interactions. They do not perform checkout or prove live Discord delivery.
+
+## 4. Keep test entitlements out of production
+
+Use a separate dev or staging application for test subscriptions. Discord test
+entitlements are API records; hiding commands does not remove existing records.
+Use the owner-only entitlement commands in your test environment to inspect and
+remove tests you created:
+
+```text
+/owner premium test-list
+/owner premium test-delete entitlement_id:ENTITLEMENT_ID
+```
+
+Inspect the entitlement's application, server, SKU, and test status before
+deleting it. Do not delete a paid customer's entitlement. With
+`NODE_ENV=production`, startup overwrites the application's global commands
+without the owner test group, and test handlers reject execution. Legacy commands
+registered directly to a guild need separate, scoped cleanup. Hiding global
+commands does not delete those guild commands or API test entitlements.
+
+## 5. Check cancellation behavior
+
+Canceling renewal should retain Premium until Discord's entitlement expires.
+When access ends, the bot uses daily 8:00 AM America/Chicago delivery and retains
+the saved custom schedule. Re-subscription restores custom delivery.
+
+Keep the public [Privacy Policy](/privacy), [Terms of Service](/terms), support
+links, and SKU benefits consistent with the running bot. Never promise priority
+delivery or exclusive quotes unless those features have been implemented.

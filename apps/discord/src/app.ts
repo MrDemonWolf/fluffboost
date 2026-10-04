@@ -4,6 +4,7 @@ import api from "./api/index.js";
 import redis from "./redis/index.js";
 import env from "./utils/env.js";
 import logger from "./utils/logger.js";
+import { stopShardProcess } from "./utils/shardShutdown.js";
 
 let redisReady = false;
 
@@ -80,7 +81,9 @@ async function shutdown(signal: string): Promise<void> {
   // mid-teardown, then send SIGTERM to each shard.
   manager.respawn = false;
   try {
-    await Promise.all(manager.shards.map((s) => s.kill()));
+    await Promise.all(manager.shards.map((shard) =>
+      shard.process ? stopShardProcess(shard.process) : shard.worker?.terminate()
+    ));
     logger.info("App", "Shards terminated");
   } catch (err) {
     logger.warn("App", "Error terminating shards", { error: err });

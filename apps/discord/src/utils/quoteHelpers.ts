@@ -48,7 +48,8 @@ export function buildMotivationEmbed(
 ): EmbedBuilder {
   return buildBrandedEmbed({
     title: "Motivation quote of the day \u{1F4C5}",
-    description: `**"${quote.quote}"**\n by ${quote.author}`,
+    // Legacy rows may predate the input limits. Keep their delivery valid.
+    description: `**"${quote.quote}"**\n by ${quote.author}`.slice(0, 4096),
     footer: {
       text: BRAND_FOOTER,
       iconURL: client.user?.displayAvatarURL(),

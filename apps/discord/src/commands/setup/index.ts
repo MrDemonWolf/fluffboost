@@ -13,8 +13,7 @@ import type {
   AutocompleteInteraction,
 } from "discord.js";
 
-import logger from "../../utils/logger.js";
-import { safeErrorReply } from "../../utils/commandErrors.js";
+import { withCommandLogging } from "../../utils/commandErrors.js";
 
 /**
  * Import subcommands
@@ -71,11 +70,10 @@ export const slashCommand = new SlashCommandBuilder()
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 export async function execute(client: Client, interaction: CommandInteraction) {
-  try {
-    if (!interaction.isChatInputCommand()) {
-      return;
-    }
-
+  if (!interaction.isChatInputCommand()) {
+    return;
+  }
+  await withCommandLogging("setup", interaction, async () => {
     if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
       await interaction.reply({
         content: "You need Administrator permissions to use this command.",
@@ -83,12 +81,6 @@ export async function execute(client: Client, interaction: CommandInteraction) {
       });
       return;
     }
-
-    logger.commands.executing(
-      "setup",
-      interaction.user.username,
-      interaction.user.id
-    );
 
     const options = interaction.options as CommandInteractionOptionResolver;
 
@@ -108,16 +100,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
         });
         break;
     }
-  } catch (err) {
-    logger.commands.error(
-      "setup",
-      interaction.user.username,
-      interaction.user.id,
-      err
-    );
-
-    await safeErrorReply(interaction);
-  }
+  });
 }
 
 export async function setupAutocomplete(interaction: AutocompleteInteraction) {

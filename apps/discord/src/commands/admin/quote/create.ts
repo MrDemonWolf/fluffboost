@@ -8,6 +8,7 @@ import { motivationQuotes } from "../../../database/schema.js";
 import { announceToMainChannel } from "../../../utils/mainChannel.js";
 import { withCommandLogging } from "../../../utils/commandErrors.js";
 import { buildBrandedEmbed } from "../../../utils/embedHelpers.js";
+import { quoteInputError } from "../../../utils/quoteLimits.js";
 
 export default async function (
   client: Client,
@@ -34,6 +35,11 @@ export default async function (
         content: "Please provide an author",
         flags: MessageFlags.Ephemeral,
       });
+      return;
+    }
+    const inputError = quoteInputError(quote, quoteAuthor);
+    if (inputError) {
+      await interaction.reply({ content: inputError, flags: MessageFlags.Ephemeral });
       return;
     }
 

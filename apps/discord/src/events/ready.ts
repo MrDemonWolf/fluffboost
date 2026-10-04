@@ -2,7 +2,7 @@ import type { Client } from "discord.js";
 
 import logger from "../utils/logger.js";
 import { slashCommands } from "./commandRegistry.js";
-import { pruneGuilds, ensureGuildExists, setActivity } from "./readyDeps.js";
+import { pruneGuilds, ensureGuildExists, setActivity, reconcilePremium } from "./readyDeps.js";
 
 export async function readyEvent(client: Client) {
   try {
@@ -23,6 +23,7 @@ export async function readyEvent(client: Client) {
      * Check if guilds exist in the database and add them if they don't.
      */
     await ensureGuildExists(client);
+    await reconcilePremium(client);
 
     /**
      * Register slash commands. They are global (application-level), so only
@@ -53,5 +54,6 @@ export async function readyEvent(client: Client) {
     await setActivity(client, { scope: "local" });
   } catch (err) {
     logger.error("Discord - Event (Ready)", "Error during ready event", err);
+    throw err;
   }
 }

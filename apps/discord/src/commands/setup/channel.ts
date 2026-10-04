@@ -1,4 +1,4 @@
-import { MessageFlags } from "discord.js";
+import { MessageFlags, PermissionFlagsBits } from "discord.js";
 
 import type {
   Client,
@@ -15,7 +15,7 @@ import { guilds } from "../../database/schema.js";
 import { guildExists } from "../../utils/guildDatabase.js";
 
 export default async function (
-  _client: Client,
+  client: Client,
   interaction: ChatInputCommandInteraction
 ): Promise<void> {
   await withCommandLogging("setup channel", interaction, async () => {
@@ -24,10 +24,22 @@ export default async function (
       return;
     }
 
-    const motivationChannel = interaction.options.getChannel(
+    const selectedChannel = interaction.options.getChannel(
       "channel",
       true
-    ) as TextChannel;
+    );
+    const motivationChannel = await client.channels.fetch(selectedChannel.id) as TextChannel | null;
+    const permissions = client.user && motivationChannel?.permissionsFor(client.user);
+    if (!motivationChannel || !motivationChannel.isTextBased() || motivationChannel.isDMBased() ||
+      motivationChannel.guildId !== guildId || !permissions?.has([
+        PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks,
+      ])) {
+      await interaction.reply({
+        content: "Choose a channel in this server where FluffBoost has View Channel, Send Messages, and Embed Links permissions.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
 
     await guildExists(guildId);
 

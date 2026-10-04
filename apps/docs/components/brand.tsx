@@ -1,4 +1,19 @@
 import type { SVGProps } from "react";
+import Image from "next/image";
+import banner from "../../../banner.jpg";
+
+// Reuse the existing FluffBoost wolf artwork; no replacement logo.
+export function BrandAvatar({ className = "size-7" }: { className?: string }) {
+  return (
+    <Image
+      src={banner}
+      alt=""
+      width={64}
+      height={64}
+      className={`rounded-full object-cover object-[42%_center] ${className}`}
+    />
+  );
+}
 
 // A friendly paw mark — used in the wordmark and as a decorative motif.
 export function PawMark(props: SVGProps<SVGSVGElement>) {
@@ -16,9 +31,7 @@ export function PawMark(props: SVGProps<SVGSVGElement>) {
 export function Wordmark() {
   return (
     <span className="inline-flex items-center gap-2 font-display text-lg font-semibold tracking-tight text-ink">
-      <span className="grid size-7 place-items-center rounded-full bg-honey text-[#2b1e12] shadow-sm">
-        <PawMark className="size-4" />
-      </span>
+      <BrandAvatar />
       FluffBoost
     </span>
   );

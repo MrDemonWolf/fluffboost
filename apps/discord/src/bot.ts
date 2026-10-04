@@ -27,9 +27,10 @@ const client = new Client({
 /**
  * This event will run if the bot starts, and logs in, successfully. Also sets the bot's activity.
  */
-client.on(Events.ClientReady, async () => {
+client.once(Events.ClientReady, async () => {
   try {
     await readyEvent(client);
+    worker = await startWorker(queue, client);
   } catch (err) {
     logger.error(
       "Discord - Event (Ready)",
@@ -111,21 +112,6 @@ const queue = new Queue(queueName, {
 });
 
 let worker: Worker | null = null;
-
-// Gate worker startup on ClientReady. Otherwise BullMQ can dequeue jobs
-// (e.g. send-motivation) before Discord login completes, causing
-// client.channels.fetch / client.users.fetch calls inside job handlers to
-// fail against an un-authenticated client.
-client.once(Events.ClientReady, () => {
-  startWorker(queue, client)
-    .then((startedWorker) => {
-      worker = startedWorker;
-    })
-    .catch((err) => {
-      logger.error("Worker", "Failed to start worker", err);
-      process.exit(1);
-    });
-});
 
 client.login(env.DISCORD_APPLICATION_BOT_TOKEN).catch((err) => {
   logger.error("Discord", "Failed to log in", err);

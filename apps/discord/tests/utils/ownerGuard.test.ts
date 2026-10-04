@@ -9,7 +9,7 @@ const logger = mockLogger();
 mock.module("../../src/utils/env.js", () => ({ default: env }));
 mock.module("../../src/utils/logger.js", () => ({ default: logger }));
 
-const { requireOwner, requireApplication } = await import("../../src/utils/ownerGuard.js");
+const { requireOwner, requireApplication, requireTestEnvironment } = await import("../../src/utils/ownerGuard.js");
 
 describe("ownerGuard", () => {
   beforeEach(() => {
@@ -64,5 +64,18 @@ describe("ownerGuard", () => {
       expect(replyArgs.content).toContain("not ready");
       expect(replyArgs.flags).toBe(MessageFlags.Ephemeral);
     });
+  });
+
+  it("blocks Premium test tools in production even for the owner", async () => {
+    const { default: currentEnv } = await import("../../src/utils/env.js");
+    const previous = currentEnv.NODE_ENV;
+    currentEnv.NODE_ENV = "production";
+    try {
+      const interaction = mockInteraction({ user: { id: currentEnv.OWNER_ID, username: "owner" } });
+      expect(await requireTestEnvironment(interaction as never)).toBe(false);
+      expect(interaction.reply.firstCall.args[0].content).toContain("disabled on the production bot");
+    } finally {
+      currentEnv.NODE_ENV = previous;
+    }
   });
 });

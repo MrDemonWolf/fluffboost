@@ -1,5 +1,6 @@
 import { pgTable, pgEnum, uuid, text, boolean, timestamp, integer, index } from "drizzle-orm/pg-core";
 import type { InferSelectModel } from "drizzle-orm";
+import { DEFAULT_GUILD_SCHEDULE } from "../utils/scheduleConfig.js";
 
 export const motivationFrequencyEnum = pgEnum("MotivationFrequency", ["Daily", "Weekly", "Monthly"]);
 export const discordActivityTypeEnum = pgEnum("DiscordActivityType", ["Custom", "Listening", "Streaming", "Playing"]);
@@ -11,10 +12,11 @@ export const guilds = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     guildId: text("guildId").notNull().unique(),
     motivationChannelId: text("motivationChannelId"),
-    motivationFrequency: motivationFrequencyEnum("motivationFrequency").notNull().default("Daily"),
-    motivationTime: text("motivationTime").notNull().default("08:00"),
+    motivationFrequency: motivationFrequencyEnum("motivationFrequency").notNull()
+      .default(DEFAULT_GUILD_SCHEDULE.motivationFrequency),
+    motivationTime: text("motivationTime").notNull().default(DEFAULT_GUILD_SCHEDULE.motivationTime),
     motivationDay: integer("motivationDay"),
-    timezone: text("timezone").notNull().default("America/Chicago"),
+    timezone: text("timezone").notNull().default(DEFAULT_GUILD_SCHEDULE.timezone),
     lastMotivationSentAt: timestamp("lastMotivationSentAt", { mode: "date" }),
     isPremium: boolean("isPremium").notNull().default(false),
     joinedAt: timestamp("joinedAt", { mode: "date" }).notNull().defaultNow(),

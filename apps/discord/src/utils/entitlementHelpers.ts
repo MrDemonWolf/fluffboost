@@ -5,6 +5,9 @@ import { eq } from "drizzle-orm";
 import { db } from "../database/index.js";
 import { guilds } from "../database/schema.js";
 import logger from "./logger.js";
+import env from "./env.js";
+import { isActivePremiumEntitlement } from "./entitlementPolicy.js";
+import { reconcilePremium } from "./premiumReconciliation.js";
 
 /**
  * Log a uniform entitlement event payload (userId, skuId, guildId, timestamp)
@@ -34,12 +37,25 @@ export async function updateGuildPremiumStatus(
   isPremium: boolean,
   eventName: string
 ): Promise<void> {
-  if (!entitlement.guildId) {
+  if (!entitlement.guildId || entitlement.skuId !== env.DISCORD_PREMIUM_SKU_ID) {
+    return;
+  }
+  if (env.NODE_ENV === "production" && (entitlement.isTest?.() ?? entitlement.startsAt === null)) {
     return;
   }
 
   try {
-    await db.update(guilds).set({ isPremium }).where(eq(guilds.guildId, entitlement.guildId));
+    const active = isPremium && isActivePremiumEntitlement(
+      entitlement, env.DISCORD_PREMIUM_SKU_ID, entitlement.guildId, Date.now(), {
+        allowTest: env.NODE_ENV !== "production",
+      }
+    );
+    if (!active) {
+      // Revoking one grant must not revoke another still-valid subscription.
+      await reconcilePremium(entitlement.client, entitlement.guildId);
+      return;
+    }
+    await db.update(guilds).set({ isPremium: true }).where(eq(guilds.guildId, entitlement.guildId));
   } catch (err) {
     logger.error(`Discord - Event (${eventName})`, "Failed to update guild premium status", err, {
       guildId: entitlement.guildId,

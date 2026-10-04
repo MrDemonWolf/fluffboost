@@ -6,9 +6,8 @@ import type {
   CommandInteractionOptionResolver,
 } from "discord.js";
 
-import logger from "../../utils/logger.js";
-import { requireOwner } from "../../utils/ownerGuard.js";
-import { safeErrorReply } from "../../utils/commandErrors.js";
+import { requireOwner, requireTestEnvironment } from "../../utils/ownerGuard.js";
+import { withCommandLogging } from "../../utils/commandErrors.js";
 
 /**
  * Import subcommands
@@ -52,18 +51,14 @@ export const slashCommand = new SlashCommandBuilder()
   });
 
 export async function execute(client: Client, interaction: CommandInteraction) {
-  try {
-    if (!interaction.isChatInputCommand()) {
+  if (!interaction.isChatInputCommand()) {
+    return;
+  }
+  await withCommandLogging("owner", interaction, async () => {
+    if (!(await requireOwner(interaction, "owner"))) {
       return;
     }
-
-    logger.commands.executing(
-      "owner",
-      interaction.user.username,
-      interaction.user.id
-    );
-
-    if (!(await requireOwner(interaction, "owner"))) {
+    if (!(await requireTestEnvironment(interaction))) {
       return;
     }
 
@@ -105,16 +100,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
           flags: MessageFlags.Ephemeral,
         });
     }
-  } catch (err) {
-    logger.commands.error(
-      "owner",
-      interaction.user.username,
-      interaction.user.id,
-      err
-    );
-
-    await safeErrorReply(interaction);
-  }
+  });
 }
 
 export default {

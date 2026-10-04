@@ -1,13 +1,20 @@
-import { describe, it, expect, afterEach, mock } from "bun:test";
+import { describe, it, expect, beforeEach, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockLogger, mockDb, mockDbChain, mockEntitlement } from "../helpers.js";
+import { mockLogger, mockDb, mockDbChain, mockEntitlement, mockEnv } from "../helpers.js";
+const reconcile = sinon.stub().resolves();
 
 describe("entitlementUpdateEvent", () => {
+  beforeEach(() => {
+    reconcile.reset();
+    reconcile.resolves();
+    mock.module("../../src/utils/premiumReconciliation.js", () => ({ reconcilePremium: reconcile }));
+    mock.module("../../src/utils/env.js", () => ({ default: mockEnv({ DISCORD_PREMIUM_SKU_ID: "sku-123" }) }));
+  });
   afterEach(() => {
     sinon.restore();
   });
 
-  it("should set isPremium=false when endsAt is in the past (expired)", async () => {
+  it("reconciles other grants when endsAt is in the past", async () => {
     const db = mockDb();
     const chain = mockDbChain([]);
     db.update.returns(chain);
@@ -19,8 +26,8 @@ describe("entitlementUpdateEvent", () => {
     const expired = mockEntitlement({ guildId: "g1", endsAt: new Date(Date.now() - 60_000) });
     await entitlementUpdateEvent(null, expired as never);
 
-    expect(db.update.calledOnce).toBe(true);
-    expect((chain.set as sinon.SinonStub).firstCall.args[0]).toEqual({ isPremium: false });
+    expect(reconcile.calledOnce).toBe(true);
+    expect(db.update.called).toBe(false);
   });
 
   it("should set isPremium=true when endsAt is null", async () => {
@@ -39,7 +46,7 @@ describe("entitlementUpdateEvent", () => {
     expect((chain.set as sinon.SinonStub).firstCall.args[0]).toEqual({ isPremium: true });
   });
 
-  it("should keep isPremium=true when endsAt is in the future (renewal carries the next period end)", async () => {
+  it("keeps isPremium=true through the remaining paid period", async () => {
     const db = mockDb();
     const chain = mockDbChain([]);
     db.update.returns(chain);
