@@ -6,3 +6,4 @@
  */
 export { pruneGuilds, ensureGuildExists } from "../utils/guildDatabase.js";
 export { default as setActivity } from "../worker/jobs/setActivity.js";
+export { reconcilePremium } from "../utils/premiumReconciliation.js";

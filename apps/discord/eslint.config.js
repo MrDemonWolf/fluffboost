@@ -114,6 +114,7 @@ export default [
       "ecosystem.config.js",
       "pnpm-lock.yaml",
       "tests/**",
+      "e2e/**",
       "src/generated/**",
     ],
   },

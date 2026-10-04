@@ -1,61 +1,101 @@
 ---
 title: Premium
-description: What premium adds, how it's billed through Discord, and how to turn it on.
+description: Activate FluffBoost Premium for your server, verify it, and set a custom quote schedule.
 ---
 
-FluffBoost is free, and stays free. Premium is a small optional upgrade for
-servers that want control over exactly when the quote arrives.
+**Premium adds custom scheduling for one Discord server.** Free servers receive
+a daily quote at 8:00 AM America/Chicago. Premium lets a server choose daily,
+weekly, or monthly delivery, a time, and an IANA timezone.
 
-## What premium adds
+The daily quote, `/quote`, and quote suggestions remain available without a
+subscription. Premium does not add a separate quote library or priority delivery.
 
-The one thing: **custom scheduling**. See [Scheduling](/docs/scheduling) for the
-full command.
+## Before you subscribe
 
-- Daily, weekly, or monthly delivery
-- A custom time (`HH:mm`)
-- Any IANA timezone
-- A specific day for weekly / monthly
+- Use Discord's **desktop app or a browser**. Discord's current
+  [Premium App FAQ](https://support-apps.discord.com/hc/en-us/articles/26501767768471-Premium-App-FAQ)
+  says Premium App purchases are unavailable in the mobile app.
+- Make sure you are purchasing for the **server you want to upgrade**.
+- To configure FluffBoost, your Discord account needs **Administrator** in that
+  server. Set a delivery channel with `/setup channel` first.
 
-Everything else — the daily quote, community suggestions, admin tools, rotating
-status — is free for every server, forever.
-
-## How billing works
-
-Premium uses **Discord's built-in App Subscriptions**, so it's handled entirely
-by Discord — no separate account, no card details shared with the bot.
+## Activate Premium
 
 <Steps>
 
 <Step>
 
-### Open the upsell
+### Open Premium in the right server
 
-Run `/premium`. If the server isn't subscribed, you'll see the premium info with
-a purchase button.
-
-</Step>
-
-<Step>
-
-### Subscribe through Discord
-
-Use the button to subscribe via Discord's own checkout.
+Run `/premium` in the server you want to upgrade. FluffBoost shows its Premium
+information and Discord's purchase button if Premium is available.
 
 </Step>
 
 <Step>
 
-### Customize your schedule
+### Complete Discord's checkout
 
-Run `/premium` again to confirm it's active, then set your schedule with
-`/setup schedule`.
+Select the Premium purchase button. Review the subscription, selected server,
+price, and renewal details, then complete checkout inside Discord.
+
+The price displayed in checkout is authoritative. FluffBoost does not ask for
+your payment card details, a separate login, or an activation code.
+
+</Step>
+
+<Step>
+
+### Check that it is active
+
+After Discord confirms the purchase, run `/premium` again in that same server.
+Look for **Premium Active**. Discord provides the entitlement to FluffBoost;
+there is no manual license key to enter.
+
+</Step>
+
+<Step>
+
+### Set your custom schedule
+
+For a daily quote at 9:30 AM New York time, run:
+
+```text
+/setup schedule frequency:Daily time:09:30 timezone:America/New_York
+```
+
+Check the **Schedule Updated** response. For weekly or monthly delivery, include
+the `day` option; see [Scheduling](/docs/scheduling) for examples and valid values.
 
 </Step>
 
 </Steps>
 
-<Callout type="info">
-  Premium is per-server. If it lapses, your custom schedule is saved and simply
-  pauses until you re-subscribe — see
-  [If premium lapses](/docs/scheduling#if-premium-lapses).
-</Callout>
+## Purchase worked, but Premium is missing
+
+| What you see | What to do |
+| --- | --- |
+| Premium subscriptions are not currently available | The operator has Premium disabled. Contact support; do not make a second purchase. |
+| No purchase option on mobile | Open Discord on desktop or in a browser. |
+| `/premium` still offers a purchase | Check the server and subscription in Discord, then run the command again. Contact support if it persists. |
+| `/setup schedule` says you need Administrator | Ask a server administrator to configure the schedule. |
+| Schedule saved, but no quote arrives | Check the delivery channel and bot permissions in the [setup guide](/docs/setup). |
+
+For help, contact the [FluffBoost support Discord](https://mrdwolf.net/discord)
+with the server ID, what `/premium` reports, and the approximate purchase time.
+Do not post card details or private billing information in a public channel.
+For Discord checkout errors, use [Discord billing support](https://dis.gd/billing).
+
+## Manage, cancel, or renew
+
+On desktop or in a browser, open **User Settings → Subscriptions**, find your
+Premium App subscriptions, and manage FluffBoost there. Follow
+[Discord's cancellation guide](https://support.discord.com/hc/en-us/articles/26729692307351-How-to-Cancel-your-Premium-App-Subscription).
+Removing the bot from your server does not cancel the subscription.
+
+Cancellation normally leaves access active until the current billing period
+ends. When the entitlement ends, the saved custom schedule is retained and
+delivery uses the default daily 8:00 AM America/Chicago schedule. An active
+subscription restores the saved custom timing.
+
+See our [Terms of Service](/terms) and [Privacy Policy](/privacy).

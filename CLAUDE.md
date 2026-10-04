@@ -164,7 +164,13 @@ Discord provides test entitlements so you can verify your subscription flow with
 - `/owner premium test-create [guild]` — Creates a guild-level test entitlement via `client.application.entitlements.createTest()`. Defaults to the current server. Returns the entitlement ID.
 - `/owner premium test-delete <entitlement_id>` — Deletes a test entitlement via `client.application.entitlements.deleteTest()`.
 
-These commands are restricted to the bot owner only (`OWNER_ID` env var).
+These commands are restricted to the bot owner only (`OWNER_ID` env var) and are
+available only outside production. Set `NODE_ENV=production` for the live bot:
+global command registration omits the owner test group, handlers reject test
+operations, and Premium access ignores test entitlements. Startup bulk command
+registration removes legacy global owner commands; guild-scoped legacy commands
+require separate scoped cleanup. Removing commands does not remove existing test
+entitlements. See `apps/docs/content/developer/premium.mdx` for operator setup.
 
 ### Custom Quote Timing (Premium)
 
@@ -174,7 +180,13 @@ Premium guilds can customize their quote delivery schedule via `/setup schedule`
 - **Timezone**: Any IANA timezone with autocomplete (default: `America/Chicago`)
 - **Day**: Day of week (0-6) for weekly, day of month (1-28) for monthly
 
-Non-premium guilds keep the default daily 8:00 AM America/Chicago schedule. The schedule evaluator (`src/utils/scheduleEvaluator.ts`) uses dayjs with timezone support to determine when each guild is due. If a premium subscription lapses, the custom schedule is retained (no automatic reset).
+Non-premium guilds use the default daily 8:00 AM America/Chicago schedule when
+Premium is enabled. The schedule evaluator (`src/utils/scheduleEvaluator.ts`)
+uses dayjs with timezone support to determine when each guild is due. When an
+entitlement expires, custom settings are retained but background delivery uses
+the free default until Premium is active again. Cancellation of renewal alone
+does not revoke the still-active billing period. Entitlements must match the
+configured SKU, current guild, active dates, and production test policy.
 
 ### Gating Future Commands Behind Premium
 

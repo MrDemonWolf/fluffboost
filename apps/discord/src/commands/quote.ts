@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, MessageFlags } from "discord.js";
+import { SlashCommandBuilder } from "discord.js";
 
 import type { Client, ChatInputCommandInteraction } from "discord.js";
 
@@ -15,18 +15,18 @@ export const slashCommand = new SlashCommandBuilder()
 
 export async function execute(client: Client, interaction: ChatInputCommandInteraction): Promise<void> {
   await withCommandLogging("quote", interaction, async () => {
+    await interaction.deferReply();
     const quote = await getRandomMotivationQuote();
     if (!quote) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "No motivation quote found. Please try again later!",
-        flags: MessageFlags.Ephemeral,
       });
       return;
     }
 
     const addedBy = await resolveQuoteAuthor(client, quote.addedBy);
 
-    await interaction.reply({
+    await interaction.editReply({
       embeds: [buildMotivationEmbed(quote, addedBy, client)],
     });
   });

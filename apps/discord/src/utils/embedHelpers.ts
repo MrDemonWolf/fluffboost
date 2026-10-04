@@ -32,7 +32,10 @@ export function buildBrandedEmbed(options: BrandedEmbedOptions = {}): EmbedBuild
     embed.setDescription(options.description);
   }
   if (options.fields && options.fields.length > 0) {
-    embed.addFields(options.fields);
+    // Old stored quotes and free-form review reasons can exceed field limits.
+    embed.addFields(options.fields.map((field) => ({
+      ...field, value: field.value.slice(0, 1024) || "(empty)",
+    })));
   }
   if (options.footer !== undefined) {
     if (typeof options.footer === "string") {

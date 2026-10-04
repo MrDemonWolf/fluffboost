@@ -26,8 +26,9 @@ describe("about command", () => {
 
     await execute(client as never, interaction as never);
 
-    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
-    const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
+    expect((interaction.deferReply as sinon.SinonStub).calledOnce).toBe(true);
+    expect((interaction.editReply as sinon.SinonStub).calledOnce).toBe(true);
+    const replyArgs = (interaction.editReply as sinon.SinonStub).firstCall.args[0];
     expect(Array.isArray(replyArgs.embeds)).toBe(true);
     expect(replyArgs.embeds).toHaveLength(1);
   });
@@ -36,8 +37,8 @@ describe("about command", () => {
     const { execute, logger } = await loadModule();
     const client = mockClient();
     const interaction = mockInteraction();
-    (interaction.reply as sinon.SinonStub).onFirstCall().rejects(new Error("fail"));
-    (interaction.reply as sinon.SinonStub).onSecondCall().resolves();
+    (interaction.editReply as sinon.SinonStub).onFirstCall().rejects(new Error("fail"));
+    (interaction.editReply as sinon.SinonStub).onSecondCall().resolves();
 
     await execute(client as never, interaction as never);
 

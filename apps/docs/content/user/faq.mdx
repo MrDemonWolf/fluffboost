@@ -5,15 +5,15 @@ description: Quick answers to the questions server owners ask most.
 
 ## Is FluffBoost free?
 
-Yes. The daily quote and all core commands are free forever. The only paid
-feature is [custom scheduling](/docs/premium).
+Yes. The daily quote, `/quote`, and community suggestions are free. Premium adds
+[custom scheduling](/docs/premium).
 
 ## The quote didn't show up — what happened?
 
 Run through these:
 
 - Did you set a channel with `/setup channel`?
-- Can FluffBoost **see** and **send messages** in that channel?
+- Can FluffBoost **view the channel**, **send messages**, and **embed links** there?
 - Is it a normal **text channel** (not forum/voice/category)?
 - Is the current time actually your scheduled time in your timezone?
 
@@ -24,8 +24,8 @@ Run through these:
 
 ## Where do the quotes come from?
 
-A curated starter library plus quotes your own members suggest with
-`/suggestion` and your admins approve. See [Suggestions](/docs/suggestions).
+A starter library plus community suggestions reviewed by the FluffBoost team.
+The approved library is shared across servers. See [Suggestions](/docs/suggestions).
 
 ## Can I change the delivery time?
 
@@ -34,9 +34,11 @@ and timezones are a [premium](/docs/premium) feature via `/setup schedule`.
 
 ## What data does FluffBoost store?
 
-Only what it needs to run: your server's ID, the channel you chose, your schedule
-settings, and the quotes/suggestions in your server. It doesn't read message
-history or DM your members.
+Server IDs, channel and schedule settings, Premium status, and quote submissions
+with submitter/reviewer user IDs. Operational logs can include command names,
+usernames, and IDs. The bot does not monitor conversations; suggestion submitters
+may receive a review-result DM. See the [Privacy Policy](/privacy) for details
+and deletion requests.
 
 ## How do I get help?
 

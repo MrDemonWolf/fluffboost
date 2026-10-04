@@ -1,21 +1,20 @@
 import type { Entitlement } from "discord.js";
 
 import { logEntitlementEvent, updateGuildPremiumStatus } from "../utils/entitlementHelpers.js";
+import { isActivePremiumEntitlement } from "../utils/entitlementPolicy.js";
 
 export async function entitlementUpdateEvent(
   _oldEntitlement: Entitlement | null,
   newEntitlement: Entitlement
 ): Promise<void> {
-  // Active subscriptions carry a populated endsAt for the current billing
-  // period and ENTITLEMENT_UPDATE fires on renewal, so a non-null endsAt does
-  // NOT mean cancelled. The entitlement is active until endsAt has passed;
-  // actual revocation arrives via ENTITLEMENT_DELETE or a past endsAt.
+  // Discord sends updates when subscriptions end. A populated endsAt is a
+  // validity boundary; a future end still grants access through the paid term.
   const endsAt = newEntitlement.endsAt;
-  const isActive = endsAt === null || endsAt.getTime() > Date.now();
+  const isActive = isActivePremiumEntitlement(newEntitlement, newEntitlement.skuId, newEntitlement.guildId);
 
   logEntitlementEvent(
     "Entitlement Update",
-    isActive ? "Premium subscription renewed" : "Premium subscription expired",
+    isActive ? "Premium entitlement remains active" : "Premium entitlement ended",
     newEntitlement,
     { endsAt: endsAt?.toISOString() }
   );

@@ -1,8 +1,11 @@
-import { describe, it, expect, afterEach, mock } from "bun:test";
+import { describe, it, expect, beforeEach, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockLogger, mockDb, mockDbChain, mockEntitlement } from "../helpers.js";
+import { mockLogger, mockDb, mockDbChain, mockEntitlement, mockEnv } from "../helpers.js";
 
 describe("entitlementCreateEvent", () => {
+  beforeEach(() => {
+    mock.module("../../src/utils/env.js", () => ({ default: mockEnv({ DISCORD_PREMIUM_SKU_ID: "sku-123" }) }));
+  });
   afterEach(() => {
     sinon.restore();
   });

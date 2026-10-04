@@ -76,7 +76,7 @@ export function mockDbChain(resolveValue: unknown = []) {
   }
 
   // Make the chain thenable so `await db.select().from(...)` works
-  chain.then = (onFulfill: (v: unknown) => unknown, onReject?: (e: unknown) => unknown) => {
+  chain["then"] = (onFulfill: (v: unknown) => unknown, onReject?: (e: unknown) => unknown) => {
     if (_rejectValue !== undefined) {
       return Promise.reject(_rejectValue).then(onFulfill, onReject);
     }
@@ -84,8 +84,8 @@ export function mockDbChain(resolveValue: unknown = []) {
   };
 
   // Test configuration helpers
-  chain.resolves = (value: unknown) => { _resolveValue = value; _rejectValue = undefined; return chain; };
-  chain.rejects = (err: unknown) => { _rejectValue = err; return chain; };
+  chain["resolves"] = (value: unknown) => { _resolveValue = value; _rejectValue = undefined; return chain; };
+  chain["rejects"] = (err: unknown) => { _rejectValue = err; return chain; };
 
   return chain;
 }
@@ -119,6 +119,10 @@ export function mockInteraction(overrides: Record<string, unknown> = {}) {
   const entitlements = new Map<string, { skuId: string }>();
   const replyStub = sinon.stub().resolves();
   const followUpStub = sinon.stub().resolves();
+  const editReplyStub = sinon.stub().resolves();
+  const deferReplyStub = sinon.stub().callsFake(async function (this: { deferred: boolean }) {
+    this.deferred = true;
+  });
 
   return {
     user: {
@@ -130,6 +134,8 @@ export function mockInteraction(overrides: Record<string, unknown> = {}) {
     replied: false,
     deferred: false,
     reply: replyStub,
+    deferReply: deferReplyStub,
+    editReply: editReplyStub,
     followUp: followUpStub,
     entitlements,
     isCommand: sinon.stub().returns(true),

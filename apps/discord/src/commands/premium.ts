@@ -24,7 +24,7 @@ export async function execute(_client: Client, interaction: CommandInteraction):
       const embed = buildBrandedEmbed({
         color: SUCCESS_COLOR,
         title: "Premium Active",
-        description: "You have an active premium subscription! Thank you for supporting FluffBoost.",
+        description: "This server has an active Premium subscription. An administrator can use /setup schedule to customize quote delivery. Thank you for supporting FluffBoost!",
         fields: [{ name: "Status", value: "Active", inline: true }],
         footer: "Manage your subscription in User Settings > Subscriptions",
       });
@@ -35,12 +35,12 @@ export async function execute(_client: Client, interaction: CommandInteraction):
 
     const upsell = buildPremiumUpsell({
       title: "FluffBoost Premium",
-      description: "Upgrade to Premium to unlock exclusive features!",
+      description: "Customize this server's quote schedule and support FluffBoost development.",
       fields: [
-        { name: "Price", value: "$1.99/month", inline: true },
+        { name: "Billing", value: "Discord checkout shows the current price and renewal terms.", inline: true },
         {
           name: "Benefits",
-          value: ["- Priority quote delivery", "- Exclusive premium quotes", "- Early access to new features"].join("\n"),
+          value: ["- Custom quote time and timezone", "- Daily, weekly, or monthly delivery", "- Support ongoing development"].join("\n"),
         },
       ],
       footerText: "Subscribe to support FluffBoost development!",

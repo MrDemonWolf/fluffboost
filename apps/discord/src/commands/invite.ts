@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, OAuth2Scopes, MessageFlags } from "discord.js";
+import { SlashCommandBuilder, OAuth2Scopes, MessageFlags, PermissionFlagsBits } from "discord.js";
 
 import type { Client, CommandInteraction } from "discord.js";
 
@@ -14,6 +14,7 @@ export async function execute(client: Client, interaction: CommandInteraction): 
   await withCommandLogging("invite", interaction, async () => {
     const inviteLink = client.generateInvite({
       scopes: [OAuth2Scopes.ApplicationsCommands, OAuth2Scopes.Bot],
+      permissions: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks],
     });
 
     await interaction.reply({

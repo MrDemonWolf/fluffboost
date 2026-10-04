@@ -5,14 +5,15 @@ import type { CommandInteraction, ChatInputCommandInteraction } from "discord.js
 import logger from "./logger.js";
 
 /**
- * Safely reply with an ephemeral error message if the interaction
- * hasn't already been replied to or deferred.
+ * Complete a deferred reply or send an ephemeral error before acknowledgement.
  */
 export async function safeErrorReply(
   interaction: CommandInteraction | ChatInputCommandInteraction,
   message = "An error occurred while processing your request."
 ): Promise<void> {
-  if (!interaction.replied && !interaction.deferred) {
+  if (interaction.deferred && !interaction.replied) {
+    await interaction.editReply({ content: message });
+  } else if (!interaction.replied) {
     await interaction.reply({
       content: message,
       flags: MessageFlags.Ephemeral,

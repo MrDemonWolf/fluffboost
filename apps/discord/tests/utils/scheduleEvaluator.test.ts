@@ -1,6 +1,9 @@
 import { describe, it, expect, afterEach } from "bun:test";
 import sinon from "sinon";
-import { getCurrentTimeInTimezone, isGuildDueForMotivation } from "../../src/utils/scheduleEvaluator.js";
+import {
+  effectiveGuildSchedule, getCurrentTimeInTimezone, isGuildDueForMotivation,
+  mostRecentScheduledOccurrence,
+} from "../../src/utils/scheduleEvaluator.js";
 
 interface TestGuild {
   motivationFrequency: "Daily" | "Weekly" | "Monthly";
@@ -256,6 +259,65 @@ describe("scheduleEvaluator", () => {
   });
 
   describe("edge cases", () => {
+    const offsetCases = [
+      { name: "spring gap before shifted time", now: "2026-03-08T08:00:00Z", time: "02:30", anchor: "2026-03-07T08:30:00Z", due: false },
+      { name: "spring gap at shifted time", now: "2026-03-08T08:30:00Z", time: "02:30", anchor: "2026-03-08T08:30:00Z", due: true },
+      { name: "spring midnight catch-up", now: "2026-03-08T11:00:00Z", time: "23:59", anchor: "2026-03-08T05:59:00Z", due: true },
+      { name: "fall expired catch-up", now: "2026-11-01T11:10:00Z", time: "23:59", anchor: "2026-11-01T04:59:00Z", due: false },
+    ];
+    for (const test of offsetCases) {
+      it(`resolves the occurrence's own offset: ${test.name}`, () => {
+        clock = sinon.useFakeTimers(new Date(test.now).getTime());
+        const guild = makeGuild({ motivationTime: test.time });
+        expect(mostRecentScheduledOccurrence(guild)?.toISOString()).toBe(new Date(test.anchor).toISOString());
+        expect(isGuildDueForMotivation(guild)).toBe(test.due);
+      });
+    }
+    for (const frequency of ["Weekly", "Monthly"] as const) {
+      it(`keeps ${frequency} spring catch-up within the correct window`, () => {
+        clock = sinon.useFakeTimers(new Date("2026-03-08T13:00:00Z").getTime());
+        const guild = makeGuild({ motivationFrequency: frequency, motivationTime: "01:30",
+          motivationDay: frequency === "Weekly" ? 0 : 8 });
+        expect(mostRecentScheduledOccurrence(guild)?.toISOString()).toBe("2026-03-08T07:30:00.000Z");
+        expect(isGuildDueForMotivation(guild)).toBe(true);
+      });
+      it(`rejects ${frequency} fall catch-up outside the correct window`, () => {
+        clock = sinon.useFakeTimers(new Date("2026-11-01T11:45:00Z").getTime());
+        const guild = makeGuild({ motivationFrequency: frequency, motivationTime: "00:30",
+          motivationDay: frequency === "Weekly" ? 0 : 1 });
+        expect(mostRecentScheduledOccurrence(guild)?.toISOString()).toBe("2026-11-01T05:30:00.000Z");
+        expect(isGuildDueForMotivation(guild)).toBe(false);
+      });
+    }
+    it.each(["Daily", "Weekly", "Monthly"] as const)(
+      "does not deliver %s twice during the repeated fall DST hour", (motivationFrequency) => {
+      clock = sinon.useFakeTimers(new Date("2026-11-01T06:31:00Z").getTime());
+      const guild = makeGuild({
+        motivationTime: "01:30", motivationFrequency,
+        motivationDay: motivationFrequency === "Weekly" ? 0 : motivationFrequency === "Monthly" ? 1 : null,
+      });
+      expect(isGuildDueForMotivation(guild)).toBe(true);
+      guild.lastMotivationSentAt = new Date();
+      clock.setSystemTime(new Date("2026-11-01T07:31:00Z"));
+      expect(isGuildDueForMotivation(guild)).toBe(false);
+    });
+    it("does not let a late midnight catch-up suppress the next evening's quote", () => {
+      clock = sinon.useFakeTimers(new Date("2026-01-16T06:03:00Z").getTime());
+      const guild = makeGuild({ motivationTime: "23:59" });
+      expect(isGuildDueForMotivation(guild)).toBe(true);
+      guild.lastMotivationSentAt = new Date();
+      clock.setSystemTime(new Date("2026-01-17T05:59:00Z"));
+      expect(isGuildDueForMotivation(guild)).toBe(true);
+    });
+    it("uses the free schedule after expiry without discarding saved customization", () => {
+      const guild = { ...makeGuild({ motivationTime: "22:00", timezone: "Europe/London" }), isPremium: false };
+      const effective = effectiveGuildSchedule(guild, true);
+      expect(effective.motivationFrequency).toBe("Daily");
+      expect(effective.motivationTime).toBe("08:00");
+      expect(effective.timezone).toBe("America/Chicago");
+      expect(guild.motivationTime).toBe("22:00");
+      expect(effectiveGuildSchedule({ ...guild, isPremium: true }, true).motivationTime).toBe("22:00");
+    });
     it("should handle midnight (00:00)", () => {
       // 2024-01-15 06:00 UTC → 00:00 CST
       clock = sinon.useFakeTimers(new Date("2024-01-15T06:00:00Z").getTime());

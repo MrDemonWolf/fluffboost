@@ -5,6 +5,7 @@ import { RootProvider } from "fumadocs-ui/provider/next";
 import { Fraunces, Nunito, JetBrains_Mono } from "next/font/google";
 import StaticSearchDialog from "@/components/search-dialog";
 import { site } from "@/lib/site";
+import banner from "../../../banner.jpg";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -37,6 +38,12 @@ export const metadata: Metadata = {
     description: site.description,
     siteName: site.name,
     type: "website",
+    images: [{
+      url: new URL(banner.src, new URL(site.origin).origin).href,
+      width: banner.width,
+      height: banner.height,
+      alt: "FluffBoost's gray-and-cream wolf at sunrise",
+    }],
   },
   twitter: { card: "summary_large_image" },
 };

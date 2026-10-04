@@ -3,7 +3,7 @@ import { MessageFlags } from "discord.js";
 import type { Client, CommandInteraction, CommandInteractionOptionResolver } from "discord.js";
 
 import { getPremiumSkuId } from "../../../utils/premium.js";
-import { requireApplication, requireOwner } from "../../../utils/ownerGuard.js";
+import { requireApplication, requireOwner, requireTestEnvironment } from "../../../utils/ownerGuard.js";
 import { withCommandLogging } from "../../../utils/commandErrors.js";
 
 export default async function (
@@ -16,6 +16,7 @@ export default async function (
     interaction,
     async () => {
       if (!(await requireOwner(interaction, "owner premium test-create"))) {return;}
+      if (!(await requireTestEnvironment(interaction))) {return;}
 
       const skuId = getPremiumSkuId();
       if (!skuId) {
