@@ -139,6 +139,13 @@ export const slashCommand = new SlashCommandBuilder()
                 { name: "Approved", value: "Approved" },
                 { name: "Rejected", value: "Rejected" },
               ),
+          )
+          .addIntegerOption((option) =>
+            option
+              .setName("page")
+              .setDescription("Page of 500 suggestions, newest first")
+              .setMinValue(1)
+              .setRequired(false),
           );
       })
       .addSubcommand((subCommand) => {

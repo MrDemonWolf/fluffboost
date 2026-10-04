@@ -36,10 +36,12 @@ describe("admin suggestion list command", () => {
     return { handler: mod.default, logger, db };
   }
 
-  function makeInteraction(status: string | null = null) {
+  function makeInteraction(status: string | null = null, page: number | null = null) {
     const interaction = mockInteraction();
     const getStringStub = interaction.options.getString as sinon.SinonStub;
     getStringStub.withArgs("status").returns(status);
+    const getIntegerStub = interaction.options.getInteger as sinon.SinonStub;
+    getIntegerStub.withArgs("page").returns(page);
     return interaction;
   }
 
@@ -78,6 +80,8 @@ describe("admin suggestion list command", () => {
     expect(db.select.calledOnce).toBe(true);
     // The where method should have been called (for status filter)
     expect((chain.where as sinon.SinonStub).called).toBe(true);
+    expect((chain.limit as sinon.SinonStub).calledWith(501)).toBe(true);
+    expect((chain.offset as sinon.SinonStub).calledWith(0)).toBe(true);
   });
 
   it("should return suggestions as a text file", async () => {
@@ -101,5 +105,32 @@ describe("admin suggestion list command", () => {
     expect(content).toContain("Be kind");
     expect(content).toContain("s2");
     expect(content).toContain("Stay strong");
+    expect(content).toContain("Page 1");
+  });
+
+  it("should bound each export page and identify the next page", async () => {
+    const { handler, db } = await loadModule();
+    const interaction = makeInteraction(null, 2);
+    const rows = Array.from({ length: 501 }, (_, index) => ({
+      id: `s${index + 501}`,
+      quote: `Quote ${index + 501}`,
+      author: "Anon",
+      status: "Pending",
+      addedBy: "user-1",
+    }));
+    const chain = mockDbChain(rows);
+    db.select.returns(chain);
+
+    await handler({} as never, interaction as never, interaction.options as never);
+
+    expect((chain.limit as sinon.SinonStub).calledWith(501)).toBe(true);
+    expect((chain.offset as sinon.SinonStub).calledWith(500)).toBe(true);
+    const content = (interaction.reply as sinon.SinonStub).firstCall.args[0].files[0].attachment.toString();
+    expect(content).toContain("Page 2");
+    expect(content).toContain("more results on page 3");
+    expect(content).toContain("s501");
+    expect(content).toContain("s1000");
+    expect(content).not.toContain("s1001");
+    expect(content.split("\n").filter((line) => line.startsWith("s"))).toHaveLength(500);
   });
 });

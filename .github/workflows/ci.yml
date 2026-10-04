@@ -135,6 +135,7 @@ jobs:
         run: bun run --filter=@fluffboost/discord test:e2e
         env:
           E2E_DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/fluffboost_e2e
+          E2E_DATABASE_DISPOSABLE: "true"
 
   docs:
     name: Docs Build & Browser E2E

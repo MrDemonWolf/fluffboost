@@ -7,16 +7,13 @@ import postgres from "postgres";
 import sinon from "sinon";
 import { guilds, motivationQuotes } from "../src/database/schema.js";
 import { mockClient, mockEnv, mockInteraction, mockLogger } from "../tests/helpers.js";
+import { requireSafeE2EDatabaseUrl } from "./databaseSafety.js";
 
-// Never fall back to DATABASE_URL or the bot's .env credentials. The tests own
-// only a fresh schema on an explicitly selected, local PostgreSQL instance.
-const databaseUrl = process.env["E2E_DATABASE_URL"];
-if (!databaseUrl) throw new Error("Set E2E_DATABASE_URL to a local test PostgreSQL instance before running bot E2E.");
-const parsedUrl = new URL(databaseUrl);
-if (!["postgres:", "postgresql:"].includes(parsedUrl.protocol) ||
-  !["localhost", "127.0.0.1", "[::1]"].includes(parsedUrl.hostname)) {
-  throw new Error("Bot E2E refuses non-loopback database hosts.");
-}
+// Never fall back to DATABASE_URL or the bot's .env credentials.
+const databaseUrl = requireSafeE2EDatabaseUrl(
+  process.env["E2E_DATABASE_URL"],
+  process.env["E2E_DATABASE_DISPOSABLE"],
+);
 
 const schemaName = `fluffboost_e2e_${crypto.randomUUID().replaceAll("-", "")}`;
 const connection = postgres(databaseUrl, {

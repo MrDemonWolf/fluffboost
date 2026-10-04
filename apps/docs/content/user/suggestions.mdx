@@ -25,10 +25,15 @@ not grant access to this queue.
 
 | Command                        | What it does                          |
 | ------------------------------ | ------------------------------------- |
-| `/admin suggestion list`       | Show pending suggestions              |
+| `/admin suggestion list`       | List suggestions                      |
 | `/admin suggestion approve`    | Approve a suggestion into the library |
 | `/admin suggestion reject`     | Decline a suggestion                  |
 | `/admin suggestion stats`      | See suggestion counts at a glance     |
+
+The list is sorted newest first and includes up to 500 suggestions per page.
+Use the optional `status` filter and `page` number to browse older or reviewed
+suggestions. Without a status filter, the list includes pending, approved, and
+rejected suggestions.
 
 <Callout type="info">
   Approved quotes join the same shared pool used for daily delivery and

@@ -8,12 +8,13 @@ import {
 import { eq } from "drizzle-orm";
 
 import { db } from "../database/index.js";
-import { guilds, suggestionQuotes } from "../database/schema.js";
+import { guilds, suggestionQuotes, type SuggestionQuote } from "../database/schema.js";
 import { announceToMainChannel } from "../utils/mainChannel.js";
 import { withCommandLogging } from "../utils/commandErrors.js";
 import { requireGuildId } from "../utils/permissions.js";
 import { buildBrandedEmbed } from "../utils/embedHelpers.js";
 import { MAX_QUOTE_LENGTH, MAX_QUOTE_AUTHOR_LENGTH, quoteInputError } from "../utils/quoteLimits.js";
+import { consumeSuggestionSlot, releaseSuggestionSlot } from "../utils/suggestionLimits.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("suggestion")
@@ -87,24 +88,51 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
       return;
     }
 
-    const [newQuote] = await db
-      .insert(suggestionQuotes)
-      .values({
-        quote,
-        author,
-        addedBy: interaction.user.id,
-        status: "Pending",
-      })
-      .returning();
+    const canSubmit = await consumeSuggestionSlot(interaction.user.id, interaction.id);
+    if (!canSubmit) {
+      await interaction.reply({
+        content: "You can submit up to 3 quote suggestions every 24 hours. Please try again later.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    let newQuote: SuggestionQuote | undefined;
+    try {
+      [newQuote] = await db
+        .insert(suggestionQuotes)
+        .values({
+          quote,
+          author,
+          addedBy: interaction.user.id,
+          status: "Pending",
+        })
+        .returning();
+    } catch (insertError) {
+      try {
+        await releaseSuggestionSlot(interaction.user.id, interaction.id);
+      } catch (releaseError) {
+        throw new AggregateError(
+          [insertError, releaseError],
+          "Suggestion insert failed and its quota reservation could not be released",
+        );
+      }
+      throw insertError;
+    }
+
+    if (!newQuote) {
+      await releaseSuggestionSlot(interaction.user.id, interaction.id);
+      await interaction.reply({
+        content: "Your suggestion could not be saved. Please try again.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
 
     await interaction.reply({
       content: "Quote suggestion created owner will review it soon!",
       flags: MessageFlags.Ephemeral,
     });
-
-    if (!newQuote) {
-      return;
-    }
 
     /**
      * Send the quote suggestion to the main channel for review
