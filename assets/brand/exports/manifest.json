@@ -1,0 +1,139 @@
+{
+  "package": "FluffBoost Discord artwork exports",
+  "created_date": "2026-10-03",
+  "status": "Exact-size exports prepared; not uploaded to Discord.",
+  "provenance": {
+    "artwork": "AI-generated in ChatGPT based on the current FluffBoost banner.",
+    "project_conversation": "https://chatgpt.com/g/g-p-6ac1a1b717b88191b7cbf5b09b9edb2c-fluffboost/c/6ac1a553-2398-83e9-a3b0-d2ed4f2028a9",
+    "source_archive": "fluffboost-production-ready.zip",
+    "source_archive_sha256": "33b98c16b2fd0f92495c564e9986b89ac213b35d50b3139894318bfb68fc8524",
+    "metadata_processing": "remove-ai-marks deterministic image metadata cleaner was run. Source exports already had no recognized C2PA or AI metadata; all repository PNGs remain byte-identical to the extracted exports.",
+    "pixel_processing": "No local resizing, cropping, editing, or pixel changes were performed.",
+    "upstream_formatting_report": "The ChatGPT source manifest reports proportional resizing for icons and paw; banners were resized, repositioned downward by 65px, extended with sky at the top, trimmed at the bottom, and received RGB rounding up to 1/255 to fit the ZIP. These process claims are upstream reports; local checks confirm output geometry, byte hashes, PNG integrity, and visible content."
+  },
+  "verified": {
+    "archive_entries": "Only seven expected PNG files and two text manifests were extracted; no paths, directories, symlinks, scripts, or encrypted entries were accepted.",
+    "archive_crc": "Passed.",
+    "png_checks": "Every PNG chunk CRC, decompressed RGB scanline length, filter values, geometry, source-manifest file size, and SHA-256 passed.",
+    "source_preservation": "Original ZIP, original concept downloads, and byte-identical outside-repository backups preserved.",
+    "format": "Non-animated, 8-bit RGB PNG with sRGB chunk. All seven are opaque and have no alpha channel.",
+    "individual_file_limit_bytes_exclusive": 10000000,
+    "visual_review": "All seven exports inspected. DEV and STAGING labels are correctly spelled. Development icon retains black opaque corners; staging icon retains white opaque margins/corners.",
+    "metadata_inspection": "No C2PA or AI metadata recognized by the inspector. This does not establish absence of a pixel watermark or change AI provenance.",
+    "live_discord_upload": "Not performed."
+  },
+  "assets": [
+    {
+      "filename": "fluffboost-production-icon.png",
+      "width": 1024,
+      "height": 1024,
+      "format": "PNG",
+      "mode": "RGB",
+      "color_space": "sRGB",
+      "label": "",
+      "file_size_bytes": 1283544,
+      "sha256": "959113958362930285fed7d438368451d55998392a7f336bf0d1b740c1c47608",
+      "original_concept_dimensions": [
+        1254,
+        1254
+      ],
+      "original_concept_sha256": "22ddf6817d7291dd6c715a4a8dbc9baa8fb316868c03ad8ad88f58c06de62782"
+    },
+    {
+      "filename": "fluffboost-production-banner.png",
+      "width": 2500,
+      "height": 1000,
+      "format": "PNG",
+      "mode": "RGB",
+      "color_space": "sRGB",
+      "label": "",
+      "file_size_bytes": 1900686,
+      "sha256": "d5dbc6ed0ec9866651cd9ec0cf406fa72c7cf4afa422b95a5adb5954844ec9e0",
+      "original_concept_dimensions": [
+        1983,
+        793
+      ],
+      "original_concept_sha256": "67357907ac3a9c3426f7168ebb6da287affb8ebf81e2725b6a0674db9e714b4e"
+    },
+    {
+      "filename": "fluffboost-dev-icon.png",
+      "width": 1024,
+      "height": 1024,
+      "format": "PNG",
+      "mode": "RGB",
+      "color_space": "sRGB",
+      "label": "DEV",
+      "file_size_bytes": 1299642,
+      "sha256": "305b7e00a40f1ae013ea1b2742fa5ade0558de17f2b5c8896496cea682008001",
+      "original_concept_dimensions": [
+        1254,
+        1254
+      ],
+      "original_concept_sha256": "f8f3e1e2a667f3519688fb455cefa5c393f6f2252f849391705705afefcfb691"
+    },
+    {
+      "filename": "fluffboost-dev-banner.png",
+      "width": 2500,
+      "height": 1000,
+      "format": "PNG",
+      "mode": "RGB",
+      "color_space": "sRGB",
+      "label": "DEV",
+      "file_size_bytes": 1837472,
+      "sha256": "3fffe79a67e30d25d9666d7930587ec2ef3ae0f5301549c2d2c855ee89b944a1",
+      "original_concept_dimensions": [
+        1983,
+        793
+      ],
+      "original_concept_sha256": "f072f15a3a59d0dd4ba32371ae0b41ad47a7620bbf9d0bae736d0a0234f599b9"
+    },
+    {
+      "filename": "fluffboost-staging-icon.png",
+      "width": 1024,
+      "height": 1024,
+      "format": "PNG",
+      "mode": "RGB",
+      "color_space": "sRGB",
+      "label": "STAGING",
+      "file_size_bytes": 1194602,
+      "sha256": "e5c4256ca95b05c9f0cf63bf9f49babf41dc45f200473736869036fede35d787",
+      "original_concept_dimensions": [
+        1254,
+        1254
+      ],
+      "original_concept_sha256": "a50dc695a84be7f8e50854a84bbc3f899df578bf268f62004f06c3119c41b016"
+    },
+    {
+      "filename": "fluffboost-staging-banner.png",
+      "width": 2500,
+      "height": 1000,
+      "format": "PNG",
+      "mode": "RGB",
+      "color_space": "sRGB",
+      "label": "STAGING",
+      "file_size_bytes": 1782136,
+      "sha256": "18bc8b530adcb141899ac86bb30502b1c652401340395bfcd9bf45c9129d2b4b",
+      "original_concept_dimensions": [
+        1983,
+        793
+      ],
+      "original_concept_sha256": "a6a46ea765603477a6bb2b075fd2127a93c8e05fff24a7cb8dbb699c6a614871"
+    },
+    {
+      "filename": "fluffboost-premium-paw.png",
+      "width": 250,
+      "height": 250,
+      "format": "PNG",
+      "mode": "RGB",
+      "color_space": "sRGB",
+      "label": "",
+      "file_size_bytes": 101916,
+      "sha256": "b3cdbf40c5e93630e41174def18c3e7abcf686e9c8ff14928fb2efdadfbf601f",
+      "original_concept_dimensions": [
+        1254,
+        1254
+      ],
+      "original_concept_sha256": "2be658ab27a8fd33ac21ccf5e4505bcd2082787a7965531e0ce4193f505da5ee"
+    }
+  ]
+}

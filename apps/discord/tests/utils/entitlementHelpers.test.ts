@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockDb, mockDbChain, mockLogger, mockEntitlement } from "../helpers.js";
+import { mockDb, mockDbChain, mockLogger, mockEntitlement, mockEnv } from "../helpers.js";
 
 const logger = mockLogger();
 const db = mockDb();
+const reconcile = sinon.stub().resolves();
 
 mock.module("../../src/utils/logger.js", () => ({ default: logger }));
 mock.module("../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
@@ -14,6 +15,10 @@ const { logEntitlementEvent, updateGuildPremiumStatus } = await import(
 
 describe("entitlementHelpers", () => {
   beforeEach(() => {
+    reconcile.reset();
+    reconcile.resolves();
+    mock.module("../../src/utils/premiumReconciliation.js", () => ({ reconcilePremium: reconcile }));
+    mock.module("../../src/utils/env.js", () => ({ default: mockEnv({ DISCORD_PREMIUM_SKU_ID: "sku-123" }) }));
     logger.info.resetHistory();
     logger.error.resetHistory();
     db.update.resetHistory();
@@ -47,6 +52,24 @@ describe("entitlementHelpers", () => {
   });
 
   describe("updateGuildPremiumStatus", () => {
+    it("does not change premium status for an unrelated SKU", async () => {
+      await updateGuildPremiumStatus(mockEntitlement({ skuId: "unrelated" }) as never, true, "Entitlement Create");
+      expect(db.update.called).toBe(false);
+    });
+    it("does not grant premium for expired entitlements", async () => {
+      await updateGuildPremiumStatus(mockEntitlement({ endsAt: new Date(0) }) as never, true, "Entitlement Create");
+      expect(reconcile.calledOnce).toBe(true);
+      expect(db.update.called).toBe(false);
+    });
+    it("ignores production test events before changing a real paid guild", async () => {
+      mock.module("../../src/utils/env.js", () => ({
+        default: mockEnv({ DISCORD_PREMIUM_SKU_ID: "sku-123", NODE_ENV: "production" }),
+      }));
+      const testEntitlement = mockEntitlement({ startsAt: null, isTest: () => true });
+      await updateGuildPremiumStatus(testEntitlement as never, false, "Entitlement Delete");
+      expect(db.update.called).toBe(false);
+      expect(reconcile.called).toBe(false);
+    });
     it("updates the guild row when guildId is present", async () => {
       const entitlement = mockEntitlement();
 
@@ -69,7 +92,7 @@ describe("entitlementHelpers", () => {
       db.update.returns(chain);
       const entitlement = mockEntitlement();
 
-      await updateGuildPremiumStatus(entitlement as never, false, "Entitlement Delete");
+      await updateGuildPremiumStatus(entitlement as never, true, "Entitlement Create");
 
       expect(logger.error.calledOnce).toBe(true);
     });

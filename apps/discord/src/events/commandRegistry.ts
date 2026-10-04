@@ -10,6 +10,7 @@ import admin from "../commands/admin/index.js";
 import setup, { setupAutocomplete as _setupAutocomplete } from "../commands/setup/index.js";
 import premium from "../commands/premium.js";
 import owner from "../commands/owner/index.js";
+import env from "../utils/env.js";
 
 /**
  * Command registry keyed by slash-command name. The event router imports this
@@ -32,7 +33,12 @@ export const commandRegistry: Record<string, { execute: CommandHandler; requires
   admin: { execute: (c, i) => admin.execute(c, i as CommandInteraction) },
   setup: { execute: (c, i) => setup.execute(c, i as CommandInteraction) },
   premium: { execute: (c, i) => premium.execute(c, i as CommandInteraction) },
-  owner: { execute: (c, i) => owner.execute(c, i as CommandInteraction) },
+  ...(env.NODE_ENV !== "production"
+    ? { owner: {
+      execute: (c: Client, i: CommandInteraction | ChatInputCommandInteraction) =>
+        owner.execute(c, i as CommandInteraction),
+    } }
+    : {}),
 };
 
 export const setupAutocomplete = _setupAutocomplete;
@@ -48,5 +54,5 @@ export const slashCommands = [
   admin.slashCommand,
   changelog.slashCommand,
   premium.slashCommand,
-  owner.slashCommand,
+  ...(env.NODE_ENV !== "production" ? [owner.slashCommand] : []),
 ];

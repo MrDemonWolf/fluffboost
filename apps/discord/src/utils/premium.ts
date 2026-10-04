@@ -12,6 +12,7 @@ import type {
 
 import env from "./env.js";
 import { buildBrandedEmbed } from "./embedHelpers.js";
+import { isActivePremiumEntitlement } from "./entitlementPolicy.js";
 
 /**
  * Check if premium subscriptions are enabled via environment config.
@@ -35,7 +36,11 @@ export function hasEntitlement(interaction: CommandInteraction | ChatInputComman
   if (!skuId) {
     return false;
   }
-  return interaction.entitlements.some((entitlement) => entitlement.skuId === skuId);
+  return interaction.entitlements.some((entitlement) =>
+    isActivePremiumEntitlement(entitlement, skuId, interaction.guildId, Date.now(), {
+      allowTest: env.NODE_ENV !== "production",
+    })
+  );
 }
 
 interface UpsellEmbedOptions {
@@ -59,7 +64,7 @@ export function buildPremiumUpsell(options: UpsellEmbedOptions = {}): {
     title: options.title ?? "FluffBoost Premium",
     description:
       options.description ??
-      "Upgrade to Premium to unlock exclusive features and support FluffBoost development!",
+      "Choose your quote delivery schedule with Premium and support FluffBoost development.",
     fields: options.fields,
     ...(options.footerText ? { footer: options.footerText } : {}),
   });

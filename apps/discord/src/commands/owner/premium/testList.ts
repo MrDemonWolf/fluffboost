@@ -2,7 +2,7 @@ import { MessageFlags } from "discord.js";
 
 import type { Client, CommandInteraction } from "discord.js";
 
-import { requireApplication, requireOwner } from "../../../utils/ownerGuard.js";
+import { requireApplication, requireOwner, requireTestEnvironment } from "../../../utils/ownerGuard.js";
 import { withCommandLogging } from "../../../utils/commandErrors.js";
 
 export default async function (client: Client, interaction: CommandInteraction): Promise<void> {
@@ -11,6 +11,7 @@ export default async function (client: Client, interaction: CommandInteraction):
     interaction,
     async () => {
       if (!(await requireOwner(interaction, "owner premium test-list"))) {return;}
+      if (!(await requireTestEnvironment(interaction))) {return;}
       const application = await requireApplication(client, interaction);
       if (!application) {return;}
 

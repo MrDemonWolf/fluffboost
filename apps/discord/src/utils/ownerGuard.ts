@@ -5,6 +5,18 @@ import type { ClientApplication, Client, CommandInteraction } from "discord.js";
 import env from "./env.js";
 import logger from "./logger.js";
 
+/** Defense in depth for stale commands and direct subcommand calls. */
+export async function requireTestEnvironment(interaction: CommandInteraction): Promise<boolean> {
+  if (env.NODE_ENV !== "production") {
+    return true;
+  }
+  await interaction.reply({
+    content: "Premium test tools are disabled on the production bot. Use the development bot instead.",
+    flags: MessageFlags.Ephemeral,
+  });
+  return false;
+}
+
 /**
  * Check if the user is the bot owner. If not, replies with an
  * ephemeral rejection and logs the unauthorized attempt.

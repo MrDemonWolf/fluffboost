@@ -12,6 +12,7 @@ export const slashCommand = new SlashCommandBuilder()
 
 export async function execute(client: Client, interaction: CommandInteraction): Promise<void> {
   await withCommandLogging("about", interaction, async () => {
+    await interaction.deferReply();
     const username = client.user?.username ?? "FluffBoost";
 
     // Per-shard cache only holds this shard's guilds; sum across shards.
@@ -24,7 +25,7 @@ export async function execute(client: Client, interaction: CommandInteraction): 
 
     const embed = buildBrandedEmbed({
       title: `About ${username} 🐾`,
-      description: `Hi! I'm ${username}, a discord bot created by MrDemonWolf, Inc. I was created to help you with your daily tasks and to make your life easier. I'm currently in ${guildCount} guilds.`,
+      description: `Hi! I'm ${username}, a furry-friendly Discord bot by MrDemonWolf, Inc. I bring scheduled quotes and a little encouragement to your pack. I'm currently in ${guildCount} servers.`,
       fields: [
         {
           name: "Documentation",
@@ -48,7 +49,7 @@ export async function execute(client: Client, interaction: CommandInteraction): 
         },
         {
           name: "Creator Discord",
-          value: "[Discord](https://l.mrdemonwolf.com/discord)",
+          value: "[Discord](https://mrdwolf.net/discord)",
           inline: true,
         },
         {
@@ -60,7 +61,7 @@ export async function execute(client: Client, interaction: CommandInteraction): 
       footer: "Made with ❤️ by MrDemonWolf, Inc.",
     });
 
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
   });
 }
 

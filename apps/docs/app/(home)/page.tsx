@@ -1,12 +1,15 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { site } from "@/lib/site";
-import { PawMark } from "@/components/brand";
+import { BrandAvatar, PawMark } from "@/components/brand";
 import { SiteFooter } from "@/components/site-footer";
+import banner from "../../../../banner.jpg";
 
 export const metadata: Metadata = {
-  title: `${site.name} — ${site.tagline}`,
+  title: { absolute: `${site.name} — ${site.tagline}` },
   description: site.description,
+  alternates: { canonical: site.origin + "/" },
 };
 
 /* ------------------------------------------------------------------ */
@@ -26,32 +29,32 @@ const features = [
   {
     icon: "clock",
     title: "Scheduled, not spammy",
-    body: "One thoughtful quote delivered to the channel you choose, on the cadence you set. It shows up, then gets out of the way.",
+    body: "A thoughtful quote delivered to the channel you choose. The free daily schedule gives your community a gentle morning lift.",
   },
   {
     icon: "globe",
     title: "Every server, its own rhythm",
-    body: "Pick the exact time and timezone that fits your community. Delivery is reliable across shards, even after a restart.",
+    body: "Premium lets you pick a time and timezone, plus daily, weekly, or monthly delivery. Make the ritual fit your community.",
   },
   {
     icon: "chat",
     title: "Community-written",
-    body: "Members suggest quotes with /suggestion; admins approve the good ones. The library grows in your server's own voice.",
+    body: "Suggest a quote with /suggestion. The FluffBoost team reviews submissions for a shared library that can encourage every server.",
   },
   {
     icon: "sparkle",
-    title: "A bot with presence",
-    body: "FluffBoost rotates through friendly status activities on an interval you control, so it always feels alive.",
+    title: "A boost on demand",
+    body: "Need encouragement between daily posts? Run /quote for an instant pick from the motivation library.",
   },
   {
     icon: "shield",
-    title: "Admin controls that make sense",
-    body: "Manage quotes, activities, and the suggestion queue from clear slash commands — no clunky dashboard to babysit.",
+    title: "One channel. Simple setup.",
+    body: "Server administrators choose the delivery channel with /setup channel. The guide walks you through permissions and scheduling.",
   },
   {
     icon: "heart",
-    title: "Built to keep running",
-    body: "A sharded architecture with a health-check endpoint means it stays up and delivers, quietly, day after day.",
+    title: "Open source, open paws",
+    body: "Read the code, report a bug, or contribute an improvement. FluffBoost is built in the open by MrDemonWolf, Inc.",
   },
 ];
 
@@ -69,14 +72,14 @@ const steps = [
   {
     n: "03",
     title: "Enjoy the boost",
-    body: "That's it. A warm quote arrives on schedule — tweak the timing anytime with /setup schedule.",
+    body: "Enjoy daily quotes at 8:00 AM America/Chicago. Try /quote now, or unlock custom timing with Premium.",
   },
 ];
 
 const faqs = [
   {
     q: "Is FluffBoost free?",
-    a: "Yes. The daily 8:00 AM quote and every core command are free, forever. Premium only adds custom scheduling — frequency, time, and timezone.",
+    a: "The daily 8:00 AM America/Chicago quote, /quote, and quote suggestions are free. Premium adds custom delivery frequency, time, and timezone.",
   },
   {
     q: "Do I need to host anything?",
@@ -84,11 +87,11 @@ const faqs = [
   },
   {
     q: "Where do the quotes come from?",
-    a: "A curated starter library plus quotes your own members suggest with /suggestion and your admins approve.",
+    a: "A starter library and community suggestions reviewed by the FluffBoost team. Approved suggestions can be delivered to any server using the bot.",
   },
   {
     q: "What permissions does it need?",
-    a: "Just enough to post in the channel you choose. FluffBoost never reads message history or DMs your members.",
+    a: "FluffBoost needs View Channel, Send Messages, and Embed Links in your chosen text channel. Setup commands require Administrator. It does not monitor conversations; suggestion submitters may receive a review-result DM.",
   },
 ];
 
@@ -134,7 +137,7 @@ function Hero() {
             style={{ ["--d" as string]: "80ms" }}
           >
             Your daily dose of{" "}
-            <span className="relative whitespace-nowrap text-honey-ink">
+            <span className="relative text-honey-ink">
               furry motivation
               <Underline />
             </span>
@@ -145,9 +148,9 @@ function Hero() {
             className="fb-rise mt-6 max-w-xl text-pretty text-lg leading-relaxed text-ink-soft"
             style={{ ["--d" as string]: "160ms" }}
           >
-            FluffBoost drops one warm, uplifting quote into your server every
-            day — on your schedule, in your timezone, written partly by your own
-            community. Cozy, quiet, and genuinely kind.
+            Make a little room for encouragement. FluffBoost brings uplifting
+            quotes to your Discord community, with a free daily boost and
+            optional Premium scheduling that fits your server's rhythm.
           </p>
 
           <div
@@ -168,7 +171,7 @@ function Hero() {
             className="fb-rise mt-6 text-sm text-ink-soft"
             style={{ ["--d" as string]: "320ms" }}
           >
-            Free forever · Set up in under a minute · No account required
+            Free daily quotes · Optional Premium · No separate account
           </p>
         </div>
 
@@ -188,15 +191,19 @@ function Hero() {
 function QuoteCard() {
   return (
     <div className="relative mx-auto max-w-md">
-      <div className="fb-float absolute -left-6 -top-6 hidden size-16 place-items-center rounded-2xl bg-berry/12 text-berry-ink sm:grid">
+      <div className="absolute -left-6 -top-6 hidden size-16 -rotate-6 place-items-center rounded-2xl bg-berry/12 text-berry-ink sm:grid">
         <PawMark className="size-8" />
       </div>
 
       <article className="fb-shadow relative rounded-3xl border border-line bg-card p-5">
+        <Image
+          src={banner}
+          alt="FluffBoost's golden-eyed wolf greeting a warm sunrise"
+          priority
+          className="mb-5 h-auto w-full rounded-2xl"
+        />
         <div className="flex items-center gap-3 border-b border-line pb-4">
-          <span className="grid size-10 place-items-center rounded-full bg-honey text-[#2b1e12]">
-            <PawMark className="size-5" />
-          </span>
+          <BrandAvatar className="size-10" />
           <div className="leading-tight">
             <p className="flex items-center gap-2 font-semibold text-ink">
               FluffBoost
@@ -213,7 +220,7 @@ function QuoteCard() {
             “You don't have to do it all today. Showing up is already brave.”
           </p>
           <p className="mt-3 text-sm font-semibold text-honey-ink">
-            — Today's motivation
+            — Example quote
           </p>
         </div>
 
@@ -233,10 +240,10 @@ function Ribbon() {
   const items = [...ribbon, ...ribbon];
   return (
     <div
-      className="fb-marquee-track relative flex overflow-hidden border-y border-line bg-paper-2 py-3.5"
+      className="relative flex overflow-hidden border-y border-line bg-paper-2 py-3.5"
       aria-hidden="true"
     >
-      <div className="fb-marquee flex shrink-0 items-center gap-4 pr-4">
+      <div className="flex shrink-0 items-center gap-4 pr-4">
         {items.map((text, i) => (
           <span key={i} className="flex items-center gap-4 whitespace-nowrap">
             <span className="text-sm font-semibold text-ink-soft">{text}</span>
@@ -267,7 +274,7 @@ function Features() {
             <h3 className="mt-4 font-display text-xl font-semibold text-ink">
               {f.title}
             </h3>
-            <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
+            <p className="mt-2 text-base leading-relaxed text-ink-soft">
               {f.body}
             </p>
           </div>
@@ -282,7 +289,7 @@ function Steps() {
     <Section
       eyebrow="Getting started"
       title="From invite to daily boost in three steps"
-      lede="Genuinely under a minute. We timed it."
+      lede="A server administrator can get started with one channel and one command."
       tinted
     >
       <ol className="grid gap-5 md:grid-cols-3">
@@ -297,7 +304,7 @@ function Steps() {
             <h3 className="mt-2 font-display text-xl font-semibold text-ink">
               {s.title}
             </h3>
-            <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
+            <p className="mt-2 text-base leading-relaxed text-ink-soft">
               {s.body}
             </p>
           </li>
@@ -311,8 +318,8 @@ function Premium() {
   return (
     <Section
       eyebrow="Premium (optional)"
-      title="Free stays free. Premium just bends time."
-      lede="Every core feature is free forever. Premium exists for servers that want the quote to land at a very specific moment."
+      title="A daily boost, or a rhythm of your own"
+      lede="Start with the free daily quote. Premium adds custom scheduling for one server, with purchase and billing handled inside Discord."
     >
       <div className="grid gap-6 lg:grid-cols-2">
         <PlanCard
@@ -320,9 +327,9 @@ function Premium() {
           highlight={false}
           points={[
             "Daily quote at 8:00 AM (America/Chicago)",
-            "Community suggestions + admin review",
-            "Rotating bot status",
-            "Every core slash command",
+            "Instant motivation with /quote",
+            "Suggestions reviewed by the FluffBoost team",
+            "Choose your server's delivery channel",
           ]}
           cta={{ label: "Add to Discord", href: site.inviteUrl, external: true }}
         />
@@ -335,7 +342,7 @@ function Premium() {
             "Custom delivery time (HH:MM)",
             "Any IANA timezone, with autocomplete",
           ]}
-          cta={{ label: "See premium docs", href: "/docs/premium" }}
+          cta={{ label: "Activate Premium", href: "/docs/premium" }}
         />
       </div>
     </Section>
@@ -344,18 +351,19 @@ function Premium() {
 
 function Community() {
   return (
-    <Section eyebrow="Community" title="The best quotes come from your people" tinted>
+    <Section eyebrow="Community" title="A little kindness can travel a long way" tinted>
       <div className="grid items-center gap-8 lg:grid-cols-[1fr_1.1fr]">
         <p className="text-lg leading-relaxed text-ink-soft">
           Anyone can suggest a quote with{" "}
           <code className="rounded-md bg-paper-2 px-1.5 py-0.5 font-mono text-sm text-honey-ink">
             /suggestion
           </code>
-          . Suggestions land in a review queue where your admins approve or pass
-          on each one. Over time your server builds a motivation library that
-          sounds like it — inside jokes and all.
+          . The FluffBoost team reviews each submission. Approved quotes join
+          the shared library and may brighten someone else's server, too.
+          Submit only quotes you're comfortable sharing publicly.
         </p>
         <div className="fb-shadow rounded-3xl border border-line bg-card p-6">
+          <p className="mb-4 text-sm font-semibold text-ink-soft">Example suggestions</p>
           <div className="space-y-3">
             <SuggestionRow name="fox_dev" text="Ship it scared. That's how it ships." status="approved" />
             <SuggestionRow name="mossypaws" text="Hydrate, then decide it's a crisis." status="pending" />
@@ -379,7 +387,7 @@ function Faq() {
                 <Plus />
               </span>
             </summary>
-            <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">
+            <p className="mt-3 text-base leading-relaxed text-ink-soft">
               {f.a}
             </p>
           </details>
@@ -402,7 +410,8 @@ function FinalCta() {
             Give your server a little more warmth tomorrow morning.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-lg text-ink-soft">
-            Add FluffBoost now and the first quote can land at 8:00 AM.
+            Add FluffBoost, choose a channel, and let the next daily boost
+            arrive at 8:00 AM America/Chicago.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <a href={site.inviteUrl} className={btnPrimary} rel="noreferrer">
@@ -491,7 +500,7 @@ function PlanCard({
       <h3 className="font-display text-2xl font-semibold text-ink">{name}</h3>
       <ul className="mt-6 space-y-3">
         {points.map((p) => (
-          <li key={p} className="flex items-start gap-3 text-[15px] text-ink">
+          <li key={p} className="flex items-start gap-3 text-base text-ink">
             <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-pine/15 text-pine">
               <Check />
             </span>
@@ -524,11 +533,11 @@ function SuggestionRow({
   status: "approved" | "pending";
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-line bg-paper-2/50 p-3">
+    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-paper-2/50 p-3">
       <span className="grid size-8 shrink-0 place-items-center rounded-full bg-honey/20 font-mono text-xs font-bold text-honey-ink">
         {name.slice(0, 2)}
       </span>
-      <p className="min-w-0 flex-1 truncate text-sm text-ink">
+      <p className="min-w-0 flex-1 basis-40 text-sm text-ink">
         <span className="text-ink-soft">@{name}</span> — {text}
       </p>
       {status === "approved" ? (

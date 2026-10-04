@@ -12,6 +12,7 @@ describe("ready event", () => {
     const pruneGuilds = sinon.stub().resolves();
     const ensureGuildExists = sinon.stub().resolves();
     const setActivity = sinon.stub().resolves();
+    const reconcilePremium = sinon.stub().resolves();
 
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
     // Mock the thin dep-shim instead of guildDatabase.js / setActivity.js so
@@ -21,6 +22,7 @@ describe("ready event", () => {
       pruneGuilds,
       ensureGuildExists,
       setActivity,
+      reconcilePremium,
     }));
     mock.module("../../src/events/commandRegistry.js", () => ({
       commandRegistry: {},
@@ -29,7 +31,7 @@ describe("ready event", () => {
     }));
     const mod = await import("../../src/events/ready.js");
 
-    return { readyEvent: mod.readyEvent, logger, pruneGuilds, ensureGuildExists, setActivity };
+    return { readyEvent: mod.readyEvent, logger, pruneGuilds, ensureGuildExists, setActivity, reconcilePremium };
   }
 
   it("should log ready with username and guild count", async () => {
@@ -97,8 +99,26 @@ describe("ready event", () => {
     pruneGuilds.rejects(new Error("DB error"));
     const client = mockClient();
 
-    await readyEvent(client as never);
-
+    await expect(readyEvent(client as never)).rejects.toThrow("DB error");
     expect(logger.error.called).toBe(true);
+  });
+
+  it("reconciles subscriptions before registering commands and starting activity", async () => {
+    const { readyEvent, ensureGuildExists, reconcilePremium, setActivity } = await loadModule();
+    const client = mockClient();
+    const commandsSet = sinon.stub().resolves([]);
+    client.application = { commands: { set: commandsSet } } as never;
+    await readyEvent(client as never);
+    expect(ensureGuildExists.calledBefore(reconcilePremium)).toBe(true);
+    expect(reconcilePremium.calledBefore(commandsSet)).toBe(true);
+    expect(commandsSet.calledBefore(setActivity)).toBe(true);
+  });
+
+  it("propagates registration errors so startup can restart", async () => {
+    const { readyEvent, setActivity } = await loadModule();
+    const client = mockClient();
+    client.application = { commands: { set: sinon.stub().rejects(new Error("Discord unavailable")) } } as never;
+    await expect(readyEvent(client as never)).rejects.toThrow("Discord unavailable");
+    expect(setActivity.called).toBe(false);
   });
 });

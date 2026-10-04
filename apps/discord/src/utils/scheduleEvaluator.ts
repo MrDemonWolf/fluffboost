@@ -3,6 +3,7 @@ import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
 
 import type { Guild, MotivationFrequency } from "../database/schema.js";
+import { DEFAULT_GUILD_SCHEDULE } from "./scheduleConfig.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -13,6 +14,19 @@ interface GuildSchedule {
   motivationDay: number | null;
   timezone: string;
   lastMotivationSentAt: Date | null;
+}
+
+/** Keep saved customization while expired subscriptions use the free schedule. */
+export function effectiveGuildSchedule(
+  guild: GuildSchedule & { isPremium: boolean }, premiumEnabled: boolean
+): GuildSchedule {
+  if (!premiumEnabled || guild.isPremium) {
+    return guild;
+  }
+  return {
+    ...DEFAULT_GUILD_SCHEDULE,
+    lastMotivationSentAt: guild.lastMotivationSentAt,
+  };
 }
 
 /**
@@ -74,37 +88,37 @@ export function mostRecentScheduledOccurrence(
   }
 
   const now = dayjs().tz(guild.timezone);
-  // Note: inside a DST spring-forward gap dayjs shifts the nonexistent local
-  // time forward, so such schedules still fire (slightly later) that day.
-  let occurrence = now.hour(parsed.hour).minute(parsed.minute).second(0).millisecond(0);
-
+  // Calendar arithmetic happens in UTC so selecting a date cannot retain
+  // today's offset for an occurrence on the other side of a DST transition.
+  let date = dayjs.utc(now.format("YYYY-MM-DD"));
   switch (guild.motivationFrequency) {
-    case "Daily":
-      if (occurrence.isAfter(now)) {
-        occurrence = occurrence.subtract(1, "day");
-      }
-      break;
     case "Weekly":
       if (guild.motivationDay === null) {
         return null;
       }
-      occurrence = occurrence.day(guild.motivationDay); // within current Sunday-start week
-      if (occurrence.isAfter(now)) {
-        occurrence = occurrence.subtract(7, "day");
-      }
+      date = date.day(guild.motivationDay);
       break;
     case "Monthly":
       if (guild.motivationDay === null) {
         return null;
       }
-      occurrence = occurrence.date(guild.motivationDay);
-      if (occurrence.isAfter(now)) {
-        // motivationDay is constrained to 1-28, so it exists in every month.
-        occurrence = occurrence.subtract(1, "month").date(guild.motivationDay);
-      }
+      date = date.date(guild.motivationDay);
       break;
   }
-
+  // Resolve the offset for this date. Nonexistent spring times move forward.
+  const resolve = () => dayjs.tz(
+    `${date.format("YYYY-MM-DD")} ${guild.motivationTime}`, guild.timezone
+  );
+  let occurrence = resolve();
+  if (occurrence.valueOf() > now.valueOf()) {
+    switch (guild.motivationFrequency) {
+      case "Daily": date = date.subtract(1, "day"); break;
+      case "Weekly": date = date.subtract(7, "day"); break;
+      // The configured day is 1-28, so subtraction preserves it in every month.
+      case "Monthly": date = date.subtract(1, "month"); break;
+    }
+    occurrence = resolve();
+  }
   return occurrence.toDate();
 }
 
@@ -128,6 +142,18 @@ export function isGuildDueForMotivation(guild: Pick<Guild, keyof GuildSchedule>)
   const { lastMotivationSentAt } = guild;
   if (lastMotivationSentAt && lastMotivationSentAt.getTime() >= occurrence.getTime()) {
     return false;
+  }
+
+  // During the repeated autumn DST hour, UTC advances while the wall clock
+  // moves backward. A prior delivery at or after this local wall-clock slot
+  // already delivered it. Compare the full local date AND time, so a late
+  // midnight catch-up does not suppress the next evening's legitimate slot.
+  if (lastMotivationSentAt) {
+    const lastLocal = dayjs(lastMotivationSentAt).tz(guild.timezone).format("YYYY-MM-DDTHH:mm:ss.SSS");
+    const scheduledLocal = dayjs(occurrence).tz(guild.timezone).format("YYYY-MM-DDTHH:mm:ss.SSS");
+    if (lastLocal >= scheduledLocal) {
+      return false;
+    }
   }
 
   return true;

@@ -97,8 +97,39 @@ jobs:
         run: bun outdated
         continue-on-error: true
 
+  e2e:
+    name: Bot E2E (PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: fluffboost_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d fluffboost_e2e"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.3.14
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Run bot E2E against isolated local PostgreSQL
+        run: bun run --filter=@fluffboost/discord test:e2e
+        env:
+          E2E_DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/fluffboost_e2e
+
   docs:
-    name: Docs Build
+    name: Docs Build & Browser E2E
     runs-on: ubuntu-latest
 
     steps:
@@ -121,8 +152,22 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Build site (static export)
-        run: bun run --filter=@fluffboost/docs build
+      - name: Install Chromium
+        run: bun run --filter=@fluffboost/docs test:e2e:install
+
+      - name: Test the GitHub Pages static export
+        run: bun run --filter=@fluffboost/docs test:e2e
+
+      - name: Upload browser report and failure traces
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browser-e2e-report
+          path: |
+            apps/docs/playwright-report/
+            apps/docs/test-results/
+          if-no-files-found: ignore
+          retention-days: 14
 
   docker:
     name: Docker Build Test

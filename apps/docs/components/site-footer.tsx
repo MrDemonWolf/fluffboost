@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
-import { PawMark } from "@/components/brand";
+import { Wordmark } from "@/components/brand";
 
 const columns = [
   {
@@ -27,6 +27,8 @@ const columns = [
       { label: "Discord server", href: site.discordUrl, external: true },
       { label: "GitHub", href: site.githubUrl, external: true },
       { label: "MrDemonWolf", href: site.companyUrl, external: true },
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms" },
     ],
   },
 ];
@@ -36,12 +38,7 @@ export function SiteFooter() {
     <footer className="relative mt-24 border-t border-line bg-paper-2">
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-14 sm:grid-cols-2 lg:grid-cols-4">
         <div className="max-w-xs">
-          <span className="inline-flex items-center gap-2 font-display text-lg font-semibold text-ink">
-            <span className="grid size-7 place-items-center rounded-full bg-honey text-[#2b1e12]">
-              <PawMark className="size-4" />
-            </span>
-            FluffBoost
-          </span>
+          <Link href="/" aria-label="FluffBoost home"><Wordmark /></Link>
           <p className="mt-3 text-sm leading-relaxed text-ink-soft">
             A warm little bot that nudges your Discord server toward a better
             day — one quote at a time.
@@ -92,7 +89,7 @@ function FooterLink({
   external?: boolean;
 }) {
   const className =
-    "text-sm text-ink-soft underline-offset-2 transition-colors hover:text-honey-ink hover:underline";
+    "inline-flex min-h-6 items-center text-sm text-ink-soft underline underline-offset-4 decoration-line transition-colors hover:text-honey-ink hover:decoration-honey-ink";
   if (external) {
     return (
       <a href={href} className={className} rel="noreferrer">
