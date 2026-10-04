@@ -1,5 +1,26 @@
 import { expect, test } from "@playwright/test";
 
+test("the banner plays real video and can be paused", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("./");
+  const video = page.locator("video");
+  await expect(page.getByRole("button", { name: "Pause animation" })).toBeVisible();
+  await expect.poll(() => video.evaluate((element) => (element as HTMLVideoElement).currentTime)).toBeGreaterThan(0);
+  await expect.poll(() => video.evaluate((element) => (element as HTMLVideoElement).videoWidth)).toBe(680);
+  await page.getByRole("button", { name: "Pause animation" }).click();
+  await expect(video).toHaveCount(0);
+  await page.getByRole("button", { name: "Play animation" }).click();
+  await expect(video).toBeVisible();
+});
+
+test("reduced motion shows the poster without autoplay", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("./");
+  await expect(page.getByRole("button", { name: "Play animation" })).toBeVisible();
+  await expect(page.locator("video")).toHaveCount(0);
+  await expect(page.getByRole("img", { name: "A warm sunrise over a woodland mountain lake" })).toBeVisible();
+});
+
 test("a server owner can reach setup and activate premium from the landing page", async ({ page }) => {
   await page.goto("./");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Your daily dose of furry motivation.");

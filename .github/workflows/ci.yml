@@ -55,6 +55,14 @@ jobs:
       - name: Run ESLint
         run: bun run lint:check
 
+      - name: Install media verification tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+
+      - name: Verify animated brand exports
+        run: bun run brand:verify
+
       - name: Run TypeScript type check
         run: bun run typecheck
 

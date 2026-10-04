@@ -1,0 +1,153 @@
+{
+  "remotion": "4.0.532",
+  "bannerDurationSeconds": 32,
+  "iconDurationSeconds": 8,
+  "videoFps": 24,
+  "gifFps": 12,
+  "gifIconSize": 512,
+  "provenance": "Remotion cloud, sunlight and glint animation over AI-generated ChatGPT artwork; no audio.",
+  "compositions": [
+    {
+      "id": "fluffboost-production-banner",
+      "file": "motion-sources/sunrise-landscape.png",
+      "width": 680,
+      "height": 240,
+      "accent": "#FFCE69",
+      "banner": true
+    },
+    {
+      "id": "fluffboost-production-icon",
+      "file": "motion-sources/wolf-icon.png",
+      "width": 1024,
+      "height": 1024,
+      "accent": "#FFCE69",
+      "banner": false
+    },
+    {
+      "id": "fluffboost-dev-banner",
+      "file": "motion-sources/sunrise-landscape.png",
+      "width": 680,
+      "height": 240,
+      "accent": "#25CFFF",
+      "banner": true
+    },
+    {
+      "id": "fluffboost-dev-icon",
+      "file": "motion-sources/wolf-icon.png",
+      "width": 1024,
+      "height": 1024,
+      "accent": "#25CFFF",
+      "banner": false
+    },
+    {
+      "id": "fluffboost-staging-banner",
+      "file": "motion-sources/sunrise-landscape.png",
+      "width": 680,
+      "height": 240,
+      "accent": "#FFCE69",
+      "banner": true
+    },
+    {
+      "id": "fluffboost-staging-icon",
+      "file": "motion-sources/wolf-icon.png",
+      "width": 1024,
+      "height": 1024,
+      "accent": "#FFCE69",
+      "banner": false
+    },
+    {
+      "id": "fluffboost-premium-paw",
+      "file": "motion-sources/premium-paw.png",
+      "width": 250,
+      "height": 250,
+      "accent": "#FFCE69",
+      "banner": false
+    }
+  ],
+  "files": {
+    "fluffboost-production-banner.png": {
+      "bytes": 176910,
+      "sha256": "48de6b0bbc253cd2dcfeb254421df27f40d31fe4188edbc0e7ba48372dd313f8"
+    },
+    "fluffboost-production-banner.mp4": {
+      "bytes": 138355,
+      "sha256": "be86b4b80a2688882d35f62ca3d0da56d06cf764abceadfbb2852133d6aa2841"
+    },
+    "fluffboost-production-banner.gif": {
+      "bytes": 1256389,
+      "sha256": "7f38c1d00e17872d06be08759829774c70529effe5f1b85fb4f2b0931d752dac"
+    },
+    "fluffboost-production-icon.png": {
+      "bytes": 742185,
+      "sha256": "1e4fc8f0384256200c3577935c6aa4b13c60e548246e1f6e5b30dbbad484c761"
+    },
+    "fluffboost-production-icon.mp4": {
+      "bytes": 394905,
+      "sha256": "6e920ec5f1fc478c460b9731709298b2b019256dd24bdbeff7eb891800b07ae7"
+    },
+    "fluffboost-production-icon.gif": {
+      "bytes": 3685927,
+      "sha256": "b8a40d660c6faf6eb01e0e7f036628746907dccad826fe10324841eda3cbc0e8"
+    },
+    "fluffboost-dev-banner.png": {
+      "bytes": 176111,
+      "sha256": "7af45c622257ffcffa70b65b7f3ca8daca1ac643864c3086a8faa5e0da460b06"
+    },
+    "fluffboost-dev-banner.mp4": {
+      "bytes": 135194,
+      "sha256": "430a2c5b010bacc7a9bdb7acc25a44d70bf77964304f51d93c0d18e5eb1a6865"
+    },
+    "fluffboost-dev-banner.gif": {
+      "bytes": 1204516,
+      "sha256": "f45d57f1abdd15675f2ecba2149481b45ef4683e3fd259c1cbf6a969151574b6"
+    },
+    "fluffboost-dev-icon.png": {
+      "bytes": 727413,
+      "sha256": "f537ae04db193fd54821f893328fdc7de42b31ca36f73bc6626a9267fcbb2eca"
+    },
+    "fluffboost-dev-icon.mp4": {
+      "bytes": 415437,
+      "sha256": "3cf68e2d2b481e194a986fa65f40fc23da5bea4c703490bf34658f8568d65593"
+    },
+    "fluffboost-dev-icon.gif": {
+      "bytes": 3950868,
+      "sha256": "30087d6f9e52b90f7bc52feea59ed2513f8166b187ed5ec82c4b9a87391cf81b"
+    },
+    "fluffboost-staging-banner.png": {
+      "bytes": 175683,
+      "sha256": "4c18896e2bcae2b9b7e6f2b5e2755375d146c33a38c44f99e318b75df13c9cc4"
+    },
+    "fluffboost-staging-banner.mp4": {
+      "bytes": 136563,
+      "sha256": "630a0c020c85f0a42aec17790880d1d15b2c730b327762cbc38460caf746b223"
+    },
+    "fluffboost-staging-banner.gif": {
+      "bytes": 1266505,
+      "sha256": "2afa3f19d9f60259216651c0cba56f24c5012452ded633317888f5ea4859cf8a"
+    },
+    "fluffboost-staging-icon.png": {
+      "bytes": 727398,
+      "sha256": "7321064cd4e162d1e4044d5f71d6268d4a89563a47e7d9db542c10d6b2096189"
+    },
+    "fluffboost-staging-icon.mp4": {
+      "bytes": 396185,
+      "sha256": "85dab68eda69262547061924bfb69f7ba09e869e484f8d8cf664b7d01f68c19b"
+    },
+    "fluffboost-staging-icon.gif": {
+      "bytes": 3646176,
+      "sha256": "12df49b83a4f595f0be080a60e14c69c427bd8352a928abcb02f8f1f7625b6aa"
+    },
+    "fluffboost-premium-paw.png": {
+      "bytes": 61681,
+      "sha256": "d1a2517dba775e9ef64bb6bd10edda9f1b93dce4ac7963c647221194e7c7d0a0"
+    },
+    "fluffboost-premium-paw.mp4": {
+      "bytes": 36031,
+      "sha256": "251aca5bb4d65583d94a9f02835c921b9d6389911d16dbf0ce323e0d0e7199cb"
+    },
+    "fluffboost-premium-paw.gif": {
+      "bytes": 734383,
+      "sha256": "47fad40a53f3585188f1e853fd05c4fd20dc4ae81b1155b7f3d677d5fc5df571"
+    }
+  }
+}

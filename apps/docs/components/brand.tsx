@@ -1,16 +1,16 @@
 import type { SVGProps } from "react";
 import Image from "next/image";
-import banner from "../../../banner.jpg";
+import icon from "../../../assets/brand/animated/fluffboost-production-icon.png";
 
-// Reuse the existing FluffBoost wolf artwork; no replacement logo.
+// The approved production portrait is shared with the Discord application.
 export function BrandAvatar({ className = "size-7" }: { className?: string }) {
   return (
     <Image
-      src={banner}
+      src={icon}
       alt=""
       width={64}
       height={64}
-      className={`rounded-full object-cover object-[42%_center] ${className}`}
+      className={`rounded-full object-cover ${className}`}
     />
   );
 }
