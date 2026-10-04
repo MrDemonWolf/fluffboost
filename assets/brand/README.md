@@ -11,6 +11,7 @@ Use the **680 × 240 (17:6)** banner exports in `animated/` for Discord's Bot pa
 the older 2500 × 1000 files below are preserved 5:2 working masters.
 PNG/MP4 icons are 1024 × 1024; GIF icons are 512 × 512; the SKU paw is 250 × 250.
 The animated banners contain scenery only, with no wolf, logo or lettering.
+Production, DEV and STAGING use the exact same warm production banner, without environment color overlays.
 Clouds and lake shimmer move with frame-driven motion; the mountains stay still.
 Icons keep the wolf/paw and environment labels, with orbiting glints.
 

@@ -18,12 +18,21 @@ const serveUrl = await bundle({
   webpackOverride: (config) => ({ ...config, resolve: { ...config.resolve, extensionAlias: { ".js": [".js", ".ts", ".tsx"] } } }),
 });
 const compositions = await getCompositions(serveUrl);
+const selected = compositions.filter((item) => requested.length === 0 || requested.includes(item.id));
+const productionBanner = compositions.find((item) => item.id === "fluffboost-production-banner");
+if (selected.some((item) => item.id.endsWith("-banner")) && productionBanner) {
+  const existingIndex = selected.indexOf(productionBanner);
+  if (existingIndex !== -1) selected.splice(existingIndex, 1);
+  selected.unshift(productionBanner);
+}
 const files: Record<string, { bytes: number; sha256: string }> = {};
-for (const composition of compositions.filter((item) => requested.length === 0 || requested.includes(item.id))) {
+for (const composition of selected) {
   for (const format of ["png", "mp4", "gif"] as const) {
     const name = `${composition.id}.${format}`;
     const output = resolve(outputDir, name);
-    if (format === "png") {
+    if (composition.id.endsWith("-banner") && composition.id !== "fluffboost-production-banner") {
+      await copyFile(resolve(outputDir, `fluffboost-production-banner.${format}`), output);
+    } else if (format === "png") {
       await renderStill({ serveUrl, composition, output, imageFormat: "png", frame: 0 });
     } else {
       await renderMedia({ serveUrl, composition, outputLocation: output,

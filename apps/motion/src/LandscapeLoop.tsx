@@ -7,8 +7,6 @@ export const LandscapeLoop = ({ asset, phase }: { asset: BrandAsset; phase: numb
   return (
     <AbsoluteFill style={{ overflow: "hidden", backgroundColor: "#FFF0D5" }}>
       <Img src={staticFile(asset.file)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-      {asset.id.includes("dev") && <AbsoluteFill style={{ backgroundColor: "#8BC9D1", mixBlendMode: "soft-light", opacity: 0.12 }} />}
-      {asset.id.includes("staging") && <AbsoluteFill style={{ backgroundColor: "#E6AA64", mixBlendMode: "soft-light", opacity: 0.12 }} />}
       <svg viewBox="0 0 680 240" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
         <circle cx="482" cy="105" r="24" fill="#F5C16E" />
         {[-1, 0, 1].flatMap((repeat) => [
