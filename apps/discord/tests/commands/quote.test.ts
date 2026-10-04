@@ -31,8 +31,9 @@ describe("quote command", () => {
     const interaction = mockInteraction();
     await execute(mockClient() as never, interaction as never);
 
-    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
-    const arg = (interaction.reply as sinon.SinonStub).firstCall.args[0];
+    expect((interaction.deferReply as sinon.SinonStub).calledOnce).toBe(true);
+    expect((interaction.editReply as sinon.SinonStub).calledOnce).toBe(true);
+    const arg = (interaction.editReply as sinon.SinonStub).firstCall.args[0];
     expect(arg.content).toContain("No motivation quote found");
   });
 
@@ -44,8 +45,9 @@ describe("quote command", () => {
     const interaction = mockInteraction();
     await execute(mockClient() as never, interaction as never);
 
-    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
-    const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
+    expect((interaction.deferReply as sinon.SinonStub).calledOnce).toBe(true);
+    expect((interaction.editReply as sinon.SinonStub).calledOnce).toBe(true);
+    const replyArgs = (interaction.editReply as sinon.SinonStub).firstCall.args[0];
     expect(Array.isArray(replyArgs.embeds)).toBe(true);
   });
 
@@ -57,6 +59,16 @@ describe("quote command", () => {
     await execute(mockClient() as never, interaction as never);
 
     expect(logger.commands.error.calledOnce).toBe(true);
-    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
+    expect((interaction.editReply as sinon.SinonStub).calledOnce).toBe(true);
+  });
+
+  it("acknowledges before database and author lookup", async () => {
+    const { execute, randomStub, authorStub } = await loadModule({
+      quote: { quote: "Keep going", author: "Anon", addedBy: "u1" },
+    });
+    const interaction = mockInteraction();
+    await execute(mockClient() as never, interaction as never);
+    expect((interaction.deferReply as sinon.SinonStub).calledBefore(randomStub)).toBe(true);
+    expect((interaction.deferReply as sinon.SinonStub).calledBefore(authorStub)).toBe(true);
   });
 });

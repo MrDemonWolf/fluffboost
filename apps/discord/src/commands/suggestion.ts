@@ -13,6 +13,7 @@ import { announceToMainChannel } from "../utils/mainChannel.js";
 import { withCommandLogging } from "../utils/commandErrors.js";
 import { requireGuildId } from "../utils/permissions.js";
 import { buildBrandedEmbed } from "../utils/embedHelpers.js";
+import { MAX_QUOTE_LENGTH, MAX_QUOTE_AUTHOR_LENGTH, quoteInputError } from "../utils/quoteLimits.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("suggestion")
@@ -23,12 +24,16 @@ export const slashCommand = new SlashCommandBuilder()
     option
       .setName("quote")
       .setDescription("The quote to be suggested")
+      .setMinLength(1)
+      .setMaxLength(MAX_QUOTE_LENGTH)
       .setRequired(true)
   )
   .addStringOption((option) =>
     option
       .setName("author")
       .setDescription("The author of the quote")
+      .setMinLength(1)
+      .setMaxLength(MAX_QUOTE_AUTHOR_LENGTH)
       .setRequired(true)
   );
 
@@ -51,6 +56,11 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
         content: "Please provide an author",
         flags: MessageFlags.Ephemeral,
       });
+      return;
+    }
+    const inputError = quoteInputError(quote, author);
+    if (inputError) {
+      await interaction.reply({ content: inputError, flags: MessageFlags.Ephemeral });
       return;
     }
     const guildId = await requireGuildId(interaction);

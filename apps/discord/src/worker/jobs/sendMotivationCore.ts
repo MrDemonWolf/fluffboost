@@ -7,10 +7,6 @@ import type { db } from "../../database/index.js";
 import { guilds } from "../../database/schema.js";
 import type { Guild } from "../../database/schema.js";
 import type {
-  isGuildDueForMotivation,
-  mostRecentScheduledOccurrence,
-} from "../../utils/scheduleEvaluator.js";
-import type {
   buildMotivationEmbed,
   getRandomMotivationQuote,
   resolveQuoteAuthor,
@@ -25,8 +21,8 @@ import type logger from "../../utils/logger.js";
 export interface SendMotivationDeps {
   db: typeof db;
   logger: typeof logger;
-  isGuildDueForMotivation: typeof isGuildDueForMotivation;
-  mostRecentScheduledOccurrence: typeof mostRecentScheduledOccurrence;
+  isGuildDueForMotivation: (guild: Guild) => boolean;
+  mostRecentScheduledOccurrence: (guild: Guild) => Date | null;
   getRandomMotivationQuote: typeof getRandomMotivationQuote;
   resolveQuoteAuthor: typeof resolveQuoteAuthor;
   buildMotivationEmbed: typeof buildMotivationEmbed;
@@ -117,7 +113,7 @@ export async function sendMotivationCore(client: Client, deps: SendMotivationDep
       }
 
       try {
-        const channel = await client.channels.fetch(g.motivationChannelId);
+        const channel = await client.channels.fetch(g.motivationChannelId, { allowUnknownGuild: true });
         if (!channel || !channel.isTextBased() || channel.isDMBased()) {
           // Keep the claim: an invalid channel is a config problem, not a
           // transient failure — retrying every tick would just spam warnings.

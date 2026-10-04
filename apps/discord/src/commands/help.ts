@@ -3,6 +3,7 @@ import type { Client, CommandInteraction } from "discord.js";
 import { SlashCommandBuilder, MessageFlags } from "discord.js";
 
 import { withCommandLogging } from "../utils/commandErrors.js";
+import env from "../utils/env.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("help")
@@ -20,9 +21,7 @@ export async function execute(_client: Client, interaction: CommandInteraction):
             \`/setup channel\` - Set the channel for quotes (admin only)
             \`/setup schedule\` - Customize quote delivery schedule (premium)
             \`/admin\` - Admin commands (selected users only)
-            \`/premium\` - View premium subscription info and status
-            \`/owner premium test-create\` - Create a test entitlement (owner only)
-            \`/owner premium test-delete\` - Delete a test entitlement (owner only)`,
+            \`/premium\` - View premium subscription info and status${env.NODE_ENV !== "production" ? "\n            `/owner premium test-create` - Create a test entitlement (owner only)\n            `/owner premium test-delete` - Delete a test entitlement (owner only)" : ""}`,
       flags: MessageFlags.Ephemeral,
     });
   });

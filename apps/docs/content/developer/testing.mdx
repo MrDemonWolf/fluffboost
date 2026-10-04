@@ -1,6 +1,6 @@
 ---
 title: Testing
-description: How the bot is tested — bun:test, Sinon, and module mocking.
+description: Unit tests, real PostgreSQL bot flows, and browser tests of the GitHub Pages export.
 ---
 
 Tests use **`bun:test`** with **Sinon**, configured in
@@ -31,12 +31,64 @@ bun --filter @fluffboost/discord test
   stays short.
 
 <Callout type="info">
-  Because commands and jobs are isolated behind these mocks, tests never touch a
+  Unit tests isolate commands and jobs behind these mocks and never touch a
   real database, Redis, or the Discord API.
 </Callout>
+
+## Bot end-to-end tests
+
+`apps/discord/e2e/` exercises the actual interaction router, command handlers,
+Drizzle queries, schema migrations, embeds, premium policy, and delivery worker
+with **real PostgreSQL**. Discord transport stays local: these tests never log
+in to Discord, create entitlements, or post to a server. Redis and BullMQ job
+dispatch are outside this suite; it invokes the production job handler directly.
+
+The suite covers channel setup, administrator permissions, Premium activation
+and expiry, concurrent SQL delivery claims, retry after a transient send failure,
+and real Discord.js channel resolution when a guild is absent from a shard's
+cache. A separate scheduler regression checks the repeated autumn DST hour.
+
+Start a disposable database in another terminal:
+
+```bash
+docker run --rm --name fluffboost-e2e-db \
+  -e POSTGRES_USER=ci -e POSTGRES_PASSWORD=ci -e POSTGRES_DB=fluffboost_e2e \
+  -p 127.0.0.1:55439:5432 postgres:16
+```
+
+Then run:
+
+```bash
+E2E_DATABASE_URL=postgres://ci:ci@127.0.0.1:55439/fluffboost_e2e \
+  bun run --filter=@fluffboost/discord test:e2e
+```
+
+Each run creates a unique schema, applies the repository migrations inside it,
+and drops only that schema on completion. The suite refuses non-loopback hosts
+and never falls back to `DATABASE_URL`. Use a disposable test database; stop the
+container afterward with `docker stop fluffboost-e2e-db`.
+
+## Browser end-to-end tests
+
+Playwright builds `apps/docs` with the deployed `/fluffboost` base path and
+serves the static `out/` directory with no route fallback. Desktop Chromium and
+a Pixel 7 viewport cover onboarding, the paid activation guide, Privacy Policy,
+Terms of Service, direct reloads, local links, missing assets, client errors, and
+horizontal overflow. Mobile emulation does not replace testing on a real phone.
+
+```bash
+bun run --filter=@fluffboost/docs test:e2e:install
+bun run --filter=@fluffboost/docs test:e2e
+```
+
+To run both suites, set `E2E_DATABASE_URL` as above and run `bun run test:e2e`.
+Browser failure screenshots and traces are written to the ignored
+`apps/docs/test-results/` directory, with an HTML report in
+`apps/docs/playwright-report/`.
 
 ## In CI
 
 GitHub Actions runs the test suite with coverage, an ESLint check, a TypeScript
 type check, a dependency audit, and a Docker build test on every push and PR to
-`main` and `dev`.
+`main` and `dev`. Bot E2E uses a fresh PostgreSQL 16 service. Browser E2E builds
+and tests the exact static export and uploads reports and failure traces.

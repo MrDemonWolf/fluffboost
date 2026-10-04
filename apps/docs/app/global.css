@@ -174,34 +174,6 @@ body {
   animation-delay: var(--d, 0ms);
 }
 
-@keyframes fb-float {
-  0%,
-  100% {
-    transform: translateY(0) rotate(-2deg);
-  }
-  50% {
-    transform: translateY(-10px) rotate(2deg);
-  }
-}
-.fb-float {
-  animation: fb-float 6s ease-in-out infinite;
-}
-
-@keyframes fb-marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-.fb-marquee {
-  animation: fb-marquee 40s linear infinite;
-}
-.fb-marquee-track:hover .fb-marquee {
-  animation-play-state: paused;
-}
-
 /* Focus ring that stays on-brand and always visible for keyboard users. */
 :where(a, button, input, [tabindex]):focus-visible {
   outline: 3px solid var(--fb-honey);

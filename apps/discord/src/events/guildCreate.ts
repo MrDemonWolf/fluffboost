@@ -3,6 +3,7 @@ import type { Guild } from "discord.js";
 import { db } from "../database/index.js";
 import { guilds } from "../database/schema.js";
 import logger from "../utils/logger.js";
+import { reconcilePremium } from "../utils/premiumReconciliation.js";
 
 export async function guildCreateEvent(guild: Guild): Promise<void> {
   try {
@@ -21,6 +22,8 @@ export async function guildCreateEvent(guild: Guild): Promise<void> {
       .values({ guildId: guild.id })
       .onConflictDoNothing({ target: guilds.guildId })
       .returning();
+
+    await reconcilePremium(guild.client, guild.id);
 
     if (guildData) {
       logger.database.operation("Guild added to database", {

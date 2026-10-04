@@ -9,8 +9,8 @@ import type {
   CommandInteraction,
   CommandInteractionOptionResolver,
 } from "discord.js";
-import logger from "../../utils/logger.js";
-import { safeErrorReply } from "../../utils/commandErrors.js";
+import { withCommandLogging } from "../../utils/commandErrors.js";
+import { MAX_QUOTE_LENGTH, MAX_QUOTE_AUTHOR_LENGTH } from "../../utils/quoteLimits.js";
 
 /**
  * Import subcommands
@@ -41,12 +41,16 @@ export const slashCommand = new SlashCommandBuilder()
             option
               .setName("quote")
               .setDescription("What is the quote?")
+              .setMinLength(1)
+              .setMaxLength(MAX_QUOTE_LENGTH)
               .setRequired(true)
           )
           .addStringOption((option) =>
             option
               .setName("quote_author")
               .setDescription("Who is the author of the quote?")
+              .setMinLength(1)
+              .setMaxLength(MAX_QUOTE_AUTHOR_LENGTH)
               .setRequired(true)
           );
       })
@@ -162,6 +166,7 @@ export const slashCommand = new SlashCommandBuilder()
             option
               .setName("reason")
               .setDescription("Reason for rejection")
+              .setMaxLength(1024)
               .setRequired(false),
           );
       })
@@ -174,16 +179,10 @@ export const slashCommand = new SlashCommandBuilder()
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 export async function execute(client: Client, interaction: CommandInteraction) {
-  try {
-    if (!interaction.isChatInputCommand()) {
-      return;
-    }
-
-    logger.commands.executing(
-      "admin",
-      interaction.user.username,
-      interaction.user.id
-    );
+  if (!interaction.isChatInputCommand()) {
+    return;
+  }
+  await withCommandLogging("admin", interaction, async () => {
 
     const options = interaction.options;
 
@@ -283,16 +282,7 @@ export async function execute(client: Client, interaction: CommandInteraction) {
           flags: MessageFlags.Ephemeral,
         });
     }
-  } catch (err) {
-    logger.commands.error(
-      "admin",
-      interaction.user.username,
-      interaction.user.id,
-      err
-    );
-
-    await safeErrorReply(interaction);
-  }
+  });
 }
 
 export default {

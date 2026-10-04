@@ -13,6 +13,7 @@ import { buildPremiumUpsell, hasEntitlement, isPremiumEnabled } from "../../util
 import { parseHourMinute } from "../../utils/scheduleEvaluator.js";
 import { isValidTimezone, filterTimezones } from "../../utils/timezones.js";
 import { buildBrandedEmbed } from "../../utils/embedHelpers.js";
+import { DEFAULT_GUILD_SCHEDULE } from "../../utils/scheduleConfig.js";
 
 const DAY_OF_WEEK_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -52,9 +53,9 @@ export default async function schedule(_client: Client, interaction: ChatInputCo
     }
 
     const options = interaction.options;
-    const frequency = (options.getString("frequency") ?? "Daily") as MotivationFrequency;
-    const time = options.getString("time") ?? "08:00";
-    const timezone = options.getString("timezone") ?? "America/Chicago";
+    const frequency = (options.getString("frequency") ?? DEFAULT_GUILD_SCHEDULE.motivationFrequency) as MotivationFrequency;
+    const time = options.getString("time") ?? DEFAULT_GUILD_SCHEDULE.motivationTime;
+    const timezone = options.getString("timezone") ?? DEFAULT_GUILD_SCHEDULE.timezone;
     const day = options.getInteger("day");
 
     if (parseHourMinute(time) === null) {
