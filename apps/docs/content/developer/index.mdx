@@ -18,11 +18,11 @@ Express health-check API.
 
 The repository is a Bun-workspace + Turborepo monorepo:
 
-```
+```text
 fluffboost/
 ├── apps/
 │   ├── discord/   # the bot (Discord.js, Drizzle, BullMQ, Express)
-│   └── web/       # this site — marketing + docs (Next.js + Fumadocs)
+│   └── docs/      # marketing + docs (Next.js + Fumadocs)
 ├── turbo.json
 └── package.json   # workspace root
 ```
@@ -48,6 +48,7 @@ fluffboost/
 <Cards>
   <Card title="Self-hosting" href="/developers/self-hosting" description="Run it locally with Bun + Docker Compose." />
   <Card title="Configuration" href="/developers/configuration" description="Every environment variable, validated by Zod." />
+  <Card title="Enable Premium" href="/developers/premium" description="Publish the server subscription and configure the bot." />
   <Card title="Deployment" href="/developers/deployment" description="Deploy on Dokploy — and migrate the old layout." />
   <Card title="Contributing" href="/developers/contributing" description="Conventions, tests, and how to open a PR." />
 </Cards>

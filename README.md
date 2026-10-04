@@ -11,7 +11,7 @@ and community-driven quotes.
 
 Spread joy, one quote at a time.
 
-**[Website & documentation →](https://mrdemonwolf.github.io/fluffboost/)**
+**[Website & documentation →](https://fluffboost.mrdemonwolf.dev/)**
 
 ## Features
 
@@ -43,7 +43,7 @@ Spread joy, one quote at a time.
 3. Enjoy daily motivation delivered to your server.
 
 Step-by-step walkthrough:
-[the Guide](https://mrdemonwolf.github.io/fluffboost/docs/).
+[the Guide](https://fluffboost.mrdemonwolf.dev/docs/).
 
 ## Usage
 
@@ -211,23 +211,23 @@ fluffboost/
 ## Documentation
 
 Documentation is published at
-**[mrdemonwolf.github.io/fluffboost](https://mrdemonwolf.github.io/fluffboost/)**
+**[fluffboost.mrdemonwolf.dev](https://fluffboost.mrdemonwolf.dev/)**
 and split by audience:
 
-- **[Guide](https://mrdemonwolf.github.io/fluffboost/docs/)** — for server
+- **[Guide](https://fluffboost.mrdemonwolf.dev/docs/)** — for server
   owners: setup, scheduling, suggestions, premium, and a
-  [command reference](https://mrdemonwolf.github.io/fluffboost/docs/commands/).
+  [command reference](https://fluffboost.mrdemonwolf.dev/docs/commands/).
   Source: `apps/docs/content/user/`.
-- **[Developers](https://mrdemonwolf.github.io/fluffboost/developers/)** —
+- **[Developers](https://fluffboost.mrdemonwolf.dev/developers/)** —
   self-hosting, configuration, database,
-  [deployment](https://mrdemonwolf.github.io/fluffboost/developers/deployment/),
+  [deployment](https://fluffboost.mrdemonwolf.dev/developers/deployment/),
   testing, and contributing. Source: `apps/docs/content/developer/`.
 
 The site is a static export built from `apps/docs` and deployed by
 `.github/workflows/deploy-docs.yml` on every push to `main`.
 
 Deploying the bot? The
-[deployment guide](https://mrdemonwolf.github.io/fluffboost/developers/deployment/)
+[deployment guide](https://fluffboost.mrdemonwolf.dev/developers/deployment/)
 covers both a fresh Dokploy setup and upgrading an existing pre-monorepo
 deployment — where the only production change is the Dockerfile path.
 
@@ -244,7 +244,7 @@ For detailed changelog information, see
 
 If you have any questions, suggestions, or feedback:
 
-- Website & docs: [mrdemonwolf.github.io/fluffboost](https://mrdemonwolf.github.io/fluffboost/)
+- Website & docs: [fluffboost.mrdemonwolf.dev](https://fluffboost.mrdemonwolf.dev/)
 - Discord: [Join my server](https://mrdwolf.net/discord)
 
 Made with love by [MrDemonWolf, Inc.](https://www.mrdemonwolf.com)

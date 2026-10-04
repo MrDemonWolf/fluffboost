@@ -1,4 +1,19 @@
 import type { SVGProps } from "react";
+import Image from "next/image";
+import icon from "../../../assets/brand/animated/fluffboost-production-icon.png";
+
+// The approved production portrait is shared with the Discord application.
+export function BrandAvatar({ className = "size-7" }: { className?: string }) {
+  return (
+    <Image
+      src={icon}
+      alt=""
+      width={64}
+      height={64}
+      className={`rounded-full object-cover ${className}`}
+    />
+  );
+}
 
 // A friendly paw mark — used in the wordmark and as a decorative motif.
 export function PawMark(props: SVGProps<SVGSVGElement>) {
@@ -16,9 +31,7 @@ export function PawMark(props: SVGProps<SVGSVGElement>) {
 export function Wordmark() {
   return (
     <span className="inline-flex items-center gap-2 font-display text-lg font-semibold tracking-tight text-ink">
-      <span className="grid size-7 place-items-center rounded-full bg-honey text-[#2b1e12] shadow-sm">
-        <PawMark className="size-4" />
-      </span>
+      <BrandAvatar />
       FluffBoost
     </span>
   );
