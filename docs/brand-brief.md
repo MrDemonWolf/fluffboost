@@ -79,5 +79,6 @@ wolf, logo or lettering. The earlier portrait banners remain preserved as master
 The final image-generated wolf and paw use simpler shapes with fewer details.
 Icons retain their environment labels, with one orbiting glint. Banners loop
 over 32 seconds; icons loop over eight seconds.
+All environments use the same approved warm production banner without color overlays.
 MP4 exports are for marketing, and PNG/GIF exports are for Discord. The Alpha
 application is the staging target, as confirmed by Nathanial.

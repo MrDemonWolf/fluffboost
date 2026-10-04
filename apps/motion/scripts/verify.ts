@@ -81,5 +81,12 @@ for (const asset of assets) {
   }
 }
 const siteCopy = await readFile(resolve(import.meta.dirname, "../../docs/public/brand/fluffboost-production-banner.mp4"));
+for (const variant of ["dev", "staging"]) {
+  for (const format of ["png", "gif", "mp4"]) {
+    assert.equal(manifest.files[`fluffboost-${variant}-banner.${format}`]?.sha256,
+      manifest.files[`fluffboost-production-banner.${format}`]?.sha256,
+      `${variant} ${format}: all environments must use the approved production banner`);
+  }
+}
 assert.equal(createHash("sha256").update(siteCopy).digest("hex"), manifest.files["fluffboost-production-banner.mp4"]?.sha256, "Website video is stale");
 process.stdout.write("All 21 exports and the website video verified.\n");
