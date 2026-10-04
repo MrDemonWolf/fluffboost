@@ -36,8 +36,8 @@ this preload and exercises the real environment loader.
   stays short.
 
 <Callout type="info">
-  Unit tests isolate commands and jobs behind these mocks and never touch a
-  real database, Redis, or the Discord API.
+  Unit tests isolate commands and jobs behind these mocks and never touch a real
+  database, Redis, or the Discord API.
 </Callout>
 
 ## Bot end-to-end tests
@@ -65,13 +65,19 @@ Then run:
 
 ```bash
 E2E_DATABASE_URL=postgres://ci:ci@127.0.0.1:55439/fluffboost_e2e \
+  E2E_DATABASE_DISPOSABLE=true \
   bun run --filter=@fluffboost/discord test:e2e
 ```
 
 Each run creates a unique schema, applies the repository migrations inside it,
-and drops only that schema on completion. The suite refuses non-loopback hosts
-and never falls back to `DATABASE_URL`. Use a disposable test database; stop the
-container afterward with `docker stop fluffboost-e2e-db`.
+and drops only that schema on completion. The suite requires the exact database
+name `fluffboost_e2e`, a loopback host, and the explicit
+`E2E_DATABASE_DISPOSABLE=true` operator assertion; it never falls back to
+`DATABASE_URL`. The assertion means you have confirmed the target database is
+disposable. Host and name checks cannot identify the server behind a local port
+forward, so never point a tunnel at production. Use a disposable test database
+and a role scoped to that database; stop the container afterward with
+`docker stop fluffboost-e2e-db`.
 
 ## Browser end-to-end tests
 

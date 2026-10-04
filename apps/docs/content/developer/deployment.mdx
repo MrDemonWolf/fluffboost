@@ -43,10 +43,10 @@ existing ones). Copy each connection string — they become `DATABASE_URL` and
 Add a new **Docker / Dockerfile** application pointing at this repository, then
 set exactly two build fields:
 
-| Field                            | Value                     |
-| -------------------------------- | ------------------------- |
-| Build context / base directory    | `.` (the repository root) |
-| Dockerfile path                  | `apps/discord/Dockerfile` |
+| Field                          | Value                     |
+| ------------------------------ | ------------------------- |
+| Build context / base directory | `.` (the repository root) |
+| Dockerfile path                | `apps/discord/Dockerfile` |
 
 The context **must** stay at the root — the Bun workspace lockfile lives there
 and `turbo prune` needs the whole graph.
@@ -67,8 +67,8 @@ Production does **not** read a `.env` file; inject these through Dokploy.
 
 <Callout type="warn">
   Invalid or missing config exits the process immediately at startup — that's by
-  design. If the container dies instantly, read the logs: the Zod error names the
-  exact variable.
+  design. If the container dies instantly, read the logs: the Zod error names
+  the exact variable.
 </Callout>
 
 </Step>
@@ -99,13 +99,24 @@ and the shards logging in. Confirm the health check goes green.
 
 The quote library is **not** seeded automatically, and without it the bot has
 nothing to post. Now that the tables exist, run this once from your machine
-against the production database:
+against the production database. From the repository root in an interactive
+Bash shell, enter the database URL at the hidden prompt so it is not included
+in the command text or shell history:
 
 ```bash
-DATABASE_URL='<your-production-url>' OWNER_ID='<your-discord-id>' bun run db:seed
+(
+  set -e
+  read -r -s -p 'Production database URL: ' DATABASE_URL
+  printf '\n'
+  read -r -p 'Owner Discord ID: ' OWNER_ID
+  export DATABASE_URL OWNER_ID
+  bun run db:seed
+)
 ```
 
-`db:seed` skips quotes that already exist, so it's safe to re-run.
+`db:seed` skips quotes that already exist, so it's safe to re-run. The URL is
+still present in the seed process environment while it runs; use a trusted
+machine and shell.
 
 </Step>
 
