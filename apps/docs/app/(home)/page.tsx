@@ -1,10 +1,9 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { Metadata } from "next";
 import { site } from "@/lib/site";
 import { BrandAvatar, PawMark } from "@/components/brand";
 import { SiteFooter } from "@/components/site-footer";
-import banner from "../../../../banner.jpg";
+import { BrandBanner } from "@/components/brand-banner";
 
 export const metadata: Metadata = {
   title: { absolute: `${site.name} — ${site.tagline}` },
@@ -196,12 +195,7 @@ function QuoteCard() {
       </div>
 
       <article className="fb-shadow relative rounded-3xl border border-line bg-card p-5">
-        <Image
-          src={banner}
-          alt="FluffBoost's golden-eyed wolf greeting a warm sunrise"
-          priority
-          className="mb-5 h-auto w-full rounded-2xl"
-        />
+        <BrandBanner />
         <div className="flex items-center gap-3 border-b border-line pb-4">
           <BrandAvatar className="size-10" />
           <div className="leading-tight">
