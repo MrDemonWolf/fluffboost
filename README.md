@@ -77,7 +77,7 @@ These manage shared content and are restricted to users in the operator's
 | `/admin activity remove`     | Remove an activity                 |
 | `/admin suggestion approve`  | Approve a suggested quote          |
 | `/admin suggestion reject`   | Reject a suggested quote           |
-| `/admin suggestion list`     | List pending suggestions           |
+| `/admin suggestion list`     | List suggestions                   |
 | `/admin suggestion stats`    | View suggestion statistics         |
 
 ### Setup Commands

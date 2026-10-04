@@ -29,16 +29,18 @@ Work through these sections top-to-bottom. Each section builds on the previous.
 
 ---
 
-## Section 4 — Verify in Production (with test entitlement)
+## Section 4 — Verify in Production
 
-- [ ] Run `/owner premium test-list` → confirm "No entitlements found" (clean slate)
 - [ ] Run `/premium` → should show gold upsell embed with purchase button
 - [ ] Run `/setup schedule` → should show premium upsell and block you
-- [ ] Run `/owner premium test-create` → **save the entitlement ID shown!**
+- [ ] Verify an active Premium entitlement using the production purchase flow
 - [ ] Run `/premium` → should show green "Premium Active" embed
 - [ ] Run `/setup schedule frequency:Weekly time:09:00 timezone:America/New_York day:1` → should succeed and save schedule
-- [ ] Run `/owner premium test-delete entitlement_id:<saved-id>` → clean up
-- [ ] Run `/premium` → should be back to upsell embed ✅ premium is live!
+- [ ] Confirm another server without Premium still sees the Premium gate
+
+Test entitlements are disabled on the production bot. Use a separate dev or
+staging application for `/owner premium test-create`, `test-list`, and
+`test-delete`, as described in `apps/docs/content/developer/premium.mdx`.
 
 ---
 
