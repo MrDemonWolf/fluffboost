@@ -16,3 +16,6 @@
 **/.env.*
 !**/.env.example
 banner.jpg
+# Marketing media and local video bundles are not bot runtime inputs.
+assets/brand
+apps/motion/build

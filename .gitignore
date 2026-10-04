@@ -91,6 +91,7 @@ web_modules/
 next-env.d.ts
 
 # Next.js build output
+apps/motion/build/
 .next
 out
 playwright-report/

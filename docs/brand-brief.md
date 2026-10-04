@@ -68,4 +68,16 @@ the repository; no local resizing or pixel edits were performed.
 
 The development icon retains opaque black corners and the staging icon retains
 opaque white corners. Live Discord crops and small-size label readability still
-need checking. No Discord artwork upload has been performed.
+need checking for the environment bots. The production bot avatar and Premium
+paw have been uploaded and saved in Discord. The Remotion workspace in
+`apps/motion` supplies reproducible animations, with committed
+PNG, MP4 and GIF exports in `assets/brand/animated`. Discord's Bot banner field
+was verified as **680 by 240 (17:6)**. Animated banners use a separate background-only
+cloudless landscape image. Remotion adds separate moving clouds, a simple sun
+and lake shimmer, with stationary mountains and no
+wolf, logo or lettering. The earlier portrait banners remain preserved as masters.
+The final image-generated wolf and paw use simpler shapes with fewer details.
+Icons retain their environment labels, with one orbiting glint. Banners loop
+over 32 seconds; icons loop over eight seconds.
+MP4 exports are for marketing, and PNG/GIF exports are for Discord. The Alpha
+application is the staging target, as confirmed by Nathanial.

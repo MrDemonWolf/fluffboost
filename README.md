@@ -173,6 +173,8 @@ Run these from the repository root; they fan out through Turborepo.
 
 - `bun run dev:discord` — Start the bot with hot reload
 - `bun run dev:docs` — Start the marketing/docs site
+- `bun run dev:motion` — Preview the Remotion brand compositions
+- `bun run brand:render` / `bun run brand:verify` — Render and verify committed PNG/MP4/GIF exports
 - `bun run lint` / `bun run lint:check` — ESLint (with / without fixes)
 - `bun run format` — Format code with Prettier
 - `bun run typecheck` — TypeScript type checking
@@ -199,6 +201,12 @@ The static output is `apps/docs/out`. The existing
 `.github/workflows/deploy-docs.yml` publishes it from `main`, independently
 of the bot deployment. Marketing drafts and the artwork brief live in
 `docs/marketing.md` and `docs/brand-brief.md`.
+
+The [Remotion workspace](apps/motion/README.md) maintains the animation source.
+Simplified image-generated backplates live in `assets/brand/motion-sources`;
+final Discord and marketing exports live in `assets/brand/animated`. Scenery-only
+banners use 32-second cloud loops. The website includes a pause control and a
+still poster for reduced-motion preferences.
 
 ### Code Quality
 

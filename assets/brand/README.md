@@ -1,6 +1,24 @@
 # FluffBoost brand assets
 
-The exact-size exports are ready to download below. They have not replaced the bot's current artwork or been uploaded to Discord. Discord's live crops and small-size label readability still need review.
+The original ChatGPT exports are retained below. The earlier detailed production avatar and Premium paw were uploaded and saved in Discord. The cleaner Development icon is also saved. The final simplified production/STAGING artwork and the 32-second banner timing still need live upload verification; repository exports do not establish what Discord currently serves.
+
+## Reproducible animation exports
+
+[Remotion workspace](../../apps/motion/README.md) contains the source and render commands.
+The [animated exports](animated/manifest.json) include PNG posters, silent MP4 videos
+and looping GIFs for production, DEV, STAGING and the Premium paw.
+Use the **680 × 240 (17:6)** banner exports in `animated/` for Discord's Bot panel;
+the older 2500 × 1000 files below are preserved 5:2 working masters.
+PNG/MP4 icons are 1024 × 1024; GIF icons are 512 × 512; the SKU paw is 250 × 250.
+The animated banners contain scenery only, with no wolf, logo or lettering.
+Clouds and lake shimmer move with frame-driven motion; the mountains stay still.
+Icons keep the wolf/paw and environment labels, with orbiting glints.
+
+The final cleaner source set is in `motion-sources`: a simplified wolf portrait,
+a simple paw and a cloudless landscape. Remotion adds the clouds and sun separately;
+the landscape image itself contains neither. Banner loops run for **32 seconds**
+at one-quarter the initial cloud speed. Icon loops run for eight seconds.
+Earlier detailed concepts and exports remain preserved as references.
 
 Generated in ChatGPT based on the current banner. The set preserves the gray-and-cream wolf, golden eyes, and warm sunrise setting. The development and staging variants add visible environment labels so they can be distinguished from the production bot.
 
