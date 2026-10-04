@@ -9,6 +9,7 @@ describe("suggestionLimits.consumeSuggestionSlot", () => {
   async function load(evalStub: sinon.SinonStub) {
     mock.module("../../src/redis/index.js", () => ({
       default: { eval: evalStub },
+      bullConnection: {},
     }));
     return import("../../src/utils/suggestionLimits.js");
   }
