@@ -16,7 +16,7 @@ describe("suggestion command", () => {
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../src/utils/env.js", () => ({ default: env }));
-    mock.module("../../src/redis/index.js", () => ({ default: redis }));
+    mock.module("../../src/redis/index.js", () => ({ default: redis, bullConnection: {} }));
 
     const mod = await import("../../src/commands/suggestion.js");
 
