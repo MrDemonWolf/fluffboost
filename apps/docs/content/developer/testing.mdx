@@ -20,6 +20,11 @@ Run just the bot's suite from its package:
 bun --filter @fluffboost/discord test
 ```
 
+The unit-test scripts preload `tests/preload.ts` to mock application settings
+before imports. They do not require `.env` or depend on the order test files
+run. Individual suites can override that fixture. The E2E script does not use
+this preload and exercises the real environment loader.
+
 ## Patterns
 
 - **Module mocking** — `mock.module()` from `bun:test` replaces imports at load
