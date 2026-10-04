@@ -21,13 +21,12 @@ Bun.serve({
 
     const route = pathname.slice(basePath.length) || "/";
     const path = resolve(output, `.${route.endsWith("/") ? `${route}index.html` : route}`);
-    if (!path.startsWith(`${output}${sep}`)) {
-      return new Response("Not found", { status: 404 });
+    const candidates = route.endsWith("/") ? [path] : [resolve(path, "index.html"), path];
+    for (const candidate of candidates) {
+      if (!candidate.startsWith(`${output}${sep}`)) continue;
+      const file = Bun.file(candidate);
+      if (await file.exists()) return new Response(file);
     }
-    const file = Bun.file(path);
-    if (!(await file.exists())) {
-      return new Response("Not found", { status: 404 });
-    }
-    return new Response(file);
+    return new Response("Not found", { status: 404 });
   },
 });

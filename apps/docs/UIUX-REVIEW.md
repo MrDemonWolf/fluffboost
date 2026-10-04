@@ -164,7 +164,7 @@ review, not a moderated user study.
 | Status and feedback | Premium checkpoints and setup-error responses inspected in source; live Discord status remains unverified. |
 | Real-world language | Shared library, operator review, subscription scope, and permission wording corrected against the implementation. |
 | Control and navigation | Landing → guide → setup, legal-page navigation, and reloads pass in Chromium desktop/mobile emulation. |
-| Consistency and standards | Internal links/assets stay under `/fluffboost`; current tests report no client errors or local 404s. |
+| Consistency and standards | Internal links and assets use the custom-domain root; current tests report no client errors or local 404s. |
 | Error prevention and recovery | Channel permission regression passes; paid-activation guide includes concrete symptom/action recovery. |
 | Recognition and efficiency | Command reference and task links are visible; keyboard mobile menu tested. Static documentation search was not exercised in this pass. |
 | Aesthetics and hierarchy | Existing artwork and type system preserved; one h1/main confirmed at three widths; real device and screen-reader experience unverified. |
@@ -190,9 +190,10 @@ review, not a moderated user study.
 - `git diff --check`: passed when this report was prepared.
 - Source was compared directly with the bot's schema, command permissions,
   suggestion review notifications, and Premium command behavior.
-- Bun 1.3.14: scoped docs typecheck passed. GitHub Pages static export built
-  with `NEXT_PUBLIC_BASE_PATH=/fluffboost`.
-- Final website E2E: seven passed, zero failed, one intentional skip (the same
+- Bun 1.3.14: scoped docs typecheck passed. GitHub Pages static export was built
+  with `NEXT_PUBLIC_BASE_PATH=/fluffboost` for the repository-path deployment;
+  the custom-domain deployment uses the root path.
+- Final website E2E: eleven passed, zero failed, one intentional skip (the same
   three-width sweep runs once rather than twice under both device projects).
 - Browser results above were rerun successfully after consolidating the Guide
   and Developers rendering in `components/documentation-page.tsx`; both route
