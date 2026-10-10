@@ -62,32 +62,38 @@ FluffBoost uses Discord slash commands grouped by role.
 | `/premium`    | View premium subscription info           |
 | `/changelog`  | View recent changes                      |
 
+`/suggestion`, `/premium` and `/setup` work only inside a server.
+
 ### Admin Commands
 
 These manage shared content and are restricted to users in the operator's
-`ALLOWED_USERS`. Your own server's administrator role does not grant access.
+`ALLOWED_USERS` (an empty list disables them). Your own server's
+administrator role does not grant access. Discord also shows `/admin` only
+to members with Administrator by default, so an authorized operator needs
+Administrator (or a Server Settings > Integrations override) in the server
+where they run it.
 
-| Command                      | Description                        |
-| ---------------------------- | ---------------------------------- |
-| `/admin quote create`        | Add a new motivational quote       |
-| `/admin quote list`          | List all quotes                    |
-| `/admin quote remove`        | Remove a quote                     |
-| `/admin activity create`     | Add a bot status activity          |
-| `/admin activity list`       | List all activities                |
-| `/admin activity remove`     | Remove an activity                 |
-| `/admin suggestion approve`  | Approve a suggested quote          |
-| `/admin suggestion reject`   | Reject a suggested quote           |
-| `/admin suggestion list`     | List suggestions                   |
-| `/admin suggestion stats`    | View suggestion statistics         |
+| Command                     | Description                  |
+| --------------------------- | ---------------------------- |
+| `/admin quote create`       | Add a new motivational quote |
+| `/admin quote list`         | List all quotes              |
+| `/admin quote remove`       | Remove a quote               |
+| `/admin activity create`    | Add a bot status activity    |
+| `/admin activity list`      | List all activities          |
+| `/admin activity remove`    | Remove an activity           |
+| `/admin suggestion approve` | Approve a suggested quote    |
+| `/admin suggestion reject`  | Reject a suggested quote     |
+| `/admin suggestion list`    | List suggestions             |
+| `/admin suggestion stats`   | View suggestion statistics   |
 
 ### Setup Commands
 
 Require Administrator in the server.
 
-| Command            | Description                              |
-| ------------------ | ---------------------------------------- |
-| `/setup channel`   | Set the quote delivery channel           |
-| `/setup schedule`  | Customize timing and timezone (Premium) |
+| Command           | Description                             |
+| ----------------- | --------------------------------------- |
+| `/setup channel`  | Set the quote delivery channel          |
+| `/setup schedule` | Customize timing and timezone (Premium) |
 
 ### Owner Commands
 
@@ -95,40 +101,42 @@ Owner test commands are available in development and staging, and excluded
 from production command registration. Keep test entitlements on separate
 test applications.
 
-| Command                      | Description                        |
-| ---------------------------- | ---------------------------------- |
-| `/owner premium test-create` | Create a test entitlement          |
-| `/owner premium test-delete` | Delete a test entitlement          |
-| `/owner premium test-list`   | Inspect test entitlements          |
+| Command                      | Description                                |
+| ---------------------------- | ------------------------------------------ |
+| `/owner premium test-create` | Create a test entitlement                  |
+| `/owner premium test-delete` | Delete a test entitlement                  |
+| `/owner premium test-list`   | List all entitlements (test grants marked) |
 
 ## Tech Stack
 
-| Layer            | Technology                               |
-| ---------------- | ---------------------------------------- |
-| Runtime          | Bun                                      |
-| Language         | TypeScript 5.x (strict mode)            |
-| Discord Library  | Discord.js v14                           |
-| Database         | PostgreSQL 16 via Drizzle ORM             |
-| Job Queue        | BullMQ with Redis 7                      |
-| HTTP Server      | Express 5                                |
-| Containerization | Docker (multi-stage, Bun)                |
-| Monorepo         | Bun workspaces + Turborepo               |
-| Marketing & docs | Next.js 16 + Fumadocs (static → GitHub Pages) |
-| CI/CD            | GitHub Actions                           |
-| Deployment       | Docker on Dokploy                        |
+| Layer            | Technology                                    |
+| ---------------- | --------------------------------------------- |
+| Runtime          | Bun                                           |
+| Language         | TypeScript 5.x (strict mode)                  |
+| Discord Library  | Discord.js v14                                |
+| Database         | PostgreSQL 18 via Drizzle ORM                 |
+| Job Queue        | BullMQ with Redis 8                           |
+| HTTP Server      | Express 5                                     |
+| Containerization | Docker (multi-stage, Bun)                     |
+| Monorepo         | Bun workspaces + Turborepo                    |
+| Marketing & docs | Next.js 16 + Fumadocs (static, GitHub Pages)  |
+| Brand animation  | Remotion                                      |
+| CI/CD            | GitHub Actions                                |
+| Deployment       | Docker on Dokploy                             |
 
 ## Development
 
 ### Prerequisites
 
 - Bun 1.3.14 (the version pinned in `package.json`)
-- PostgreSQL 16 (or use Docker Compose)
-- Redis 7 (or use Docker Compose)
+- PostgreSQL 18 (or use Docker Compose)
+- Redis 8 (or use Docker Compose)
 - A Discord application with bot token
+- `ffmpeg` and `ffprobe`, only for `bun run brand:verify`
 
 ### Setup
 
-Run everything from the repository root — Bun resolves the whole workspace.
+Run everything from the repository root. Bun resolves the whole workspace.
 
 1. Clone the repository:
 
@@ -143,25 +151,41 @@ Run everything from the repository root — Bun resolves the whole workspace.
    bun install
    ```
 
-3. Start local infrastructure:
-
-   ```bash
-   docker compose up -d
-   ```
-
-4. Copy and configure environment variables:
+3. Copy and configure environment variables. Required:
+   `DISCORD_APPLICATION_BOT_TOKEN`, `OWNER_ID` and `MAIN_CHANNEL_ID` (the
+   template's database and Redis URLs match Compose):
 
    ```bash
    cp apps/discord/.env.example apps/discord/.env
    ```
 
-5. Sync the database schema:
+4. Start local infrastructure (PostgreSQL 18 + Redis 8 on `127.0.0.1`; the
+   bot is not started):
+
+   ```bash
+   docker compose up -d
+   ```
+
+   To run the bot in a container instead, use
+   `docker compose --profile bot up --build`. It publishes the health API on
+   `127.0.0.1:3000` and needs Docker Compose 2.24+ for the optional
+   `env_file`.
+
+5. Sync the database schema (use `bun run db:migrate` instead if you will
+   also run the bot container against this database, since its startup
+   migration refuses a schema with no migration history):
 
    ```bash
    bun run db:push
    ```
 
-6. Start the bot in watch mode:
+6. Load the starter quotes:
+
+   ```bash
+   bun run db:seed
+   ```
+
+7. Start the bot in watch mode:
 
    ```bash
    bun run dev:discord
@@ -171,80 +195,76 @@ Run everything from the repository root — Bun resolves the whole workspace.
 
 Run these from the repository root; they fan out through Turborepo.
 
-- `bun run dev:discord` — Start the bot with hot reload
-- `bun run dev:docs` — Start the marketing/docs site
-- `bun run dev:motion` — Preview the Remotion brand compositions
-- `bun run brand:render` / `bun run brand:verify` — Render and verify committed PNG/MP4/GIF exports
-- `bun run lint` / `bun run lint:check` — ESLint (with / without fixes)
-- `bun run format` — Format code with Prettier
-- `bun run typecheck` — TypeScript type checking
-- `bun run test` / `bun run test:coverage` — Test suites (with coverage)
-- `bun run test:e2e` — Bot integration and browser end-to-end suites
-- `bun run db:push` — Sync schema to database (dev)
-- `bun run db:generate` — Generate a Drizzle migration
-- `bun run db:migrate` — Run migrations (production)
-- `bun run db:studio` — Open Drizzle Studio UI
-- `bun run db:seed` — Load the starter quote library
+- `bun run dev:discord` - Start the bot with hot reload
+- `bun run dev:docs` - Start the marketing/docs site
+- `bun run dev:motion` - Preview the Remotion brand compositions
+- `bun run dev` - Start all three workspaces at once
+- `bun run build` - Build the docs static export (`apps/docs/out`)
+- `bun run brand:render` - Render PNG/MP4/GIF brand exports
+- `bun run brand:verify` - Verify the committed brand exports
+- `bun run lint` / `bun run lint:check` - ESLint (with / without fixes)
+- `bun run format` - Format code with Prettier
+- `bun run typecheck` - TypeScript type checking
+- `bun run test` - Bot unit tests
+- `bun run test:coverage` - Bot unit tests with coverage (what CI runs)
+- `bun run test:e2e` - Bot (real PostgreSQL) and browser end-to-end suites
+- `bun run db:push` - Sync schema to database (dev)
+- `bun run db:generate` - Generate a Drizzle migration
+- `bun run db:migrate` - Run migrations (production)
+- `bun run db:studio` - Open Drizzle Studio UI
+- `bun run db:seed` - Load the starter quote library (safe to re-run)
+- `bun run db:reconcile --confirm` - Bring a Prisma-era or drifted database to the current schema and record the baseline (back up first)
 
+To build the GitHub Pages site with its production prefix, run
+`NEXT_PUBLIC_BASE_PATH=/fluffboost bun run --filter=@fluffboost/docs build`.
 The [developer guide](https://mrdemonwolf.github.io/fluffboost/developers/)
-covers deployment, configuration, testing, and contributions. The
-[operator Premium guide](https://mrdemonwolf.github.io/fluffboost/developers/premium/)
-explains the SKU and deployment configuration.
-
-Build the GitHub Pages site locally with the production prefix:
-
-```bash
-NEXT_PUBLIC_BASE_PATH=/fluffboost bun run --filter=@fluffboost/docs build
-```
-
-The static output is `apps/docs/out`. The existing
-`.github/workflows/deploy-docs.yml` publishes it from `main`, independently
-of the bot deployment. Marketing drafts and the artwork brief live in
-`docs/marketing.md` and `docs/brand-brief.md`.
-
-The [Remotion workspace](apps/motion/README.md) maintains the animation source.
-Simplified image-generated backplates live in `assets/brand/motion-sources`;
-final Discord and marketing exports live in `assets/brand/animated`. Scenery-only
-banners use 32-second cloud loops. The website includes a pause control and a
-still poster for reduced-motion preferences.
+covers deployment, configuration, testing, Premium, and contributing. The
+[Remotion workspace](apps/motion/README.md) documents the brand animation
+sources and exports.
 
 ### Code Quality
 
-- ESLint with TypeScript and Airbnb base config
-- Strict TypeScript (`noUnusedLocals`,
-  `noUnusedParameters`, `noImplicitReturns`,
-  `noUncheckedIndexedAccess`)
-- bun:test + Sinon test framework
-- supertest for HTTP endpoint testing
-- Playwright for desktop and mobile-width website flows
-- CI runs via GitHub Actions with Bun
+- ESLint (`@eslint/js` recommended + typescript-eslint rules)
+- Strict TypeScript (`noUnusedLocals`, `noUnusedParameters`,
+  `noImplicitReturns`, `noUncheckedIndexedAccess`)
+- bun:test + Sinon unit tests, supertest for the health API
+- Bot end-to-end tests against real PostgreSQL
+- Playwright and axe-core for desktop and mobile-width website flows
+- Schema drift, dependency audit, brand export and Docker image checks in
+  GitHub Actions
 
 ## Project Structure
 
 ```text
 fluffboost/
 ├── apps/
-│   ├── discord/              # The Discord bot
+│   ├── discord/                # The Discord bot
 │   │   ├── src/
-│   │   │   ├── api/          # Express health-check API
-│   │   │   ├── commands/     # Slash commands (admin/, owner/, setup/)
-│   │   │   ├── database/     # Drizzle ORM instance and schema
-│   │   │   ├── events/       # Discord event handlers
-│   │   │   ├── redis/        # Redis/IORedis connection
-│   │   │   ├── utils/        # Shared utilities
-│   │   │   └── worker/       # BullMQ worker and jobs
-│   │   ├── tests/            # Test suite (mirrors src/)
-│   │   ├── drizzle/          # Drizzle migration SQL files
-│   │   ├── Dockerfile        # Multi-stage build (turbo prune)
+│   │   │   ├── api/            # Express health API (/api/health, /live)
+│   │   │   ├── commands/       # Slash commands (admin/, owner/, setup/)
+│   │   │   ├── database/       # Drizzle client, schema and migrator
+│   │   │   ├── events/         # Discord event handlers + command registry
+│   │   │   ├── redis/          # Redis/IORedis connections
+│   │   │   ├── utils/          # Shared utilities
+│   │   │   └── worker/         # BullMQ worker and jobs
+│   │   ├── tests/              # Unit tests (mirror src/)
+│   │   ├── e2e/                # End-to-end tests against real PostgreSQL
+│   │   ├── scripts/            # Maintenance scripts (quote seed)
+│   │   ├── drizzle/            # Migration SQL and journal
+│   │   ├── Dockerfile          # Multi-stage build (turbo prune)
 │   │   └── docker-entrypoint.sh
-│   └── docs/                 # Marketing site + docs (Next.js + Fumadocs)
-│       ├── app/              # Landing page + docs routes
-│       ├── content/          # user/ (Guide) + developer/ docs (MDX)
-│       └── e2e/              # Browser flows against the static export
-├── docs/                      # Marketing copy and artwork brief
-├── docker-compose.yml        # Local PostgreSQL + Redis
-├── turbo.json                # Turborepo pipeline
-└── package.json              # Bun workspace root
+│   ├── docs/                   # Marketing site + docs (Next.js + Fumadocs)
+│   │   ├── app/                # Landing page + docs routes
+│   │   ├── content/            # user/ (Guide) + developer/ docs (MDX)
+│   │   └── e2e/                # Browser flows against the static export
+│   └── motion/                 # Remotion brand animations
+├── assets/brand/               # Brand artwork
+│   ├── motion-sources/         # Backplates used by apps/motion
+│   └── animated/               # Rendered Discord and marketing exports
+├── docs/                       # Marketing copy and artwork brief
+├── docker-compose.yml          # Local PostgreSQL + Redis (bot: --profile bot)
+├── turbo.json                  # Turborepo pipeline
+└── package.json                # Bun workspace root
 ```
 
 ## License
@@ -256,6 +276,7 @@ fluffboost/
 If you have any questions, suggestions, or feedback:
 
 - Website & docs: [mrdemonwolf.github.io/fluffboost](https://mrdemonwolf.github.io/fluffboost/)
+- Developer guide: [mrdemonwolf.github.io/fluffboost/developers](https://mrdemonwolf.github.io/fluffboost/developers/)
 - Discord: [Join my server](https://mrdwolf.net/discord)
 
 Made with love by [MrDemonWolf, Inc.](https://www.mrdemonwolf.com)
