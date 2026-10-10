@@ -7,8 +7,8 @@ FluffBoost is a sharded Discord bot (Discord.js v14) designed to deliver daily m
 - **Runtime**: Bun
 - **Language**: TypeScript 5.x (ESM)
 - **Discord Library**: Discord.js v14
-- **Database**: PostgreSQL 16 via Drizzle ORM (with `postgres` driver)
-- **Queue/Background Jobs**: BullMQ with Redis 7
+- **Database**: PostgreSQL 18 via Drizzle ORM (with `postgres` driver)
+- **Queue/Background Jobs**: BullMQ with Redis 8
 - **API**: Express 5 (Health Check API)
 - **Validation**: Zod (Environment variables)
 - **Testing**: bun:test, Sinon
@@ -61,4 +61,4 @@ All environment variables are strictly validated by Zod in `src/utils/env.ts`. K
 - `PREMIUM_ENABLED` & `DISCORD_PREMIUM_SKU_ID` (for subscription features)
 
 ## Deployment Note
-The project uses a multi-stage `Dockerfile` with `oven/bun:1`. Since Bun runs TypeScript directly, there is no build/compile step — source files are copied directly into the production image. Migrations are executed at runtime via `docker-entrypoint.sh` using `bunx drizzle-kit migrate`. Drizzle Kit reads `drizzle.config.ts` for database credentials and schema location.
+The project uses a multi-stage `apps/discord/Dockerfile` with `oven/bun:1.3.14`. Since Bun runs TypeScript directly, there is no build/compile step — source files are copied directly into the production image. Migrations are executed at runtime via `docker-entrypoint.sh`, which runs `src/database/migrate.ts` (programmatic Drizzle migrator, no `drizzle-kit` in the image).
