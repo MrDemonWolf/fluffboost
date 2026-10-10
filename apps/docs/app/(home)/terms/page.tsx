@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms of Service" description="These terms apply to the hosted FluffBoost Discord bot and this website, operated by MrDemonWolf, Inc. By using the service, you agree to these terms.">
+    <LegalPage title="Terms of Service" lastUpdated="2026-10-03" description="These terms apply to the hosted FluffBoost Discord bot and this website, operated by MrDemonWolf, Inc. By using the service, you agree to these terms.">
       <h2>Using FluffBoost</h2>
       <p>You must be eligible to use Discord under its <a href="https://discord.com/terms">Terms of Service</a> and comply with its <a href="https://discord.com/guidelines">Community Guidelines</a>. Invite and configure the bot only in servers where you are authorized to do so. Server administrators control the delivery channel and may remove the bot at any time.</p>
       <p>Do not use FluffBoost to harass people, distribute unlawful material, submit private information about others, infringe intellectual property, evade moderation, or disrupt the service. We may reject submissions or restrict access to address abuse and service problems.</p>

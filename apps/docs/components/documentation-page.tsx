@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import type { userSource } from "@/lib/source";
 import { getDoc } from "@/lib/load-doc";
 import { getMDXComponents } from "@/mdx-components";
+import { DocsMain } from "@/app/(home)/_components/layout-a11y";
 
 type DocumentationSource = typeof userSource;
 
@@ -21,7 +22,8 @@ export function DocumentationPage({ source, slug }: {
   const { body: MDX, toc } = getDoc(page.data);
 
   return (
-    <DocsPage toc={toc}>
+    // DocsMain swaps the stock <article> container for a <main> landmark.
+    <DocsPage toc={toc} slots={{ container: DocsMain }}>
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>

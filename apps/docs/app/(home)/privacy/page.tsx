@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy Policy" description="FluffBoost is operated by MrDemonWolf, Inc. This policy covers the hosted Discord bot and this website. Independently hosted copies have their own operators and data practices.">
+    <LegalPage title="Privacy Policy" lastUpdated="2026-10-03" description="FluffBoost is operated by MrDemonWolf, Inc. This policy covers the hosted Discord bot and this website. Independently hosted copies have their own operators and data practices.">
       <h2>Data we process</h2>
       <ul>
         <li><strong>Server configuration:</strong> Discord server ID, selected delivery channel ID, schedule, timezone, Premium status, last delivery time, and configuration timestamps.</li>

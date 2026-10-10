@@ -32,14 +32,20 @@ DISCORD_PREMIUM_SKU_ID=YOUR_SERVER_SUBSCRIPTION_SKU_ID
 NODE_ENV=production
 ```
 
-The SKU must belong to the same Discord application as
-`DISCORD_APPLICATION_ID` and its bot token. Keep dev, staging, and production
-application credentials separate. Do not commit `.env` files or tokens.
+With `PREMIUM_ENABLED=false` (the default) Premium gating is **off**:
+`/setup schedule` is open to every server, saved custom schedules apply, and
+there is no purchase button. Turn it on before you sell the subscription, or
+custom scheduling stays free for everyone.
+
+The SKU must belong to the same Discord application as the bot token. Keep
+dev, staging, and production application credentials separate. Do not commit `.env` files or tokens.
 
 Invalid configuration stops startup. Restart or redeploy after changing these
 values: entitlement event handlers are registered when the bot starts. At startup
 and on server join, the bot reconciles active entitlements before scheduled
-delivery. Production ignores test entitlements.
+delivery, and each shard re-checks its servers' entitlements every 30 minutes.
+Production (`NODE_ENV=production`) ignores both owner-created test entitlements
+and Application Test Mode purchases (`TestModePurchase`).
 
 ## 3. Verify the server flow
 
@@ -78,7 +84,9 @@ commands does not delete those guild commands or API test entitlements.
 
 Canceling renewal should retain Premium until Discord's entitlement expires.
 When access ends, the bot uses daily 8:00 AM America/Chicago delivery and retains
-the saved custom schedule. Re-subscription restores custom delivery.
+the saved custom schedule. Because of the 30-minute re-check, delivery falls back
+to the free schedule within about 30 minutes after a term ends, even if the bot
+missed Discord's entitlement event. Re-subscription restores custom delivery.
 
 Keep the public [Privacy Policy](/privacy), [Terms of Service](/terms), support
 links, and SKU benefits consistent with the running bot. Never promise priority

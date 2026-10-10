@@ -22,7 +22,9 @@ The repository is a Bun-workspace + Turborepo monorepo:
 fluffboost/
 ├── apps/
 │   ├── discord/   # the bot (Discord.js, Drizzle, BullMQ, Express)
-│   └── docs/      # marketing + docs (Next.js + Fumadocs)
+│   ├── docs/      # marketing + docs (Next.js + Fumadocs)
+│   └── motion/    # brand animations (Remotion)
+├── assets/brand/  # brand artwork and rendered exports
 ├── turbo.json
 └── package.json   # workspace root
 ```
@@ -33,13 +35,14 @@ fluffboost/
 | ---------------- | --------------------------------- |
 | Runtime          | Bun (runs TypeScript directly)    |
 | Discord library  | Discord.js v14 (`ShardingManager`)|
-| Database         | PostgreSQL 16 via Drizzle ORM     |
-| Job queue        | BullMQ on Redis 7                 |
-| HTTP             | Express 5 (`/api/health`)         |
+| Database         | PostgreSQL 18 via Drizzle ORM     |
+| Job queue        | BullMQ on Redis 8                 |
+| HTTP             | Express 5 (`/api/health`, `/api/health/live`) |
 | Deployment       | Docker image on Dokploy           |
 
-- **`apps/discord/src/app.ts`** — main process: verifies DB/Redis, starts the
-  Express API, then spawns shards.
+- **`apps/discord/src/app.ts`** — main process: waits (with bounded retries)
+  until Postgres and Redis answer, starts the Express API, then spawns shards
+  and supervises them.
 - **`apps/discord/src/bot.ts`** — each shard: Discord client, event listeners,
   a BullMQ queue + worker, then logs in.
 - **`apps/discord/src/worker/`** — two recurring jobs: `set-activity` (rotate

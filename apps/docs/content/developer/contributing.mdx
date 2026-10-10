@@ -16,15 +16,24 @@ Contributions are welcome. A little house style keeps the codebase consistent.
   `console.log`.
 - **Max line length 120** (enforced by ESLint).
 - **Bun only** — no npm, yarn, or pnpm.
+- **Backward-compatible migrations.** Generate them with `bun run db:generate`
+  and commit the SQL plus `drizzle/meta`. There are no down migrations, so
+  split breaking schema changes into expand and contract steps across deploys.
 
 ## Adding a slash command
 
-1. Create a file in `apps/discord/src/commands/` exporting `slashCommand`
-   (a `SlashCommandBuilder`) and `execute(client, interaction)`.
-2. Add a `case` to the switch in
-   `apps/discord/src/events/interactionCreate.ts`.
-3. Register it where commands are pushed to Discord in
-   `apps/discord/src/events/ready.ts`.
+1. Create a file in `apps/discord/src/commands/` that exports `slashCommand`
+   (a `SlashCommandBuilder`), `execute(client, interaction)` and
+   `export default { slashCommand, execute }`. Handlers receive a
+   `ChatInputCommandInteraction`; the router has already narrowed it.
+2. Add the command to **both** lists in
+   `apps/discord/src/events/commandRegistry.ts`: `commandRegistry` routes the
+   interaction and `slashCommands` registers it with Discord (`ready.ts` pushes
+   that list). A unit test fails if the two disagree.
+3. For a new subcommand of `/admin`, `/owner` or `/setup`, add an entry to that
+   group's route Map (`adminRoutes`, `ownerRoutes` or `setupRoutes`) instead.
+4. Update the text in `apps/discord/src/commands/help.ts`, the command tables in
+   `README.md`, and the [command reference](/docs/commands).
 
 ## Branches
 
@@ -41,8 +50,18 @@ Run the same checks CI does:
 ```bash
 bun run lint:check
 bun run typecheck
-bun run test
+bun run test:coverage
 ```
+
+Use these scripts rather than a bare `bun test` at the repository root, which
+also picks up the end-to-end suites and skips the unit-test environment
+fixture. See [Testing](/developers/testing) for test conventions.
+
+CI also runs `bun audit`, the bot and browser end-to-end suites, a schema drift
+check (`bun run db:generate` must produce no new migration), the docs contrast
+check, `bun run brand:verify` (needs `ffmpeg`/`ffprobe`), and a Docker build
+that applies the migrations twice. Root `bun run test` runs the bot unit suite
+only.
 
 Green across the board? Open the PR against `dev` (or `main` for hotfixes) and
 describe the change. Thanks for helping FluffBoost spread a little more

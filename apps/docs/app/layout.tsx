@@ -33,9 +33,13 @@ export const metadata: Metadata = {
   },
   description: site.description,
   applicationName: site.name,
+  // "./" resolves against each page's own path (metadataBase + trailingSlash), so
+  // every page gets its own canonical and og:url.
+  alternates: { canonical: "./" },
+  // No title/description here: Next fills og:* and twitter:* from each page's own
+  // metadata. Pages must not set their own `openGraph`, which would drop `images`.
   openGraph: {
-    title: `${site.name} — ${site.tagline}`,
-    description: site.description,
+    url: "./",
     siteName: site.name,
     type: "website",
     images: [{
@@ -56,7 +60,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       suppressHydrationWarning
     >
       <body className="flex min-h-screen flex-col bg-paper text-ink">
-        <RootProvider search={{ SearchDialog: StaticSearchDialog }}>
+        {/* preload: false keeps the (lazy) search dialog unmounted until it is first opened. */}
+        <RootProvider search={{ SearchDialog: StaticSearchDialog, preload: false }}>
           {children}
         </RootProvider>
       </body>
