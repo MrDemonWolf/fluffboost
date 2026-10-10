@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { assets } from "../src/assets.js";
+import { assets, bannerSeconds, fps, GIF_BYTE_BUDGET, gifFps, gifScale, iconSeconds } from "../src/assets.js";
 
 const outputDir = resolve(import.meta.dirname, "../../../assets/brand/animated");
 const mediaCommand = (command: "ffmpeg" | "ffprobe", args: string[]) => {
@@ -12,8 +12,16 @@ const mediaCommand = (command: "ffmpeg" | "ffprobe", args: string[]) => {
   assert.equal(result.status, 0, result.stderr?.toString());
   return result.stdout;
 };
-const manifest: { files: Record<string, { bytes: number; sha256: string }> } =
-  JSON.parse(await readFile(resolve(outputDir, "manifest.json"), "utf8"));
+type Manifest = {
+  bannerDurationSeconds: number; iconDurationSeconds: number; videoFps: number; gifFps: number;
+  files: Record<string, { bytes: number; sha256: string }>;
+};
+const manifest: Manifest = JSON.parse(await readFile(resolve(outputDir, "manifest.json"), "utf8"));
+// The encoded files are checked against src/assets.ts below; these catch a stale manifest header.
+assert.equal(manifest.bannerDurationSeconds, bannerSeconds, "manifest banner duration");
+assert.equal(manifest.iconDurationSeconds, iconSeconds, "manifest icon duration");
+assert.equal(manifest.videoFps, fps, "manifest video fps");
+assert.equal(manifest.gifFps, gifFps, "manifest GIF fps");
 
 for (const asset of assets) {
   for (const format of ["png", "mp4", "gif"] as const) {
@@ -27,15 +35,15 @@ for (const asset of assets) {
     const info = JSON.parse(mediaCommand("ffprobe", ["-v", "error", "-show_streams", "-show_format", "-of", "json", path]).toString());
     assert.equal(info.streams.length, 1, `${name}: unexpected audio or extra stream`);
     const stream = info.streams[0];
-    const scale = format === "gif" && asset.width === 1024 ? 0.5 : 1;
+    const scale = format === "gif" ? gifScale(asset) : 1;
     assert.equal(stream.width, asset.width * scale, `${name}: width`);
     assert.equal(stream.height, asset.height * scale, `${name}: height`);
     if (format === "png") { continue; }
-    const duration = asset.banner ? 32 : 8;
-    const frameCount = duration * 12;
+    const duration = asset.banner ? bannerSeconds : iconSeconds;
+    const frameCount = duration * gifFps;
     assert.ok(Math.abs(Number(info.format.duration) - duration) < 0.02, `${name}: duration`);
     if (format === "mp4") { continue; }
-    assert.ok(bytes.length < 10_000_000, `${name}: upload budget`);
+    assert.ok(bytes.length < GIF_BYTE_BUDGET, `${name}: upload budget`);
     const loop = bytes.indexOf("NETSCAPE2.0");
     assert.ok(loop >= 0, `${name}: missing loop extension`);
     assert.equal(bytes.readUInt16LE(loop + 13), 0, `${name}: must loop forever`);
@@ -89,4 +97,4 @@ for (const variant of ["dev", "staging"]) {
   }
 }
 assert.equal(createHash("sha256").update(siteCopy).digest("hex"), manifest.files["fluffboost-production-banner.mp4"]?.sha256, "Website video is stale");
-process.stdout.write("All 21 exports and the website video verified.\n");
+process.stdout.write(`All ${assets.length * 3} exports and the website video verified.\n`);

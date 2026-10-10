@@ -28,7 +28,7 @@ bun run brand:render fluffboost-production-banner
 Exports and a SHA-256 manifest are saved in `assets/brand/animated` and committed.
 Banners are **680 × 240 (17:6)** for the Discord Bot panel. PNG/MP4 icons are 1024 × 1024;
 GIF icons are 512 × 512 to keep uploads small.
-the Premium SKU paw is 250 × 250. GIFs use 12 fps, videos use 24 fps.
+The Premium SKU paw is 250 × 250. GIFs use 12 fps, videos use 24 fps.
 The render fails if a GIF exceeds a conservative 10,000,000-byte upload budget.
 The production MP4 is also copied into the docs site's public assets for deployment.
 
