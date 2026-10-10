@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - "apps/docs/**"
+      - "assets/brand/animated/fluffboost-production-*.png"
       - "package.json"
       - "bun.lock"
       - "turbo.json"
@@ -42,9 +43,8 @@ jobs:
       - name: Build site
         run: bun run --filter=@fluffboost/docs build
         env:
-          # GitHub Pages serves this project site under /<repo>.
-          # Delete this (or set it empty) if you move to a custom domain.
-          NEXT_PUBLIC_BASE_PATH: /fluffboost
+          # The custom domain serves the site at its root.
+          NEXT_PUBLIC_BASE_PATH: ""
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
