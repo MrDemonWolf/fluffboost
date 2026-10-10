@@ -29,6 +29,10 @@ each morning.
 /setup schedule frequency:Weekly time:09:00 timezone:America/New_York day:1
 ```
 
+Options you leave out keep their saved values, so `/setup schedule time:10:00`
+changes only the time. If you change `frequency` to Weekly or Monthly, also
+pass a new `day`.
+
 <Callout type="info">
   Timezones use the IANA database (like `Europe/London` or `Asia/Tokyo`), so
   daylight-saving shifts are handled for you.

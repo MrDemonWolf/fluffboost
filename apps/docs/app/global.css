@@ -7,21 +7,24 @@
 
 /* ------------------------------------------------------------------ *
  * FluffBoost — "cozy woodland dawn" palette.
- * Every text/background pair below is checked to meet WCAG AA (most
- * body pairs clear AAA). See scripts/contrast-check.mjs.
+ * `bun run check:contrast` (scripts/contrast-check.mjs) reads these
+ * declarations and checks the text/background pairs the markup renders
+ * against WCAG AA, so keep each token a plain #rrggbb or var(--fb-*).
  * ------------------------------------------------------------------ */
 :root {
   --fb-paper: #fbf4e9; /* page */
   --fb-paper-2: #f4e7d2; /* alternating band */
   --fb-card: #fffdf8; /* raised card */
-  --fb-ink: #2b1e12; /* primary text  (13.9:1 on paper) */
-  --fb-ink-soft: #5a4632; /* muted text    (6.0:1 on paper) */
+  --fb-ink: #2b1e12; /* primary text */
+  --fb-ink-soft: #5a4632; /* muted text */
   --fb-honey: #e07c05; /* brand fill */
-  --fb-honey-ink: #955000; /* honey text    (4.8:1 on paper) */
-  --fb-berry: #b4194a; /* accent fill   (5.9:1 white text) */
-  --fb-berry-ink: #a3153f; /* berry text    (6.7:1 on paper) */
-  --fb-pine: #0e6e56; /* secondary     (4.6:1 on paper) */
+  --fb-honey-ink: #955000; /* honey text */
+  --fb-on-honey: #2b1e12; /* text on honey fills, in both themes */
+  --fb-berry: #b4194a; /* accent fill */
+  --fb-berry-ink: #a3153f; /* berry text */
+  --fb-pine: #0e6e56; /* secondary */
   --fb-line: #e6d4b8; /* hairline border */
+  --fb-focus: var(--fb-honey-ink); /* focus ring: >= 3:1 on every light surface */
   --fb-glow: 224 124 5;
 }
 
@@ -29,14 +32,15 @@
   --fb-paper: #17110b;
   --fb-paper-2: #1f1710;
   --fb-card: #23190f;
-  --fb-ink: #f6ead7; /* 14.6:1 on paper */
-  --fb-ink-soft: #c8b39a; /* 8.1:1 on paper */
+  --fb-ink: #f6ead7;
+  --fb-ink-soft: #c8b39a;
   --fb-honey: #f7a63a;
-  --fb-honey-ink: #f9b862; /* 8.9:1 on paper */
+  --fb-honey-ink: #f9b862;
   --fb-berry: #ff7ca0;
-  --fb-berry-ink: #ff8fae; /* 7.6:1 on paper */
-  --fb-pine: #57d3af; /* 8.8:1 on paper */
+  --fb-berry-ink: #ff8fae;
+  --fb-pine: #57d3af;
   --fb-line: #3a2c1d;
+  --fb-focus: var(--fb-honey);
   --fb-glow: 247 166 58;
 }
 
@@ -54,6 +58,7 @@
   --color-ink-soft: var(--fb-ink-soft);
   --color-honey: var(--fb-honey);
   --color-honey-ink: var(--fb-honey-ink);
+  --color-on-honey: var(--fb-on-honey);
   --color-berry: var(--fb-berry);
   --color-berry-ink: var(--fb-berry-ink);
   --color-pine: var(--fb-pine);
@@ -80,7 +85,7 @@
   --color-fd-secondary-foreground: var(--fb-ink);
   --color-fd-accent: var(--fb-paper-2);
   --color-fd-accent-foreground: var(--fb-ink);
-  --color-fd-ring: var(--fb-honey);
+  --color-fd-ring: var(--fb-focus);
 }
 
 .dark {
@@ -174,9 +179,64 @@ body {
   animation-delay: var(--d, 0ms);
 }
 
-/* Focus ring that stays on-brand and always visible for keyboard users. */
-:where(a, button, input, [tabindex]):focus-visible {
-  outline: 3px solid var(--fb-honey);
+/* Focus ring that stays on-brand and always visible for keyboard users.
+ * No border-radius here: outlines already follow each element's own radius,
+ * and an unlayered radius would square off rounded-full pills. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--fb-focus);
   outline-offset: 2px;
-  border-radius: 6px;
+}
+
+/* Skip link: visually hidden until it receives keyboard focus. */
+.fb-skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  border-radius: 9999px;
+  background: var(--fb-card);
+  color: var(--fb-ink);
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  box-shadow: 0 10px 28px -18px rgba(43, 30, 18, 0.6);
+  transform: translateY(-200%);
+}
+.fb-skip-link:focus {
+  transform: none;
+}
+
+/* Keep keyboard focus clear of fixed chrome on the home and legal pages
+ * (WCAG 2.4.11): the 56px sticky header when tabbing backwards, and the
+ * mobile invite bar while it is shown. Docs pages manage their own heading
+ * scroll-margin, so this is scoped to the HomeLayout container. */
+html:has(#nd-home-layout) {
+  scroll-padding-top: 4rem;
+}
+@media (max-width: 639px) and (min-height: 30rem) {
+  html:has([data-mobile-invite-bar][data-visible="true"]) {
+    scroll-padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Fumadocs 16.11 fades the collapsed-sidebar toolbar out with opacity only,
+ * which leaves its two buttons focusable while invisible. visibility takes
+ * them out of the tab order (as a discrete transition it still waits for the
+ * fade). Drop this once fumadocs-ui marks the panel inert (16.16+). */
+[data-sidebar-panel] {
+  transition-property: opacity, visibility;
+}
+[data-sidebar-panel].opacity-0 {
+  visibility: hidden;
+}
+
+/*
+ * github-light's keyword red (#D73A49, 4.49:1) and variable orange (#E36209,
+ * 3.43:1) fall under WCAG AA on the warm page background. Shiki sets them
+ * inline, so the darker replacements need !important.
+ */
+span[style*="--shiki-light:#D73A49"] {
+  --shiki-light: #b92534 !important;
+}
+span[style*="--shiki-light:#E36209"] {
+  --shiki-light: #a94600 !important;
 }

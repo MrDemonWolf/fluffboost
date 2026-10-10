@@ -10,7 +10,7 @@ Tests use **`bun:test`** with **Sinon**, configured in
 ## Running tests
 
 ```bash
-bun run test            # whole workspace, via Turborepo
+bun run test            # bot unit suite (excludes @fluffboost/motion)
 bun run test:coverage   # with a coverage report
 ```
 
@@ -20,23 +20,50 @@ Run just the bot's suite from its package:
 bun --filter @fluffboost/discord test
 ```
 
-The unit-test scripts preload `tests/preload.ts` to mock application settings
-before imports. They do not require `.env` or depend on the order test files
+`bun run brand:verify` separately checks the animated brand exports in
+`apps/motion`; it needs `ffmpeg` and `ffprobe` on your `PATH`.
+
+The unit-test scripts run with `--isolate` and preload `tests/preload.ts` to
+mock application settings before imports. They do not require `.env` or depend on the order test files
 run. Individual suites can override that fixture. The E2E script does not use
 this preload and exercises the real environment loader.
 
+Always use these scripts. A bare `bun test` at the repository root also picks
+up the bot E2E suite and the Playwright specs, and skips the preload fixture.
+To run one file:
+
+```bash
+cd apps/discord
+NODE_ENV=test bun test --isolate --preload ./tests/preload.ts tests/utils/timezones.test.ts
+```
+
 ## Patterns
 
-- **Module mocking** — `mock.module()` from `bun:test` replaces imports at load
-  time, so dependencies like the database and logger are swapped for fakes.
+- **Prefer injected dependencies.** Modules such as `sendMotivationCore.ts`,
+  `setActivityCore.ts` and `premiumReconciliationCore.ts` take their database,
+  logger and helpers as arguments, so tests pass stubs directly.
+- **`mock.module()` is per file.** The scripts pass `--isolate`, so each test
+  file gets a fresh module registry and the preload fixture; a mock never
+  reaches another file and needs no restore hook. Inside one file it persists
+  across tests and replaces the whole module, so when you mock a shared module
+  spread its real exports and replace only what you need
+  (`tests/commands/permissionsMock.ts` shows the pattern). A partial mock makes
+  other imports fail with `Export named ... not found`. Without `--isolate` (a
+  bare `bun test`) mocks leak between files, which is one more reason to use
+  the scripts.
+- **Fresh copies.** To evaluate a module again under different mocks in the
+  same file, import it with a query suffix, such as
+  `import("../../src/events/commandRegistry.js?env=production")`.
 - **Time control** — schedule-sensitive tests use `sinon.useFakeTimers()` to pin
   `dayjs()` to a fixed moment.
 - **Shared fakes** — `tests/helpers.ts` provides factories (`mockLogger`,
   `mockDb`, `mockInteraction`, `mockClient`, `mockEnv`, and friends) so each test
   stays short.
+- **Routers** — tests for `/admin`, `/owner` and `/setup` swap entries in the
+  exported route Maps instead of mocking subcommand modules.
 
 <Callout type="info">
-  Unit tests isolate commands and jobs behind these mocks and never touch a real
+  Unit tests isolate commands and jobs behind these fakes and never touch a real
   database, Redis, or the Discord API.
 </Callout>
 
@@ -58,7 +85,7 @@ Start a disposable database in another terminal:
 ```bash
 docker run --rm --name fluffboost-e2e-db \
   -e POSTGRES_USER=ci -e POSTGRES_PASSWORD=ci -e POSTGRES_DB=fluffboost_e2e \
-  -p 127.0.0.1:55439:5432 postgres:16
+  -p 127.0.0.1:55439:5432 postgres:18-alpine
 ```
 
 Then run:
@@ -83,14 +110,26 @@ and a role scoped to that database; stop the container afterward with
 
 Playwright builds `apps/docs` with the deployed `/fluffboost` base path and
 serves the static `out/` directory with no route fallback. Desktop Chromium and
-a Pixel 7 viewport cover onboarding, the paid activation guide, Privacy Policy,
-Terms of Service, direct reloads, local links, missing assets, client errors, and
-horizontal overflow. Mobile emulation does not replace testing on a real phone.
+a Pixel 7 viewport sweep every page in the generated sitemap for broken local
+links, missing assets, client errors, horizontal overflow, a single `<main>`, and
+per-page canonical and `og:` metadata. They also cover static search (including
+the retry after a failed index load and focus return), the branded 404 page, a
+keyboard Tab walk (skip link first, focus always visible and never covered),
+the mobile docs drawer, and an axe-core WCAG 2.2 AA scan of every page (with
+reduced motion) and of the visible mobile invite bar. Mobile emulation does not replace testing on a real
+phone.
 
 ```bash
 bun run --filter=@fluffboost/docs test:e2e:install
 bun run --filter=@fluffboost/docs test:e2e
 ```
+
+### Preview the static export
+
+`bun run --filter=@fluffboost/docs preview` builds with the `/fluffboost` base
+path and serves it at `http://127.0.0.1:4173/fluffboost/`.
+`bun run --filter=@fluffboost/docs start` serves an existing `out/` directory;
+set `NEXT_PUBLIC_BASE_PATH` to match the build it serves.
 
 To run both suites, set `E2E_DATABASE_URL` as above and run `bun run test:e2e`.
 Browser failure screenshots and traces are written to the ignored
@@ -99,7 +138,15 @@ Browser failure screenshots and traces are written to the ignored
 
 ## In CI
 
-GitHub Actions runs the test suite with coverage, an ESLint check, a TypeScript
-type check, a dependency audit, and a Docker build test on every push and PR to
-`main` and `dev`. Bot E2E uses a fresh PostgreSQL 16 service. Browser E2E builds
-and tests the exact static export and uploads reports and failure traces.
+GitHub Actions runs on every push and PR to `main` and `dev`:
+
+| Job                         | What it checks                                                        |
+| --------------------------- | --------------------------------------------------------------------- |
+| Test & Typecheck            | `bun run test:coverage`, schema drift, ESLint, `brand:verify`, TypeScript |
+| Security Audit              | `bun audit`                                                           |
+| Bot E2E (PostgreSQL)        | The bot E2E suite against a fresh PostgreSQL 18 service               |
+| Docs Build & Browser E2E    | Contrast check, then Playwright against the exact static export      |
+| Docker Build Test           | Builds the image and runs its migrations twice (the second is a no-op) |
+
+The coverage report and the browser report and failure traces are uploaded as
+build artifacts.

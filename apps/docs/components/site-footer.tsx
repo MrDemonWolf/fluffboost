@@ -33,9 +33,11 @@ const columns = [
   },
 ];
 
-export function SiteFooter() {
+// `className` lets a page extend the footer's own background, e.g. to reserve
+// space under it for the home page's fixed mobile invite bar.
+export function SiteFooter({ className = "" }: { className?: string }) {
   return (
-    <footer className="relative mt-24 border-t border-line bg-paper-2">
+    <footer className={`relative mt-24 border-t border-line bg-paper-2 ${className}`}>
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-14 sm:grid-cols-2 lg:grid-cols-4">
         <div className="max-w-xs">
           <Link href="/" aria-label="FluffBoost home"><Wordmark /></Link>

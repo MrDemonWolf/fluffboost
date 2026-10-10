@@ -20,6 +20,8 @@ Anyone can use these.
 | `/premium`    | View premium subscription info        |
 | `/changelog`  | View recent changes                   |
 
+`/suggestion` and `/premium` work only inside a server.
+
 ## Setup
 
 Requires **Administrator** in the server.
@@ -34,6 +36,11 @@ Requires **Administrator** in the server.
 These commands manage the bot's **shared** quotes, activities, and suggestion
 queue. They are restricted to users the bot operator authorizes in `ALLOWED_USERS`;
 being an administrator of your own server does not grant access.
+
+Discord also shows `/admin` only to members with **Administrator** by default.
+An authorized operator who is not an administrator of the server they are in
+will not see it there unless a server admin adds a command override under
+**Server Settings → Integrations**.
 
 | Command                     | Description                   |
 | --------------------------- | ----------------------------- |

@@ -16,7 +16,11 @@ production dependencies.
   prune.
 - The container's entrypoint runs database migrations, then starts the bot with
   `bun run src/app.ts`.
-- A **health check** hits `GET /api/health` on `PORT` (default `3000`).
+- The container `HEALTHCHECK` hits `GET /api/health/live` on `PORT` (default
+  `3000`). That liveness endpoint has no dependencies, so a short Postgres or
+  Redis blip does not get a container with live gateway sessions replaced.
+- `GET /api/health` is the **readiness** endpoint: it returns `503` while
+  Postgres or Redis is unreachable. Point external uptime monitors at it.
 - All configuration is injected as environment variables — see
   [Configuration](/developers/configuration).
 
@@ -30,9 +34,11 @@ Starting from a clean server? Work through these in order.
 
 ### Provision PostgreSQL and Redis
 
-Create a **PostgreSQL 16** and a **Redis 7** service in Dokploy (or point at
+Create a **PostgreSQL 18** and a **Redis 8** service in Dokploy (or point at
 existing ones). Copy each connection string — they become `DATABASE_URL` and
-`REDIS_URL`.
+`REDIS_URL`. Each bot process opens its own Postgres pool, so check the
+[connection budget](/developers/configuration#postgres-connection-budget)
+against the server's `max_connections`.
 
 </Step>
 
@@ -58,9 +64,9 @@ and `turbo prune` needs the whole graph.
 ### Add the environment variables
 
 Set the required variables — `DATABASE_URL`, `REDIS_URL`,
-`DISCORD_APPLICATION_ID`, `DISCORD_APPLICATION_PUBLIC_KEY`,
-`DISCORD_APPLICATION_BOT_TOKEN`, `OWNER_ID`, `MAIN_GUILD_ID`,
-`MAIN_CHANNEL_ID` — plus any optional ones you want. The full table (with
+`DISCORD_APPLICATION_BOT_TOKEN`, `OWNER_ID` and `MAIN_CHANNEL_ID` — plus any
+optional ones you want. Leave `HOST` unset so the health API listens on all
+interfaces inside the container. The full table (with
 defaults) is in [Configuration](/developers/configuration).
 
 Production does **not** read a `.env` file; inject these through Dokploy.
@@ -75,10 +81,57 @@ Production does **not** read a `.env` file; inject these through Dokploy.
 
 <Step>
 
-### Expose the port and health check
+### Expose the port, health check and stop grace period
 
-The container listens on `PORT` (default `3000`) and answers
-`GET /api/health`. Point Dokploy's health check at that path.
+The container listens on `PORT` (default `3000`). Point Dokploy's health check
+at `GET /api/health/live` (liveness). Keep `GET /api/health` for external
+uptime monitors, since it reports `503` when Postgres or Redis is down.
+
+Set Dokploy's Swarm **Stop Grace Period** to **35 seconds**
+(`stopGracePeriodSwarm: 35000000000`, in nanoseconds). Shutdown is budgeted so
+each layer finishes before the next one gives up on it:
+
+| Layer                        | Limit |
+| ---------------------------- | ----- |
+| Shard shutdown watchdog      | 20 s  |
+| Shard `SIGKILL`              | 22 s  |
+| Parent (manager) watchdog    | 30 s  |
+| Orchestrator stop grace      | 35 s  |
+
+With a shorter grace period, in-flight quote deliveries and Redis/Postgres
+connections are cut off mid-drain.
+
+<Callout type="info">
+  **Restart backoff.** If one shard dies 5 times within 15 minutes, the manager
+  exits the container with a non-zero code instead of respawning it again, so
+  Dokploy's own restart backoff applies. Fatal shard errors (login failure, an
+  unrecoverable gateway close) also wait 15 seconds before exiting, so a
+  respawn cannot hot-loop Discord logins. The manager looks up the shard count
+  before spawning anything: it retries network errors, 5xx and 429 answers,
+  and on an invalid token (or once retries run out) it also waits 15 seconds
+  before exiting. A failed shard spawn waits the same 15 seconds.
+</Callout>
+
+</Step>
+
+<Step>
+
+### Use stop-first updates
+
+Dokploy deploys applications as Docker Swarm services, and its default update
+order is **start-first**: the new container logs in to Discord while the old
+one is still connected. For a bot that means two instances on the same token
+until the old task stops, so commands run twice and both schedule jobs.
+
+Under **Advanced → Swarm Settings**, set both **Update Config** and
+**Rollback Config** to:
+
+```json
+{ "Parallelism": 1, "Order": "stop-first", "FailureAction": "rollback" }
+```
+
+With stop-first, each deploy has a short gap (one boot plus shard login) where
+commands do not answer. That is the intended trade-off for a gateway bot.
 
 </Step>
 
@@ -91,6 +144,10 @@ starts, so the schema is created for you on this first run — watch the logs fo
 `Running database migrations...`, then a successful Postgres + Redis connection
 and the shards logging in. Confirm the health check goes green.
 
+If the deploy stops with `Migration aborted: Existing schema without migration
+history`, the database already has tables that were not created by these
+migrations. See [Baseline an existing database](#baseline-an-existing-database).
+
 </Step>
 
 <Step>
@@ -98,10 +155,23 @@ and the shards logging in. Confirm the health check goes green.
 ### Load the starter quotes
 
 The quote library is **not** seeded automatically, and without it the bot has
-nothing to post. Now that the tables exist, run this once from your machine
-against the production database. From the repository root in an interactive
-Bash shell, enter the database URL at the hidden prompt so it is not included
-in the command text or shell history:
+nothing to post. Now that the tables exist, run the seed once. Seeding needs
+only `DATABASE_URL` and `OWNER_ID`, which the bot container already has, so the
+simplest option is to run it **inside the bot container**. This keeps Postgres
+private:
+
+```bash
+# Dokploy: open the application's terminal, then run
+bun run db:seed
+
+# Or from the Docker host (the image's working directory is
+# /usr/src/app/apps/discord):
+docker exec -it <container> bun run db:seed
+```
+
+If you must seed from your own machine instead, run this from the repository
+root in an interactive Bash shell. Enter the database URL at the hidden prompt
+so it is not included in the command text or shell history:
 
 ```bash
 (
@@ -139,8 +209,8 @@ lands, then `/quote` to confirm the library loaded.
   unchanged — only the build path moves.
 </Callout>
 
-The only thing that changed is **where the Dockerfile lives**. Update your
-Dokploy application:
+The build change is **where the Dockerfile lives**; a few Dokploy settings
+also need updating (step 3). Update your Dokploy application:
 
 <Steps>
 
@@ -167,10 +237,15 @@ apps/discord/Dockerfile
 
 <Step>
 
-### Leave everything else as-is
+### Update the runtime settings
 
-Environment variables, ports, and the health check path (`/api/health`) are
-unchanged. No new variables are required.
+Environment variables and ports are unchanged, and no new variables are
+required. Do update three settings: switch the health check path to
+`/api/health/live`, set the Stop Grace Period to 35 seconds (see
+[Expose the port, health check and stop grace period](#expose-the-port-health-check-and-stop-grace-period)),
+and switch to [stop-first updates](#use-stop-first-updates).
+`DISCORD_APPLICATION_ID`, `DISCORD_APPLICATION_PUBLIC_KEY` and `MAIN_GUILD_ID`
+are no longer read and can be removed.
 
 </Step>
 
@@ -197,9 +272,289 @@ docker build -f apps/discord/Dockerfile -t fluffboost:test .
 
 ### Rollback
 
-If anything looks wrong, redeploy the previous commit. Nothing in this migration
-touches the database, the environment, or the health check, so a rollback is
-just a redeploy of the old image.
+If anything looks wrong after the monorepo move, redeploy the previous commit.
+The build path change does not touch the environment, so rolling back is a
+redeploy of the old image (restore the old health check path too).
+
+Rolling **forward** may touch the database: if the production schema was
+created with `db:push` (or before migrations existed), the first deploy that
+runs migrations stops with a baseline error. Follow
+[Baseline an existing database](#baseline-an-existing-database) (schema already
+current) or [Reconcile a legacy database](#reconcile-a-legacy-database)
+(Prisma era or drifted) before or right after that deploy.
+
+## Migrations, backups and rollbacks
+
+Every deploy runs pending migrations before the bot starts, and there are no
+down migrations. Rolling back therefore runs the **old image against the new
+schema**. Keep that safe:
+
+- **Expand, then contract.** Ship additive changes (new nullable columns, new
+  tables, new enum values) first. Remove or rename things in a later deploy,
+  once no running image reads them.
+- **Back up before risky migrations.** Take a dump right before deploying a
+  migration that rewrites or drops data:
+
+  ```bash
+  pg_dump --format=custom --file=fluffboost-$(date +%Y%m%d%H%M).dump "$DATABASE_URL"
+  ```
+
+- **Close long sessions before a migration.** The migrator waits at most
+  60 seconds for a table lock (`lock_timeout`). An open `BEGIN` in psql or a
+  long `pg_dump` holding a lock on a table the migration alters makes the
+  deploy fail with `canceling statement due to lock timeout (55P03)`; the
+  migration transaction rolls back cleanly, so finish those sessions and
+  redeploy. If another migrator holds the migration lock, the log shows
+  `Waiting for the migration lock held by backend pid N...` and the deploy
+  aborts after 2 minutes; check that pid in `pg_stat_activity`.
+- **Prefer fixing forward.** If a deploy misbehaves, ship a fix. Roll back to
+  the previous image only when its migrations were backward-compatible; restore
+  the dump (`pg_restore --clean`) only as a last resort, since it discards
+  everything written after the backup.
+
+## Baseline an existing database
+
+The entrypoint refuses to migrate when the app tables exist
+(`public."Guild"`) but Drizzle has no migration history
+(`drizzle.__drizzle_migrations` is missing or empty). Applying migration `0000`
+there would fail on the first `CREATE TYPE`, and silently recording it could
+hide schema drift. The deploy exits with:
+
+```text
+Migration aborted: Existing schema without migration history: baseline required (see the deployment docs). ...
+```
+
+Baselining only records that `0000` is applied; it changes no tables. It is for
+a database whose schema already matches `0000` exactly, such as one built with
+`db:push` from the current code. A database from the Prisma era, or one pushed
+from an older Drizzle schema, has drift (missing columns, text ids, different
+enum labels). [Reconcile it](#reconcile-a-legacy-database) instead; the
+reconcile also records the baseline.
+
+Set `SKIP_MIGRATIONS=true` to keep the bot running while you baseline, then:
+
+<Steps>
+
+<Step>
+
+### Confirm the state
+
+```sql
+SELECT to_regclass('drizzle.__drizzle_migrations') AS history,
+       to_regclass('public."Guild"') AS guild;
+```
+
+A baseline is needed when `guild` is set and `history` is `NULL` (or the
+history table has no rows).
+
+</Step>
+
+<Step>
+
+### Diff the schema
+
+Create a scratch database, migrate it with the same image
+(`bun run src/database/migrate.ts` with `DATABASE_URL` pointing at the
+scratch database), then compare the `public` schemas. Run `pg_dump` from the
+`postgres` image that matches the server's major version (a client older than
+the server refuses to dump), and drop the `\restrict` / `\unrestrict` lines,
+which carry a random key on every dump:
+
+```bash
+# Match the server's major version: postgres:18-alpine for PostgreSQL 18, postgres:17-alpine for 17, ...
+dump() {
+  docker run --rm --network host postgres:18-alpine \
+    pg_dump --schema-only --no-owner --no-privileges --schema=public "$1" |
+    grep -vE '^\\(un)?restrict'
+}
+dump "$PROD_URL"    > prod.sql
+dump "$SCRATCH_URL" > expected.sql
+diff prod.sql expected.sql && echo "schema matches 0000"
+```
+
+An empty diff is a pass. Any output is drift: do not baseline, use
+[Reconcile a legacy database](#reconcile-a-legacy-database) instead.
+
+</Step>
+
+<Step>
+
+### Record the baseline
+
+Run this in one transaction. The hash is the SHA-256 of
+`apps/discord/drizzle/0000_confused_eternity.sql` and `created_at` is that
+entry's `when` in `drizzle/meta/_journal.json`; recompute both with
+`shasum -a 256` if the file ever changes. The safety check at the top aborts
+(and records nothing) when a column, column type, `uuid` id default, enum
+label or index from `0000` is missing, for example the Prisma-era
+`SuggestionQuote` without `reviewedBy`.
+
+```sql
+BEGIN;
+-- Safety check: abort unless the tables already have migration 0000's shape.
+DO $$
+DECLARE problems text;
+BEGIN
+  SELECT string_agg(format('%s.%s', e.t, e.c), ', ') INTO problems
+  FROM (VALUES
+    ('Guild', 'id', 'uuid'), ('Guild', 'guildId', 'text'), ('Guild', 'motivationChannelId', 'text'),
+    ('Guild', 'motivationFrequency', 'MotivationFrequency'), ('Guild', 'motivationTime', 'text'),
+    ('Guild', 'motivationDay', 'int4'), ('Guild', 'timezone', 'text'),
+    ('Guild', 'lastMotivationSentAt', 'timestamp'), ('Guild', 'isPremium', 'bool'),
+    ('Guild', 'joinedAt', 'timestamp'), ('Guild', 'updatedAt', 'timestamp'),
+    ('MotivationQuote', 'id', 'uuid'), ('MotivationQuote', 'quote', 'text'),
+    ('MotivationQuote', 'author', 'text'), ('MotivationQuote', 'addedBy', 'text'),
+    ('MotivationQuote', 'createdAt', 'timestamp'),
+    ('SuggestionQuote', 'id', 'uuid'), ('SuggestionQuote', 'quote', 'text'),
+    ('SuggestionQuote', 'author', 'text'), ('SuggestionQuote', 'addedBy', 'text'),
+    ('SuggestionQuote', 'status', 'SuggestionStatus'), ('SuggestionQuote', 'reviewedBy', 'text'),
+    ('SuggestionQuote', 'reviewedAt', 'timestamp'), ('SuggestionQuote', 'createdAt', 'timestamp'),
+    ('SuggestionQuote', 'updatedAt', 'timestamp'),
+    ('DiscordActivity', 'id', 'uuid'), ('DiscordActivity', 'activity', 'text'),
+    ('DiscordActivity', 'type', 'DiscordActivityType'), ('DiscordActivity', 'url', 'text'),
+    ('DiscordActivity', 'createdAt', 'timestamp')
+  ) AS e(t, c, u)
+  WHERE NOT EXISTS (
+    SELECT 1 FROM information_schema.columns k
+    WHERE k.table_schema = 'public' AND k.table_name = e.t AND k.column_name = e.c AND k.udt_name = e.u
+      AND (e.c <> 'id' OR k.column_default = 'gen_random_uuid()')
+  );
+  IF problems IS NOT NULL THEN
+    RAISE EXCEPTION 'Not baselining: missing or mismatched columns: %', problems
+      USING HINT = 'Use the reconcile script (bun run db:reconcile) instead.';
+  END IF;
+  IF (SELECT string_agg(enumlabel, ',' ORDER BY enumsortorder) FROM pg_enum
+      WHERE enumtypid = to_regtype('public."DiscordActivityType"')) IS DISTINCT FROM 'Custom,Listening,Streaming,Playing'
+     OR (SELECT string_agg(enumlabel, ',' ORDER BY enumsortorder) FROM pg_enum
+         WHERE enumtypid = to_regtype('public."SuggestionStatus"')) IS DISTINCT FROM 'Pending,Approved,Rejected'
+     OR (SELECT string_agg(enumlabel, ',' ORDER BY enumsortorder) FROM pg_enum
+         WHERE enumtypid = to_regtype('public."MotivationFrequency"')) IS DISTINCT FROM 'Daily,Weekly,Monthly'
+     OR to_regclass('public.suggestion_status_idx') IS NULL
+     OR to_regclass('public.guild_motivation_channel_idx') IS NULL THEN
+    RAISE EXCEPTION 'Not baselining: enum labels or indexes differ from migration 0000'
+      USING HINT = 'Use the reconcile script (bun run db:reconcile) instead.';
+  END IF;
+END $$;
+CREATE SCHEMA IF NOT EXISTS drizzle;
+CREATE TABLE IF NOT EXISTS drizzle.__drizzle_migrations (
+  id SERIAL PRIMARY KEY,
+  hash text NOT NULL,
+  created_at bigint
+);
+INSERT INTO drizzle.__drizzle_migrations (hash, created_at)
+SELECT '9289c18010701751cde68a6c7bffb56e87090393725f50e8d903467bdce1cb93', 1785275510784
+WHERE NOT EXISTS (SELECT 1 FROM drizzle.__drizzle_migrations);
+COMMIT;
+```
+
+Only record `0000`; the `WHERE NOT EXISTS` makes a second run a no-op. Any
+later migrations apply normally on the next deploy. Only baseline after the
+schema diff is clean: recording `0000` on a drifted schema makes Drizzle skip
+it, and inserts then fail at runtime instead of at deploy time.
+
+</Step>
+
+<Step>
+
+### Redeploy and confirm
+
+Redeploy and check the logs for `Migrations complete.` before the bot starts.
+
+</Step>
+
+<Step>
+
+### Remove the opt-out
+
+Delete `SKIP_MIGRATIONS` from the environment so future deploys migrate again.
+
+</Step>
+
+</Steps>
+
+## Reconcile a legacy database
+
+For a database from the Prisma era (any of its migrations, or `prisma db push`),
+one pushed from an earlier Drizzle schema (`drizzle-kit push`), or one where a
+`drizzle-kit push --force` stopped partway. The entrypoint refuses these with
+the baseline error above, and baselining them would hide the drift.
+
+`apps/discord/scripts/reconcileLegacySchema.sql` rebuilds the four tables in the
+current shape and keeps every row, in **one transaction**:
+
+1. Renames the legacy tables, constraints, indexes and enum types to `_legacy_*`.
+2. Runs migration `0000` verbatim.
+3. Copies every column whose name still exists, mapping values: enum labels
+   case-insensitively (`pending` to `Pending`, `CUSTOM` to `Custom`), the old
+   cron default `0 8 * * *` to `08:00`, text ids to `uuid`, and NULLs to the
+   column default. It checks the row count of every table.
+4. Drops the `_legacy_*` objects and `_prisma_migrations`, then records the
+   `0000` baseline row with the hash and `created_at` that Drizzle's migrator
+   computes.
+
+It refuses a database that already has migration history (already baselined
+or migrated) or has no `public."Guild"`. Anything it cannot map aborts the
+whole transaction with a message naming the table, column and values, and the
+database stays unchanged. That covers an enum value with no current
+equivalent (the early `WATCHING` activity type, an unknown suggestion status),
+a non-UUID id, a malformed `motivationTime` and duplicate `guildId`s. Fix those
+rows and run it again.
+
+<Callout type="warn">
+  Columns the current schema no longer has are dropped with their values; a
+  `NOTICE` lists them. On early Prisma databases (before September 2025) that
+  is `SuggestionQuote.guildId`, which recorded the server a suggestion came
+  from. Keep the backup if you need it.
+</Callout>
+
+<Steps>
+
+<Step>
+
+### Stop the bot and back up
+
+Stop the application so nothing writes during the reconcile, then dump
+the database with a `pg_dump` that matches the server's major version:
+
+```bash
+pg_dump --format=custom --file=fluffboost-before-reconcile.dump "$DATABASE_URL"
+```
+
+</Step>
+
+<Step>
+
+### Run the reconcile
+
+From the image (Dokploy terminal, working directory
+`/usr/src/app/apps/discord`) or a checkout of the same commit:
+
+```bash
+bun run db:reconcile --confirm
+```
+
+It reads `DATABASE_URL`. Without `--confirm` it prints this checklist and
+exits. Each table reports `N of N row(s) copied`. With `psql` instead:
+
+```bash
+psql -X -v ON_ERROR_STOP=1 -d "$DATABASE_URL" -f apps/discord/scripts/reconcileLegacySchema.sql
+```
+
+</Step>
+
+<Step>
+
+### Redeploy and confirm
+
+Remove `SKIP_MIGRATIONS` and redeploy. The log shows `Migrations complete.`
+with nothing applied, then the bot starts. The
+[schema diff](#diff-the-schema) against a fresh scratch database is now empty.
+If anything went wrong, `pg_restore --clean --dbname="$DATABASE_URL"
+fluffboost-before-reconcile.dump` returns to the backup.
+
+</Step>
+
+</Steps>
 
 ## Environment files
 

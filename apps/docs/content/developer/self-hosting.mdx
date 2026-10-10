@@ -6,7 +6,8 @@ description: Get the FluffBoost bot running on your machine with Bun and Docker 
 ## Prerequisites
 
 - **Bun** (the project runs TypeScript directly — no build step)
-- **PostgreSQL 16** and **Redis 7** (or just use the bundled Docker Compose)
+- **PostgreSQL 18** and **Redis 8** (or just use the bundled Docker Compose).
+  CI also runs the bot end-to-end suite against PostgreSQL 18.
 - A **Discord application** with a bot token
 
 ## Setup
@@ -29,27 +30,30 @@ bun install
 
 <Step>
 
-### Start local infrastructure
-
-```bash
-docker compose up -d
-```
-
-This brings up PostgreSQL and Redis on `localhost` with the defaults the bot
-expects.
-
-</Step>
-
-<Step>
-
 ### Configure the bot
 
 ```bash
 cp apps/discord/.env.example apps/discord/.env
 ```
 
-Fill in your Discord credentials and IDs. See
-[Configuration](/developers/configuration) for every variable.
+Fill in the required values: `DISCORD_APPLICATION_BOT_TOKEN`, `OWNER_ID` and
+`MAIN_CHANNEL_ID`. The template's `DATABASE_URL` and `REDIS_URL` already match
+the Compose services. See [Configuration](/developers/configuration) for every
+variable.
+
+</Step>
+
+<Step>
+
+### Start local infrastructure
+
+```bash
+docker compose up -d
+```
+
+This starts only PostgreSQL 18 and Redis 8, bound to `127.0.0.1` with the
+defaults the bot expects (`docker compose up -d postgres redis` is
+equivalent). The infrastructure does not need the `.env` file.
 
 </Step>
 
@@ -60,6 +64,31 @@ Fill in your Discord credentials and IDs. See
 ```bash
 bun run db:push
 ```
+
+`db:push` is quick but records no migration history. If you also plan to run
+the bot container (below) against this database, use `bun run db:migrate`
+instead: the container's startup migration step refuses a database that has
+the tables but no history. Already used `db:push` and now the container (or
+`db:migrate`) stops with `baseline required` or `type "DiscordActivityType"
+already exists`? Keep your data and follow
+[Baseline an existing database](/developers/deployment#baseline-an-existing-database)
+(its schema diff is empty when you pushed the current schema), or
+[Reconcile a legacy database](/developers/deployment#reconcile-a-legacy-database)
+if the diff shows drift. On a throwaway dev database you can instead drop it,
+recreate it, and run `bun run db:migrate`.
+
+</Step>
+
+<Step>
+
+### Load the starter quotes
+
+```bash
+bun run db:seed
+```
+
+Without quotes the bot has nothing to post. The seed skips quotes that already
+exist, so it is safe to re-run.
 
 </Step>
 
@@ -83,12 +112,30 @@ Run these from the repo root — they fan out through Turborepo:
 | ------------------------- | --------------------------------------------- |
 | `bun run dev:discord`     | Bot with hot reload                           |
 | `bun run dev:docs`        | This docs/marketing site                      |
-| `bun run test`            | Test suites across the workspace              |
+| `bun run dev:motion`      | Remotion Studio for the brand animations      |
+| `bun run test`            | Bot unit tests (excludes `@fluffboost/motion`) |
+| `bun run test:coverage`   | Bot unit tests with coverage (what CI runs)   |
 | `bun run typecheck`       | TypeScript checks                             |
 | `bun run lint:check`      | ESLint (no fixes)                             |
 | `bun run db:push`         | Push schema changes to the dev database       |
 | `bun run db:seed`         | Load the starter quote library (safe to re-run) |
+| `bun run db:reconcile --confirm` | Legacy or drifted database to the current schema ([details](/developers/deployment#reconcile-a-legacy-database)) |
 | `bun run db:studio`       | Open Drizzle Studio                           |
+
+Plain `bun run dev` starts the bot, the docs site and Remotion Studio together.
+
+## Run the bot in a container
+
+To run the bot itself through Compose instead of `bun run dev:discord`:
+
+```bash
+docker compose --profile bot up --build
+```
+
+The `bot` service builds `apps/discord/Dockerfile`, reads
+`apps/discord/.env` if it exists, and points `DATABASE_URL`/`REDIS_URL` at the
+Compose services. Its health API is published on `127.0.0.1:3000` only. The
+optional `env_file` syntax needs Docker Compose 2.24 or newer.
 
 <Callout type="info">
   The bot uses Discord's `ShardingManager`: `apps/discord/src/app.ts` is the

@@ -4,6 +4,7 @@ import { site } from "@/lib/site";
 import { BrandAvatar, PawMark } from "@/components/brand";
 import { SiteFooter } from "@/components/site-footer";
 import { BrandBanner } from "@/components/brand-banner";
+import { MobileInviteBar } from "@/components/mobile-invite-bar";
 
 export const metadata: Metadata = {
   title: { absolute: `${site.name} — ${site.tagline}` },
@@ -99,19 +100,25 @@ const faqs = [
 /* ------------------------------------------------------------------ */
 
 export default function HomePage() {
-  // HomeLayout already provides the <main> landmark, so this is a plain wrapper.
+  // The layout's container is a plain <div>, so the page owns the <main>
+  // landmark and the footer stays outside it.
   return (
-    <div className="flex-1">
-      <Hero />
-      <Ribbon />
-      <Features />
-      <Steps />
-      <Premium />
-      <Community />
-      <Faq />
-      <FinalCta />
-      <SiteFooter />
-    </div>
+    <>
+      <main id="main-content" className="flex-1">
+        <Hero />
+        <Ribbon />
+        <Features />
+        <Steps />
+        <Premium />
+        <Community />
+        <Faq />
+        <FinalCta />
+      </main>
+      {/* Below sm the fixed invite bar covers the page end, so the footer
+          reserves that space in its own color. */}
+      <SiteFooter className="pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:pb-0" />
+      <MobileInviteBar />
+    </>
   );
 }
 
@@ -119,12 +126,12 @@ export default function HomePage() {
 
 function Hero() {
   return (
-    <section className="fb-dawn relative overflow-hidden">
+    <section id="home-hero" className="fb-dawn relative overflow-hidden">
       <div className="fb-grain pointer-events-none absolute inset-0" />
-      <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-6 pb-20 pt-16 lg:grid-cols-[1.05fr_0.95fr] lg:pb-28 lg:pt-24">
+      <div className="relative mx-auto grid max-w-6xl items-center gap-9 px-5 pb-12 pt-10 sm:gap-12 sm:px-6 sm:pb-20 sm:pt-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:pb-28 lg:pt-24">
         <div>
           <p
-            className="fb-rise inline-flex items-center gap-2 rounded-full border border-line bg-card/70 px-3.5 py-1.5 text-sm font-semibold text-honey-ink backdrop-blur"
+            className="fb-rise inline-flex min-h-10 items-center gap-2 rounded-full border border-line bg-card/70 px-3.5 py-1.5 text-sm font-semibold text-honey-ink backdrop-blur"
             style={{ ["--d" as string]: "0ms" }}
           >
             <PawMark className="size-4" />
@@ -132,19 +139,24 @@ function Hero() {
           </p>
 
           <h1
-            className="fb-rise mt-6 text-balance font-display text-[clamp(2.6rem,6vw,4.4rem)] font-semibold leading-[1.03] tracking-tight text-ink"
+            className="fb-rise mt-5 max-w-[12ch] text-balance font-display text-[clamp(2.65rem,10vw,4.4rem)] font-semibold leading-[0.99] tracking-tight text-ink sm:mt-6 sm:max-w-none sm:text-[clamp(2.6rem,6vw,4.4rem)] sm:leading-[1.03]"
             style={{ ["--d" as string]: "80ms" }}
           >
             Your daily dose of{" "}
-            <span className="relative text-honey-ink">
-              furry motivation
-              <Underline />
+            {/* The underline sits on one unbreakable word: on a span that wraps,
+                an absolutely positioned child spans only the last line's tail. */}
+            <span className="text-honey-ink">
+              furry{" "}
+              <span className="relative inline-block">
+                motivation
+                <Underline />
+              </span>
             </span>
             .
           </h1>
 
           <p
-            className="fb-rise mt-6 max-w-xl text-pretty text-lg leading-relaxed text-ink-soft"
+            className="fb-rise mt-5 max-w-xl text-pretty text-base leading-relaxed text-ink-soft sm:mt-6 sm:text-lg"
             style={{ ["--d" as string]: "160ms" }}
           >
             Make a little room for encouragement. FluffBoost brings uplifting
@@ -153,7 +165,7 @@ function Hero() {
           </p>
 
           <div
-            className="fb-rise mt-9 flex flex-col gap-3 sm:flex-row sm:items-center"
+            className="fb-rise mt-7 flex flex-col gap-3 sm:mt-9 sm:flex-row sm:items-center"
             style={{ ["--d" as string]: "240ms" }}
           >
             <a href={site.inviteUrl} className={btnPrimary} rel="noreferrer">
@@ -167,7 +179,7 @@ function Hero() {
           </div>
 
           <p
-            className="fb-rise mt-6 text-sm text-ink-soft"
+            className="fb-rise mt-4 text-balance text-center text-sm leading-relaxed text-ink-soft sm:mt-6 sm:text-left"
             style={{ ["--d" as string]: "320ms" }}
           >
             Free daily quotes · Optional Premium · No separate account
@@ -175,7 +187,7 @@ function Hero() {
         </div>
 
         <div
-          className="fb-rise relative"
+          className="fb-rise relative mx-auto w-full max-w-md lg:max-w-none"
           style={{ ["--d" as string]: "220ms" }}
         >
           <QuoteCard />
@@ -194,8 +206,10 @@ function QuoteCard() {
         <PawMark className="size-8" />
       </div>
 
-      <article className="fb-shadow relative rounded-3xl border border-line bg-card p-5">
-        <BrandBanner />
+      <article className="fb-shadow relative rounded-3xl border border-line bg-card p-3.5 sm:p-5">
+        <div className="overflow-hidden rounded-2xl">
+          <BrandBanner />
+        </div>
         <div className="flex items-center gap-3 border-b border-line pb-4">
           <BrandAvatar className="size-10" />
           <div className="leading-tight">
@@ -209,8 +223,8 @@ function QuoteCard() {
           </div>
         </div>
 
-        <div className="fb-ticket mt-4 rounded-2xl bg-paper-2/60 p-5">
-          <p className="font-display text-2xl leading-snug text-ink">
+        <div className="fb-ticket mt-3.5 rounded-2xl bg-paper-2/60 p-4 sm:mt-4 sm:p-5">
+          <p className="font-display text-xl leading-snug text-ink sm:text-2xl">
             “You don't have to do it all today. Showing up is already brave.”
           </p>
           <p className="mt-3 text-sm font-semibold text-honey-ink">
@@ -218,8 +232,8 @@ function QuoteCard() {
           </p>
         </div>
 
-        <div className="mt-4 flex items-center justify-between text-xs text-ink-soft">
-          <span>Delivered to #daily-motivation</span>
+        <div className="mt-3.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-ink-soft sm:mt-4">
+          <span>Delivered to <span className="font-semibold text-ink-soft">#daily-motivation</span></span>
           <span className="inline-flex items-center gap-1">
             <PawMark className="size-3.5 text-berry-ink" />
             paw-sitivity
@@ -230,18 +244,16 @@ function QuoteCard() {
   );
 }
 
+// A static, wrapping strip: each phrase is shown once and never clipped
+// (phones show the first three so the band stays short).
 function Ribbon() {
-  const items = [...ribbon, ...ribbon];
   return (
-    <div
-      className="relative flex overflow-hidden border-y border-line bg-paper-2 py-3.5"
-      aria-hidden="true"
-    >
-      <div className="flex shrink-0 items-center gap-4 pr-4">
-        {items.map((text, i) => (
-          <span key={i} className="flex items-center gap-4 whitespace-nowrap">
-            <span className="text-sm font-semibold text-ink-soft">{text}</span>
+    <div className="border-y border-line bg-paper-2 py-3.5" aria-hidden="true">
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 px-5 sm:px-6">
+        {ribbon.map((text) => (
+          <span key={text} className="flex items-center gap-2 whitespace-nowrap max-sm:nth-[n+4]:hidden">
             <PawMark className="size-3.5 text-honey" />
+            <span className="text-sm font-semibold text-ink-soft">{text}</span>
           </span>
         ))}
       </div>
@@ -292,7 +304,7 @@ function Steps() {
             key={s.n}
             className="relative rounded-3xl border border-line bg-card p-6"
           >
-            <span className="font-display text-4xl font-semibold text-honey/40">
+            <span className="font-display text-4xl font-semibold text-honey-ink">
               {s.n}
             </span>
             <h3 className="mt-2 font-display text-xl font-semibold text-ink">
@@ -397,7 +409,7 @@ function FinalCta() {
       <div className="fb-dawn fb-shadow relative mx-auto max-w-5xl overflow-hidden rounded-[2rem] border border-line bg-card px-8 py-14 text-center">
         <div className="fb-grain pointer-events-none absolute inset-0" />
         <div className="relative">
-          <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-honey text-[#2b1e12]">
+          <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-honey text-on-honey">
             <PawMark className="size-7" />
           </span>
           <h2 className="mx-auto mt-6 max-w-2xl text-balance font-display text-[clamp(2rem,4vw,3rem)] font-semibold leading-tight text-ink">
@@ -427,10 +439,10 @@ function FinalCta() {
 /* ------------------------------------------------------------------ */
 
 const btnPrimary =
-  "inline-flex items-center justify-center gap-2 rounded-full bg-honey px-6 py-3 font-display text-base font-semibold text-[#2b1e12] fb-shadow transition-[filter,transform] hover:brightness-[1.05] active:translate-y-px";
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-honey px-6 py-3 font-display text-base font-semibold text-on-honey fb-shadow transition-[filter,transform] hover:brightness-[1.05] active:translate-y-px";
 
 const btnGhost =
-  "inline-flex items-center justify-center gap-2 rounded-full border border-line bg-card px-6 py-3 font-display text-base font-semibold text-ink transition-colors hover:border-honey";
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-line bg-card px-6 py-3 font-display text-base font-semibold text-ink transition-colors hover:border-honey";
 
 function Section({
   eyebrow,
@@ -487,7 +499,7 @@ function PlanCard({
       }`}
     >
       {highlight ? (
-        <span className="absolute right-6 top-6 rounded-full bg-honey px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#2b1e12]">
+        <span className="absolute right-6 top-6 rounded-full bg-honey px-3 py-1 text-xs font-bold uppercase tracking-wide text-on-honey">
           Optional
         </span>
       ) : null}

@@ -1,3 +1,4 @@
+import type { StructuredData } from "fumadocs-core/mdx-plugins";
 import { createSearchAPI } from "fumadocs-core/search/server";
 import { userSource, devSource } from "@/lib/source";
 
@@ -14,8 +15,8 @@ export const { staticGET: GET } = createSearchAPI("advanced", {
         const data = page.data as {
           title: string;
           description?: string;
-          structuredData?: unknown;
-          load?: () => Promise<{ structuredData: unknown }>;
+          structuredData?: StructuredData;
+          load?: () => Promise<{ structuredData: StructuredData }>;
         };
         const structuredData =
           data.structuredData ?? (await data.load?.())?.structuredData;
@@ -25,8 +26,7 @@ export const { staticGET: GET } = createSearchAPI("advanced", {
           description: data.description,
           url: page.url,
           id: page.url,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          structuredData: structuredData as any,
+          structuredData: structuredData as StructuredData,
         };
       }),
     );

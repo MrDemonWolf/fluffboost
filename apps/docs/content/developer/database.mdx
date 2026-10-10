@@ -9,15 +9,20 @@ reads it at runtime, so there's no code-generation step.
 
 ## Tables
 
-| Table               | Purpose                                                             |
-| ------------------- | ------------------------------------------------------------------- |
-| `guilds`            | Per-server config: channel, schedule (frequency/time/timezone/day), premium status, `lastMotivationSentAt` |
-| `motivationQuotes`  | The approved quote library                                          |
-| `suggestionQuotes`  | User-submitted quotes pending admin review                          |
-| `discordActivities` | Bot status entries, with a type enum                                |
+The Drizzle identifier is what you use in code; the SQL name (quoted,
+PascalCase) is what you use in `psql` or raw SQL.
 
-Two enums back these: `motivationFrequencyEnum` (Daily / Weekly / Monthly) and
-`discordActivityTypeEnum` (Custom / Listening / Streaming / Playing).
+| Drizzle             | SQL table           | Purpose                                                             |
+| ------------------- | ------------------- | ------------------------------------------------------------------- |
+| `guilds`            | `"Guild"`           | Per-server config: channel, schedule (frequency/time/timezone/day), `isPremium`, `lastMotivationSentAt` |
+| `motivationQuotes`  | `"MotivationQuote"` | The approved quote library                                          |
+| `suggestionQuotes`  | `"SuggestionQuote"` | Every user submission, with its review `status`, `reviewedBy` and `reviewedAt` |
+| `discordActivities` | `"DiscordActivity"` | Bot status entries, with a type enum                                |
+
+Three enums back these: `motivationFrequencyEnum` (Daily / Weekly / Monthly),
+`discordActivityTypeEnum` (Custom / Listening / Streaming / Playing) and
+`suggestionStatusEnum` (Pending / Approved / Rejected). The matching TypeScript
+types are `MotivationFrequency`, `DiscordActivityType` and `SuggestionStatus`.
 
 ## Working with the schema
 
@@ -50,20 +55,53 @@ Open a visual browser with `bun run db:studio`.
 
 ## How scheduling reads the data
 
-The `send-motivation` worker job runs every minute and asks
-`isGuildDueForMotivation()` (in `apps/discord/src/utils/scheduleEvaluator.ts`,
-powered by dayjs with timezone support) which guilds are due right now. After a
-successful send it updates `lastMotivationSentAt` so a quote is never delivered
-twice.
+The `send-motivation` worker job runs every minute and works out which guilds
+are due right now with the schedule evaluator in
+`apps/discord/src/utils/scheduleEvaluator.ts` (dayjs with timezone support). A
+guild stays due for six hours after its scheduled time (the catch-up window)
+until something is sent for that occurrence. Due guilds are handled in chunks
+of 25.
+
+Each guild row is **claimed before the send**: an atomic `UPDATE` stamps
+`lastMotivationSentAt` only if it is still older than the scheduled
+occurrence, so two workers can never both send the same occurrence.
+
+- A **temporary** failure (a Discord 5xx, a network error, a rate limit, or a
+  rejected token) releases the claim, so a later tick inside the catch-up
+  window retries.
+- A **permanent** failure (a missing or non-text channel, missing access or
+  permissions) keeps the claim, so the bot does not retry every minute.
+- Each send carries a deterministic nonce with `enforceNonce`, so a retry that
+  reaches Discord within its dedupe window returns the existing message
+  instead of posting a second one.
+- Delivery is **at most once** per occurrence. If the process dies between the
+  claim and the send, that guild misses that occurrence; chunking limits how
+  many guilds one crash can affect.
+
+On shutdown, or when the job hits its 10-minute limit, delivery stops claiming
+new guilds between chunks; the unclaimed ones roll over to the next tick.
+
+<Callout type="warn">
+  Keep the claim **before** `send()`. Moving the `lastMotivationSentAt` update
+  after a successful send looks safer but reintroduces the race where two
+  workers both deliver the same quote.
+</Callout>
 
 <Callout type="info">
   **Migrations run at deploy time.** The container entrypoint runs
   `apps/discord/src/database/migrate.ts` before starting the bot, so a fresh
   database is created and kept up to date automatically. The repository ships
-  both the migration SQL and `drizzle/meta/_journal.json`, which is what the
-  script looks for — if that journal ever goes missing, the script silently
-  skips and the schema stops being applied. Set `SKIP_MIGRATIONS=true` to opt
-  out for a single deploy.
+  both the migration SQL and `drizzle/meta/_journal.json`. If that journal is
+  missing, the script exits with code 1 and the deploy fails rather than
+  starting on an unmigrated schema. The migrations folder is resolved from the
+  script's own location, not the working directory. A database that already
+  has the tables but no migration history (for example one built with
+  `db:push`) is refused until you
+  [baseline it](/developers/deployment#baseline-an-existing-database), or, for
+  a Prisma-era or drifted schema,
+  [reconcile it](/developers/deployment#reconcile-a-legacy-database). Set
+  `SKIP_MIGRATIONS=true` to opt out for a single deploy; the bot still refuses
+  to start when the tables do not exist at all.
 </Callout>
 
 <Callout type="warn">

@@ -64,8 +64,9 @@ For a daily quote at 9:30 AM New York time, run:
 /setup schedule frequency:Daily time:09:30 timezone:America/New_York
 ```
 
-Check the **Schedule Updated** response. For weekly or monthly delivery, include
-the `day` option; see [Scheduling](/docs/scheduling) for examples and valid values.
+Check the **Schedule Updated** response. Options you leave out keep their saved
+values. For weekly or monthly delivery, include the `day` option; see
+[Scheduling](/docs/scheduling) for examples and valid values.
 
 </Step>
 
@@ -95,7 +96,10 @@ Removing the bot from your server does not cancel the subscription.
 
 Cancellation normally leaves access active until the current billing period
 ends. When the entitlement ends, the saved custom schedule is retained and
-delivery uses the default daily 8:00 AM America/Chicago schedule. An active
-subscription restores the saved custom timing.
+delivery uses the default daily 8:00 AM America/Chicago schedule. FluffBoost
+re-checks subscriptions every 30 minutes, so this can take up to about 30
+minutes after the period ends. An active subscription restores the saved custom
+timing. Purchases made in Discord's Application Test Mode never unlock Premium
+on the live bot.
 
 See our [Terms of Service](/terms) and [Privacy Policy](/privacy).

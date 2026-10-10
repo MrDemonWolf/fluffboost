@@ -1,8 +1,10 @@
 import type { SVGProps } from "react";
 import Image from "next/image";
-import icon from "../../../assets/brand/animated/fluffboost-production-icon.png";
+// A 128px web derivative of the approved production portrait
+// (assets/brand/animated/fluffboost-production-icon.png, shared with the Discord
+// application). The 1024px master is far too heavy for a 28-40px avatar.
+import icon from "@/assets/brand/fluffboost-icon-128.webp";
 
-// The approved production portrait is shared with the Discord application.
 export function BrandAvatar({ className = "size-7" }: { className?: string }) {
   return (
     <Image

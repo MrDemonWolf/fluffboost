@@ -17,29 +17,76 @@ your platform (see [Deployment](/developers/deployment)).
 | -------------------------------- | --------------------------------------- |
 | `DATABASE_URL`                   | PostgreSQL connection string            |
 | `REDIS_URL`                      | Redis connection string                 |
-| `DISCORD_APPLICATION_ID`         | Discord snowflake                       |
-| `DISCORD_APPLICATION_PUBLIC_KEY` | From the Discord Developer Portal       |
 | `DISCORD_APPLICATION_BOT_TOKEN`  | Bot token                               |
 | `OWNER_ID`                       | Snowflake of the bot owner              |
-| `MAIN_GUILD_ID`                  | Primary/support guild snowflake         |
-| `MAIN_CHANNEL_ID`                | Primary channel snowflake               |
+| `MAIN_CHANNEL_ID`                | Announcement channel snowflake          |
 
 ## Optional (with defaults)
 
 | Variable                            | Default                    | Notes                                        |
 | ----------------------------------- | -------------------------- | -------------------------------------------- |
-| `DATABASE_POOL_MAX`                 | `10`                       | Max Postgres pool size per process           |
+| `DATABASE_POOL_MAX`                 | `10`                       | Max Postgres pool size per process (1–100)   |
+| `DATABASE_QUERY_LOG`                | `false`                    | Logs SQL query text (never parameters) at debug level. Development only |
 | `WORKER_CONCURRENCY`                | `4`                        | BullMQ worker concurrency per shard          |
 | `DISCORD_DEFAULT_STATUS`            | `Spreading Paw-sitivity 🐾` | Fallback presence text                       |
 | `DISCORD_DEFAULT_ACTIVITY_TYPE`     | `Custom`                   | `Playing`, `Streaming`, `Listening`, `Custom`|
 | `DEFAULT_ACTIVITY_URL`              | —                          | Stream URL (for `Streaming`)                 |
 | `DISCORD_ACTIVITY_INTERVAL_MINUTES` | `15`                       | Presence rotation interval (1–1440)          |
-| `ALLOWED_USERS`                     | —                          | Comma-separated snowflakes                    |
-| `HOST` / `PORT`                     | — / `3000`                 | Express health API bind                       |
-| `VERSION`                           | `0.0.0-dev`                | Reported version string                       |
+| `ALLOWED_USERS`                     | —                          | Comma-separated snowflakes allowed to run `/admin`. Empty disables every `/admin` command |
+| `HOST`                              | — (all interfaces)         | Health API bind address. Leave unset in Docker/Dokploy; `127.0.0.1` binds loopback only |
+| `PORT`                              | `3000`                     | Health API port, a number from 1 to 65535    |
+| `VERSION`                           | `apps/discord/package.json` version | Shown in `/about` and `/changelog`  |
 | `NODE_ENV`                          | `development`              | `development`, `production`, `test`          |
-| `PREMIUM_ENABLED`                   | `false`                    | Master toggle for premium features           |
-| `DISCORD_PREMIUM_SKU_ID`            | —                          | **Required when `PREMIUM_ENABLED=true`**      |
+| `PREMIUM_ENABLED`                   | `false`                    | Premium gating. `false` opens custom schedules to every server (see below) |
+| `DISCORD_PREMIUM_SKU_ID`            | —                          | **Required only when `PREMIUM_ENABLED=true`**; an empty value counts as unset |
+
+SQL is not logged by default, including in development. Set
+`DATABASE_QUERY_LOG=true` to see query text while debugging.
+
+### What `PREMIUM_ENABLED=false` means
+
+`false` turns Premium **gating** off; it does not hide custom scheduling.
+`/setup schedule` is open to every server, saved custom schedules apply, and
+there is no purchase button or entitlement handling. That suits a self-hosted
+bot. A bot that sells Premium must set `PREMIUM_ENABLED=true` and
+`DISCORD_PREMIUM_SKU_ID`; see [Enable Premium](/developers/premium).
+
+### Container-only settings
+
+`SKIP_MIGRATIONS=true` is read by the Docker entrypoint, not by the bot, and
+skips the startup migration step. Use it only while you
+[baseline](/developers/deployment#baseline-an-existing-database) or
+[reconcile](/developers/deployment#reconcile-a-legacy-database) an existing
+database; with no `public."Guild"` table the bot exits with "Database schema
+missing" instead of starting;
+see [Database & schema](/developers/database) for how migrations run.
+
+### Postgres connection budget
+
+`DATABASE_POOL_MAX` applies **per process**. The supervisor process and every
+shard process each open their own pool (connections are opened lazily and
+closed after 30 seconds idle; the supervisor only needs one or two). Keep:
+
+```text
+shards × DATABASE_POOL_MAX + 2  ≤  max_connections − reserved connections
+```
+
+Discord's recommended shard count grows with the number of servers, so lower
+`DATABASE_POOL_MAX` (or add a pooler such as PgBouncer) as shards are added.
+Run PgBouncer in session mode: transaction mode needs prepared statements
+turned off in the client, which the bot does not do, and the migration step
+holds a session-level advisory lock.
+
+## Optional and unused
+
+The bot does not read these. They are accepted (and validated as snowflakes
+when set) so older `.env` files keep working, and can be removed.
+
+| Variable                         | Notes                                   |
+| -------------------------------- | --------------------------------------- |
+| `DISCORD_APPLICATION_ID`         | The bot uses `client.application` instead |
+| `DISCORD_APPLICATION_PUBLIC_KEY` | Only needed for HTTP interactions, which the bot does not use |
+| `MAIN_GUILD_ID`                  | Announcements use `MAIN_CHANNEL_ID` alone |
 
 <Callout type="warn">
   If `PREMIUM_ENABLED=true`, `DISCORD_PREMIUM_SKU_ID` must be set — the schema
