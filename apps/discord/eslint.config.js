@@ -14,18 +14,8 @@ export default [
       parserOptions: {
         ecmaVersion: "latest",
         sourceType: "module",
-        project: "./tsconfig.json",
-      },
-      globals: {
-        console: "readonly",
-        process: "readonly",
-        Buffer: "readonly",
-        __dirname: "readonly",
-        __filename: "readonly",
-        global: "readonly",
-        module: "readonly",
-        require: "readonly",
-        exports: "readonly",
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     plugins: {
@@ -38,10 +28,24 @@ export default [
         { argsIgnorePattern: "^_" },
       ],
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-var-requires": "error",
+      "@typescript-eslint/no-require-imports": "error",
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/explicit-module-boundary-types": "off",
       "@typescript-eslint/no-non-null-assertion": "warn",
+
+      // Type-aware async/exhaustiveness rules: a dropped `await` or an
+      // unhandled enum value must fail lint rather than surface in production.
+      "@typescript-eslint/no-floating-promises": [
+        "error",
+        { checkThenables: true },
+      ],
+      "@typescript-eslint/no-misused-promises": "error",
+      "@typescript-eslint/await-thenable": "error",
+      "@typescript-eslint/only-throw-error": "error",
+      "@typescript-eslint/switch-exhaustiveness-check": [
+        "error",
+        { considerDefaultExhaustiveForUnions: true },
+      ],
 
       // General rules (not TypeScript prefixed)
       "no-console": "off", // We use consola for logging
@@ -84,13 +88,6 @@ export default [
       globals: {
         console: "readonly",
         process: "readonly",
-        Buffer: "readonly",
-        __dirname: "readonly",
-        __filename: "readonly",
-        global: "readonly",
-        module: "readonly",
-        require: "readonly",
-        exports: "readonly",
       },
     },
     rules: {
@@ -103,19 +100,44 @@ export default [
     },
   },
 
+  // Tests and E2E: typed through tsconfig.test.json (the main tsconfig excludes
+  // *.test.ts). Mocks and fixtures are loosely typed by design, so the
+  // explicit-any/non-null warnings are off; the async rules stay on.
+  {
+    files: ["tests/**/*.ts", "e2e/**/*.ts"],
+    languageOptions: {
+      parserOptions: {
+        projectService: false,
+        project: ["./tsconfig.test.json"],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
+      camelcase: "off",
+      // Rest-destructuring is how env tests drop a key from a fixture.
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", ignoreRestSiblings: true }],
+      // bun:test types mock.module as `void | Promise<void>` though it registers
+      // synchronously, and types `.rejects` matchers as void though they return a
+      // promise at runtime, so these two type-aware rules misfire on test code.
+      "@typescript-eslint/no-floating-promises": [
+        "error",
+        { allowForKnownSafeCalls: [{ from: "package", name: "module", package: "bun:test" }] },
+      ],
+      "@typescript-eslint/await-thenable": "off",
+    },
+  },
+
   // Global ignores
   {
     ignores: [
       "node_modules/**",
       "dist/**",
       "build/**",
+      "coverage/**",
       "*.config.js",
       "*.config.ts",
-      "ecosystem.config.js",
-      "pnpm-lock.yaml",
-      "tests/**",
-      "e2e/**",
-      "src/generated/**",
     ],
   },
 ];
