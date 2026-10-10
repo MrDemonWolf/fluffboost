@@ -9,6 +9,7 @@ jobs:
   update-year:
     name: Update Copyright Year
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: write
 

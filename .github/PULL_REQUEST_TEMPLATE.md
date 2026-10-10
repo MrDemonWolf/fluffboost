@@ -22,18 +22,18 @@ Closes #
 
 ## Database migrations
 
-> Skip if `src/database/schema.ts` was not modified.
+> Skip if `apps/discord/src/database/schema.ts` was not modified.
 
-- [ ] Schema changed in `src/database/schema.ts`
-- [ ] Migration generated via `bun run db:generate`
+- [ ] Schema changed in `apps/discord/src/database/schema.ts`
+- [ ] Migration generated via `bun run db:generate` (SQL and `drizzle/meta` committed)
 - [ ] Migration tested locally via `bun run db:migrate`
-- [ ] Migration is backwards-compatible (or breaking change noted above)
+- [ ] Migration is backwards-compatible (expand/contract), so a rollback to the previous image still works (or breaking change noted above)
 
 ## Discord-specific checklist
 
 > Skip items that don't apply.
 
-- [ ] New/renamed slash commands registered in `src/events/ready.ts` and routed in `src/events/interactionCreate.ts`
+- [ ] New/renamed slash commands added to both `commandRegistry` and `slashCommands` in `apps/discord/src/events/commandRegistry.ts` (subcommands: the group router's route Map), and to `/help` and the command docs
 - [ ] Channel fetches use `client.channels.fetch(id)` not `client.channels.cache.get(id)`
 - [ ] Batch guild operations use `Promise.allSettled()`
 - [ ] Premium gate applied where required (`isPremiumEnabled() && !hasEntitlement(interaction)`)
@@ -41,10 +41,12 @@ Closes #
 
 ## CI checklist
 
-- [ ] `bun test` passes
+- [ ] `bun run test` passes (not a bare `bun test`, which also picks up the E2E suites)
 - [ ] `bun run lint:check` passes
 - [ ] `bun run typecheck` passes
-- [ ] Docker build passes (validated by CI or `docker build .` locally)
+- [ ] `bun run test:e2e` passes, if the change touches SQL, delivery, or the docs site
+- [ ] `bun run brand:verify` passes, if `apps/motion` or `assets/brand` changed
+- [ ] Docker build passes (validated by CI or `docker build -f apps/discord/Dockerfile .` locally)
 
 ## Breaking changes
 
