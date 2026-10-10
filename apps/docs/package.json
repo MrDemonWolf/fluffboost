@@ -7,8 +7,12 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build --webpack",
-    "start": "next start",
+    "start": "bun run scripts/serve-export.mjs",
+    "preview": "NEXT_PUBLIC_BASE_PATH=/fluffboost next build --webpack && NEXT_PUBLIC_BASE_PATH=/fluffboost bun run scripts/serve-export.mjs",
     "typecheck": "fumadocs-mdx && next typegen && tsc --noEmit",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint . --max-warnings 0",
+    "check:contrast": "bun scripts/contrast-check.mjs",
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install --with-deps chromium",
     "postinstall": "fumadocs-mdx"
@@ -24,14 +28,20 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@eslint/js": "^9.39.2",
     "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "^4.1.0",
     "@types/mdx": "^2.0.13",
     "@types/node": "^22.10.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "eslint": "^9.39.2",
+    "eslint-plugin-jsx-a11y": "^6.10.0",
+    "eslint-plugin-react-hooks": "^7.0.0",
     "postcss": "^8.5.0",
     "tailwindcss": "^4.1.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.57.0"
   }
 }

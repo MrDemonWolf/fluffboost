@@ -12,8 +12,7 @@
     "@remotion/renderer": "4.0.532",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "remotion": "4.0.532",
-    "zod": "4.5.4"
+    "remotion": "4.0.532"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
@@ -26,10 +25,10 @@
   },
   "scripts": {
     "dev": "remotion studio src/index.ts",
-    "build": "remotion bundle src/index.ts --out-dir=dist",
+    "bundle": "remotion bundle src/index.ts --out-dir=dist",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src scripts",
-    "lint:check": "eslint src scripts",
+    "lint": "eslint src scripts --fix",
+    "lint:check": "eslint src scripts --max-warnings 0",
     "render": "bun scripts/render.ts",
     "test": "bun scripts/verify.ts"
   }

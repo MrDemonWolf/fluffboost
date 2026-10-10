@@ -5,12 +5,22 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**", "out/**"]
     },
+    "@fluffboost/docs#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "out/**"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/banner.jpg",
+        "$TURBO_ROOT$/assets/brand/animated/*.png"
+      ]
+    },
     "dev": {
       "cache": false,
       "persistent": true
     },
     "lint": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "cache": false
     },
     "lint:check": {
       "dependsOn": ["^build"]
@@ -19,10 +29,20 @@
       "dependsOn": ["^build"]
     },
     "test": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "passThroughEnv": ["DATABASE_URL", "REDIS_URL", "DISCORD_*", "OWNER_ID", "MAIN_GUILD_ID", "MAIN_CHANNEL_ID"]
+    },
+    "@fluffboost/motion#test": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/assets/brand/animated/**",
+        "$TURBO_ROOT$/apps/docs/public/brand/**"
+      ]
     },
     "test:coverage": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "passThroughEnv": ["DATABASE_URL", "REDIS_URL", "DISCORD_*", "OWNER_ID", "MAIN_GUILD_ID", "MAIN_CHANNEL_ID"]
     },
     "format": {
       "cache": false
