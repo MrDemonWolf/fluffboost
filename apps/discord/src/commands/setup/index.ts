@@ -2,18 +2,18 @@ import {
   SlashCommandBuilder,
   PermissionFlagsBits,
   ChannelType,
+  InteractionContextType,
   MessageFlags,
 } from "discord.js";
 
 import type {
   SlashCommandSubcommandBuilder,
   Client,
-  CommandInteraction,
-  CommandInteractionOptionResolver,
+  ChatInputCommandInteraction,
   AutocompleteInteraction,
 } from "discord.js";
 
-import { withCommandLogging } from "../../utils/commandErrors.js";
+import { requireGuildAdministrator } from "../../utils/permissions.js";
 
 /**
  * Import subcommands
@@ -24,6 +24,8 @@ import schedule, { autocomplete as scheduleAutocomplete } from "./schedule.js";
 export const slashCommand = new SlashCommandBuilder()
   .setName("setup")
   .setDescription("Setup the bot")
+  // Server configuration only; hides the command from bot DMs.
+  .setContexts(InteractionContextType.Guild)
   .addSubcommand((subCommand: SlashCommandSubcommandBuilder) => {
     return subCommand
       .setName("channel")
@@ -65,42 +67,38 @@ export const slashCommand = new SlashCommandBuilder()
         option
           .setName("day")
           .setDescription("Day of week (0=Sun-6=Sat) for weekly, or day of month (1-28) for monthly")
+          .setMinValue(0)
+          .setMaxValue(28)
       );
   })
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
-export async function execute(client: Client, interaction: CommandInteraction) {
-  if (!interaction.isChatInputCommand()) {
+type SetupSubcommand = (client: Client, interaction: ChatInputCommandInteraction) => Promise<void>;
+
+export const setupRoutes: ReadonlyMap<string, SetupSubcommand> = new Map([
+  ["channel", channel],
+  ["schedule", schedule],
+]);
+
+/**
+ * Subcommands carry their own withCommandLogging wrapper and Administrator
+ * check; errors thrown here are answered by the interactionCreate router.
+ */
+export async function execute(client: Client, interaction: ChatInputCommandInteraction): Promise<void> {
+  if (!(await requireGuildAdministrator(interaction))) {
     return;
   }
-  await withCommandLogging("setup", interaction, async () => {
-    if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
-      await interaction.reply({
-        content: "You need Administrator permissions to use this command.",
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
 
-    const options = interaction.options as CommandInteractionOptionResolver;
+  const handler = setupRoutes.get(interaction.options.getSubcommand());
+  if (!handler) {
+    await interaction.reply({
+      content: "Invalid subcommand",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
 
-    const subcommands = options.getSubcommand();
-
-    switch (subcommands) {
-      case "channel":
-        await channel(client, interaction);
-        break;
-      case "schedule":
-        await schedule(client, interaction);
-        break;
-      default:
-        await interaction.reply({
-          content: "Invalid subcommand",
-          flags: MessageFlags.Ephemeral,
-        });
-        break;
-    }
-  });
+  await handler(client, interaction);
 }
 
 export async function setupAutocomplete(interaction: AutocompleteInteraction) {

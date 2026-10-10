@@ -9,7 +9,7 @@ describe("suggestionLimits.consumeSuggestionSlot", () => {
   async function load(evalStub: sinon.SinonStub) {
     mock.module("../../src/redis/index.js", () => ({
       default: { eval: evalStub },
-      bullConnection: {},
+      bullRedis: {},
     }));
     return import("../../src/utils/suggestionLimits.js");
   }
@@ -33,9 +33,22 @@ describe("suggestionLimits.consumeSuggestionSlot", () => {
     expect(windowMs).toBe(String(SUGGESTION_RATE_LIMIT_WINDOW_MS));
     expect(limit).toBe(String(MAX_SUGGESTIONS_PER_USER_PER_DAY));
     expect(interactionId).toBe("interaction-456");
-    expect(script).toContain('redis.call("ZREMRANGEBYSCORE"');
-    expect(script).toContain('redis.call("ZCARD"');
-    expect(script).toContain('redis.call("ZADD"');
+    // The Lua itself runs against real Redis in e2e/suggestionLimits.test.ts.
+    expect(typeof script).toBe("string");
+  });
+
+  it("releases a reservation by user key and interaction id", async () => {
+    const evalStub = sinon.stub().resolves(1);
+    const { releaseSuggestionSlot } = await load(evalStub);
+
+    await releaseSuggestionSlot("user-123", "interaction-456");
+
+    expect(evalStub.calledOnce).toBe(true);
+    const [script, keyCount, key, interactionId] = evalStub.firstCall.args;
+    expect(typeof script).toBe("string");
+    expect(keyCount).toBe(1);
+    expect(key).toBe("fluffboost:suggestion-rate:user-123");
+    expect(interactionId).toBe("interaction-456");
   });
 
   it("fails closed when Redis denies the next slot", async () => {

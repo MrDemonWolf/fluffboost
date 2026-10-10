@@ -1,110 +1,36 @@
-import { ShardingManager } from "discord.js";
+import { ShardingManager, fetchRecommendedShardCount } from "discord.js";
 import { queryClient } from "./database/index.js";
 import api from "./api/index.js";
 import redis from "./redis/index.js";
 import env from "./utils/env.js";
 import logger from "./utils/logger.js";
-import { stopShardProcess } from "./utils/shardShutdown.js";
+import { runApp } from "./appCore.js";
+import { hasAppSchema } from "./utils/startupChecks.js";
+import { createThrottledErrorLogger } from "./utils/throttledErrorLogger.js";
 
-let redisReady = false;
-
-queryClient`SELECT 1`
-  .then(() => {
-    logger.database.connected("PostgreSQL");
-  })
-  .catch((err: Error) => {
-    logger.database.error("PostgreSQL", err);
-    process.exit(1);
-  });
-
+/**
+ * Manager-process entry point: wires the real dependencies into runApp()
+ * (src/appCore.ts), which holds the startup sequence and shutdown logic.
+ */
 redis
   .on("ready", () => {
-    redisReady = true;
     logger.database.connected("Redis");
   })
   .on("end", () => {
     logger.warn("Database", "Redis connection closed");
   })
-  .on("error", (err: Error) => {
-    // ioredis emits transient errors during reconnect attempts; only escalate
-    // if we never managed to connect at all.
-    if (!redisReady) {
-      logger.database.error("Redis", err);
-    } else {
-      logger.warn("Database", `Redis transient error: ${err.message}`);
-    }
-  });
+  // ioredis emits an error on every reconnect attempt during an outage; log one line per minute.
+  .on("error", createThrottledErrorLogger("Database", "Redis error"));
 
-const server = api.listen(api.get("port"), () => {
-  logger.api.started(api.get("host"), api.get("port"));
+await runApp({
+  env,
+  logger,
+  probeDatabase: () => queryClient`SELECT 1`,
+  hasAppSchema: () => hasAppSchema((text) => queryClient.unsafe(text)),
+  closeDatabase: () => queryClient.end({ timeout: 5 }),
+  redis,
+  listen: (port, host) => (host ? api.listen(port, host) : api.listen(port)),
+  fetchShardCount: () => fetchRecommendedShardCount(env.DISCORD_APPLICATION_BOT_TOKEN),
+  createManager: (file, options) => new ShardingManager(file, options),
+  proc: process,
 });
-
-server.on("error", (err: unknown) => {
-  logger.api.error(err);
-  process.exit(1);
-});
-
-const manager = new ShardingManager("./src/bot.ts", {
-  token: env.DISCORD_APPLICATION_BOT_TOKEN,
-  totalShards: "auto",
-  respawn: true,
-});
-
-manager.on("shardCreate", (shard) => {
-  try {
-    logger.discord.shardLaunched(shard.id);
-  } catch (err: unknown) {
-    logger.discord.shardError(shard.id, err);
-  }
-});
-
-manager.spawn().catch((err) => {
-  logger.error("App", "Failed to spawn shards", err);
-  process.exit(1);
-});
-
-let shuttingDown = false;
-
-async function shutdown(signal: string): Promise<void> {
-  if (shuttingDown) {return;}
-  shuttingDown = true;
-  logger.info("App", `Received ${signal}, shutting down gracefully`);
-
-  // Stop accepting new HTTP work first.
-  await new Promise<void>((resolve) => {
-    server.close(() => resolve());
-    setTimeout(resolve, 5000).unref();
-  });
-  logger.info("App", "HTTP server closed");
-
-  // Stop respawning before killing so a crashed shard doesn't re-spawn
-  // mid-teardown, then send SIGTERM to each shard.
-  manager.respawn = false;
-  try {
-    await Promise.all(manager.shards.map((shard) =>
-      shard.process ? stopShardProcess(shard.process) : shard.worker?.terminate()
-    ));
-    logger.info("App", "Shards terminated");
-  } catch (err) {
-    logger.warn("App", "Error terminating shards", { error: err });
-  }
-
-  try {
-    await queryClient.end({ timeout: 5 });
-    logger.info("App", "Postgres pool closed");
-  } catch (err) {
-    logger.warn("App", "Error closing Postgres", { error: err });
-  }
-
-  try {
-    await redis.quit().catch(() => redis.disconnect());
-    logger.info("App", "Redis disconnected");
-  } catch (err) {
-    logger.warn("App", "Error disconnecting Redis", { error: err });
-  }
-
-  process.exit(0);
-}
-
-process.on("SIGTERM", () => void shutdown("SIGTERM"));
-process.on("SIGINT", () => void shutdown("SIGINT"));

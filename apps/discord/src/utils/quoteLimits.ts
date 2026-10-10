@@ -11,3 +11,14 @@ export function quoteInputError(quote: string, author: string): string | null {
   }
   return null;
 }
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Library record IDs (quotes, suggestions, activities) are Postgres UUIDs.
+ * Checking the shape first turns a mistyped ID into a "not found" reply
+ * instead of a Postgres invalid-input error.
+ */
+export function isUuid(value: string): boolean {
+  return UUID_PATTERN.test(value);
+}

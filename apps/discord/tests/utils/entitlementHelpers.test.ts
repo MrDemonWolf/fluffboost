@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, mock } from "bun:test";
 import sinon from "sinon";
+import { EntitlementType } from "discord.js";
 import { mockDb, mockDbChain, mockLogger, mockEntitlement, mockEnv } from "../helpers.js";
 
 const logger = mockLogger();
@@ -35,7 +36,7 @@ describe("entitlementHelpers", () => {
       const [component, message, payload] = logger.info.firstCall.args;
       expect(component).toBe("Discord - Event (Entitlement Update)");
       expect(message).toBe("renewed");
-      expect(payload.userId).toBe(entitlement.userId);
+      expect(payload).not.toHaveProperty("userId");
       expect(payload.skuId).toBe(entitlement.skuId);
       expect(payload.guildId).toBe(entitlement.guildId);
       expect(payload.extra).toBe(1);
@@ -69,6 +70,51 @@ describe("entitlementHelpers", () => {
       await updateGuildPremiumStatus(testEntitlement as never, false, "Entitlement Delete");
       expect(db.update.called).toBe(false);
       expect(reconcile.called).toBe(false);
+    });
+    it("ignores production Application Test Mode purchases even when they have a start date", async () => {
+      mock.module("../../src/utils/env.js", () => ({
+        default: mockEnv({ DISCORD_PREMIUM_SKU_ID: "sku-123", NODE_ENV: "production" }),
+      }));
+      const testModePurchase = mockEntitlement({
+        startsAt: new Date(0), type: EntitlementType.TestModePurchase, isTest: () => false,
+      });
+      await updateGuildPremiumStatus(testModePurchase as never, true, "Entitlement Create");
+      expect(db.update.called).toBe(false);
+      expect(reconcile.called).toBe(false);
+    });
+    it("grants Application Test Mode purchases outside production", async () => {
+      const testModePurchase = mockEntitlement({
+        startsAt: new Date(0), type: EntitlementType.TestModePurchase, isTest: () => false,
+      });
+      await updateGuildPremiumStatus(testModePurchase as never, true, "Entitlement Create");
+      expect(db.update.calledOnce).toBe(true);
+    });
+    it("applies a grant only after an in-flight revoke for the same guild finishes", async () => {
+      // Resubscribe: the old grant's revoke reconcile must not overwrite the new grant.
+      const order: string[] = [];
+      let finishRevoke: () => void = () => {};
+      reconcile.callsFake(() => new Promise<void>((resolve) => {
+        finishRevoke = () => { order.push("revoke"); resolve(); };
+      }));
+      db.update.callsFake(() => {
+        order.push("grant");
+        return mockDbChain([]);
+      });
+
+      const revoke = updateGuildPremiumStatus(mockEntitlement() as never, false, "Entitlement Delete");
+      const grant = updateGuildPremiumStatus(mockEntitlement({ id: "ent-new" }) as never, true, "Entitlement Create");
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(order).toEqual([]);
+      finishRevoke();
+      await Promise.all([revoke, grant]);
+      expect(order).toEqual(["revoke", "grant"]);
+    });
+    it("keeps processing a guild's later events after an earlier one fails", async () => {
+      reconcile.rejects(new Error("Discord unavailable"));
+      await updateGuildPremiumStatus(mockEntitlement() as never, false, "Entitlement Delete");
+      await updateGuildPremiumStatus(mockEntitlement() as never, true, "Entitlement Create");
+      expect(logger.error.calledOnce).toBe(true);
+      expect(db.update.calledOnce).toBe(true);
     });
     it("updates the guild row when guildId is present", async () => {
       const entitlement = mockEntitlement();

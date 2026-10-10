@@ -1,4 +1,4 @@
-import type { Client, CommandInteraction } from "discord.js";
+import type { Client, ChatInputCommandInteraction } from "discord.js";
 
 import { desc } from "drizzle-orm";
 
@@ -10,7 +10,7 @@ import { replyWithTextFile } from "../../../utils/replyHelpers.js";
 
 export default async function (
   _client: Client,
-  interaction: CommandInteraction
+  interaction: ChatInputCommandInteraction
 ): Promise<void> {
   await withCommandLogging("admin quote list", interaction, async () => {
     if (!(await isUserPermitted(interaction))) {return;}

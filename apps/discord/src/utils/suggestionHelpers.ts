@@ -5,9 +5,10 @@ import { and, eq } from "drizzle-orm";
 import { db } from "../database/index.js";
 import { suggestionQuotes } from "../database/schema.js";
 import type { SuggestionQuote } from "../database/schema.js";
-import { buildBrandedEmbed, SUCCESS_COLOR, DANGER_COLOR } from "./embedHelpers.js";
+import { buildBrandedEmbed, escapeFieldValue, SUCCESS_COLOR, DANGER_COLOR } from "./embedHelpers.js";
 import { announceToMainChannel } from "./mainChannel.js";
 import logger from "./logger.js";
+import { isUuid } from "./quoteLimits.js";
 
 /**
  * Load a suggestion that must be in Pending status. Replies ephemerally and
@@ -17,11 +18,15 @@ export async function fetchPendingSuggestion(
   suggestionId: string,
   interaction: CommandInteraction
 ): Promise<SuggestionQuote | null> {
-  const [suggestion] = await db
-    .select()
-    .from(suggestionQuotes)
-    .where(eq(suggestionQuotes.id, suggestionId))
-    .limit(1);
+  // A malformed ID cannot match a row; skip the query so Postgres does not
+  // raise an invalid-uuid error that would surface as a generic failure.
+  const [suggestion] = isUuid(suggestionId)
+    ? await db
+      .select()
+      .from(suggestionQuotes)
+      .where(eq(suggestionQuotes.id, suggestionId))
+      .limit(1)
+    : [];
 
   if (!suggestion) {
     await interaction.reply({
@@ -62,9 +67,10 @@ export async function notifySuggestionReviewed(
 ): Promise<void> {
   const color = status === "Approved" ? SUCCESS_COLOR : DANGER_COLOR;
 
+  // Staff-facing: show the submitted text literally (masked links included).
   const embedFields = [
-    { name: "Quote", value: suggestion.quote },
-    { name: "Author", value: suggestion.author },
+    { name: "Quote", value: escapeFieldValue(suggestion.quote) },
+    { name: "Author", value: escapeFieldValue(suggestion.author) },
     { name: "Submitted By", value: `<@${suggestion.addedBy}>` },
   ];
   if (reason) {

@@ -9,5 +9,3 @@ import type { SetActivityOptions } from "./setActivityCore.js";
 export default async (client: Client, options?: SetActivityOptions): Promise<void> => {
   await setActivityCore(client, { db, env, logger }, options);
 };
-
-export { setActivityCore };

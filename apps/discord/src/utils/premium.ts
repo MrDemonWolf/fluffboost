@@ -12,7 +12,7 @@ import type {
 
 import env from "./env.js";
 import { buildBrandedEmbed } from "./embedHelpers.js";
-import { isActivePremiumEntitlement } from "./entitlementPolicy.js";
+import { allowsTestEntitlements, isActivePremiumEntitlement } from "./entitlementPolicy.js";
 
 /**
  * Check if premium subscriptions are enabled via environment config.
@@ -38,14 +38,14 @@ export function hasEntitlement(interaction: CommandInteraction | ChatInputComman
   }
   return interaction.entitlements.some((entitlement) =>
     isActivePremiumEntitlement(entitlement, skuId, interaction.guildId, Date.now(), {
-      allowTest: env.NODE_ENV !== "production",
+      allowTest: allowsTestEntitlements(env.NODE_ENV),
     })
   );
 }
 
 interface UpsellEmbedOptions {
-  title?: string;
-  description?: string;
+  title: string;
+  description: string;
   fields?: { name: string; value: string; inline?: boolean }[];
   footerText?: string;
 }
@@ -54,19 +54,20 @@ interface UpsellEmbedOptions {
  * Build a consistent premium-upsell embed + SKU button row. Both are returned
  * so callers can spread them into `interaction.reply({...})`.
  */
-export function buildPremiumUpsell(options: UpsellEmbedOptions = {}): {
+export interface PremiumUpsell {
   embeds: EmbedBuilder[];
   components: ActionRowBuilder<ButtonBuilder>[];
-} {
+}
+
+export function buildPremiumUpsell(options: UpsellEmbedOptions): PremiumUpsell {
   const skuId = getPremiumSkuId();
 
   const embed = buildBrandedEmbed({
-    title: options.title ?? "FluffBoost Premium",
-    description:
-      options.description ??
-      "Choose your quote delivery schedule with Premium and support FluffBoost development.",
+    title: options.title,
+    description: options.description,
     fields: options.fields,
-    ...(options.footerText ? { footer: options.footerText } : {}),
+    // An empty footer is rejected by Discord, so "" means no footer.
+    footer: options.footerText || undefined,
   });
 
   const components: ActionRowBuilder<ButtonBuilder>[] = [];

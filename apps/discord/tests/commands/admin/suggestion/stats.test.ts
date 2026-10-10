@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
+import { mockPermissions } from "../../permissionsMock.js";
 import { mockLogger, mockDb, mockDbChain, mockInteraction, mockEnv } from "../../../helpers.js";
 
 describe("admin suggestion stats command", () => {
@@ -14,7 +15,7 @@ describe("admin suggestion stats command", () => {
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../../../src/utils/env.js", () => ({ default: mockEnv() }));
-    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().resolves(permitted) }));
+    await mockPermissions(permitted);
 
     const mod = await import("../../../../src/commands/admin/suggestion/stats.js");
 
@@ -54,7 +55,8 @@ describe("admin suggestion stats command", () => {
     expect(fields[1].value).toBe("10");  // Approved
     expect(fields[2].value).toBe("3");   // Rejected
     expect(fields[3].value).toBe("18");  // Total
-    expect(fields[4].value).toBe("56%"); // Approval rate (10/18)
+    // Approval rate over reviewed suggestions only: 10 / (10 + 3)
+    expect(fields[4].value).toBe("77%");
   });
 
   it("should handle zero suggestions", async () => {
@@ -69,6 +71,35 @@ describe("admin suggestion stats command", () => {
     expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
     const fields = replyArgs.embeds[0].data.fields;
-    expect(fields[4].value).toBe("0%"); // 0% approval rate when no suggestions
+    expect(fields[4].value).toBe("N/A"); // nothing reviewed yet
+  });
+
+  it("does not let a pending backlog dilute the approval rate", async () => {
+    const { handler, db } = await loadModule();
+    const interaction = mockInteraction();
+
+    db.select.onCall(0).returns(mockDbChain([{ value: 40 }])); // Pending
+    db.select.onCall(1).returns(mockDbChain([{ value: 10 }])); // Approved
+    db.select.onCall(2).returns(mockDbChain([{ value: 0 }]));  // Rejected
+
+    await handler({} as never, interaction as never);
+
+    const fields = (interaction.reply as sinon.SinonStub).firstCall.args[0].embeds[0].data.fields;
+    expect(fields[3].value).toBe("50");
+    expect(fields[4].value).toBe("100%");
+  });
+
+  it("shows N/A when only pending suggestions exist", async () => {
+    const { handler, db } = await loadModule();
+    const interaction = mockInteraction();
+
+    db.select.onCall(0).returns(mockDbChain([{ value: 7 }]));
+    db.select.onCall(1).returns(mockDbChain([{ value: 0 }]));
+    db.select.onCall(2).returns(mockDbChain([{ value: 0 }]));
+
+    await handler({} as never, interaction as never);
+
+    const fields = (interaction.reply as sinon.SinonStub).firstCall.args[0].embeds[0].data.fields;
+    expect(fields[4].value).toBe("N/A");
   });
 });

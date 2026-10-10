@@ -4,12 +4,8 @@ import {
   MessageFlags,
 } from "discord.js";
 
-import type {
-  Client,
-  CommandInteraction,
-  CommandInteractionOptionResolver,
-} from "discord.js";
-import { withCommandLogging } from "../../utils/commandErrors.js";
+import type { Client, ChatInputCommandInteraction } from "discord.js";
+import { isUserPermitted } from "../../utils/permissions.js";
 import { MAX_QUOTE_LENGTH, MAX_QUOTE_AUTHOR_LENGTH } from "../../utils/quoteLimits.js";
 
 /**
@@ -32,7 +28,7 @@ export const slashCommand = new SlashCommandBuilder()
   .addSubcommandGroup((subCommandGroup) => {
     return subCommandGroup
       .setName("quote")
-      .setDescription("Get a random quote")
+      .setDescription("Manage motivation quotes")
       .addSubcommand((subCommand) => {
         return subCommand
           .setName("create")
@@ -185,111 +181,47 @@ export const slashCommand = new SlashCommandBuilder()
   })
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
-export async function execute(client: Client, interaction: CommandInteraction) {
-  if (!interaction.isChatInputCommand()) {
+type AdminSubcommand = (client: Client, interaction: ChatInputCommandInteraction) => Promise<void>;
+
+/** Handlers keyed by "<group> <subcommand>", matching the builder above. */
+export const adminRoutes: ReadonlyMap<string, AdminSubcommand> = new Map([
+  ["quote create", quoteCreate],
+  ["quote remove", quoteRemove],
+  ["quote list", quoteList],
+  ["activity create", activityAdd],
+  ["activity remove", activityRemove],
+  ["activity list", activityList],
+  ["suggestion list", suggestionList],
+  ["suggestion approve", suggestionApprove],
+  ["suggestion reject", suggestionReject],
+  ["suggestion stats", suggestionStats],
+]);
+
+/**
+ * Each subcommand wraps itself in withCommandLogging, so the router does not
+ * (nesting double-logged and reported router success after a handler failed).
+ * Anything thrown here is caught and answered by the interactionCreate router.
+ */
+export async function execute(client: Client, interaction: ChatInputCommandInteraction): Promise<void> {
+  // Authorize once for every subcommand, including any added later. Each
+  // subcommand keeps its own check as defense in depth for other entry points.
+  if (!(await isUserPermitted(interaction))) {
     return;
   }
-  await withCommandLogging("admin", interaction, async () => {
 
-    const options = interaction.options;
+  const group = interaction.options.getSubcommandGroup();
+  const subcommand = interaction.options.getSubcommand();
+  const handler = adminRoutes.get(`${group} ${subcommand}`);
 
-    const subCommandGroup = options.getSubcommandGroup();
-    const subCommand = options.getSubcommand();
+  if (!handler) {
+    await interaction.reply({
+      content: "Invalid subcommand",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
 
-    switch (subCommandGroup) {
-      case "quote":
-        switch (subCommand) {
-          case "create":
-            await quoteCreate(
-              client,
-              interaction,
-              options as CommandInteractionOptionResolver
-            );
-            break;
-          case "remove":
-            await quoteRemove(
-              client,
-              interaction,
-              options as CommandInteractionOptionResolver
-            );
-            break;
-          case "list":
-            await quoteList(client, interaction);
-            break;
-          default:
-            await interaction.reply({
-              content: "Invalid subcommand",
-              flags: MessageFlags.Ephemeral,
-            });
-        }
-        break;
-      case "activity":
-        switch (subCommand) {
-          case "create":
-            await activityAdd(
-              client,
-              interaction,
-              options as CommandInteractionOptionResolver
-            );
-            break;
-          case "remove":
-            await activityRemove(
-              client,
-              interaction,
-              options as CommandInteractionOptionResolver
-            );
-            break;
-          case "list":
-            await activityList(client, interaction);
-            break;
-          default:
-            await interaction.reply({
-              content: "Invalid subcommand",
-              flags: MessageFlags.Ephemeral,
-            });
-        }
-        break;
-      case "suggestion":
-        switch (subCommand) {
-          case "list":
-            await suggestionList(
-              client,
-              interaction,
-              options as CommandInteractionOptionResolver,
-            );
-            break;
-          case "approve":
-            await suggestionApprove(
-              client,
-              interaction,
-              options as CommandInteractionOptionResolver,
-            );
-            break;
-          case "reject":
-            await suggestionReject(
-              client,
-              interaction,
-              options as CommandInteractionOptionResolver,
-            );
-            break;
-          case "stats":
-            await suggestionStats(client, interaction);
-            break;
-          default:
-            await interaction.reply({
-              content: "Invalid subcommand",
-              flags: MessageFlags.Ephemeral,
-            });
-        }
-        break;
-
-      default:
-        await interaction.reply({
-          content: "Invalid subcommand group",
-          flags: MessageFlags.Ephemeral,
-        });
-    }
-  });
+  await handler(client, interaction);
 }
 
 export default {

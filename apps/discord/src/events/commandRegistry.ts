@@ -1,4 +1,4 @@
-import type { Client, ChatInputCommandInteraction, CommandInteraction } from "discord.js";
+import type { Client, ChatInputCommandInteraction } from "discord.js";
 
 import help from "../commands/help.js";
 import about from "../commands/about.js";
@@ -11,48 +11,48 @@ import setup, { setupAutocomplete as _setupAutocomplete } from "../commands/setu
 import premium from "../commands/premium.js";
 import owner from "../commands/owner/index.js";
 import env from "../utils/env.js";
+import { allowsTestEntitlements } from "../utils/entitlementPolicy.js";
 
 /**
  * Command registry keyed by slash-command name. The event router imports this
  * single object, so tests can mock one module instead of ten — which avoids
  * cross-file `mock.module` leakage clobbering the real command modules used
  * by each command's own test file.
+ *
+ * Every command is a chat-input (slash) command; the router narrows with
+ * isChatInputCommand() once, so handlers never re-check or cast.
  */
 export type CommandHandler = (
   client: Client,
-  interaction: CommandInteraction | ChatInputCommandInteraction
+  interaction: ChatInputCommandInteraction
 ) => Promise<unknown>;
 
-export const commandRegistry: Record<string, { execute: CommandHandler; requiresChatInput?: boolean }> = {
-  help: { execute: (c, i) => help.execute(c, i as CommandInteraction) },
-  about: { execute: (c, i) => about.execute(c, i as CommandInteraction) },
-  changelog: { execute: (c, i) => changelog.execute(c, i as CommandInteraction) },
-  quote: { execute: (c, i) => quote.execute(c, i as ChatInputCommandInteraction), requiresChatInput: true },
-  invite: { execute: (c, i) => invite.execute(c, i as CommandInteraction) },
-  suggestion: { execute: (c, i) => suggestion.execute(c, i as ChatInputCommandInteraction), requiresChatInput: true },
-  admin: { execute: (c, i) => admin.execute(c, i as CommandInteraction) },
-  setup: { execute: (c, i) => setup.execute(c, i as CommandInteraction) },
-  premium: { execute: (c, i) => premium.execute(c, i as CommandInteraction) },
-  ...(env.NODE_ENV !== "production"
-    ? { owner: {
-      execute: (c: Client, i: CommandInteraction | ChatInputCommandInteraction) =>
-        owner.execute(c, i as CommandInteraction),
-    } }
-    : {}),
-};
+/** The /owner premium test tools are never registered or routed in production. */
+const ownerEnabled = allowsTestEntitlements(env.NODE_ENV);
+
+/**
+ * The single list of commands, in Discord registration order. Routing and
+ * registration are both derived from it, so a command cannot be registered
+ * without being routed (or the reverse).
+ */
+const commands = [
+  help,
+  about,
+  quote,
+  suggestion,
+  invite,
+  setup,
+  admin,
+  changelog,
+  premium,
+  ...(ownerEnabled ? [owner] : []),
+];
+
+export const commandRegistry: Readonly<Record<string, { execute: CommandHandler }>> = Object.fromEntries(
+  commands.map((command) => [command.slashCommand.name, { execute: command.execute as CommandHandler }])
+);
 
 export const setupAutocomplete = _setupAutocomplete;
 
 /** All slash-command definitions for Discord API registration. */
-export const slashCommands = [
-  help.slashCommand,
-  about.slashCommand,
-  quote.slashCommand,
-  suggestion.slashCommand,
-  invite.slashCommand,
-  setup.slashCommand,
-  admin.slashCommand,
-  changelog.slashCommand,
-  premium.slashCommand,
-  ...(env.NODE_ENV !== "production" ? [owner.slashCommand] : []),
-];
+export const slashCommands = commands.map((command) => command.slashCommand);

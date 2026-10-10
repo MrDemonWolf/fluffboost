@@ -1,35 +1,41 @@
 import { MessageFlags } from "discord.js";
-import type { Client, CommandInteraction, CommandInteractionOptionResolver } from "discord.js";
+import type { Client, ChatInputCommandInteraction } from "discord.js";
 
 import { eq, desc } from "drizzle-orm";
 
 import { withCommandLogging } from "../../../utils/commandErrors.js";
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
-import { suggestionQuotes } from "../../../database/schema.js";
+import { suggestionQuotes, suggestionStatusEnum } from "../../../database/schema.js";
 import type { SuggestionStatus } from "../../../database/schema.js";
 import { replyWithTextFile } from "../../../utils/replyHelpers.js";
 
-const VALID_STATUSES: SuggestionStatus[] = ["Pending", "Approved", "Rejected"];
+const VALID_STATUSES: readonly SuggestionStatus[] = suggestionStatusEnum.enumValues;
 const PAGE_SIZE = 500;
+
+// Discord limits `status` to the registered choices; this guards stale
+// command definitions and keeps the DB enum the single source of truth.
+function isSuggestionStatus(value: string): value is SuggestionStatus {
+  return (VALID_STATUSES as readonly string[]).includes(value);
+}
 
 export default async function (
   _client: Client,
-  interaction: CommandInteraction,
-  options: CommandInteractionOptionResolver,
+  interaction: ChatInputCommandInteraction,
 ): Promise<void> {
   await withCommandLogging("admin suggestion list", interaction, async () => {
     if (!(await isUserPermitted(interaction))) {return;}
 
+    const { options } = interaction;
     const status = options.getString("status");
-    if (status && !(VALID_STATUSES as string[]).includes(status)) {
+    if (status && !isSuggestionStatus(status)) {
       await interaction.reply({
         content: `Invalid status: ${status}. Must be one of: ${VALID_STATUSES.join(", ")}.`,
         flags: MessageFlags.Ephemeral,
       });
       return;
     }
-    const validStatus = status ? (status as SuggestionStatus) : null;
+    const validStatus = status && isSuggestionStatus(status) ? status : null;
     const requestedPage = options.getInteger("page");
     const page = requestedPage && requestedPage > 0 ? requestedPage : 1;
 

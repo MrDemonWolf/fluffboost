@@ -1,9 +1,6 @@
-import {
-  Client,
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
-  MessageFlags,
-} from "discord.js";
+import { InteractionContextType, MessageFlags, SlashCommandBuilder } from "discord.js";
+
+import type { Client, ChatInputCommandInteraction } from "discord.js";
 
 import { eq } from "drizzle-orm";
 
@@ -12,15 +9,21 @@ import { guilds, suggestionQuotes, type SuggestionQuote } from "../database/sche
 import { announceToMainChannel } from "../utils/mainChannel.js";
 import { withCommandLogging } from "../utils/commandErrors.js";
 import { requireGuildId } from "../utils/permissions.js";
-import { buildBrandedEmbed } from "../utils/embedHelpers.js";
+import { buildBrandedEmbed, escapeFieldValue } from "../utils/embedHelpers.js";
 import { MAX_QUOTE_LENGTH, MAX_QUOTE_AUTHOR_LENGTH, quoteInputError } from "../utils/quoteLimits.js";
-import { consumeSuggestionSlot, releaseSuggestionSlot } from "../utils/suggestionLimits.js";
+import {
+  consumeSuggestionSlot,
+  MAX_SUGGESTIONS_PER_USER_PER_DAY,
+  releaseSuggestionSlot,
+} from "../utils/suggestionLimits.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("suggestion")
   .setDescription(
-    "Make a quote suggestion which will be reviewed by the owner of the bot"
+    "Suggest a quote for the FluffBoost team to review"
   )
+  // Submissions are tied to a set-up server; hides the command from bot DMs.
+  .setContexts(InteractionContextType.Guild)
   .addStringOption((option) =>
     option
       .setName("quote")
@@ -40,25 +43,10 @@ export const slashCommand = new SlashCommandBuilder()
 
 export async function execute(client: Client, interaction: ChatInputCommandInteraction): Promise<void> {
   await withCommandLogging("suggestion", interaction, async () => {
-    const options = interaction.options;
+    // Both options are required in the command schema.
+    const quote = interaction.options.getString("quote", true);
+    const author = interaction.options.getString("author", true);
 
-    const quote = options.getString("quote");
-    const author = options.getString("author");
-
-    if (!quote) {
-      await interaction.reply({
-        content: "Please provide a quote",
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
-    if (!author) {
-      await interaction.reply({
-        content: "Please provide an author",
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
     const inputError = quoteInputError(quote, author);
     if (inputError) {
       await interaction.reply({ content: inputError, flags: MessageFlags.Ephemeral });
@@ -68,6 +56,10 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
     if (!guildId) {
       return;
     }
+
+    // Acknowledge before the DB and Redis round trips: a slow pool must not
+    // expire the interaction after the quota slot and row are already spent.
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     /**
      * Get the guild from the database
@@ -81,18 +73,18 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
       .limit(1);
 
     if (!guild) {
-      await interaction.reply({
-        content: "This server is not setup yet. Please setup the bot first.",
-        flags: MessageFlags.Ephemeral,
+      await interaction.editReply({
+        content: "FluffBoost is not set up in this server yet. Ask a server admin to run `/setup channel` first.",
       });
       return;
     }
 
     const canSubmit = await consumeSuggestionSlot(interaction.user.id, interaction.id);
     if (!canSubmit) {
-      await interaction.reply({
-        content: "You can submit up to 3 quote suggestions every 24 hours. Please try again later.",
-        flags: MessageFlags.Ephemeral,
+      await interaction.editReply({
+        content:
+          `You can submit up to ${MAX_SUGGESTIONS_PER_USER_PER_DAY} quote suggestions every 24 hours. ` +
+          "Please try again later.",
       });
       return;
     }
@@ -122,16 +114,16 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
 
     if (!newQuote) {
       await releaseSuggestionSlot(interaction.user.id, interaction.id);
-      await interaction.reply({
+      await interaction.editReply({
         content: "Your suggestion could not be saved. Please try again.",
-        flags: MessageFlags.Ephemeral,
       });
       return;
     }
 
-    await interaction.reply({
-      content: "Quote suggestion created owner will review it soon!",
-      flags: MessageFlags.Ephemeral,
+    await interaction.editReply({
+      content:
+        "Thanks! The FluffBoost team will review your suggestion. If it is approved, it may be posted " +
+        "in any server using FluffBoost, credited with your Discord username and avatar.",
     });
 
     /**
@@ -140,8 +132,9 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
     const embed = buildBrandedEmbed({
       title: "New Quote Suggestion",
       fields: [
-        { name: "Quote", value: quote },
-        { name: "Quote Author", value: author },
+        // Staff-facing: show the submitted text literally (masked links included).
+        { name: "Quote", value: escapeFieldValue(quote) },
+        { name: "Quote Author", value: escapeFieldValue(author) },
         { name: "Status", value: newQuote.status },
       ],
       footer: `Created with ID ${newQuote.id}`,

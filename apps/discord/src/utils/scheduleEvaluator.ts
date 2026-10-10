@@ -43,23 +43,6 @@ export function parseHourMinute(value: string): { hour: number; minute: number }
 }
 
 /**
- * Get the current time components in a specific timezone using dayjs.
- *
- * Note on weekly dedup: dayjs's `isSame(now, "week")` uses Sunday as the
- * week start regardless of guild locale. This is intentional and consistent
- * for the bot's purpose (guarding against duplicate sends within a 7-day window).
- */
-export function getCurrentTimeInTimezone(tz: string) {
-  const now = dayjs().tz(tz);
-  return {
-    hour: now.hour(),
-    minute: now.minute(),
-    dayOfWeek: now.day(), // 0 = Sunday, 6 = Saturday
-    dayOfMonth: now.date(), // 1-31
-  };
-}
-
-/**
  * How far past the scheduled time a send may still fire. A worker tick can be
  * delayed or skipped entirely (deploys, Redis blips, shard respawns resetting
  * the repeatable slot); an exact-minute match would silently drop that
@@ -67,7 +50,7 @@ export function getCurrentTimeInTimezone(tz: string) {
  * without re-delivering long-stale slots. lastMotivationSentAt still dedupes
  * against the occurrence, so a late send happens at most once.
  */
-export const CATCH_UP_WINDOW_MS = 6 * 60 * 60 * 1000;
+const CATCH_UP_WINDOW_MS = 6 * 60 * 60 * 1000;
 
 /**
  * Resolve the most recent scheduled occurrence at or before now in the
@@ -77,7 +60,10 @@ export const CATCH_UP_WINDOW_MS = 6 * 60 * 60 * 1000;
  * midnight/week/month boundaries (e.g. a daily 23:59 slot evaluated at 00:03
  * must resolve to *yesterday's* 23:59, not today's).
  *
- * Returns null for malformed times or missing day configuration.
+ * Returns null for malformed times, missing or out-of-range day configuration
+ * (Weekly 0-6, Monthly 1-28) and timezones Intl rejects. Only /setup schedule
+ * validates these columns, so rows written any other way (db:studio, raw SQL)
+ * must degrade to "not due" instead of throwing or resolving to a future slot.
  */
 export function mostRecentScheduledOccurrence(
   guild: Pick<Guild, "motivationFrequency" | "motivationTime" | "motivationDay" | "timezone">
@@ -87,54 +73,62 @@ export function mostRecentScheduledOccurrence(
     return null;
   }
 
-  const now = dayjs().tz(guild.timezone);
-  // Calendar arithmetic happens in UTC so selecting a date cannot retain
-  // today's offset for an occurrence on the other side of a DST transition.
-  let date = dayjs.utc(now.format("YYYY-MM-DD"));
-  switch (guild.motivationFrequency) {
-    case "Weekly":
-      if (guild.motivationDay === null) {
-        return null;
-      }
-      date = date.day(guild.motivationDay);
-      break;
-    case "Monthly":
-      if (guild.motivationDay === null) {
-        return null;
-      }
-      date = date.date(guild.motivationDay);
-      break;
+  const day = guild.motivationDay;
+  if (guild.motivationFrequency === "Weekly" && (day === null || !Number.isInteger(day) || day < 0 || day > 6)) {
+    return null;
   }
-  // Resolve the offset for this date. Nonexistent spring times move forward.
-  const resolve = () => dayjs.tz(
-    `${date.format("YYYY-MM-DD")} ${guild.motivationTime}`, guild.timezone
-  );
-  let occurrence = resolve();
-  if (occurrence.valueOf() > now.valueOf()) {
-    switch (guild.motivationFrequency) {
-      case "Daily": date = date.subtract(1, "day"); break;
-      case "Weekly": date = date.subtract(7, "day"); break;
-      // The configured day is 1-28, so subtraction preserves it in every month.
-      case "Monthly": date = date.subtract(1, "month"); break;
+  if (guild.motivationFrequency === "Monthly" && (day === null || !Number.isInteger(day) || day < 1 || day > 28)) {
+    return null;
+  }
+
+  try {
+    const now = dayjs().tz(guild.timezone);
+    // Calendar arithmetic happens in UTC so selecting a date cannot retain
+    // today's offset for an occurrence on the other side of a DST transition.
+    let date = dayjs.utc(now.format("YYYY-MM-DD"));
+    if (day !== null && guild.motivationFrequency === "Weekly") {
+      date = date.day(day);
+    } else if (day !== null && guild.motivationFrequency === "Monthly") {
+      date = date.date(day);
     }
-    occurrence = resolve();
+    // Resolve the offset for this date. Nonexistent spring times move forward.
+    const resolve = () => dayjs.tz(
+      `${date.format("YYYY-MM-DD")} ${guild.motivationTime}`, guild.timezone
+    );
+    let occurrence = resolve();
+    if (occurrence.valueOf() > now.valueOf()) {
+      switch (guild.motivationFrequency) {
+        case "Daily": date = date.subtract(1, "day"); break;
+        case "Weekly": date = date.subtract(7, "day"); break;
+        // The configured day is 1-28, so subtraction preserves it in every month.
+        case "Monthly": date = date.subtract(1, "month"); break;
+      }
+      occurrence = resolve();
+    }
+    return occurrence.toDate();
+  } catch (err) {
+    // Intl throws RangeError for unknown zones ("GMT+5", "Central").
+    if (err instanceof RangeError) {
+      return null;
+    }
+    throw err;
   }
-  return occurrence.toDate();
 }
 
 /**
- * Determines if a guild is due to receive a motivation quote right now: the
- * most recent scheduled occurrence is within CATCH_UP_WINDOW_MS, and nothing
- * has been sent at or after that occurrence yet.
+ * Whether a guild is due for an already-resolved occurrence: the occurrence
+ * is in the past but within CATCH_UP_WINDOW_MS, and nothing has been sent at
+ * or after it yet. Split out so the worker can resolve each distinct schedule
+ * once per tick and reuse the occurrence for the due check and the claim.
  */
-export function isGuildDueForMotivation(guild: Pick<Guild, keyof GuildSchedule>): boolean {
-  const occurrence = mostRecentScheduledOccurrence(guild);
-  if (!occurrence) {
-    return false;
-  }
-
+export function isDueForOccurrence(
+  guild: Pick<Guild, "timezone" | "lastMotivationSentAt">,
+  occurrence: Date
+): boolean {
   const sinceScheduled = dayjs().valueOf() - occurrence.getTime();
-  if (sinceScheduled > CATCH_UP_WINDOW_MS) {
+  // A future occurrence is never due (defensive: the resolver only returns
+  // past slots, but a future one would otherwise pass the claim every tick).
+  if (sinceScheduled < 0 || sinceScheduled > CATCH_UP_WINDOW_MS) {
     return false;
   }
 
@@ -157,4 +151,29 @@ export function isGuildDueForMotivation(guild: Pick<Guild, keyof GuildSchedule>)
   }
 
   return true;
+}
+
+/**
+ * Build a per-tick resolver returning the occurrence a guild is due for (or
+ * null). Nearly every free guild shares DEFAULT_GUILD_SCHEDULE, so each
+ * distinct schedule's occurrence is resolved once and cached; the due check
+ * still runs per guild because it depends on that row's lastMotivationSentAt.
+ * Create a fresh resolver for every tick so the cache never spans minutes.
+ */
+export function createDueOccurrenceResolver(
+  premiumEnabled: boolean
+): (guild: GuildSchedule & { isPremium: boolean }) => Date | null {
+  const occurrences = new Map<string, Date | null>();
+  return (guild) => {
+    const schedule = effectiveGuildSchedule(guild, premiumEnabled);
+    const key = [
+      schedule.motivationFrequency, schedule.motivationTime, schedule.motivationDay, schedule.timezone,
+    ].join("|");
+    let occurrence = occurrences.get(key);
+    if (occurrence === undefined) {
+      occurrence = mostRecentScheduledOccurrence(schedule);
+      occurrences.set(key, occurrence);
+    }
+    return occurrence && isDueForOccurrence(schedule, occurrence) ? occurrence : null;
+  };
 }

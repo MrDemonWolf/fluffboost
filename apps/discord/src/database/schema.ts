@@ -22,9 +22,7 @@ export const guilds = pgTable(
     joinedAt: timestamp("joinedAt", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updatedAt", { mode: "date" }).notNull().defaultNow().$onUpdate(() => new Date()),
   },
-  (table) => ({
-    motivationChannelIdx: index("guild_motivation_channel_idx").on(table.motivationChannelId),
-  })
+  (table) => [index("guild_motivation_channel_idx").on(table.motivationChannelId)]
 );
 
 export const motivationQuotes = pgTable("MotivationQuote", {
@@ -48,9 +46,7 @@ export const suggestionQuotes = pgTable(
     createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updatedAt", { mode: "date" }).notNull().defaultNow().$onUpdate(() => new Date()),
   },
-  (table) => ({
-    statusIdx: index("suggestion_status_idx").on(table.status),
-  })
+  (table) => [index("suggestion_status_idx").on(table.status)]
 );
 
 export const discordActivities = pgTable("DiscordActivity", {

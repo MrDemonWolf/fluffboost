@@ -2,12 +2,13 @@ import { MessageFlags } from "discord.js";
 
 import type { ClientApplication, Client, CommandInteraction } from "discord.js";
 
+import { allowsTestEntitlements } from "./entitlementPolicy.js";
 import env from "./env.js";
 import logger from "./logger.js";
 
 /** Defense in depth for stale commands and direct subcommand calls. */
 export async function requireTestEnvironment(interaction: CommandInteraction): Promise<boolean> {
-  if (env.NODE_ENV !== "production") {
+  if (allowsTestEntitlements(env.NODE_ENV)) {
     return true;
   }
   await interaction.reply({

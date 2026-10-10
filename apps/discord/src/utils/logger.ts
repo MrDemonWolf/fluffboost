@@ -1,353 +1,186 @@
 import consola from "consola";
 import env from "./env.js";
 
-/**
- * Type definitions for logger methods
- */
 type LogMetadata = Record<string, unknown>;
-type LogError = Error | string | unknown;
-
-interface CommandLogger {
-  executing: (
-    command: string,
-    username: string,
-    id: string,
-    guildId?: string
-  ) => void;
-  success: (
-    command: string,
-    username: string,
-    id: string,
-    guildId?: string
-  ) => void;
-  error: (
-    command: string,
-    username: string,
-    id: string,
-    error?: LogError,
-    guildId?: string
-  ) => void;
-  warn: (
-    command: string,
-    username: string,
-    id: string,
-    message?: string,
-    guildId?: string
-  ) => void;
-  unauthorized: (
-    command: string,
-    username: string,
-    id: string,
-    guildId?: string
-  ) => void;
-}
-
-interface DatabaseLogger {
-  connected: (service: string) => void;
-  error: (service: string, error: LogError) => void;
-  operation: (operation: string, details?: LogMetadata) => void;
-}
-
-interface ApiLogger {
-  started: (host: string, port: number) => void;
-  error: (error: LogError) => void;
-  request: (method: string, path: string, status: number) => void;
-}
-
-interface DiscordLogger {
-  shardLaunched: (shardId: number) => void;
-  shardError: (shardId: number, error: LogError) => void;
-  ready: (username: string, guildCount: number) => void;
-  guildJoined: (
-    guildName: string,
-    guildId: string,
-    memberCount: number
-  ) => void;
-  guildLeft: (guildName: string, guildId: string) => void;
-}
-
-interface Logger {
-  success: (component: string, message: string, metadata?: LogMetadata) => void;
-  info: (component: string, message: string, metadata?: LogMetadata) => void;
-  warn: (component: string, message: string, metadata?: LogMetadata) => void;
-  error: (
-    component: string,
-    message: string,
-    error?: LogError,
-    metadata?: LogMetadata
-  ) => void;
-  debug: (component: string, message: string, metadata?: LogMetadata) => void;
-  ready: (component: string, message: string, metadata?: LogMetadata) => void;
-  unauthorized: (
-    operation: string,
-    username: string,
-    userId: string,
-    guildId?: string
-  ) => void;
-  commands: CommandLogger;
-  database: DatabaseLogger;
-  api: ApiLogger;
-  discord: DiscordLogger;
-}
+type LogError = unknown;
+type Level = "success" | "info" | "warn" | "error" | "debug" | "ready";
 
 /**
- * Centralized logger utility with consistent formatting for FluffBoost
- * Provides structured logging for different contexts with environment-aware configuration
+ * Centralized logger utility with consistent formatting for FluffBoost.
+ *
+ * Every level renders through emit(), which passes the error and metadata to consola as
+ * positional args. consola only prints `args`, so extra keys on a single log object
+ * (the previous `{ message, error, metadata }` shape) were silently dropped.
  */
 
-// Configure consola based on environment
-const isDevelopment = env.NODE_ENV === "development";
 const isProduction = env.NODE_ENV === "production";
 
-// Set log level based on environment - more verbose in production for monitoring
-consola.level = isProduction ? 3 : isDevelopment ? 4 : 3; // Info level in prod, Debug in dev
+// Debug output only in development; info and above everywhere else.
+consola.level = env.NODE_ENV === "development" ? 4 : 3;
+
+const REDACTED = "[REDACTED]";
+// Embedded URL passwords shorter than this are skipped so common words are not mangled.
+const MIN_PASSWORD_LENGTH = 8;
+
+/**
+ * Connection strings and the bot token must never reach the logs, even when a driver
+ * echoes them back inside an error message, stack, cause, or nested metadata.
+ */
+function collectSecrets(): string[] {
+  const secrets = new Set<string>();
+  for (const value of [env.DATABASE_URL, env.REDIS_URL, env.DISCORD_APPLICATION_BOT_TOKEN]) {
+    if (value.length === 0) {
+      continue;
+    }
+    secrets.add(value);
+    try {
+      const { password } = new URL(value);
+      if (password.length >= MIN_PASSWORD_LENGTH) {
+        secrets.add(password);
+        secrets.add(decodeURIComponent(password));
+      }
+    } catch {
+      // Not a URL (the bot token) or a malformed escape; the full value is still redacted.
+    }
+  }
+  // Longest first so a full URL is replaced before the password embedded in it.
+  return [...secrets].sort((a, b) => b.length - a.length);
+}
+
+const secrets = collectSecrets();
+
+function redact(text: string): string {
+  let result = text;
+  for (const secret of secrets) {
+    result = result.split(secret).join(REDACTED);
+  }
+  return result;
+}
+
+/**
+ * Redaction happens at the sink: consola's reporters format every arg (messages, Error
+ * stacks and causes, nested metadata, class instances) into one line and write it to
+ * options.stdout/stderr. Wrapping those streams redacts exactly what reaches the logs,
+ * without copying or inspecting payloads, and callers' errors are never mutated.
+ */
+function redactingStream(stream: NodeJS.WriteStream): NodeJS.WriteStream {
+  // Inherit the TTY properties (columns, isTTY, hasColors) reporters read from the stream.
+  const wrapped: NodeJS.WriteStream = Object.create(stream);
+  wrapped.write = (chunk: string) => stream.write(redact(chunk));
+  return wrapped;
+}
+
+consola.options.stdout = redactingStream(process.stdout);
+consola.options.stderr = redactingStream(process.stderr);
+
+function emit(level: Level, component: string, message: string, err?: LogError, metadata?: LogMetadata): void {
+  const extra: LogError[] = [];
+  if (err !== undefined && err !== null) {
+    extra.push(err);
+  }
+  if (metadata) {
+    extra.push(metadata);
+  }
+  consola[level](`[${component}] ${message}`, ...extra);
+}
+
+const success = (component: string, message: string, metadata?: LogMetadata) =>
+  emit("success", component, message, undefined, metadata);
+const info = (component: string, message: string, metadata?: LogMetadata) =>
+  emit("info", component, message, undefined, metadata);
+const warn = (component: string, message: string, metadata?: LogMetadata) =>
+  emit("warn", component, message, undefined, metadata);
+const error = (component: string, message: string, err?: LogError, metadata?: LogMetadata) =>
+  emit("error", component, message, err, metadata);
+// consola.level filters debug outside development.
+const debug = (component: string, message: string, metadata?: LogMetadata) =>
+  emit("debug", component, message, undefined, metadata);
+const ready = (component: string, message: string, metadata?: LogMetadata) =>
+  emit("ready", component, message, undefined, metadata);
+
+// Info in production for monitoring, debug elsewhere.
+const operational = isProduction ? info : debug;
+
+const commandMeta = (command: string, username: string, id: string, guildId?: string) => ({
+  command,
+  user: { username, id },
+  ...(guildId && { guild: guildId }),
+});
 
 /**
  * Application logger with consistent formatting
  */
-export const logger: Logger = {
-  /**
-   * Log successful operations
-   */
-  success: (component: string, message: string, metadata?: LogMetadata) => {
-    consola.success({
-      message: `[${component}] ${message}`,
-      ...(metadata && { metadata }),
-      badge: true,
-    });
-  },
+const logger = {
+  success,
+  info,
+  warn,
+  error,
+  debug,
+  ready,
 
   /**
-   * Log informational messages
+   * Log permission violations. All denials share the "Security" component.
    */
-  info: (component: string, message: string, metadata?: LogMetadata) => {
-    consola.info({
-      message: `[${component}] ${message}`,
-      ...(metadata && { metadata }),
-      badge: true,
-    });
-  },
-
-  /**
-   * Log warnings
-   */
-  warn: (component: string, message: string, metadata?: LogMetadata) => {
-    consola.warn({
-      message: `[${component}] ${message}`,
-      ...(metadata && { metadata }),
-      badge: true,
-    });
-  },
-
-  /**
-   * Log errors with proper error handling
-   */
-  error: (
-    component: string,
-    message: string,
-    error?: LogError,
-    metadata?: LogMetadata
-  ) => {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorStack = error instanceof Error ? error.stack : undefined;
-
-    consola.error({
-      message: `[${component}] ${message}`,
-      ...(errorMessage && { error: errorMessage }),
-      ...(errorStack && isDevelopment && { stack: errorStack }),
-      ...(metadata && { metadata }),
-      badge: true,
-    });
-  },
-
-  /**
-   * Log debug information (only in development)
-   */
-  debug: (component: string, message: string, metadata?: LogMetadata) => {
-    if (isDevelopment) {
-      consola.debug({
-        message: `[${component}] ${message}`,
-        ...(metadata && { metadata }),
-        badge: true,
-      });
-    }
-  },
-
-  /**
-   * Log when services are ready
-   */
-  ready: (component: string, message: string, metadata?: LogMetadata) => {
-    consola.ready({
-      message: `[${component}] ${message}`,
-      ...(metadata && { metadata }),
-      badge: true,
-    });
-  },
-
-  /**
-   * Log permission violations
-   */
-  unauthorized: (
-    operation: string,
-    username: string,
-    userId: string,
-    guildId?: string
-  ) => {
-    logger.warn("Security", `Unauthorized ${operation} attempt`, {
+  unauthorized: (operation: string, username: string, userId: string, guildId?: string) =>
+    warn("Security", `Unauthorized ${operation} attempt`, {
       user: { username, id: userId },
       ...(guildId && { guild: guildId }),
-    });
-  },
+    }),
 
   /**
-   * Log command operations and execution tracking
+   * Log command execution. Routine executing/success lines are debug-only to keep user
+   * identifiers out of production logs; warnings and errors keep IDs for incident response.
    */
   commands: {
-    executing: (
-      command: string,
-      username: string,
-      id: string,
-      guildId?: string
-    ) => {
-      // Always log command execution in production for monitoring
-      const logMethod = isProduction ? logger.info : logger.debug;
-      logMethod("Discord - Command", `Executing ${command}`, {
-        command,
-        user: { username, id },
-        ...(guildId && { guild: guildId }),
-      });
-    },
-    success: (
-      command: string,
-      username: string,
-      id: string,
-      guildId?: string
-    ) => {
-      // Always log successful commands in production
-      logger.success("Discord - Command", `Successfully executed ${command}`, {
-        command,
-        user: { username, id },
-        ...(guildId && { guild: guildId }),
-      });
-    },
-    error: (
-      command: string,
-      username: string,
-      id: string,
-      error?: LogError,
-      guildId?: string
-    ) => {
-      logger.error("Discord - Command", `Error executing ${command}`, error, {
-        command,
-        user: { username, id },
-        ...(guildId && { guild: guildId }),
-      });
-    },
-    warn: (
-      command: string,
-      username: string,
-      id: string,
-      message?: string,
-      guildId?: string
-    ) => {
-      logger.warn(
-        "Discord - Command",
-        message || `Warning executing ${command}`,
-        {
-          command,
-          user: { username, id },
-          ...(guildId && { guild: guildId }),
-        }
-      );
-    },
-    unauthorized: (
-      command: string,
-      username: string,
-      id: string,
-      guildId?: string
-    ) => {
-      logger.warn("Discord - Command", `Unauthorized access to ${command}`, {
-        command,
-        user: { username, id },
-        ...(guildId && { guild: guildId }),
-      });
-    },
+    executing: (command: string, username: string, id: string, guildId?: string) =>
+      debug("Discord - Command", `Executing ${command}`, commandMeta(command, username, id, guildId)),
+    success: (command: string, username: string, id: string, guildId?: string) =>
+      debug("Discord - Command", `Successfully executed ${command}`, commandMeta(command, username, id, guildId)),
+    error: (command: string, username: string, id: string, err?: LogError, guildId?: string) =>
+      error("Discord - Command", `Error executing ${command}`, err, commandMeta(command, username, id, guildId)),
+    warn: (command: string, username: string, id: string, message?: string, guildId?: string) =>
+      warn("Discord - Command", message || `Warning executing ${command}`, commandMeta(command, username, id, guildId)),
+    unauthorized: (command: string, username: string, id: string, guildId?: string) =>
+      warn("Security", `Unauthorized access to ${command}`, commandMeta(command, username, id, guildId)),
   },
 
   /**
    * Log database operations
    */
   database: {
-    connected: (service: string) =>
-      logger.success("Database", `${service} connected`),
-    error: (service: string, error: LogError) =>
-      logger.error("Database", `${service} connection failed`, error),
-    operation: (operation: string, details?: LogMetadata) => {
-      // Log important database operations in production
-      const logMethod = isProduction ? logger.info : logger.debug;
-      logMethod("Database", operation, details);
-    },
+    connected: (service: string) => success("Database", `${service} connected`),
+    error: (service: string, err: LogError) => error("Database", `${service} connection failed`, err),
+    operation: (operation: string, details?: LogMetadata) => operational("Database", operation, details),
   },
 
   /**
    * Log API operations
    */
   api: {
+    // IPv6 literals (e.g. the unspecified "::") need brackets to form a usable URL.
     started: (host: string, port: number) =>
-      logger.ready("API", `Server listening on http://${host}:${port}`),
-    error: (error: LogError) => logger.error("API", "Server error", error),
-    request: (method: string, path: string, status: number) => {
-      // Log all API requests in production for monitoring
-      const logMethod = isProduction ? logger.info : logger.debug;
-      logMethod("API", `${method} ${path} - ${status}`, {
-        method,
-        path,
-        status,
-        timestamp: new Date().toISOString(),
-      });
-    },
+      ready("API", `Server listening on http://${host.includes(":") ? `[${host}]` : host}:${port}`),
+    error: (err: LogError) => error("API", "Server error", err),
+    request: (method: string, path: string, status: number) =>
+      operational("API", `${method} ${path} - ${status}`, { method, path, status }),
   },
 
   /**
    * Log Discord operations
    */
   discord: {
-    shardLaunched: (shardId: number) =>
-      logger.success(
-        "Discord - Event (Shard Launched)",
-        `Shard ${shardId} launched`
-      ),
-    shardError: (shardId: number, error: LogError) =>
-      logger.error(
-        "Discord - Event (Shard Error)",
-        `Shard ${shardId} error`,
-        error
-      ),
+    shardLaunched: (shardId: number) => success("Discord - Event (Shard Launched)", `Shard ${shardId} launched`),
+    shardError: (shardId: number, err: LogError) =>
+      error("Discord - Event (Shard Error)", `Shard ${shardId} error`, err),
     ready: (username: string, guildCount: number) =>
-      logger.ready(
-        "Discord - Event (Ready)",
-        `Bot ready as ${username} in ${guildCount} guilds`,
-        {
-          botUsername: username,
-          guildCount,
-          timestamp: new Date().toISOString(),
-        }
-      ),
+      ready("Discord - Event (Ready)", `Bot ready as ${username} in ${guildCount} guilds`, {
+        botUsername: username,
+        guildCount,
+      }),
     guildJoined: (guildName: string, guildId: string, memberCount: number) =>
-      logger.info("Discord", `Joined guild: ${guildName}`, {
-        guildId,
-        guildName,
-        memberCount,
-        action: "guild_joined",
-        timestamp: new Date().toISOString(),
-      }),
+      info("Discord", `Joined guild: ${guildName}`, { guildId, guildName, memberCount, action: "guild_joined" }),
     guildLeft: (guildName: string, guildId: string) =>
-      logger.info("Discord - Event (Guild Left)", `Left guild: ${guildName}`, {
-        guildId,
-        guildName,
-        action: "guild_left",
-        timestamp: new Date().toISOString(),
-      }),
+      info("Discord - Event (Guild Delete)", `Left guild: ${guildName}`, { guildId, guildName, action: "guild_left" }),
   },
 };
 

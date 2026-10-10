@@ -20,7 +20,7 @@ describe("invite command", () => {
   it("should reply with invite link", async () => {
     const { execute } = await loadModule();
     const client = mockClient();
-    (client as Record<string, unknown>).generateInvite = sinon.stub().returns("https://discord.gg/test");
+    Object.assign(client, { generateInvite: sinon.stub().returns("https://discord.gg/test") });
     const interaction = mockInteraction();
 
     await execute(client as never, interaction as never);
@@ -33,7 +33,7 @@ describe("invite command", () => {
   it("should reply with error on failure", async () => {
     const { execute, logger } = await loadModule();
     const client = mockClient();
-    (client as Record<string, unknown>).generateInvite = sinon.stub().throws(new Error("fail"));
+    Object.assign(client, { generateInvite: sinon.stub().throws(new Error("fail")) });
     const interaction = mockInteraction();
 
     await execute(client as never, interaction as never);

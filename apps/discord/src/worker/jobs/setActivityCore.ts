@@ -3,15 +3,33 @@ import { ActivityType } from "discord.js";
 import type { Client } from "discord.js";
 import { desc } from "drizzle-orm";
 
-import { db } from "../../database/index.js";
+// Type-only imports keep this module evaluable without env/db side effects —
+// tests import it directly and inject every dependency.
+import type { db } from "../../database/index.js";
 import { discordActivities } from "../../database/schema.js";
-import env from "../../utils/env.js";
-import logger from "../../utils/logger.js";
+import { withTimeout } from "../../utils/async.js";
+import type { DiscordActivityType } from "../../database/schema.js";
+import type env from "../../utils/env.js";
+import type logger from "../../utils/logger.js";
 
-const getActivityType = (activityTypeString: string): ActivityType => {
-  const activityType = ActivityType[activityTypeString as keyof typeof ActivityType];
-  return activityType !== undefined ? activityType : ActivityType.Playing;
+// Exhaustive: a new DiscordActivityType member fails to compile until mapped.
+const ACTIVITY_TYPES: Record<DiscordActivityType, ActivityType> = {
+  Custom: ActivityType.Custom,
+  Listening: ActivityType.Listening,
+  Streaming: ActivityType.Streaming,
+  Playing: ActivityType.Playing,
 };
+
+const getActivityType = (activityType: DiscordActivityType): ActivityType =>
+  ACTIVITY_TYPES[activityType] ?? ActivityType.Playing;
+
+/**
+ * Upper bound on the cross-shard presence broadcast. discord.js never settles
+ * a pending broadcastEval when a sibling shard dies mid-eval, which would pin
+ * this job (and a worker concurrency slot) forever; failing lets the next
+ * rotation retry.
+ */
+export const BROADCAST_TIMEOUT_MS = 10_000;
 
 export interface SetActivityDeps {
   db: typeof db;
@@ -37,11 +55,15 @@ async function applyActivity(
   scope: "all" | "local"
 ): Promise<void> {
   if (client.shard && scope === "all") {
-    await client.shard.broadcastEval(
-      (c, ctx) => {
-        c.user?.setActivity(ctx.name, { type: ctx.type, url: ctx.url ?? undefined });
-      },
-      { context: { name, type, url: url ?? null } }
+    await withTimeout(
+      client.shard.broadcastEval(
+        (c, ctx) => {
+          c.user?.setActivity(ctx.name, { type: ctx.type, url: ctx.url ?? undefined });
+        },
+        { context: { name, type, url: url ?? null } }
+      ),
+      BROADCAST_TIMEOUT_MS,
+      "Activity broadcast"
     );
   } else {
     client.user?.setActivity(name, { type, url });

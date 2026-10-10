@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
+import { mockPermissions } from "../../permissionsMock.js";
 import { mockLogger, mockDb, mockDbChain, mockInteraction, mockClient } from "../../../helpers.js";
 
 describe("admin quote list command", () => {
@@ -13,7 +14,7 @@ describe("admin quote list command", () => {
 
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
-    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().resolves(true) }));
+    await mockPermissions(true);
 
     const mod = await import("../../../../src/commands/admin/quote/list.js");
 
@@ -26,7 +27,7 @@ describe("admin quote list command", () => {
 
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
-    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().resolves(false) }));
+    await mockPermissions(false);
 
     const mod = await import("../../../../src/commands/admin/quote/list.js");
 
@@ -34,12 +35,13 @@ describe("admin quote list command", () => {
   }
 
   it("should return early when user is not permitted", async () => {
-    const { handler } = await loadModuleNotPermitted();
+    const { handler, db } = await loadModuleNotPermitted();
     const interaction = mockInteraction();
 
     await handler(mockClient() as never, interaction as never);
 
     expect((interaction.reply as sinon.SinonStub).called).toBe(false);
+    expect(db.select.called).toBe(false);
   });
 
   it("should reply when no quotes found", async () => {

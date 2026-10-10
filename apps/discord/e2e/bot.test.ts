@@ -28,6 +28,17 @@ const env = mockEnv({ PREMIUM_ENABLED: true, DISCORD_PREMIUM_SKU_ID: skuId });
 mock.module("../src/database/index.js", () => ({ db, queryClient: connection }));
 mock.module("../src/utils/logger.js", () => ({ default: logger }));
 mock.module("../src/utils/env.js", () => ({ default: env }));
+// Redis is outside this suite: without this, importing the command registry
+// (via /suggestion's rate limiter) would open real ioredis clients to
+// env.REDIS_URL. Redis-backed behavior is covered by suggestionLimits.test.ts.
+mock.module("../src/redis/index.js", () => ({
+  default: {
+    eval: sinon.stub().resolves(1),
+    ping: sinon.stub().resolves("PONG"),
+    quit: sinon.stub().resolves("OK"),
+  },
+  bullRedis: {},
+}));
 
 // Keep actual routing, handlers, validators, SQL queries, embeds and scheduler.
 const { interactionCreateEvent } = await import("../src/events/interactionCreate.js");
@@ -61,7 +72,7 @@ function makeInteraction(commandName = "setup", subcommand = "channel", entitled
 
 function makeTransport() {
   const channel = {
-    id: channelId, guildId,
+    id: channelId, guildId, type: ChannelType.GuildText,
     isTextBased: () => true, isDMBased: () => false,
     permissionsFor: () => ({ has: () => true }), send: sinon.stub().resolves(),
   };
@@ -86,7 +97,9 @@ beforeAll(async () => {
     const migration = await readFile(new URL(`../drizzle/${entry.tag}.sql`, import.meta.url), "utf8");
     // Migrations qualify enum creation as public; remap to this run's schema.
     for (const statement of migration.replaceAll('"public".', `"${schemaName}".`).split("--> statement-breakpoint")) {
-      if (statement.trim()) await connection.unsafe(statement);
+      if (statement.trim()) {
+        await connection.unsafe(statement);
+      }
     }
   }
 }, 20_000);
@@ -105,7 +118,9 @@ afterEach(() => {
   env.NODE_ENV = "test";
 });
 afterAll(async () => {
-  if (schemaCreated) await connection`DROP SCHEMA ${connection(schemaName)} CASCADE`;
+  if (schemaCreated) {
+    await connection`DROP SCHEMA ${connection(schemaName)} CASCADE`;
+  }
   await connection.end();
 });
 
@@ -205,7 +220,9 @@ describe("bot E2E with real PostgreSQL and local Discord transport", () => {
     const remaining = makeEntitlement({
       id: "100000000000000999", client: entitlementClient as unknown as DiscordClient<true>,
     });
-    entitlementClient.application.entitlements.fetch.resolves(new Collection([[remaining.id, remaining]]));
+    // Honor the pagination cursor: the walk stops only on an empty page.
+    entitlementClient.application.entitlements.fetch.callsFake(async ({ after }: { after?: string }) =>
+      after === "0" ? new Collection([[remaining.id, remaining]]) : new Collection());
     await entitlementDeleteEvent(makeEntitlement({ client: entitlementClient as unknown as DiscordClient<true> }));
     expect((await db.select().from(guilds))[0]?.isPremium).toBe(true);
     entitlementClient.application.entitlements.fetch.resolves(new Collection());
@@ -240,7 +257,7 @@ describe("bot E2E with real PostgreSQL and local Discord transport", () => {
       author: {
         id: "100000000000000555", username: "FluffBoost", discriminator: "0000", avatar: null, bot: true,
       },
-      embeds: (options?.body as { embeds: unknown[] }).embeds, attachments: [],
+      embeds: (options?.body as { embeds?: unknown[] } | undefined)?.embeds ?? [], attachments: [],
       timestamp: new Date().toISOString(), edited_timestamp: null, tts: false,
       mention_everyone: false, mentions: [], mention_roles: [], pinned: false,
     }));
@@ -248,6 +265,9 @@ describe("bot E2E with real PostgreSQL and local Discord transport", () => {
       expect(client.guilds.cache.has(guildId)).toBe(false);
       await sendMotivation(client);
       expect(send.calledOnce).toBe(true);
+      // An empty-body regression would otherwise pass as a send with no quote.
+      const body = send.firstCall.args[1]?.body as { embeds?: unknown[] } | undefined;
+      expect(body?.embeds).toHaveLength(1);
       expect((await db.select().from(guilds))[0]?.lastMotivationSentAt).not.toBeNull();
     } finally {
       await client.destroy();

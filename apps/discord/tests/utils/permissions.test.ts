@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, mock } from "bun:test";
 import sinon from "sinon";
+import { MessageFlags } from "discord.js";
 import { mockEnv, mockLogger, mockInteraction } from "../helpers.js";
 
 const logger = mockLogger();
@@ -8,7 +9,9 @@ const env = mockEnv();
 mock.module("../../src/utils/env.js", () => ({ default: env }));
 mock.module("../../src/utils/logger.js", () => ({ default: logger }));
 
-const { isUserPermitted } = await import("../../src/utils/permissions.js");
+// The suite runs with --isolate, so no other file's permissions.js stub can
+// stand in for the real guards (a query-suffix copy would also hide coverage).
+const { isUserPermitted, requireGuildAdministrator } = await import("../../src/utils/permissions.js");
 
 describe("permissions", () => {
   beforeEach(() => {
@@ -62,5 +65,26 @@ describe("permissions", () => {
     const interaction = mockInteraction({ user: { id: "user-bad", username: "hacker" } });
     await isUserPermitted(interaction as never);
     expect(logger.unauthorized.calledOnce).toBe(true);
+  });
+
+  it("requireGuildAdministrator allows members with Administrator", async () => {
+    const has = sinon.stub().returns(true);
+    const interaction = mockInteraction({ memberPermissions: { has } });
+    expect(await requireGuildAdministrator(interaction as never)).toBe(true);
+    expect((interaction.reply as sinon.SinonStub).called).toBe(false);
+  });
+
+  it("requireGuildAdministrator refuses other members with an ephemeral reply", async () => {
+    const interaction = mockInteraction({ memberPermissions: { has: sinon.stub().returns(false) } });
+    expect(await requireGuildAdministrator(interaction as never)).toBe(false);
+    const reply = (interaction.reply as sinon.SinonStub).firstCall.args[0];
+    expect(reply.content).toContain("Administrator");
+    expect(reply.flags).toBe(MessageFlags.Ephemeral);
+  });
+
+  it("requireGuildAdministrator refuses interactions with no member permissions (DMs)", async () => {
+    const interaction = mockInteraction({ memberPermissions: null });
+    expect(await requireGuildAdministrator(interaction as never)).toBe(false);
+    expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
   });
 });

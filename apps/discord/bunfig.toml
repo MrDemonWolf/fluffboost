@@ -6,3 +6,14 @@ autoInstall = false
 [test]
 root = "./tests"
 timeout = 5000
+# `bun run test:coverage` prints the table and writes coverage/lcov.info (the CI artifact).
+coverageReporter = ["text", "lcov"]
+coverageDir = "coverage"
+# Test helpers are not product code. schema.ts is declarative; its only
+# functions are Drizzle index/constraint callbacks that drizzle-kit runs.
+coveragePathIgnorePatterns = ["tests/**", "e2e/**", "src/database/schema.ts"]
+# Bun enforces this PER FILE (not on the "All files" total), so it is a floor
+# that fails CI when any loaded module's coverage collapses. Set just under the
+# weakest file at the time of writing (src/app.ts: ~48% funcs, ~76% lines);
+# raise it as those gaps close.
+coverageThreshold = { lines = 0.7, functions = 0.45 }

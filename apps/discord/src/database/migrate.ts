@@ -1,42 +1,35 @@
-import fs from "node:fs";
-import { drizzle } from "drizzle-orm/postgres-js";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
-import { sql } from "drizzle-orm";
-import postgres from "postgres";
+import {
+  MIGRATIONS_FOLDER,
+  MigrationAbortError,
+  assertJournalExists,
+  describeMigrationError,
+  createPostgresSession,
+  runMigrations,
+} from "./migrator.js";
 
 // console.* is intentional here: this script runs standalone at container
 // startup, before the structured logger (and validated env it needs) exists.
-const migrationsFolder = "./drizzle";
-const journalPath = `${migrationsFolder}/meta/_journal.json`;
+// Any failure exits 1 so docker-entrypoint.sh (`set -e`) never starts the bot
+// on an unmigrated schema; SKIP_MIGRATIONS=true is the only opt-out.
+try {
+  assertJournalExists(MIGRATIONS_FOLDER);
 
-if (!fs.existsSync(journalPath)) {
-  console.log("No migrations found, skipping.");
-  process.exit(0);
-}
+  const connectionString = process.env["DATABASE_URL"];
+  if (!connectionString) {
+    throw new MigrationAbortError("DATABASE_URL is not set");
+  }
 
-const connectionString = process.env["DATABASE_URL"];
-if (!connectionString) {
-  console.error("DATABASE_URL is not set");
+  await runMigrations(createPostgresSession(connectionString), MIGRATIONS_FOLDER);
+  console.log("Migrations complete.");
+} catch (error) {
+  if (error instanceof MigrationAbortError) {
+    console.error(`Migration aborted: ${error.message}`);
+  } else {
+    console.error(`Migration failed: ${describeMigrationError(error)}`);
+    // The full error (wrapper, stack, driver details) only on request.
+    if (process.env["DEBUG"]) {
+      console.error(error);
+    }
+  }
   process.exit(1);
 }
-
-// Stable advisory lock key — any constant int8 works as long as it's stable
-// across replicas. Picked from `select hashtext('fluffboost:migrations')::bigint`.
-const LOCK_KEY = 7261972598341205n;
-
-const sqlClient = postgres(connectionString, { max: 1 });
-const db = drizzle(sqlClient);
-
-try {
-  await db.execute(sql`SELECT pg_advisory_lock(${LOCK_KEY})`);
-  await migrate(db, { migrationsFolder });
-} finally {
-  try {
-    await db.execute(sql`SELECT pg_advisory_unlock(${LOCK_KEY})`);
-  } catch {
-    // unlock failure is non-fatal — connection close releases it
-  }
-  await sqlClient.end();
-}
-
-console.log("Migrations complete.");

@@ -13,7 +13,8 @@ import { buildPremiumUpsell, hasEntitlement, isPremiumEnabled } from "../../util
 import { parseHourMinute } from "../../utils/scheduleEvaluator.js";
 import { isValidTimezone, filterTimezones } from "../../utils/timezones.js";
 import { buildBrandedEmbed } from "../../utils/embedHelpers.js";
-import { DEFAULT_GUILD_SCHEDULE } from "../../utils/scheduleConfig.js";
+import { DEFAULT_GUILD_SCHEDULE, describeDefaultSchedule } from "../../utils/scheduleConfig.js";
+import { requireGuildAdministrator, requireGuildId } from "../../utils/permissions.js";
 
 const DAY_OF_WEEK_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -31,16 +32,20 @@ function formatScheduleDescription(frequency: string, time: string, timezone: st
 
 export default async function schedule(_client: Client, interaction: ChatInputCommandInteraction): Promise<void> {
   await withCommandLogging("setup schedule", interaction, async () => {
-    if (!interaction.guildId) {return;}
+    const guildId = await requireGuildId(interaction);
+    if (!guildId) {return;}
+    if (!(await requireGuildAdministrator(interaction))) {return;}
 
-    if (isPremiumEnabled() && !hasEntitlement(interaction)) {
+    const premiumEnabled = isPremiumEnabled();
+    if (premiumEnabled && !hasEntitlement(interaction)) {
+      const defaultSchedule = describeDefaultSchedule();
       const upsell = buildPremiumUpsell({
         title: "Premium Feature",
         description:
           "Custom quote scheduling is a premium feature! " +
           "Subscribe to FluffBoost Premium to customize when your server receives motivational quotes.",
         fields: [
-          { name: "Default Schedule", value: "Daily at 8:00 AM (America/Chicago)" },
+          { name: "Default Schedule", value: defaultSchedule.charAt(0).toUpperCase() + defaultSchedule.slice(1) },
           {
             name: "Premium Unlocks",
             value: "- Custom delivery time\n- Custom timezone\n- Weekly or monthly frequency",
@@ -52,11 +57,24 @@ export default async function schedule(_client: Client, interaction: ChatInputCo
       return;
     }
 
+    // Omitted options keep the saved schedule rather than resetting to the
+    // free defaults, so `/setup schedule time:10:00` changes only the time.
+    const [current] = await db
+      .select()
+      .from(guilds)
+      .where(eq(guilds.guildId, guildId))
+      .limit(1);
+    const base = current ?? DEFAULT_GUILD_SCHEDULE;
+
     const options = interaction.options;
-    const frequency = (options.getString("frequency") ?? DEFAULT_GUILD_SCHEDULE.motivationFrequency) as MotivationFrequency;
-    const time = options.getString("time") ?? DEFAULT_GUILD_SCHEDULE.motivationTime;
-    const timezone = options.getString("timezone") ?? DEFAULT_GUILD_SCHEDULE.timezone;
-    const day = options.getInteger("day");
+    // Discord restricts `frequency` to the registered choices.
+    const frequency = (options.getString("frequency") ?? base.motivationFrequency) as MotivationFrequency;
+    const time = options.getString("time") ?? base.motivationTime;
+    const timezone = options.getString("timezone") ?? base.timezone;
+    // A saved weekday is not a valid day of month (and vice versa), so reuse the
+    // saved day only when the frequency is unchanged.
+    const day = options.getInteger("day") ??
+      (frequency === base.motivationFrequency ? base.motivationDay : null);
 
     if (parseHourMinute(time) === null) {
       await interaction.reply({
@@ -92,17 +110,20 @@ export default async function schedule(_client: Client, interaction: ChatInputCo
       }
     }
 
-    await guildExists(interaction.guildId);
+    await guildExists(guildId);
 
-    await db
-      .update(guilds)
-      .set({
-        motivationFrequency: frequency,
-        motivationTime: time,
-        timezone,
-        motivationDay: frequency === "Daily" ? null : day,
-      })
-      .where(eq(guilds.guildId, interaction.guildId));
+    const changes: Partial<typeof guilds.$inferInsert> = {
+      motivationFrequency: frequency,
+      motivationTime: time,
+      timezone,
+      motivationDay: frequency === "Daily" ? null : day,
+    };
+    if (premiumEnabled) {
+      // The gate above just proved an active entitlement; self-heal a stale
+      // flag (e.g. a missed ENTITLEMENT_CREATE) so delivery honors it.
+      changes.isPremium = true;
+    }
+    await db.update(guilds).set(changes).where(eq(guilds.guildId, guildId));
 
     const embed = buildBrandedEmbed({
       title: "Schedule Updated",

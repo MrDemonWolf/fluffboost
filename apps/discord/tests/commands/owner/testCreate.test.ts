@@ -13,8 +13,13 @@ describe("owner premium test-create command", () => {
 
     mock.module("../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../src/utils/env.js", () => ({ default: env }));
+    // Provide every premium export: mock.module is process-global, and other
+    // modules loaded later in the same run (e.g. /help) import more of them.
     mock.module("../../../src/utils/premium.js", () => ({
       getPremiumSkuId: sinon.stub().returns(env.DISCORD_PREMIUM_SKU_ID),
+      isPremiumEnabled: sinon.stub().returns(env.PREMIUM_ENABLED),
+      hasEntitlement: sinon.stub().returns(false),
+      buildPremiumUpsell: sinon.stub().returns({ embeds: [], components: [] }),
     }));
 
     const mod = await import("../../../src/commands/owner/premium/testCreate.js");
@@ -29,12 +34,9 @@ describe("owner premium test-create command", () => {
     });
 
     const interaction = mockInteraction({ user: { id: "owner-123", username: "owner" } });
-    const options = {
-      getString: sinon.stub().returns(null),
-    };
 
     const client = mockClient();
-    await testCreate(client as never, interaction as never, options as never);
+    await testCreate(client as never, interaction as never);
 
     expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
@@ -51,10 +53,9 @@ describe("owner premium test-create command", () => {
       user: { id: "owner-123", username: "owner" },
       guildId: "current-guild-123",
     });
-    const options = { getString: sinon.stub().returns(null) };
 
     const client = mockClient();
-    await testCreate(client as never, interaction as never, options as never);
+    await testCreate(client as never, interaction as never);
 
     const createTestCall = (
       client.application as { entitlements: { createTest: sinon.SinonStub } }
@@ -70,12 +71,45 @@ describe("owner premium test-create command", () => {
     });
 
     const interaction = mockInteraction({ user: { id: "not-owner", username: "hacker" } });
-    const options = { getString: sinon.stub().returns(null) };
 
-    await testCreate(mockClient() as never, interaction as never, options as never);
+    await testCreate(mockClient() as never, interaction as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
     expect(replyArgs.content).toContain("Only the bot owner");
+  });
+
+  it("passes the guild option through to the test entitlement", async () => {
+    const { testCreate } = await loadModule({
+      OWNER_ID: "owner-123",
+      DISCORD_PREMIUM_SKU_ID: "sku-1",
+    });
+
+    const interaction = mockInteraction({ user: { id: "owner-123", username: "owner" } });
+    (interaction.options.getString as sinon.SinonStub).withArgs("guild").returns("other-guild-1");
+
+    const client = mockClient();
+    await testCreate(client as never, interaction as never);
+
+    const createTest = client.application.entitlements.createTest;
+    expect(createTest.firstCall.args[0].guild).toBe("other-guild-1");
+  });
+
+  it("refuses the owner on the production bot without calling Discord", async () => {
+    const { testCreate } = await loadModule({
+      OWNER_ID: "owner-123",
+      DISCORD_PREMIUM_SKU_ID: "sku-1",
+      NODE_ENV: "production",
+    });
+
+    const interaction = mockInteraction({ user: { id: "owner-123", username: "owner" } });
+    const client = mockClient();
+
+    await testCreate(client as never, interaction as never);
+
+    const createTest = client.application.entitlements.createTest;
+    expect(createTest.called).toBe(false);
+    const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
+    expect(replyArgs.content).toContain("disabled on the production bot");
   });
 
   it("should reject when no SKU configured", async () => {
@@ -85,9 +119,8 @@ describe("owner premium test-create command", () => {
     });
 
     const interaction = mockInteraction({ user: { id: "owner-123", username: "owner" } });
-    const options = { getString: sinon.stub().returns(null) };
 
-    await testCreate(mockClient() as never, interaction as never, options as never);
+    await testCreate(mockClient() as never, interaction as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
     expect(replyArgs.content).toContain("DISCORD_PREMIUM_SKU_ID is not configured");
@@ -103,9 +136,8 @@ describe("owner premium test-create command", () => {
       user: { id: "owner-123", username: "owner" },
       guildId: null,
     });
-    const options = { getString: sinon.stub().returns(null) };
 
-    await testCreate(mockClient() as never, interaction as never, options as never);
+    await testCreate(mockClient() as never, interaction as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
     expect(replyArgs.content).toContain("Could not determine guild");
@@ -118,14 +150,13 @@ describe("owner premium test-create command", () => {
     });
 
     const interaction = mockInteraction({ user: { id: "100000000000000999", username: "owner" } });
-    const options = { getString: sinon.stub().returns(null) };
 
     const client = mockClient();
     (
       client.application as { entitlements: { createTest: sinon.SinonStub } }
     ).entitlements.createTest.rejects(new Error("API Error: rate limited"));
 
-    await testCreate(client as never, interaction as never, options as never);
+    await testCreate(client as never, interaction as never);
 
     expect(logger.commands.error.called).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];

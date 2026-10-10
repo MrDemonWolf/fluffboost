@@ -7,7 +7,7 @@ import logger from "./logger.js";
 /**
  * Complete a deferred reply or send an ephemeral error before acknowledgement.
  */
-export async function safeErrorReply(
+async function safeErrorReply(
   interaction: CommandInteraction | ChatInputCommandInteraction,
   message = "An error occurred while processing your request."
 ): Promise<void> {
@@ -21,12 +21,8 @@ export async function safeErrorReply(
   }
 }
 
-/**
- * Single entry point for logging a command error.
- * Replaces the duplicated pair of `logger.commands.error` + `logger.error` calls
- * scattered across catch blocks.
- */
-export function logCommandError(
+/** Log a command failure with the invoking user and guild. */
+function logCommandError(
   commandName: string,
   interaction: CommandInteraction | ChatInputCommandInteraction,
   err: unknown

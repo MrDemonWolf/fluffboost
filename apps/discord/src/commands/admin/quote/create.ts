@@ -1,6 +1,6 @@
-import { Client, CommandInteraction, MessageFlags } from "discord.js";
+import { MessageFlags } from "discord.js";
 
-import type { CommandInteractionOptionResolver } from "discord.js";
+import type { Client, ChatInputCommandInteraction } from "discord.js";
 
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
@@ -12,31 +12,17 @@ import { quoteInputError } from "../../../utils/quoteLimits.js";
 
 export default async function (
   client: Client,
-  interaction: CommandInteraction,
-  options: CommandInteractionOptionResolver
+  interaction: ChatInputCommandInteraction
 ): Promise<void> {
   await withCommandLogging("admin quote create", interaction, async () => {
     if (!(await isUserPermitted(interaction))) {
       return;
     }
 
-    const quote = options.getString("quote");
-    const quoteAuthor = options.getString("quote_author");
+    // Both options are required in the command schema.
+    const quote = interaction.options.getString("quote", true);
+    const quoteAuthor = interaction.options.getString("quote_author", true);
 
-    if (!quote) {
-      await interaction.reply({
-        content: "Please provide a quote",
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
-    if (!quoteAuthor) {
-      await interaction.reply({
-        content: "Please provide an author",
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
     const inputError = quoteInputError(quote, quoteAuthor);
     if (inputError) {
       await interaction.reply({ content: inputError, flags: MessageFlags.Ephemeral });

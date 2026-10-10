@@ -1,6 +1,6 @@
-import { Client, CommandInteraction, MessageFlags } from "discord.js";
+import { MessageFlags } from "discord.js";
 
-import type { CommandInteractionOptionResolver } from "discord.js";
+import type { Client, ChatInputCommandInteraction } from "discord.js";
 
 import { eq } from "drizzle-orm";
 
@@ -9,33 +9,34 @@ import { db } from "../../../database/index.js";
 import { motivationQuotes } from "../../../database/schema.js";
 import { announceToMainChannel } from "../../../utils/mainChannel.js";
 import { withCommandLogging } from "../../../utils/commandErrors.js";
+import { isUuid } from "../../../utils/quoteLimits.js";
 
 export default async function (
   client: Client,
-  interaction: CommandInteraction,
-  options: CommandInteractionOptionResolver
+  interaction: ChatInputCommandInteraction
 ): Promise<void> {
   await withCommandLogging("admin quote remove", interaction, async () => {
     if (!(await isUserPermitted(interaction))) {
       return;
     }
 
-    const quoteId = options.getString("quote_id", true);
+    const quoteId = interaction.options.getString("quote_id", true).trim();
 
-    const [quote] = await db
-      .select()
-      .from(motivationQuotes)
-      .where(eq(motivationQuotes.id, quoteId))
-      .limit(1);
-    if (!quote) {
+    // Single atomic statement: concurrent removes cannot both report success
+    // or post two deletion announcements.
+    const [deleted] = isUuid(quoteId)
+      ? await db
+        .delete(motivationQuotes)
+        .where(eq(motivationQuotes.id, quoteId))
+        .returning({ id: motivationQuotes.id })
+      : [];
+    if (!deleted) {
       await interaction.reply({
         content: `Quote with id ${quoteId} not found`,
         flags: MessageFlags.Ephemeral,
       });
       return;
     }
-
-    await db.delete(motivationQuotes).where(eq(motivationQuotes.id, quoteId));
 
     // Reply before the main-channel notification: the DB write is committed,
     // and the announce can outlive the 3-second interaction deadline.

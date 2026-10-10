@@ -1,6 +1,6 @@
-import { Client, CommandInteraction, MessageFlags } from "discord.js";
+import { MessageFlags } from "discord.js";
 
-import type { CommandInteractionOptionResolver } from "discord.js";
+import type { Client, ChatInputCommandInteraction } from "discord.js";
 
 import type { DiscordActivityType } from "../../../database/schema.js";
 
@@ -11,28 +11,23 @@ import { discordActivities } from "../../../database/schema.js";
 
 export default async function (
   _client: Client,
-  interaction: CommandInteraction,
-  options: CommandInteractionOptionResolver
+  interaction: ChatInputCommandInteraction
 ): Promise<void> {
   await withCommandLogging("admin activity add", interaction, async () => {
     if (!(await isUserPermitted(interaction))) {
       return;
     }
 
+    const { options } = interaction;
     const activity = options.getString("activity", true);
-    const activityType = options.getString("type", true);
+    // Discord restricts `type` to the registered choices.
+    const activityType = options.getString("type", true) as DiscordActivityType;
     const activityUrl = options.getString("url");
 
+    // Free-text option with no minLength, so whitespace-only input is possible.
     if (!activity.trim()) {
       await interaction.reply({
         content: "Please provide an activity",
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
-    if (!activityType.trim()) {
-      await interaction.reply({
-        content: "Please provide a type",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -42,7 +37,7 @@ export default async function (
       .insert(discordActivities)
       .values({
         activity,
-        type: activityType as DiscordActivityType,
+        type: activityType,
         url: activityUrl,
       })
       .returning();

@@ -17,14 +17,14 @@ export async function interactionCreateEvent(
       return;
     }
 
-    if (!interaction.isCommand()) {
+    // Every registered command is a slash command; narrow once here.
+    if (!interaction.isChatInputCommand()) {
       return;
     }
 
-    const { commandName } = interaction;
-    if (!commandName) {return;}
-
-    const handler = commandRegistry[commandName];
+    const handler = Object.hasOwn(commandRegistry, interaction.commandName)
+      ? commandRegistry[interaction.commandName]
+      : undefined;
     if (!handler) {
       logger.commands.warn(
         "interactionCreate",
@@ -32,10 +32,19 @@ export async function interactionCreateEvent(
         interaction.user.id,
         "Command not found"
       );
-      return;
-    }
-
-    if (handler.requiresChatInput && !interaction.isChatInputCommand()) {
+      // Stale client command lists or leftover registrations can still invoke
+      // removed commands; acknowledge so Discord does not show a failure.
+      try {
+        await interaction.reply({
+          content: "This command is no longer available.",
+          flags: MessageFlags.Ephemeral,
+        });
+      } catch (replyErr) {
+        logger.error("Discord - Command", "Failed to reply to unknown command", replyErr, {
+          command: interaction.commandName,
+          interactionId: interaction.id,
+        });
+      }
       return;
     }
 

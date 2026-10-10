@@ -1,10 +1,10 @@
 import { z } from "zod";
-import dotenv from "dotenv";
 
 import { envSchema } from "./envSchema.js";
 
-dotenv.config();
-
+// Bun loads .env (and .env.<NODE_ENV>, .env.local) into process.env for
+// `bun run`, `bun --watch` and `bun test`, and shard processes inherit it,
+// so no dotenv call is needed here.
 type EnvSchema = z.infer<typeof envSchema>;
 const parsed = envSchema.safeParse(process.env);
 
@@ -18,5 +18,4 @@ if (!parsed.success) {
 
 const env: EnvSchema = parsed.data;
 
-export { envSchema };
 export default env;
