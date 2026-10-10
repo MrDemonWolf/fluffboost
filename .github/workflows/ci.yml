@@ -2,7 +2,9 @@ name: CI
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Every commit on main gets a complete CI result (Dokploy deploys main on
+  # push); superseded runs on other branches and PRs are still cancelled.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 on:
   push:
@@ -17,15 +19,18 @@ jobs:
   test:
     name: Test & Typecheck
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: 1.3.14
+          bun-version-file: package.json
 
       - name: Cache Bun dependencies
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
@@ -42,15 +47,32 @@ jobs:
         run: bun run test:coverage
         env:
           # Values must pass the Zod env schema (snowflake regex etc.) in case
-          # a test transitively loads the real src/utils/env.ts.
+          # a test transitively loads the real src/utils/env.ts. turbo runs in
+          # strict env mode, so these reach the tests only because turbo.json
+          # lists them in passThroughEnv for test and test:coverage.
           DATABASE_URL: postgres://ci:ci@localhost:5432/fluffboost
           REDIS_URL: redis://localhost:6379
-          DISCORD_APPLICATION_ID: "123456789012345678"
-          DISCORD_APPLICATION_PUBLIC_KEY: ci-test-public-key
           DISCORD_APPLICATION_BOT_TOKEN: ci-test-bot-token
           OWNER_ID: "123456789012345678"
-          MAIN_GUILD_ID: "123456789012345678"
           MAIN_CHANNEL_ID: "123456789012345678"
+
+      - name: Run unit tests in random order
+        # Every file already runs in its own module registry (--isolate); this
+        # also shuffles test order so hidden coupling surfaces. Bun prints the
+        # seed; reproduce locally with `bun run test --seed=<seed>`.
+        working-directory: apps/discord
+        run: bun run test --randomize
+
+      - name: Check for schema drift
+        # drizzle-kit generate diffs schema.ts against the committed snapshot
+        # without connecting, so the URL only has to parse.
+        working-directory: apps/discord
+        run: |
+          bun --bun drizzle-kit generate
+          git diff --exit-code -- drizzle
+          test -z "$(git status --porcelain -- drizzle)"
+        env:
+          DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/ci
 
       - name: Run ESLint
         run: bun run lint:check
@@ -67,25 +89,30 @@ jobs:
         run: bun run typecheck
 
       - name: Upload coverage report
+        # test:coverage writes coverage/lcov.info (bunfig.toml coverageReporter).
+        if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: coverage-report
-          path: apps/discord/coverage/
-          if-no-files-found: ignore
+          path: apps/discord/coverage/lcov.info
+          if-no-files-found: warn
           retention-days: 14
 
   security:
     name: Security Audit
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: 1.3.14
+          bun-version-file: package.json
 
       - name: Cache Bun dependencies
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
@@ -106,11 +133,23 @@ jobs:
         continue-on-error: true
 
   e2e:
-    name: Bot E2E (PostgreSQL)
+    name: Bot E2E (PostgreSQL + Redis)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
+      redis:
+        # Same major as docker-compose.yml. Runs the real suggestion-quota Lua.
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
       postgres:
-        image: postgres:16
+        # Same major as docker-compose.yml and production.
+        image: postgres:18-alpine
         env:
           POSTGRES_USER: ci
           POSTGRES_PASSWORD: ci
@@ -125,30 +164,37 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
       - name: Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: 1.3.14
+          bun-version-file: package.json
       - name: Install dependencies
         run: bun install --frozen-lockfile
-      - name: Run bot E2E against isolated local PostgreSQL
+      - name: Run bot E2E against isolated local PostgreSQL and Redis
         run: bun run --filter=@fluffboost/discord test:e2e
         env:
           E2E_DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/fluffboost_e2e
           E2E_DATABASE_DISPOSABLE: "true"
+          E2E_REDIS_URL: redis://127.0.0.1:6379
+          E2E_REDIS_DISPOSABLE: "true"
 
   docs:
     name: Docs Build & Browser E2E
     runs-on: ubuntu-latest
+    timeout-minutes: 25
 
     steps:
       - name: Checkout code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: 1.3.14
+          bun-version-file: package.json
 
       - name: Cache Bun dependencies
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
@@ -160,6 +206,9 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
+
+      - name: Check color contrast
+        run: bun run --filter=@fluffboost/docs check:contrast
 
       - name: Install Chromium
         run: bun run --filter=@fluffboost/docs test:e2e:install
@@ -181,11 +230,28 @@ jobs:
   docker:
     name: Docker Build Test
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: test
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: fluffboost_image
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d fluffboost_image"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - name: Checkout code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
@@ -196,6 +262,19 @@ jobs:
           context: .
           file: apps/discord/Dockerfile
           push: false
+          load: true
           tags: fluffboost:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Run image migrations twice
+        # Exercises the image layout (migrations folder, journal, loader) and
+        # proves a second run is a no-op on an already migrated database.
+        run: |
+          for run in 1 2; do
+            out=$(docker run --rm --network host \
+              -e DATABASE_URL=postgres://ci:ci@127.0.0.1:5432/fluffboost_image \
+              --entrypoint bun fluffboost:test run src/database/migrate.ts 2>&1)
+            echo "$out"
+            echo "$out" | grep -q "Migrations complete." || { echo "migration run $run failed"; exit 1; }
+          done
