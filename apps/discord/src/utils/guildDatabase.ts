@@ -1,13 +1,35 @@
 import type { Client } from "discord.js";
-import { eq, asc } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 
 import { db } from "../database/index.js";
 import { guilds } from "../database/schema.js";
 import logger from "./logger.js";
 
+/** Keep each multi-row statement well under Postgres's bind-parameter limit. */
+const GUILD_BATCH_SIZE = 1000;
+
+function chunk<T>(items: readonly T[], size = GUILD_BATCH_SIZE): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
+  }
+  return chunks;
+}
+
+/**
+ * Insert any missing guild rows in set-based batches. Idempotent: rows created
+ * concurrently (e.g. by guildCreate) are skipped instead of raising 23505.
+ */
+async function ensureGuildRows(guildIds: readonly string[]): Promise<void> {
+  for (const ids of chunk(guildIds)) {
+    await db.insert(guilds).values(ids.map((guildId) => ({ guildId })))
+      .onConflictDoNothing({ target: guilds.guildId });
+  }
+}
+
 export async function pruneGuilds(client: Client) {
   try {
-    const guildsInDb = await db.select().from(guilds).orderBy(asc(guilds.guildId));
+    const guildsInDb = await db.select({ guildId: guilds.guildId }).from(guilds);
 
     if (guildsInDb.length === 0) {
       logger.info(
@@ -59,27 +81,24 @@ export async function pruneGuilds(client: Client) {
       guildsToRemove: guildsToRemove.length,
     });
 
-    for (const guild of guildsToRemove) {
+    let removed = 0;
+    for (const ids of chunk(guildsToRemove.map((guild) => guild.guildId))) {
       try {
-        await db.delete(guilds).where(eq(guilds.guildId, guild.guildId));
-
-        logger.success(
-          "Discord - Guild Database",
-          "Removed guild from database",
-          {
-            guildId: guild.guildId,
-          }
-        );
+        await db.delete(guilds).where(inArray(guilds.guildId, ids));
+        removed += ids.length;
       } catch (err) {
         logger.error(
           "Discord Event Logger",
-          "Error removing guild from database",
+          "Error removing guilds from database",
           err,
           {
-            guildId: guild.guildId,
+            guildIds: ids,
           }
         );
       }
+    }
+    if (removed > 0) {
+      logger.success("Discord - Guild Database", "Removed guilds from database", { removed });
     }
     logger.info(
       "Discord Event Logger",
@@ -99,52 +118,22 @@ export async function pruneGuilds(client: Client) {
 
 export async function ensureGuildExists(client: Client) {
   try {
-    const currentGuilds = await db.select().from(guilds).orderBy(asc(guilds.guildId));
-    const guildsToAdd = client.guilds.cache.filter(
-      (guild) =>
-        !currentGuilds.some((currentGuild: { guildId: string }) => currentGuild.guildId === guild.id)
-    );
-
-    if (guildsToAdd.size === 0) {
+    const guildIds = [...client.guilds.cache.keys()];
+    if (guildIds.length === 0) {
       logger.info(
         "Discord Event Logger",
-        "No new guilds to add to the database"
+        "No guilds to ensure in the database"
       );
       return;
     }
 
-    logger.info("Discord - Guild Database", "Adding new guilds to database", {
-      guildsToAdd: guildsToAdd.size,
-    });
-
-    for (const guild of guildsToAdd.values()) {
-      try {
-        await db.insert(guilds).values({ guildId: guild.id });
-
-        logger.success(
-          "Discord - Guild Database",
-          "Created guild in database",
-          {
-            guildId: guild.id,
-            guildName: guild.name,
-          }
-        );
-      } catch (err) {
-        logger.error(
-          "Discord Event Logger",
-          "Error adding guild to the database",
-          err,
-          {
-            operation: "ensureGuildExists",
-            guildId: guild.id,
-            guildName: guild.name,
-          }
-        );
-      }
-    }
+    await ensureGuildRows(guildIds);
     logger.info(
       "Discord Event Logger",
-      "Finished ensuring guilds exist in the database"
+      "Finished ensuring guilds exist in the database",
+      {
+        guilds: guildIds.length,
+      }
     );
   } catch (err) {
     logger.error(
@@ -158,7 +147,8 @@ export async function ensureGuildExists(client: Client) {
   }
 }
 
+/** Ensure one guild row exists. Always resolves true; kept for existing callers. */
 export async function guildExists(guildId: string) {
-  await db.insert(guilds).values({ guildId }).onConflictDoNothing({ target: guilds.guildId });
+  await ensureGuildRows([guildId]);
   return true;
 }

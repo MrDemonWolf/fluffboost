@@ -24,11 +24,10 @@ export async function replyWithTextFile<T>({
   emptyMessage,
   ephemeral = true,
 }: ReplyWithTextFileOptions<T>): Promise<void> {
+  const flags = ephemeral ? MessageFlags.Ephemeral : undefined;
+
   if (rows.length === 0) {
-    await interaction.reply({
-      content: emptyMessage,
-      ...(ephemeral ? { flags: MessageFlags.Ephemeral } : {}),
-    });
+    await interaction.reply({ content: emptyMessage, flags });
     return;
   }
 
@@ -37,6 +36,6 @@ export async function replyWithTextFile<T>({
 
   await interaction.reply({
     files: [{ attachment: Buffer.from(text), name: filename }],
-    ...(ephemeral ? { flags: MessageFlags.Ephemeral } : {}),
+    flags,
   });
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
-import { MessageFlags } from "discord.js";
+import { ChannelType, MessageFlags } from "discord.js";
 import sinon from "sinon";
 import { mockLogger, mockDb, mockDbChain, mockClient, mockInteraction } from "../../helpers.js";
 
@@ -25,9 +25,17 @@ describe("setup channel command", () => {
     return { handler: mod.default, logger, db };
   }
 
+  function adminInteraction(overrides: Record<string, unknown> = {}) {
+    return mockInteraction({ memberPermissions: { has: sinon.stub().returns(true) }, ...overrides });
+  }
+
+  function textChannel(id: string, guildId: unknown, canSend = true) {
+    return { id, guildId, type: ChannelType.GuildText, permissionsFor: () => ({ has: () => canSend }) };
+  }
+
   it("should reply ephemerally when no guildId", async () => {
     const { handler } = await loadModule();
-    const interaction = mockInteraction({ guildId: null });
+    const interaction = adminInteraction({ guildId: null });
 
     await handler(mockClient() as never, interaction as never);
 
@@ -37,18 +45,30 @@ describe("setup channel command", () => {
     expect(arg.flags).toBe(MessageFlags.Ephemeral);
   });
 
+  it("refuses non-administrators without fetching the channel or writing", async () => {
+    const { handler, db } = await loadModule();
+    const interaction = mockInteraction({ memberPermissions: { has: sinon.stub().returns(false) } });
+    const client = mockClient();
+
+    await handler(client as never, interaction as never);
+
+    expect(client.channels.fetch.called).toBe(false);
+    expect(db.update.called).toBe(false);
+    const arg = (interaction.reply as sinon.SinonStub).firstCall.args[0];
+    expect(arg.content).toContain("Administrator");
+    expect(arg.flags).toBe(MessageFlags.Ephemeral);
+  });
+
   it("should update guild with channel and reply", async () => {
     const { handler, db } = await loadModule();
-    const interaction = mockInteraction();
-    const channel = { id: "ch-123", name: "general" };
-    (interaction.options.getChannel as sinon.SinonStub).withArgs("channel", true).returns(channel);
+    const interaction = adminInteraction();
+    (interaction.options.getChannel as sinon.SinonStub).withArgs("channel", true).returns({ id: "ch-123" });
 
     const chain = mockDbChain([]);
     db.update.returns(chain);
 
     const client = mockClient();
-    client.channels.fetch.resolves({ ...channel, guildId: interaction.guildId,
-      isTextBased: () => true, isDMBased: () => false, permissionsFor: () => ({ has: () => true }) });
+    client.channels.fetch.resolves(textChannel("ch-123", interaction.guildId));
     await handler(client as never, interaction as never);
 
     expect(db.update.calledOnce).toBe(true);
@@ -63,12 +83,11 @@ describe("setup channel command", () => {
     const chain = mockDbChain();
     chain.rejects(new Error("DB error"));
     db.update.returns(chain);
-    const interaction = mockInteraction();
+    const interaction = adminInteraction();
     (interaction.options.getChannel as sinon.SinonStub).withArgs("channel", true).returns({ id: "ch-123" });
 
     const client = mockClient();
-    client.channels.fetch.resolves({ id: "ch-123", guildId: interaction.guildId,
-      isTextBased: () => true, isDMBased: () => false, permissionsFor: () => ({ has: () => true }) });
+    client.channels.fetch.resolves(textChannel("ch-123", interaction.guildId));
     await handler(client as never, interaction as never);
 
     expect(logger.commands.error.calledOnce).toBe(true);
@@ -77,13 +96,28 @@ describe("setup channel command", () => {
 
   it("rejects an inaccessible channel without saving it", async () => {
     const { handler, db } = await loadModule();
-    const interaction = mockInteraction();
+    const interaction = adminInteraction();
     interaction.options.getChannel.returns({ id: "restricted" });
     const client = mockClient();
-    client.channels.fetch.resolves({ id: "restricted", guildId: interaction.guildId,
-      isTextBased: () => true, isDMBased: () => false, permissionsFor: () => ({ has: () => false }) });
+    client.channels.fetch.resolves(textChannel("restricted", interaction.guildId, false));
     await handler(client as never, interaction as never);
     expect(db.update.called).toBe(false);
+    expect(interaction.reply.firstCall.args[0].content).toContain("Embed Links");
+  });
+
+  it("gives the permission guidance for a non-text channel instead of a generic error", async () => {
+    const { handler, db, logger } = await loadModule();
+    const interaction = adminInteraction();
+    interaction.options.getChannel.returns({ id: "voice-1" });
+    const client = mockClient();
+    // A voice channel has no text permissionsFor contract here; it must be
+    // rejected on its type before anything else is called on it.
+    client.channels.fetch.resolves({ id: "voice-1", guildId: interaction.guildId, type: ChannelType.GuildVoice });
+
+    await handler(client as never, interaction as never);
+
+    expect(db.update.called).toBe(false);
+    expect(logger.commands.error.called).toBe(false);
     expect(interaction.reply.firstCall.args[0].content).toContain("Embed Links");
   });
 });

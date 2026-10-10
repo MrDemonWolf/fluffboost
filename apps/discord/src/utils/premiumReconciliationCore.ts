@@ -9,22 +9,50 @@ export async function activePremiumGuilds(
   guildId?: string
 ): Promise<string[]> {
   const active = new Set<string>();
-  let after: string | undefined;
+  // Discord documents no default order, so anchor an ascending walk at "0" and
+  // only stop on an empty page (server-side filters can shorten a page early).
+  let after = "0";
   for (;;) {
-    const page = await fetchPage({
-      skus: [skuId], limit: 100, excludeEnded: true, excludeDeleted: true,
-      cache: false, ...(after ? { after } : {}), ...(guildId ? { guild: guildId } : {}),
-    });
+    const options: FetchEntitlementsOptions = {
+      skus: [skuId], limit: 100, excludeEnded: true, excludeDeleted: true, cache: false, after,
+    };
+    if (guildId) {
+      options.guild = guildId;
+    }
+    const page = await fetchPage(options);
+    if (page.size === 0) {break;}
     for (const entitlement of page.values()) {
       if (entitlement.guildId &&
         isActivePremiumEntitlement(entitlement, skuId, entitlement.guildId, Date.now(), { allowTest })) {
         active.add(entitlement.guildId);
       }
     }
-    if (page.size < 100) {break;}
     const next = [...page.keys()].reduce((max, id) => BigInt(id) > BigInt(max) ? id : max);
-    if (next === after) {throw new Error("Entitlement pagination did not advance");}
+    if (BigInt(next) <= BigInt(after)) {throw new Error("Entitlement pagination did not advance");}
     after = next;
   }
   return [...active];
+}
+
+export interface PremiumWritePlan {
+  revoke: string[];
+  grant: string[];
+}
+
+/**
+ * Decide the isPremium writes for one reconcile pass. Only rows that were
+ * already premium before the snapshot was fetched may be cleared, so a grant
+ * written by ENTITLEMENT_CREATE while the snapshot was in flight is not lost.
+ */
+export function planPremiumWrites(
+  ownedGuilds: readonly string[],
+  premiumBefore: readonly string[],
+  activeGuilds: readonly string[]
+): PremiumWritePlan {
+  const owned = new Set(ownedGuilds);
+  const active = new Set(activeGuilds.filter((id) => owned.has(id)));
+  return {
+    revoke: premiumBefore.filter((id) => owned.has(id) && !active.has(id)),
+    grant: [...active],
+  };
 }

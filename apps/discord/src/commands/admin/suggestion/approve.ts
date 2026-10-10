@@ -1,11 +1,12 @@
 import { MessageFlags } from "discord.js";
 
-import type { Client, CommandInteraction, CommandInteractionOptionResolver } from "discord.js";
+import type { Client, ChatInputCommandInteraction } from "discord.js";
 
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
 import { motivationQuotes } from "../../../database/schema.js";
 import { withCommandLogging } from "../../../utils/commandErrors.js";
+import { quoteInputError } from "../../../utils/quoteLimits.js";
 import {
   fetchPendingSuggestion,
   notifySuggestionReviewed,
@@ -14,16 +15,26 @@ import {
 
 export default async function (
   client: Client,
-  interaction: CommandInteraction,
-  options: CommandInteractionOptionResolver,
+  interaction: ChatInputCommandInteraction,
 ): Promise<void> {
   await withCommandLogging("admin suggestion approve", interaction, async () => {
     if (!(await isUserPermitted(interaction))) {return;}
 
-    const suggestionId = options.getString("suggestion_id", true);
+    const suggestionId = interaction.options.getString("suggestion_id", true).trim();
 
     const suggestion = await fetchPendingSuggestion(suggestionId, interaction);
     if (!suggestion) {return;}
+
+    // Suggestions saved before the length limits existed can still be pending;
+    // never copy one into the library that delivery would truncate.
+    const inputError = quoteInputError(suggestion.quote, suggestion.author);
+    if (inputError) {
+      await interaction.reply({
+        content: `${inputError} Reject this suggestion instead.`,
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
 
     // Atomic: only proceed if the suggestion is still Pending. Guards against
     // two admins approving concurrently (would double-insert a motivation quote)

@@ -1,11 +1,11 @@
 import { MessageFlags } from "discord.js";
 
-import type { Client, CommandInteraction } from "discord.js";
+import type { Client, ChatInputCommandInteraction } from "discord.js";
 
 import { requireApplication, requireOwner, requireTestEnvironment } from "../../../utils/ownerGuard.js";
 import { withCommandLogging } from "../../../utils/commandErrors.js";
 
-export default async function (client: Client, interaction: CommandInteraction): Promise<void> {
+export default async function (client: Client, interaction: ChatInputCommandInteraction): Promise<void> {
   await withCommandLogging(
     "owner premium test-list",
     interaction,

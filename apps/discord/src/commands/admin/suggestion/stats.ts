@@ -1,4 +1,6 @@
-import { Client, CommandInteraction, MessageFlags } from "discord.js";
+import { MessageFlags } from "discord.js";
+
+import type { Client, ChatInputCommandInteraction } from "discord.js";
 
 import { eq, count } from "drizzle-orm";
 
@@ -11,7 +13,7 @@ import { buildBrandedEmbed } from "../../../utils/embedHelpers.js";
 
 export default async function (
   _client: Client,
-  interaction: CommandInteraction,
+  interaction: ChatInputCommandInteraction,
 ): Promise<void> {
   await withCommandLogging("admin suggestion stats", interaction, async () => {
     if (!(await isUserPermitted(interaction))) {
@@ -33,7 +35,10 @@ export default async function (
     ]);
 
     const total = pending + approved + rejected;
-    const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
+    // Share of reviewed suggestions that were approved; pending ones have no
+    // outcome yet, so they must not dilute the rate.
+    const reviewed = approved + rejected;
+    const approvalRate = reviewed > 0 ? `${Math.round((approved / reviewed) * 100)}%` : "N/A";
 
     const embed = buildBrandedEmbed({
       title: "Suggestion Statistics",
@@ -42,7 +47,7 @@ export default async function (
         { name: "Approved", value: `${approved}`, inline: true },
         { name: "Rejected", value: `${rejected}`, inline: true },
         { name: "Total", value: `${total}`, inline: true },
-        { name: "Approval Rate", value: `${approvalRate}%`, inline: true },
+        { name: "Approval Rate", value: approvalRate, inline: true },
       ],
       timestamp: true,
     });

@@ -63,9 +63,47 @@ describe("timezones", () => {
       expect(results).toHaveLength(0);
     });
 
-    it("should return 25 results for empty query", () => {
+    it("should return a curated list of common zones for an empty query", () => {
       const results = filterTimezones("");
-      expect(results).toHaveLength(25);
+      expect(results.length).toBeGreaterThan(0);
+      expect(results.length).toBeLessThanOrEqual(25);
+      expect(results[0]).toBe("America/Chicago");
+      expect(results).toContain("America/New_York");
+      expect(results).not.toContain("Africa/Abidjan");
+      expect(results.every(isValidTimezone)).toBe(true);
+      expect(filterTimezones("   ")).toEqual(results);
+    });
+
+    it.each([
+      ["new york", "America/New_York"],
+      ["los angeles", "America/Los_Angeles"],
+      ["  Buenos Aires ", "America/Argentina/Buenos_Aires"],
+      ["port au prince", "America/Port-au-Prince"],
+      ["port-au-prince", "America/Port-au-Prince"],
+      ["new_york", "America/New_York"],
+    ])("normalizes spaces, underscores and hyphens (%p)", (query, expected) => {
+      expect(filterTimezones(query)).toContain(expected);
+    });
+
+    it.each([
+      ["kolkata", "Asia/Kolkata"],
+      ["kyiv", "Europe/Kyiv"],
+      ["ho chi minh", "Asia/Ho_Chi_Minh"],
+      ["kathmandu", "Asia/Kathmandu"],
+      ["yangon", "Asia/Yangon"],
+      ["nuuk", "America/Nuuk"],
+    ])("suggests the modern IANA name for %p", (query, expected) => {
+      expect(filterTimezones(query)).toContain(expected);
+      expect(isValidTimezone(expected)).toBe(true);
+    });
+
+    it("ranks city-name prefix matches first", () => {
+      // "ind" hits city prefixes (Indiana/..., Indian/...) and mid-name matches.
+      const results = filterTimezones("ind");
+      const cityPrefix = results.findIndex((tz) => tz.split("/").pop()?.toLowerCase().startsWith("ind"));
+      const nonPrefix = results.findIndex((tz) => !tz.split("/").pop()?.toLowerCase().startsWith("ind"));
+      expect(cityPrefix).toBeGreaterThanOrEqual(0);
+      expect(nonPrefix === -1 || cityPrefix < nonPrefix).toBe(true);
     });
   });
 });

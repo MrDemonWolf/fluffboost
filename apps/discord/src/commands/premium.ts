@@ -1,14 +1,21 @@
-import { MessageFlags, SlashCommandBuilder } from "discord.js";
+import { InteractionContextType, MessageFlags, SlashCommandBuilder } from "discord.js";
 
 import type { Client, CommandInteraction } from "discord.js";
+import { eq } from "drizzle-orm";
 
+import { db } from "../database/index.js";
+import { guilds } from "../database/schema.js";
+import logger from "../utils/logger.js";
 import { withCommandLogging } from "../utils/commandErrors.js";
+import { requireGuildId } from "../utils/permissions.js";
 import { buildPremiumUpsell, hasEntitlement, isPremiumEnabled } from "../utils/premium.js";
 import { buildBrandedEmbed, SUCCESS_COLOR } from "../utils/embedHelpers.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("premium")
-  .setDescription("View premium subscription info and status");
+  .setDescription("View premium subscription info and status")
+  // Premium is a per-server subscription; hides the command from bot DMs.
+  .setContexts(InteractionContextType.Guild);
 
 export async function execute(_client: Client, interaction: CommandInteraction): Promise<void> {
   await withCommandLogging("premium", interaction, async () => {
@@ -17,6 +24,13 @@ export async function execute(_client: Client, interaction: CommandInteraction):
         content: "Premium subscriptions are not currently available.",
         flags: MessageFlags.Ephemeral,
       });
+      return;
+    }
+
+    // Stale global registrations can still reach DMs, where there is no server
+    // to show a subscription for.
+    const guildId = await requireGuildId(interaction);
+    if (!guildId) {
       return;
     }
 
@@ -30,6 +44,15 @@ export async function execute(_client: Client, interaction: CommandInteraction):
       });
 
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+
+      // Self-heal: this reply reads live entitlements, but delivery reads the
+      // cached isPremium flag, which a missed or failed entitlement event can
+      // leave stale. Best-effort; the reconciliation loop is the backstop.
+      try {
+        await db.update(guilds).set({ isPremium: true }).where(eq(guilds.guildId, guildId));
+      } catch (err) {
+        logger.commands.error("premium", interaction.user.username, interaction.user.id, err, guildId);
+      }
       return;
     }
 

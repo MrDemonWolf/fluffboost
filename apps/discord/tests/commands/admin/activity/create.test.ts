@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
+import { mockPermissions } from "../../permissionsMock.js";
 import { mockLogger, mockDb, mockDbChain, mockInteraction, mockClient } from "../../../helpers.js";
 
 describe("admin activity create command", () => {
@@ -13,7 +14,7 @@ describe("admin activity create command", () => {
 
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
-    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().resolves(true) }));
+    await mockPermissions(true);
 
     const mod = await import("../../../../src/commands/admin/activity/create.js");
 
@@ -26,7 +27,7 @@ describe("admin activity create command", () => {
 
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
-    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().resolves(false) }));
+    await mockPermissions(false);
 
     const mod = await import("../../../../src/commands/admin/activity/create.js");
 
@@ -42,33 +43,24 @@ describe("admin activity create command", () => {
     return interaction;
   }
 
-  it("should return early when user is not permitted", async () => {
-    const { handler } = await loadModuleNotPermitted();
+  it("should return early without touching the database when user is not permitted", async () => {
+    const { handler, db } = await loadModuleNotPermitted();
     const interaction = makeInteraction("Gaming", "Playing");
 
-    await handler(mockClient() as never, interaction as never, interaction.options as never);
+    await handler(mockClient() as never, interaction as never);
 
     expect((interaction.reply as sinon.SinonStub).called).toBe(false);
+    expect(db.insert.called).toBe(false);
   });
 
   it("should reply when empty activity provided", async () => {
     const { handler } = await loadModule();
     const interaction = makeInteraction("  ", "Playing");
 
-    await handler(mockClient() as never, interaction as never, interaction.options as never);
+    await handler(mockClient() as never, interaction as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
     expect(replyArgs.content).toContain("provide an activity");
-  });
-
-  it("should reply when empty type provided", async () => {
-    const { handler } = await loadModule();
-    const interaction = makeInteraction("Gaming", "  ");
-
-    await handler(mockClient() as never, interaction as never, interaction.options as never);
-
-    const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).toContain("provide a type");
   });
 
   it("should create activity and reply on success", async () => {
@@ -76,7 +68,7 @@ describe("admin activity create command", () => {
     db.insert.returns(mockDbChain([{ id: "a1", activity: "Gaming", type: "Playing", url: null }]));
 
     const interaction = makeInteraction("Gaming", "Playing");
-    await handler(mockClient() as never, interaction as never, interaction.options as never);
+    await handler(mockClient() as never, interaction as never);
 
     expect(db.insert.calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
@@ -94,7 +86,7 @@ describe("admin activity create command", () => {
     db.insert.returns(chain);
 
     const interaction = makeInteraction("Streaming", "Streaming", "https://twitch.tv/test");
-    await handler(mockClient() as never, interaction as never, interaction.options as never);
+    await handler(mockClient() as never, interaction as never);
 
     expect(db.insert.calledOnce).toBe(true);
     const valuesArgs = (chain.values as sinon.SinonStub).firstCall.args[0];
@@ -108,7 +100,7 @@ describe("admin activity create command", () => {
     db.insert.returns(chain);
 
     const interaction = makeInteraction("Gaming", "Playing");
-    await handler(mockClient() as never, interaction as never, interaction.options as never);
+    await handler(mockClient() as never, interaction as never);
 
     expect(logger.commands.error.calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];

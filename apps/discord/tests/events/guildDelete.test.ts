@@ -1,5 +1,8 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
+import type { SinonStub } from "sinon";
+import { PgDialect } from "drizzle-orm/pg-core";
+import type { SQL } from "drizzle-orm";
 import { mockLogger, mockDb, mockDbChain, mockGuild } from "../helpers.js";
 
 describe("guildDeleteEvent", () => {
@@ -10,6 +13,8 @@ describe("guildDeleteEvent", () => {
   it("should delete guild from database and log on leave", async () => {
     const db = mockDb();
     const logger = mockLogger();
+    const deleteChain = mockDbChain();
+    db.delete.returns(deleteChain);
 
     mock.module("../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
@@ -18,6 +23,8 @@ describe("guildDeleteEvent", () => {
     await guildDeleteEvent(mockGuild({ id: "g1", name: "Bye Guild" }) as never);
 
     expect(db.delete.calledOnce).toBe(true);
+    const where = (deleteChain["where"] as SinonStub).firstCall.args[0] as SQL;
+    expect(new PgDialect().sqlToQuery(where).params).toEqual(["g1"]);
     expect(logger.discord.guildLeft.calledOnce).toBe(true);
   });
 

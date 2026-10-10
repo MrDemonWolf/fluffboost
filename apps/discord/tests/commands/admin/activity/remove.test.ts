@@ -1,32 +1,22 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
+import { mockPermissions } from "../../permissionsMock.js";
 import { mockLogger, mockDb, mockDbChain, mockInteraction, mockClient } from "../../../helpers.js";
+
+const ACTIVITY_ID = "0b1c2d3e-4f5a-4b6c-9d7e-8f9a0b1c2d3e";
 
 describe("admin activity remove command", () => {
   afterEach(() => {
     sinon.restore();
   });
 
-  async function loadModule() {
+  async function loadModule(permitted = true) {
     const logger = mockLogger();
     const db = mockDb();
 
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
-    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().returns(true) }));
-
-    const mod = await import("../../../../src/commands/admin/activity/remove.js");
-
-    return { handler: mod.default, logger, db };
-  }
-
-  async function loadModuleNotPermitted() {
-    const logger = mockLogger();
-    const db = mockDb();
-
-    mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
-    mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
-    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().returns(false) }));
+    await mockPermissions(permitted);
 
     const mod = await import("../../../../src/commands/admin/activity/remove.js");
 
@@ -40,46 +30,62 @@ describe("admin activity remove command", () => {
     return interaction;
   }
 
-  it("should return early when user is not permitted", async () => {
-    const { handler } = await loadModuleNotPermitted();
-    const interaction = makeInteraction("a1");
+  it("should return early without touching the database when user is not permitted", async () => {
+    const { handler, db } = await loadModule(false);
+    const interaction = makeInteraction(ACTIVITY_ID);
 
-    await handler(mockClient() as never, interaction as never, interaction.options as never);
+    await handler(mockClient() as never, interaction as never);
 
     expect((interaction.reply as sinon.SinonStub).called).toBe(false);
+    expect(db.select.called).toBe(false);
+    expect(db.delete.called).toBe(false);
   });
 
-  it("should reply when empty activity ID provided", async () => {
-    const { handler } = await loadModule();
+  it("replies not found for a blank ID without querying the database", async () => {
+    const { handler, db } = await loadModule();
     const interaction = makeInteraction("  ");
 
-    await handler(mockClient() as never, interaction as never, interaction.options as never);
+    await handler(mockClient() as never, interaction as never);
 
+    expect(db.delete.called).toBe(false);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).toContain("valid activity ID");
+    expect(replyArgs.content).toContain("No activity found");
+  });
+
+  it("replies not found for a malformed ID without querying the database", async () => {
+    const { handler, db, logger } = await loadModule();
+    const interaction = makeInteraction(ACTIVITY_ID.slice(0, 35));
+
+    await handler(mockClient() as never, interaction as never);
+
+    expect(db.delete.called).toBe(false);
+    expect(logger.commands.error.called).toBe(false);
+    const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
+    expect(replyArgs.content).toContain("No activity found");
   });
 
   it("should reply when activity not found", async () => {
     const { handler, db } = await loadModule();
-    // findUnique equivalent: select().from().where().limit(1) returns empty array -> destructures to undefined
-    db.select.returns(mockDbChain([]));
+    db.delete.returns(mockDbChain([]));
 
-    const interaction = makeInteraction("a-nonexistent");
-    await handler(mockClient() as never, interaction as never, interaction.options as never);
+    const interaction = makeInteraction(ACTIVITY_ID);
+    await handler(mockClient() as never, interaction as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
     expect(replyArgs.content).toContain("No activity found");
   });
 
-  it("should delete activity and reply on success", async () => {
+  it("should delete activity atomically and reply on success", async () => {
     const { handler, db } = await loadModule();
-    // findUnique equivalent returns the activity
-    db.select.returns(mockDbChain([{ id: "a1", activity: "Gaming", type: "Playing" }]));
+    const chain = mockDbChain([{ id: ACTIVITY_ID }]);
+    db.delete.returns(chain);
 
-    const interaction = makeInteraction("a1");
-    await handler(mockClient() as never, interaction as never, interaction.options as never);
+    const interaction = makeInteraction(ACTIVITY_ID);
+    await handler(mockClient() as never, interaction as never);
 
+    expect(db.select.called).toBe(false);
     expect(db.delete.calledOnce).toBe(true);
+    expect((chain["returning"] as sinon.SinonStub).calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
     expect(replyArgs.content).toContain("deleted");
   });
@@ -88,10 +94,10 @@ describe("admin activity remove command", () => {
     const { handler, db, logger } = await loadModule();
     const chain = mockDbChain();
     chain.rejects(new Error("DB error"));
-    db.select.returns(chain);
+    db.delete.returns(chain);
 
-    const interaction = makeInteraction("a1");
-    await handler(mockClient() as never, interaction as never, interaction.options as never);
+    const interaction = makeInteraction(ACTIVITY_ID);
+    await handler(mockClient() as never, interaction as never);
 
     expect(logger.commands.error.calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];

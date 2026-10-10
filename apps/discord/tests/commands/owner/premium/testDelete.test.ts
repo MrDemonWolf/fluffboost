@@ -32,7 +32,7 @@ describe("owner premium test-delete command", () => {
     const { handler } = await loadModule({ OWNER_ID: "owner-123" });
     const interaction = makeInteraction("not-owner", "ent-1");
 
-    await handler(mockClient() as never, interaction as never, interaction.options as never);
+    await handler(mockClient() as never, interaction as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
     expect(replyArgs.content).toContain("Only the bot owner");
@@ -43,7 +43,7 @@ describe("owner premium test-delete command", () => {
     const interaction = makeInteraction("owner-123", "ent-1");
     const client = mockClient();
 
-    await handler(client as never, interaction as never, interaction.options as never);
+    await handler(client as never, interaction as never);
 
     expect(
       (client.application as { entitlements: { deleteTest: sinon.SinonStub } }).entitlements.deleteTest.calledOnce
@@ -62,7 +62,7 @@ describe("owner premium test-delete command", () => {
     const client = mockClient();
     client.application = null as never;
 
-    await handler(client as never, interaction as never, interaction.options as never);
+    await handler(client as never, interaction as never);
 
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
     expect(replyArgs.content).toContain("not ready");
@@ -76,7 +76,7 @@ describe("owner premium test-delete command", () => {
       new Error("API Error: rate limited")
     );
 
-    await handler(client as never, interaction as never, interaction.options as never);
+    await handler(client as never, interaction as never);
 
     expect(logger.commands.error.calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
@@ -87,7 +87,7 @@ describe("owner premium test-delete command", () => {
     const { handler, logger } = await loadModule({ OWNER_ID: "owner-123" });
     const interaction = makeInteraction("not-owner", "ent-1");
 
-    await handler(mockClient() as never, interaction as never, interaction.options as never);
+    await handler(mockClient() as never, interaction as never);
 
     expect(logger.commands.unauthorized.calledOnce).toBe(true);
   });

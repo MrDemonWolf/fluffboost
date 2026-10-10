@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
+import { mockPermissions } from "../../permissionsMock.js";
 import { mockLogger, mockDb, mockDbChain, mockInteraction, mockEnv } from "../../../helpers.js";
 
 describe("admin suggestion list command", () => {
@@ -15,7 +16,7 @@ describe("admin suggestion list command", () => {
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../../../src/utils/env.js", () => ({ default: env }));
-    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().returns(true) }));
+    await mockPermissions(true);
 
     const mod = await import("../../../../src/commands/admin/suggestion/list.js");
 
@@ -29,7 +30,7 @@ describe("admin suggestion list command", () => {
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../../../src/utils/env.js", () => ({ default: mockEnv() }));
-    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().returns(false) }));
+    await mockPermissions(false);
 
     const mod = await import("../../../../src/commands/admin/suggestion/list.js");
 
@@ -49,7 +50,7 @@ describe("admin suggestion list command", () => {
     const { handler, db } = await loadModuleUnauthorized();
     const interaction = makeInteraction();
 
-    await handler({} as never, interaction as never, interaction.options as never);
+    await handler({} as never, interaction as never);
 
     expect(db.select.called).toBe(false);
   });
@@ -59,7 +60,7 @@ describe("admin suggestion list command", () => {
     const interaction = makeInteraction();
 
     // Default mockDb already returns empty array for select
-    await handler({} as never, interaction as never, interaction.options as never);
+    await handler({} as never, interaction as never);
 
     expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
@@ -75,7 +76,7 @@ describe("admin suggestion list command", () => {
     const chain = mockDbChain([]);
     db.select.returns(chain);
 
-    await handler({} as never, interaction as never, interaction.options as never);
+    await handler({} as never, interaction as never);
 
     expect(db.select.calledOnce).toBe(true);
     // The where method should have been called (for status filter)
@@ -93,7 +94,7 @@ describe("admin suggestion list command", () => {
       { id: "s2", quote: "Stay strong", author: "Me", status: "Approved", addedBy: "user-2" },
     ]));
 
-    await handler({} as never, interaction as never, interaction.options as never);
+    await handler({} as never, interaction as never);
 
     expect((interaction.reply as sinon.SinonStub).calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
@@ -121,7 +122,7 @@ describe("admin suggestion list command", () => {
     const chain = mockDbChain(rows);
     db.select.returns(chain);
 
-    await handler({} as never, interaction as never, interaction.options as never);
+    await handler({} as never, interaction as never);
 
     expect((chain.limit as sinon.SinonStub).calledWith(501)).toBe(true);
     expect((chain.offset as sinon.SinonStub).calledWith(500)).toBe(true);
@@ -131,6 +132,6 @@ describe("admin suggestion list command", () => {
     expect(content).toContain("s501");
     expect(content).toContain("s1000");
     expect(content).not.toContain("s1001");
-    expect(content.split("\n").filter((line) => line.startsWith("s"))).toHaveLength(500);
+    expect(content.split("\n").filter((line: string) => line.startsWith("s"))).toHaveLength(500);
   });
 });

@@ -1,9 +1,8 @@
 import express from "express";
-import morgan from "morgan";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
-import env from "../utils/env.js";
+import logger from "../utils/logger.js";
 
 /**
  * Import all routes
@@ -11,12 +10,31 @@ import env from "../utils/env.js";
 import healthRoute from "./routes/health.js";
 
 const app: express.Application = express();
+
 /**
- * Express configuration (express.json, express.urlencoded, helmet, morgan, cors)
+ * The API only serves GET health checks, so no body parsers. `trust proxy` is
+ * deliberately unset: the limiter keys on the socket address, and trusting
+ * X-Forwarded-For without a known proxy hop would let clients spoof it.
  */
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(helmet());
+
+/**
+ * Access log through the structured logger (method, path, status only: no
+ * client IP or user agent). Successful health checks are skipped as noise.
+ * Mounted before the limiter so 429s are logged.
+ */
+app.use((req, res, next) => {
+  // Captured now: routers rewrite req.url while handling, and the query string is dropped.
+  const path = req.path;
+  res.on("finish", () => {
+    if (path.startsWith("/api/health") && res.statusCode < 400) {
+      return;
+    }
+    logger.api.request(req.method, path, res.statusCode);
+  });
+  next();
+});
+
 app.use(
   rateLimit({
     windowMs: 60 * 1000,
@@ -25,50 +43,6 @@ app.use(
     legacyHeaders: false,
   })
 );
-
-/**
- * Use verbose logs in development, concise logs in production
- * Skip logging for health check requests from Coolify (curl/*), Pulsetic monitoring, and localhost IPs
- */
-const skipHealthChecks = (req: express.Request) => {
-  const userAgent = req.get("User-Agent") || "";
-  const clientIP = req.ip || req.socket.remoteAddress || "";
-
-  // Skip if User-Agent starts with curl/ (Coolify health checks)
-  if (userAgent.startsWith("curl/")) {
-    return true;
-  }
-
-  // Skip if User-Agent contains pulsetic (Pulsetic monitoring)
-  if (userAgent.toLowerCase().includes("pulsetic")) {
-    return true;
-  }
-
-  // Skip if request is from localhost (IPv4 or IPv6)
-  if (
-    clientIP === "127.0.0.1" ||
-    clientIP === "::1" ||
-    clientIP === "::ffff:127.0.0.1"
-  ) {
-    return true;
-  }
-
-  return false;
-};
-
-if (env.NODE_ENV === "production") {
-  app.use(morgan("combined", { skip: skipHealthChecks }));
-} else {
-  app.use(morgan("dev", { skip: skipHealthChecks }));
-}
-
-/**
- * Set express variables
- * @param {string} host - Hostname
- * @param {number} port - Port
- */
-app.set("host", env.HOST || "localhost");
-app.set("port", env.PORT || 3000);
 
 /**
  * Initialize routes

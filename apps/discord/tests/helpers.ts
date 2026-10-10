@@ -1,5 +1,9 @@
 import sinon from "sinon";
 import type { SinonStub } from "sinon";
+import type { z } from "zod";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
+
+import type { envSchema } from "../src/utils/envSchema.js";
 
 /**
  * Shared test helper factories for FluffBoost tests.
@@ -61,31 +65,62 @@ export function mockLogger() {
  *   const chain = mockDbChain();
  *   chain.rejects(new Error("DB error"));
  */
-export function mockDbChain(resolveValue: unknown = []) {
+export interface MockDbChain extends PromiseLike<unknown> {
+  from: SinonStub;
+  where: SinonStub;
+  orderBy: SinonStub;
+  limit: SinonStub;
+  offset: SinonStub;
+  set: SinonStub;
+  values: SinonStub;
+  onConflictDoNothing: SinonStub;
+  returning: SinonStub;
+  target: SinonStub;
+  /** Make the awaited chain resolve to `value` (clears a configured rejection). */
+  resolves(value: unknown): MockDbChain;
+  /** Make the awaited chain reject with `err`. */
+  rejects(err: unknown): MockDbChain;
+}
+
+export function mockDbChain(resolveValue: unknown = []): MockDbChain {
   let _resolveValue: unknown = resolveValue;
   let _rejectValue: unknown = undefined;
 
-  const chain: Record<string, unknown> = {};
-  const methods = [
-    "from", "where", "orderBy", "limit", "offset",
-    "set", "values", "onConflictDoNothing", "returning", "target",
-  ];
+  // Every builder method returns the chain itself, like Drizzle's query builder.
+  const builder = () => sinon.stub().callsFake(() => chain);
 
-  for (const method of methods) {
-    chain[method] = sinon.stub().returns(chain);
-  }
-
-  // Make the chain thenable so `await db.select().from(...)` works
-  chain["then"] = (onFulfill: (v: unknown) => unknown, onReject?: (e: unknown) => unknown) => {
-    if (_rejectValue !== undefined) {
-      return Promise.reject(_rejectValue).then(onFulfill, onReject);
-    }
-    return Promise.resolve(_resolveValue).then(onFulfill, onReject);
+  const chain: MockDbChain = {
+    from: builder(),
+    where: builder(),
+    orderBy: builder(),
+    limit: builder(),
+    offset: builder(),
+    set: builder(),
+    values: builder(),
+    onConflictDoNothing: builder(),
+    returning: builder(),
+    target: builder(),
+    // Make the chain thenable so `await db.select().from(...)` works
+    then<TResult1 = unknown, TResult2 = never>(
+      onFulfill?: ((value: unknown) => TResult1 | PromiseLike<TResult1>) | null,
+      onReject?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
+    ): PromiseLike<TResult1 | TResult2> {
+      if (_rejectValue !== undefined) {
+        return Promise.reject(_rejectValue).then(onFulfill, onReject);
+      }
+      return Promise.resolve(_resolveValue).then(onFulfill, onReject);
+    },
+    // Test configuration helpers
+    resolves(value: unknown) {
+      _resolveValue = value;
+      _rejectValue = undefined;
+      return chain;
+    },
+    rejects(err: unknown) {
+      _rejectValue = err;
+      return chain;
+    },
   };
-
-  // Test configuration helpers
-  chain["resolves"] = (value: unknown) => { _resolveValue = value; _rejectValue = undefined; return chain; };
-  chain["rejects"] = (err: unknown) => { _rejectValue = err; return chain; };
 
   return chain;
 }
@@ -207,10 +242,22 @@ export function mockEntitlement(overrides: Record<string, unknown> = {}) {
 
 // ── Default env mock ─────────────────────────────────────────────────────────
 
-export function mockEnv(overrides: Record<string, unknown> = {}) {
+export type MockEnv = z.infer<typeof envSchema>;
+
+/** The unit-test env overrides tests/preload.ts registers (unreachable hosts, fake credentials). */
+export const UNIT_ENV_FIXTURE: Partial<MockEnv> = {
+  DATABASE_URL: "postgres://unit:unit@127.0.0.1:1/fluffboost_unit",
+  REDIS_URL: "redis://127.0.0.1:1",
+  DISCORD_APPLICATION_PUBLIC_KEY: "unit-test-not-a-discord-public-key",
+  DISCORD_APPLICATION_BOT_TOKEN: "unit-test-not-a-discord-token",
+};
+
+/** A fully typed env fixture; overrides must match the real schema's output types. */
+export function mockEnv(overrides: Partial<MockEnv> = {}): MockEnv {
   return {
     DATABASE_URL: "postgres://user:pass@localhost:5432/test",
     DATABASE_POOL_MAX: 10,
+    DATABASE_QUERY_LOG: false,
     REDIS_URL: "redis://localhost:6379",
     DISCORD_APPLICATION_ID: "100000000000000001",
     DISCORD_APPLICATION_PUBLIC_KEY: "key-123",
@@ -224,7 +271,7 @@ export function mockEnv(overrides: Record<string, unknown> = {}) {
     MAIN_GUILD_ID: "100000000000000100",
     MAIN_CHANNEL_ID: "100000000000000200",
     HOST: "localhost",
-    PORT: "3000",
+    PORT: 3000,
     VERSION: "1.0.0",
     NODE_ENV: "test",
     PREMIUM_ENABLED: false,
@@ -241,15 +288,17 @@ export type MockDb = ReturnType<typeof mockDb>;
 export type StubFn = SinonStub;
 
 // ── Premium upsell stub (matches real premium.buildPremiumUpsell shape) ────
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
 
 export function stubBuildPremiumUpsell(skuId?: string) {
-  return (opts: { title?: string; description?: string; fields?: { name: string; value: string; inline?: boolean }[] } = {}) => {
+  type UpsellField = { name: string; value: string; inline?: boolean };
+  return (opts: { title?: string; description?: string; fields?: UpsellField[] } = {}) => {
     const embed = new EmbedBuilder()
       .setColor(0xfadb7f)
       .setTitle(opts.title ?? "FluffBoost Premium")
       .setDescription(opts.description ?? "upsell");
-    if (opts.fields) embed.addFields(opts.fields);
+    if (opts.fields) {
+      embed.addFields(opts.fields);
+    }
     const components: ActionRowBuilder<ButtonBuilder>[] = [];
     if (skuId) {
       components.push(

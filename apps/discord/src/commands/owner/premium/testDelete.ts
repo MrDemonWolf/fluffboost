@@ -1,14 +1,13 @@
 import { MessageFlags } from "discord.js";
 
-import type { Client, CommandInteraction, CommandInteractionOptionResolver } from "discord.js";
+import type { Client, ChatInputCommandInteraction } from "discord.js";
 
 import { requireApplication, requireOwner, requireTestEnvironment } from "../../../utils/ownerGuard.js";
 import { withCommandLogging } from "../../../utils/commandErrors.js";
 
 export default async function (
   client: Client,
-  interaction: CommandInteraction,
-  options: CommandInteractionOptionResolver
+  interaction: ChatInputCommandInteraction
 ): Promise<void> {
   await withCommandLogging(
     "owner premium test-delete",
@@ -17,7 +16,7 @@ export default async function (
       if (!(await requireOwner(interaction, "owner premium test-delete"))) {return;}
       if (!(await requireTestEnvironment(interaction))) {return;}
 
-      const entitlementId = options.getString("entitlement_id", true);
+      const entitlementId = interaction.options.getString("entitlement_id", true);
 
       const application = await requireApplication(client, interaction);
       if (!application) {return;}

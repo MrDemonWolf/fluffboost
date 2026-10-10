@@ -1,13 +1,8 @@
 import { SlashCommandBuilder, MessageFlags } from "discord.js";
 
-import type {
-  Client,
-  CommandInteraction,
-  CommandInteractionOptionResolver,
-} from "discord.js";
+import type { Client, ChatInputCommandInteraction } from "discord.js";
 
 import { requireOwner, requireTestEnvironment } from "../../utils/ownerGuard.js";
-import { withCommandLogging } from "../../utils/commandErrors.js";
 
 /**
  * Import subcommands
@@ -46,61 +41,46 @@ export const slashCommand = new SlashCommandBuilder()
           );
       })
       .addSubcommand((subCommand) => {
-        return subCommand.setName("test-list").setDescription("List all entitlements");
+        return subCommand
+          .setName("test-list")
+          .setDescription("List all entitlements (test grants marked)");
       });
   });
 
-export async function execute(client: Client, interaction: CommandInteraction) {
-  if (!interaction.isChatInputCommand()) {
+type OwnerSubcommand = (client: Client, interaction: ChatInputCommandInteraction) => Promise<void>;
+
+/** Handlers keyed by "<group> <subcommand>", matching the builder above. */
+export const ownerRoutes: ReadonlyMap<string, OwnerSubcommand> = new Map([
+  ["premium test-create", premiumTestCreate],
+  ["premium test-delete", premiumTestDelete],
+  ["premium test-list", premiumTestList],
+]);
+
+/**
+ * Subcommands carry their own withCommandLogging wrapper and guards; errors
+ * thrown by the router itself are answered by the interactionCreate router.
+ */
+export async function execute(client: Client, interaction: ChatInputCommandInteraction): Promise<void> {
+  if (!(await requireOwner(interaction, "owner"))) {
     return;
   }
-  await withCommandLogging("owner", interaction, async () => {
-    if (!(await requireOwner(interaction, "owner"))) {
-      return;
-    }
-    if (!(await requireTestEnvironment(interaction))) {
-      return;
-    }
+  if (!(await requireTestEnvironment(interaction))) {
+    return;
+  }
 
-    const options = interaction.options;
-    const subCommandGroup = options.getSubcommandGroup();
-    const subCommand = options.getSubcommand();
+  const group = interaction.options.getSubcommandGroup();
+  const subcommand = interaction.options.getSubcommand();
+  const handler = ownerRoutes.get(`${group} ${subcommand}`);
 
-    switch (subCommandGroup) {
-      case "premium":
-        switch (subCommand) {
-          case "test-create":
-            await premiumTestCreate(
-              client,
-              interaction,
-              options as CommandInteractionOptionResolver
-            );
-            break;
-          case "test-delete":
-            await premiumTestDelete(
-              client,
-              interaction,
-              options as CommandInteractionOptionResolver
-            );
-            break;
-          case "test-list":
-            await premiumTestList(client, interaction);
-            break;
-          default:
-            await interaction.reply({
-              content: "Invalid subcommand",
-              flags: MessageFlags.Ephemeral,
-            });
-        }
-        break;
+  if (!handler) {
+    await interaction.reply({
+      content: "Invalid subcommand",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
 
-      default:
-        await interaction.reply({
-          content: "Invalid subcommand group",
-          flags: MessageFlags.Ephemeral,
-        });
-    }
-  });
+  await handler(client, interaction);
 }
 
 export default {

@@ -1,6 +1,6 @@
 import { MessageFlags } from "discord.js";
 
-import type { Client, CommandInteraction, CommandInteractionOptionResolver } from "discord.js";
+import type { Client, ChatInputCommandInteraction } from "discord.js";
 
 import { getPremiumSkuId } from "../../../utils/premium.js";
 import { requireApplication, requireOwner, requireTestEnvironment } from "../../../utils/ownerGuard.js";
@@ -8,8 +8,7 @@ import { withCommandLogging } from "../../../utils/commandErrors.js";
 
 export default async function (
   client: Client,
-  interaction: CommandInteraction,
-  options: CommandInteractionOptionResolver
+  interaction: ChatInputCommandInteraction
 ): Promise<void> {
   await withCommandLogging(
     "owner premium test-create",
@@ -27,7 +26,7 @@ export default async function (
         return;
       }
 
-      const guildId = options.getString("guild") ?? interaction.guildId;
+      const guildId = interaction.options.getString("guild") ?? interaction.guildId;
       if (!guildId) {
         await interaction.reply({
           content: "Could not determine guild. Run this in a server or pass a guild ID.",

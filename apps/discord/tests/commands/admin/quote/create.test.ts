@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
+import { mockPermissions } from "../../permissionsMock.js";
 import { mockLogger, mockDb, mockDbChain, mockInteraction, mockClient, mockEnv } from "../../../helpers.js";
 
 describe("admin quote create command", () => {
@@ -15,7 +16,7 @@ describe("admin quote create command", () => {
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../../../src/utils/env.js", () => ({ default: env }));
-    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().resolves(true) }));
+    await mockPermissions(true);
 
     const mod = await import("../../../../src/commands/admin/quote/create.js");
 
@@ -30,14 +31,14 @@ describe("admin quote create command", () => {
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../../../src/utils/env.js", () => ({ default: env }));
-    mock.module("../../../../src/utils/permissions.js", () => ({ isUserPermitted: sinon.stub().resolves(false) }));
+    await mockPermissions(false);
 
     const mod = await import("../../../../src/commands/admin/quote/create.js");
 
     return { handler: mod.default, logger, db, env };
   }
 
-  function makeInteraction(quote: string | null, author: string | null) {
+  function makeInteraction(quote: string, author: string) {
     const interaction = mockInteraction();
     const getStringStub = interaction.options.getString as sinon.SinonStub;
     getStringStub.withArgs("quote").returns(quote);
@@ -45,33 +46,36 @@ describe("admin quote create command", () => {
     return interaction;
   }
 
-  it("should return early when user is not permitted", async () => {
-    const { handler } = await loadModuleNotPermitted();
+  it("should return early without touching the database when user is not permitted", async () => {
+    const { handler, db } = await loadModuleNotPermitted();
     const interaction = makeInteraction("Be kind", "Anon");
 
-    await handler(mockClient() as never, interaction as never, interaction.options as never);
+    await handler(mockClient() as never, interaction as never);
 
     expect((interaction.reply as sinon.SinonStub).called).toBe(false);
+    expect(db.insert.called).toBe(false);
   });
 
-  it("should reply when no quote provided", async () => {
-    const { handler } = await loadModule();
-    const interaction = makeInteraction(null, "Author");
+  it("rejects a whitespace-only quote without inserting", async () => {
+    const { handler, db } = await loadModule();
+    const interaction = makeInteraction("   ", "Author");
 
-    await handler(mockClient() as never, interaction as never, interaction.options as never);
+    await handler(mockClient() as never, interaction as never);
 
+    expect(db.insert.called).toBe(false);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).toContain("provide a quote");
+    expect(replyArgs.content).toContain("Use a quote between 1 and");
   });
 
-  it("should reply when no author provided", async () => {
-    const { handler } = await loadModule();
-    const interaction = makeInteraction("Be kind", null);
+  it("rejects a whitespace-only author without inserting", async () => {
+    const { handler, db } = await loadModule();
+    const interaction = makeInteraction("Be kind", " ");
 
-    await handler(mockClient() as never, interaction as never, interaction.options as never);
+    await handler(mockClient() as never, interaction as never);
 
+    expect(db.insert.called).toBe(false);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
-    expect(replyArgs.content).toContain("provide an author");
+    expect(replyArgs.content).toContain("Use an author between 1 and");
   });
 
   it("should create quote and reply on success", async () => {
@@ -87,7 +91,7 @@ describe("admin quote create command", () => {
     (client.channels.fetch as sinon.SinonStub).resolves(channel);
 
     const interaction = makeInteraction("Be kind", "Anon");
-    await handler(client as never, interaction as never, interaction.options as never);
+    await handler(client as never, interaction as never);
 
     expect(db.insert.calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
@@ -107,7 +111,7 @@ describe("admin quote create command", () => {
     (client.channels.fetch as sinon.SinonStub).resolves(channel);
 
     const interaction = makeInteraction("Be kind", "Anon");
-    await handler(client as never, interaction as never, interaction.options as never);
+    await handler(client as never, interaction as never);
 
     expect(channel.send.calledOnce).toBe(true);
     const sendArgs = channel.send.firstCall.args[0];
@@ -122,7 +126,7 @@ describe("admin quote create command", () => {
     db.insert.returns(chain);
 
     const interaction = makeInteraction("Be kind", "Anon");
-    await handler(mockClient() as never, interaction as never, interaction.options as never);
+    await handler(mockClient() as never, interaction as never);
 
     expect(logger.commands.error.calledOnce).toBe(true);
     const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];

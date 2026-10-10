@@ -1,4 +1,4 @@
-import { MessageFlags } from "discord.js";
+import { MessageFlags, PermissionFlagsBits } from "discord.js";
 import type { CommandInteraction } from "discord.js";
 
 import env from "./env.js";
@@ -55,4 +55,22 @@ export async function requireGuildId(
     return null;
   }
   return interaction.guildId;
+}
+
+/**
+ * Guard for server-configuration commands. Replies ephemerally and returns
+ * false unless the member has Administrator in this server. Used by the
+ * /setup router and again by each /setup subcommand as defense in depth.
+ */
+export async function requireGuildAdministrator(
+  interaction: CommandInteraction
+): Promise<boolean> {
+  if (interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+    return true;
+  }
+  await interaction.reply({
+    content: "You need Administrator permissions to use this command.",
+    flags: MessageFlags.Ephemeral,
+  });
+  return false;
 }

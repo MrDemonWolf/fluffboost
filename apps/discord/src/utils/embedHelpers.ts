@@ -1,10 +1,26 @@
-import { EmbedBuilder } from "discord.js";
+import { EmbedBuilder, escapeMarkdown } from "discord.js";
 import type { APIEmbedField } from "discord.js";
 
-export const BRAND_COLOR = 0xfadb7f;
+const BRAND_COLOR = 0xfadb7f;
 export const SUCCESS_COLOR = 0x57f287;
 export const DANGER_COLOR = 0xed4245;
 export const BRAND_FOOTER = "Powered by MrDemonWolf, Inc.";
+
+const EMBED_FIELD_VALUE_LIMIT = 1024;
+
+/**
+ * Render user-submitted text literally in an embed field, so reviewers see
+ * masked links, headings and other markdown exactly as typed. Truncates after
+ * escaping because the backslashes count toward the field limit.
+ */
+export function escapeFieldValue(text: string): string {
+  return escapeMarkdown(text, {
+    heading: true,
+    bulletedList: true,
+    numberedList: true,
+    maskedLink: true,
+  }).slice(0, EMBED_FIELD_VALUE_LIMIT);
+}
 
 export interface BrandedEmbedOptions {
   title?: string;
@@ -34,7 +50,7 @@ export function buildBrandedEmbed(options: BrandedEmbedOptions = {}): EmbedBuild
   if (options.fields && options.fields.length > 0) {
     // Old stored quotes and free-form review reasons can exceed field limits.
     embed.addFields(options.fields.map((field) => ({
-      ...field, value: field.value.slice(0, 1024) || "(empty)",
+      ...field, value: field.value.slice(0, EMBED_FIELD_VALUE_LIMIT) || "(empty)",
     })));
   }
   if (options.footer !== undefined) {

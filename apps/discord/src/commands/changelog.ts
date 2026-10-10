@@ -3,8 +3,10 @@ import { SlashCommandBuilder, MessageFlags } from "discord.js";
 import type { Client, CommandInteraction } from "discord.js";
 
 import env from "../utils/env.js";
+import { allowsTestEntitlements } from "../utils/entitlementPolicy.js";
 import { withCommandLogging } from "../utils/commandErrors.js";
 import { buildBrandedEmbed, BRAND_FOOTER } from "../utils/embedHelpers.js";
+import { describeDefaultSchedule } from "../utils/scheduleConfig.js";
 
 export const slashCommand = new SlashCommandBuilder()
   .setName("changelog")
@@ -34,18 +36,23 @@ export async function execute(_client: Client, interaction: CommandInteraction):
           name: "Per-Server Schedules",
           value:
             "Every server now has its own independent quote schedule. " +
-            "Free servers keep the default daily 8:00 AM (America/Chicago) delivery.",
+            `Free servers keep the default schedule: ${describeDefaultSchedule()}.`,
         },
         {
           name: "New Commands",
-          value:
-            "`/premium` - View your premium subscription status\n" +
-            "`/setup schedule` - Customize quote delivery (premium)\n" +
-            "`/owner premium test-create` - Create a test entitlement (owner only)\n" +
-            "`/owner premium test-delete` - Delete a test entitlement (owner only)",
+          value: [
+            "`/premium` - View your premium subscription status",
+            "`/setup schedule` - Customize quote delivery (premium)",
+            // The /owner group is not registered on the production bot.
+            ...(allowsTestEntitlements(env.NODE_ENV)
+              ? [
+                "`/owner premium test-create` - Create a test entitlement (owner only)",
+                "`/owner premium test-delete` - Delete a test entitlement (owner only)",
+              ]
+              : []),
+          ].join("\n"),
         },
       ],
-      timestamp: true,
       footer: BRAND_FOOTER,
     });
 

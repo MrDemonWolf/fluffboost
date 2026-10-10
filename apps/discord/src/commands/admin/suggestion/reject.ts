@@ -1,6 +1,6 @@
 import { MessageFlags } from "discord.js";
 
-import type { Client, CommandInteraction, CommandInteractionOptionResolver } from "discord.js";
+import type { Client, ChatInputCommandInteraction } from "discord.js";
 
 import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
@@ -13,14 +13,13 @@ import {
 
 export default async function (
   client: Client,
-  interaction: CommandInteraction,
-  options: CommandInteractionOptionResolver,
+  interaction: ChatInputCommandInteraction,
 ): Promise<void> {
   await withCommandLogging("admin suggestion reject", interaction, async () => {
     if (!(await isUserPermitted(interaction))) {return;}
 
-    const suggestionId = options.getString("suggestion_id", true);
-    const reason = options.getString("reason");
+    const suggestionId = interaction.options.getString("suggestion_id", true).trim();
+    const reason = interaction.options.getString("reason");
 
     const suggestion = await fetchPendingSuggestion(suggestionId, interaction);
     if (!suggestion) {return;}
