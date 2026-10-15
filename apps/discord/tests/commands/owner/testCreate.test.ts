@@ -1,3 +1,8 @@
+/**
+ * Tests /owner premium test-create (src/commands/owner/premium/testCreate.ts) with mocked env and premium utils.
+ * loadModule() registers mock.module stubs, then imports the module; Bun patches an already-imported module's
+ * bindings in place, so each call's fresh stubs reach the cached module.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockLogger, mockEnv, mockInteraction, mockClient } from "../../helpers.js";
@@ -13,8 +18,8 @@ describe("owner premium test-create command", () => {
 
     mock.module("../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../src/utils/env.js", () => ({ default: env }));
-    // Provide every premium export: mock.module is process-global, and other
-    // modules loaded later in the same run (e.g. /help) import more of them.
+    // Provide every premium export: a mock replaces the whole module for this file, so a
+    // partial one would fail any other importer with "Export named X not found".
     mock.module("../../../src/utils/premium.js", () => ({
       getPremiumSkuId: sinon.stub().returns(env.DISCORD_PREMIUM_SKU_ID),
       isPremiumEnabled: sinon.stub().returns(env.PREMIUM_ENABLED),

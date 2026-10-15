@@ -1,3 +1,7 @@
+/**
+ * Tests for the Express app in src/api/index.ts: access logging, body parsing and rate limiting.
+ * Dependencies are mocked with mock.module() before the app is dynamically imported.
+ */
 import { describe, it, expect, beforeAll, beforeEach, mock } from "bun:test";
 import supertest from "supertest";
 import sinon from "sinon";

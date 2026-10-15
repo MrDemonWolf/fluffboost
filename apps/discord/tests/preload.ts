@@ -1,3 +1,7 @@
+/**
+ * Unit-test preload (passed via --preload by `bun run test`): replaces src/utils/env.js with UNIT_ENV_FIXTURE
+ * so no .env is needed and nothing can reach a real database, Redis or Discord.
+ */
 import { mock } from "bun:test";
 import { UNIT_ENV_FIXTURE, mockEnv } from "./helpers.js";
 

@@ -2,11 +2,16 @@ import { AbsoluteFill, Img, staticFile, useCurrentFrame, useVideoConfig } from "
 import type { BrandAsset } from "./assets.js";
 import { LandscapeLoop } from "./LandscapeLoop.js";
 
-/** Visible periodic atmosphere: the approved character and labels stay fixed. */
+/**
+ * Visible periodic atmosphere: the approved character and labels stay fixed.
+ * Every animated value is a function of `phase`, one full turn (0..2π) over the
+ * composition, so the last frame flows back into frame 0 and the loop is seamless.
+ */
 export const BrandLoop = ({ asset }: { asset: BrandAsset }) => {
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
   const phase = (frame / durationInFrames) * Math.PI * 2;
+  // Glow opacity eases 0.06 -> 0.18 -> 0.06 across the loop.
   const glow = 0.06 + 0.06 * (1 - Math.cos(phase));
   if (asset.banner) {
     return <LandscapeLoop asset={asset} phase={phase} />;

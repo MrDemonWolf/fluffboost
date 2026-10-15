@@ -1,3 +1,7 @@
+/**
+ * Tests the arguments consumeSuggestionSlot / releaseSuggestionSlot (src/utils/suggestionLimits.ts) pass to
+ * Redis EVAL with a stubbed client; the Lua itself is covered by the E2E suite.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 

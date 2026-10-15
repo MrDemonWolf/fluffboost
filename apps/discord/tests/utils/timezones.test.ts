@@ -1,3 +1,4 @@
+/** Tests the IANA timezone list, validation and autocomplete search in src/utils/timezones.ts (no mocks). */
 import { describe, it, expect } from "bun:test";
 import { ALL_TIMEZONES, isValidTimezone, filterTimezones } from "../../src/utils/timezones.js";
 

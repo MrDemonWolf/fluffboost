@@ -1,5 +1,7 @@
 "use client";
 
+/** Docs search dialog backed by the static index, passed to RootProvider in app/layout.tsx. */
+
 import { lazy, useRef, useState } from "react";
 import type { SharedProps } from "fumadocs-ui/components/dialog/search";
 import { withBasePath } from "@/lib/site";

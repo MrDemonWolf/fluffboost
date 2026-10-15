@@ -1,3 +1,4 @@
+/** `/admin suggestion list`: pages through submitted suggestions, optionally filtered by review status. */
 import { MessageFlags } from "discord.js";
 import type { Client, ChatInputCommandInteraction } from "discord.js";
 
@@ -11,6 +12,7 @@ import type { SuggestionStatus } from "../../../database/schema.js";
 import { replyWithTextFile } from "../../../utils/replyHelpers.js";
 
 const VALID_STATUSES: readonly SuggestionStatus[] = suggestionStatusEnum.enumValues;
+/** Rows per page; one extra row is fetched to detect whether a next page exists. */
 const PAGE_SIZE = 500;
 
 // Discord limits `status` to the registered choices; this guards stale
@@ -19,6 +21,10 @@ function isSuggestionStatus(value: string): value is SuggestionStatus {
   return (VALID_STATUSES as readonly string[]).includes(value);
 }
 
+/**
+ * Replies ephemerally with one page of suggestions as a text-file attachment,
+ * newest first (id breaks ties so paging is stable).
+ */
 export default async function (
   _client: Client,
   interaction: ChatInputCommandInteraction,

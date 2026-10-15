@@ -1,3 +1,8 @@
+/**
+ * Browser E2E for the exported site, run against the /fluffboost static build
+ * (see playwright.config.ts) on desktop and mobile projects: base-path integrity,
+ * search, keyboard/focus behavior and an axe WCAG 2.2 AA sweep of every page.
+ */
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 

@@ -1,3 +1,4 @@
+/** Standard logging and user-facing error reply for slash-command handlers (see withCommandLogging). */
 import { MessageFlags } from "discord.js";
 
 import type { CommandInteraction, ChatInputCommandInteraction } from "discord.js";
@@ -6,6 +7,8 @@ import logger from "./logger.js";
 
 /**
  * Complete a deferred reply or send an ephemeral error before acknowledgement.
+ * If the handler already replied, nothing is sent: the outcome the user saw
+ * stands and the failure is only logged.
  */
 async function safeErrorReply(
   interaction: CommandInteraction | ChatInputCommandInteraction,
@@ -38,7 +41,9 @@ function logCommandError(
 
 /**
  * Wrap a command handler with the standard executing/success/error/safeErrorReply
- * lifecycle so individual handlers don't repeat boilerplate.
+ * lifecycle so individual handlers don't repeat boilerplate. Never rejects: a
+ * handler error is logged and answered with `errorMessage` (or a generic one).
+ * Subcommands wrap themselves; routers do not, to avoid double logging.
  */
 export async function withCommandLogging(
   commandName: string,

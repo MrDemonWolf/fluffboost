@@ -1,3 +1,4 @@
+/** `/setup channel`: chooses the text channel where this server's scheduled quotes are posted. */
 import { ChannelType, MessageFlags, PermissionFlagsBits } from "discord.js";
 
 import type { Client, ChatInputCommandInteraction } from "discord.js";
@@ -10,6 +11,11 @@ import { db } from "../../database/index.js";
 import { guilds } from "../../database/schema.js";
 import { guildExists } from "../../utils/guildDatabase.js";
 
+/**
+ * Requires Administrator, verifies the channel belongs to this server and the bot
+ * can view it, send and embed there, then saves it on the Guild row (creating the
+ * row if needed). Replies ephemerally.
+ */
 export default async function (
   client: Client,
   interaction: ChatInputCommandInteraction
@@ -44,6 +50,7 @@ export default async function (
       return;
     }
 
+    // Create the Guild row if it is missing so the UPDATE below has a target.
     await guildExists(guildId);
 
     await db

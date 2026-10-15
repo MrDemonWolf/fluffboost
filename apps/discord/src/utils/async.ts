@@ -1,5 +1,6 @@
 /** Generic promise helpers: sleep, capped backoff, retries and deadlines. */
 
+/** Resolves after `ms` milliseconds. The timer is not unref'd, so it keeps the process alive. */
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -9,6 +10,7 @@ export function backoffDelay(attempt: number, baseMs: number, maxMs: number): nu
   return Math.min(maxMs, baseMs * 2 ** attempt);
 }
 
+/** Options for retryWithBackoff. `onRetry` gets the 1-based number of the attempt that just failed. */
 export interface RetryOptions {
   attempts: number;
   baseMs: number;
@@ -16,6 +18,7 @@ export interface RetryOptions {
   onRetry?: (err: Error, attempt: number, delayMs: number) => void;
   /** Return false to stop retrying and rethrow at once (e.g. an invalid token). */
   shouldRetry?: (err: unknown) => boolean;
+  /** Injectable for tests; defaults to the real sleep(). */
   sleep?: (ms: number) => Promise<void>;
 }
 

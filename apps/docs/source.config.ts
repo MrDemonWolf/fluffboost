@@ -1,3 +1,4 @@
+/** fumadocs-mdx collections; compiled into the generated `.source/` that lib/source.ts imports. */
 import { defineDocs, defineConfig } from "fumadocs-mdx/config";
 
 // Two independent docs trees: one for server owners / community members, one

@@ -1,3 +1,7 @@
+/**
+ * Tests /admin suggestion stats (src/commands/admin/suggestion/stats.ts); each select() call is one
+ * status count, stubbed in call order Pending, Approved, Rejected.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockPermissions } from "../../permissionsMock.js";

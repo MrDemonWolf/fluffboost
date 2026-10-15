@@ -11,6 +11,7 @@ export type LoadedDoc = {
   toc: ComponentProps<typeof DocsPage>["toc"];
 };
 
+/** Reads the compiled MDX body and table of contents off a docs page's `page.data`. */
 export function getDoc(data: unknown): LoadedDoc {
   const d = data as LoadedDoc;
   return { body: d.body, toc: d.toc };

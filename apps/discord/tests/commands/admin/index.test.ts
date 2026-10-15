@@ -1,3 +1,7 @@
+/**
+ * Tests the /admin router (src/commands/admin/index.ts): route coverage, dispatch and router-level auth.
+ * Routes are swapped in the exported adminRoutes Map (restored after each test) instead of mocking subcommands.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { MessageFlags } from "discord.js";

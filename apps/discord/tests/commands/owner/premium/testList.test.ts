@@ -1,3 +1,7 @@
+/**
+ * Tests /owner premium test-list (src/commands/owner/premium/testList.ts) against mockClient()'s
+ * stubbed application.entitlements.fetch, including the 2000-character reply cap.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockLogger, mockEnv, mockInteraction, mockClient } from "../../../helpers.js";

@@ -1,3 +1,7 @@
+/**
+ * Tests the /suggestion command (src/commands/suggestion.ts) with mocked db, env and Redis.
+ * `redis.eval` runs the quota Lua script: 1 reserves a slot, 0 means the rolling daily quota is full.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { InteractionContextType, MessageFlags } from "discord.js";
@@ -165,6 +169,7 @@ describe("suggestion command", () => {
     const insertChain = mockDbChain();
     insertChain.rejects(new Error("DB error"));
     db.insert.returns(insertChain);
+    // The second eval is the ZREM that releases the reserved slot.
     redis.eval.onSecondCall().resolves(1);
     const interaction = makeInteraction("Be kind", "Anon");
 

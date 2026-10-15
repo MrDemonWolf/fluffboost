@@ -36,7 +36,8 @@ COPY --from=pruner /usr/src/app/out/full/ ./
 RUN rm -rf apps/discord/tests apps/discord/e2e
 
 # ----------------------------------------------------------------------------
-# Runtime
+# Runtime — slim Bun image with only the pruned app + prod deps, run as an
+# unprivileged user.
 # ----------------------------------------------------------------------------
 FROM oven/bun:1.3.14-slim AS runner
 WORKDIR /usr/src/app

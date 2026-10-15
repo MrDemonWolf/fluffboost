@@ -1,3 +1,4 @@
+/** Unit-tests the E2E database guard (e2e/databaseSafety.ts) that keeps E2E runs off non-disposable databases. */
 import { describe, it, expect } from "bun:test";
 
 import { requireSafeE2EDatabaseUrl } from "../../e2e/databaseSafety.js";

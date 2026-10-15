@@ -1,3 +1,8 @@
+/**
+ * `bun run brand:render [composition-id...]`: renders PNG (frame 0), MP4 and GIF
+ * for each composition (all by default) into assets/brand/animated/, then updates
+ * manifest.json with each file's size and SHA-256 for scripts/verify.ts to check.
+ */
 import { bundle } from "@remotion/bundler";
 import { getCompositions, renderMedia, renderStill } from "@remotion/renderer";
 import { createHash } from "node:crypto";
@@ -23,6 +28,8 @@ const serveUrl = await bundle({
 });
 const compositions = await getCompositions(serveUrl);
 const selected = compositions.filter((item) => requested.length === 0 || requested.includes(item.id));
+// Dev/staging banners are copies of the production banner, so render production
+// first (adding it even when only another banner was requested).
 const productionBanner = compositions.find((item) => item.id === "fluffboost-production-banner");
 if (selected.some((item) => item.id.endsWith("-banner")) && productionBanner) {
   const existingIndex = selected.indexOf(productionBanner);
@@ -42,11 +49,13 @@ for (const composition of selected) {
       await renderMedia({ serveUrl, composition, outputLocation: output,
         codec: format === "gif" ? "gif" : "h264", muted: true, concurrency: 2,
         ...(format === "gif"
+          // GIFs drop to gifFps and (for icons) half size to fit GIF_BYTE_BUDGET.
           ? { everyNthFrame: gifEveryNthFrame, scale: gifScale(composition) }
           : { crf: 20, pixelFormat: "yuv420p" as const }),
       });
     }
     const bytes = await readFile(output);
+    // The docs site serves its own copy from /public; verify.ts fails if it goes stale.
     if (name === "fluffboost-production-banner.mp4") {
       const siteDir = resolve(root, "apps/docs/public/brand");
       await mkdir(siteDir, { recursive: true });
@@ -59,6 +68,7 @@ for (const composition of selected) {
     process.stdout.write(`Rendered ${name} (${bytes.length} bytes)\n`);
   }
 }
+// Merge with the previous manifest so a partial render keeps the other files' records.
 const manifestPath = resolve(outputDir, "manifest.json");
 let previous: { files?: typeof files } = {};
 try { previous = JSON.parse(await readFile(manifestPath, "utf8")); } catch { /* First render. */ }

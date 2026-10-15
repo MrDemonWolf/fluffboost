@@ -1,3 +1,7 @@
+/**
+ * Tests fetchPendingSuggestion, notifySuggestionReviewed and markSuggestionReviewed
+ * (src/utils/suggestionHelpers.ts) with db, env and logger mocked per load.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { PgDialect } from "drizzle-orm/pg-core";

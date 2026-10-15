@@ -1,3 +1,7 @@
+/**
+ * Tests isUserPermitted and requireGuildAdministrator (src/utils/permissions.ts). The guards read env at call
+ * time, so each test mutates the shared mocked env object and beforeEach resets it.
+ */
 import { describe, it, expect, beforeEach, mock } from "bun:test";
 import sinon from "sinon";
 import { MessageFlags } from "discord.js";

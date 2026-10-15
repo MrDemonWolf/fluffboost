@@ -1,3 +1,7 @@
+/**
+ * BullMQ worker and job scheduling for one shard: routes the repeating
+ * set-activity and send-motivation jobs to their handlers under per-job deadlines.
+ */
 import { Worker, Job } from "bullmq";
 import type { Queue } from "bullmq";
 import type { Client } from "discord.js";
@@ -20,23 +24,25 @@ export const SCHEDULE_REFRESH_MS = 5 * 60_000;
 /** Startup waits this long for scheduling; BullMQ's connection queues commands while Redis is down. */
 const SCHEDULE_STARTUP_TIMEOUT_MS = 30_000;
 
+type JobName = "set-activity" | "send-motivation";
+
 /**
  * Upper bounds on a single run. A timed-out run fails (freeing its concurrency
  * slot) and its abort signal fires, so send-motivation stops claiming guilds;
  * the next scheduled tick picks up whatever was left.
  */
-type JobName = "set-activity" | "send-motivation";
-
 export const JOB_TIMEOUTS_MS = {
   "set-activity": 60_000,
   "send-motivation": 10 * 60_000,
 } as const satisfies Record<JobName, number>;
 
+/** Keep a short job history in Redis for debugging instead of growing forever. */
 const JOB_TEMPLATE_OPTS = {
   removeOnComplete: { count: 50 },
   removeOnFail: { count: 100 },
 };
 
+/** Repeat intervals (ms). A function so env is read at call time, not module load. */
 function schedules(): { name: JobName; every: number }[] {
   return [
     { name: "set-activity", every: env.DISCORD_ACTIVITY_INTERVAL_MINUTES * 60 * 1000 },
@@ -79,6 +85,12 @@ async function runWithDeadline<T>(
   return withTimeout(run(), JOB_TIMEOUTS_MS[name], `Job "${name}"`, (err) => controller.abort(err));
 }
 
+/**
+ * Starts this shard's BullMQ worker (every shard consumes jobs, so a tick runs
+ * on whichever shard picks it up). Shard 0 also registers the job schedulers
+ * and re-asserts them every SCHEDULE_REFRESH_MS. Rejects only if the Worker
+ * itself cannot be built; bot.ts retries that, then treats it as fatal.
+ */
 export default async function startWorker(queue: Queue, client: Client): Promise<Worker> {
   const worker = new Worker(
     queue.name,

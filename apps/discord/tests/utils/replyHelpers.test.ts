@@ -1,3 +1,4 @@
+/** Tests replyWithTextFile (src/utils/replyHelpers.ts): empty-message reply vs. text attachment. */
 import { describe, it, expect, afterEach } from "bun:test";
 import sinon from "sinon";
 import { mockInteraction } from "../helpers.js";

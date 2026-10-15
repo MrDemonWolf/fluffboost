@@ -1,3 +1,7 @@
+/**
+ * Root layout for every route: fonts, site-wide metadata defaults (canonical,
+ * Open Graph) and the Fumadocs provider wired to the static search dialog.
+ */
 import "./global.css";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
@@ -5,6 +9,7 @@ import { RootProvider } from "fumadocs-ui/provider/next";
 import { Fraunces, Nunito, JetBrains_Mono } from "next/font/google";
 import StaticSearchDialog from "@/components/search-dialog";
 import { site } from "@/lib/site";
+// The repo-root banner doubles as the social preview image.
 import banner from "../../../banner.jpg";
 
 const fraunces = Fraunces({
@@ -43,6 +48,8 @@ export const metadata: Metadata = {
     siteName: site.name,
     type: "website",
     images: [{
+      // banner.src already carries the base path, so resolve it against the bare
+      // origin rather than site.origin (which would double /fluffboost).
       url: new URL(banner.src, new URL(site.origin).origin).href,
       width: banner.width,
       height: banner.height,
@@ -57,6 +64,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html
       lang="en"
       className={`${fraunces.variable} ${nunito.variable} ${mono.variable}`}
+      // next-themes sets the theme class on <html> before hydration.
       suppressHydrationWarning
     >
       <body className="flex min-h-screen flex-col bg-paper text-ink">

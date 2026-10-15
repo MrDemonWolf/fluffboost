@@ -1,3 +1,4 @@
+/** `/admin activity create`: adds a bot presence entry to the rotation used by the set-activity job. */
 import { MessageFlags } from "discord.js";
 
 import type { Client, ChatInputCommandInteraction } from "discord.js";
@@ -9,6 +10,7 @@ import { isUserPermitted } from "../../../utils/permissions.js";
 import { db } from "../../../database/index.js";
 import { discordActivities } from "../../../database/schema.js";
 
+/** Inserts a DiscordActivity row and replies ephemerally with its new ID. */
 export default async function (
   _client: Client,
   interaction: ChatInputCommandInteraction

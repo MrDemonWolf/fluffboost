@@ -1,9 +1,11 @@
+/** Access guards for commands: the ALLOWED_USERS admin allow-list and server-scoped checks. */
 import { MessageFlags, PermissionFlagsBits } from "discord.js";
 import type { CommandInteraction } from "discord.js";
 
 import env from "./env.js";
 import logger from "./logger.js";
 
+/** Warn about an empty ALLOWED_USERS once per process, not on every rejected command. */
 let warned = false;
 
 function getAllowedUsers(): string[] {
@@ -21,6 +23,11 @@ function getAllowedUsers(): string[] {
   return raw.split(",").map((s) => s.trim()).filter(Boolean);
 }
 
+/**
+ * Guard for /admin: true only when the user is listed in ALLOWED_USERS
+ * (Discord server permissions are irrelevant). Otherwise logs the attempt,
+ * replies ephemerally and returns false.
+ */
 export async function isUserPermitted(interaction: CommandInteraction): Promise<boolean> {
   const allowedUsers = getAllowedUsers();
 

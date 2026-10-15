@@ -1,3 +1,8 @@
+/**
+ * Shard-process entry point, spawned by the ShardingManager in appCore.ts.
+ * Creates this shard's Discord client, wires event handlers, starts the BullMQ
+ * worker once ready, and owns the shard's graceful and fatal shutdown paths.
+ */
 import { Client, Events, GatewayIntentBits, Options } from "discord.js";
 import { Queue } from "bullmq";
 import type { Worker } from "bullmq";
@@ -12,9 +17,6 @@ import redisClient, { bullRedis } from "./redis/index.js";
 import { createThrottledErrorLogger } from "./utils/throttledErrorLogger.js";
 import startWorker, { QUEUE_NAME } from "./worker/index.js";
 
-/**
- * Import events from the events folder.
- */
 import { cancelReadyRetries, readyEvent } from "./events/ready.js";
 import { guildCreateEvent } from "./events/guildCreate.js";
 import { guildDeleteEvent } from "./events/guildDelete.js";
@@ -25,6 +27,7 @@ import { entitlementUpdateEvent } from "./events/entitlementUpdate.js";
 import { entitlementDeleteEvent } from "./events/entitlementDelete.js";
 
 const client = new Client({
+  // Slash commands and guild join/leave only; no message or member intents needed.
   intents: [GatewayIntentBits.Guilds],
   // Nothing the bot sends should ping; a deliberate ping must opt in per message.
   allowedMentions: { parse: [] },
@@ -60,8 +63,10 @@ let stopPremiumLoop: (() => void) | null = null;
 let initialReadyDone = false;
 
 /**
- * This event will run if the bot starts, and logs in, successfully. readyEvent
- * is best-effort; only a worker that cannot start at all is fatal.
+ * First ClientReady for this shard. readyEvent is best-effort; only a worker
+ * that cannot start at all is fatal. `shuttingDown` is re-checked after the
+ * awaits because a SIGTERM can land mid-startup, and a worker started after
+ * shutdown() ran would never be closed.
  */
 async function onClientReady(): Promise<void> {
   if (shuttingDown) {
@@ -95,36 +100,28 @@ async function onClientReady(): Promise<void> {
 // onClientReady handles its own failures, so the promise never rejects.
 client.once(Events.ClientReady, () => void onClientReady());
 
-/**
- * This event will run every time the bot joins a guild.
- */
+/** Bot added to a guild. */
 client.on(Events.GuildCreate, (guild) => {
   guildCreateEvent(guild).catch((err) => {
     logger.error("Discord - Event (GuildCreate)", "Unhandled error", err);
   });
 });
 
-/**
- * This event will run every time the bot leaves a guild.
- */
+/** Bot removed from a guild (kicked, or the guild was deleted). */
 client.on(Events.GuildDelete, (guild) => {
   guildDeleteEvent(guild).catch((err) => {
     logger.error("Discord - Event (Guild Delete)", "Unhandled error", err);
   });
 });
 
-/**
- * Handle interactionCreate events.
- */
+/** Slash commands and autocomplete; interactionCreate.ts routes them and ignores other interaction types. */
 client.on(Events.InteractionCreate, (interaction) => {
   interactionCreateEvent(client, interaction).catch((err) => {
     logger.error("Discord - Event (InteractionCreate)", "Unhandled error", err);
   });
 });
 
-/**
- * Handle discord shard lifecycle events.
- */
+/** discord.js emits ShardDisconnect only for closes it will not recover from, so this is fatal. */
 client.on(Events.ShardDisconnect, (event, shardId) => {
   shardDisconnectEvent(event, shardId, () => fatal("Unrecoverable gateway close"));
 });
@@ -151,7 +148,8 @@ client.on(Events.Error, (err) => {
 });
 
 /**
- * Handle entitlement events for premium subscriptions.
+ * Premium entitlement events, registered only when Premium gating is on. Missed
+ * events are covered by the periodic reconciliation loop started in onClientReady.
  */
 if (isPremiumEnabled()) {
   client.on(Events.EntitlementCreate, (entitlement) => {
@@ -185,11 +183,13 @@ client.login(env.DISCORD_APPLICATION_BOT_TOKEN).catch((err) => {
  * (send-motivation stops claiming guilds, finishes claimed sends) → worker →
  * queue → Discord session → Redis. See shardShutdown.ts for the time budget.
  */
+// Declared down here but only read from callbacks, which never run before module evaluation finishes.
 let shuttingDown = false;
 
 /** Bounded wait for the queue's Redis connection before closing it (fits the 20 s shard watchdog). */
 const QUEUE_READY_GRACE_MS = 1_000;
 
+/** Idempotent; `minExitDelayMs` holds the exit back (from shutdown start) for fatal paths. */
 async function shutdown(reason: string, exitCode = 0, minExitDelayMs = 0): Promise<void> {
   if (shuttingDown) {
     return;

@@ -1,3 +1,4 @@
+/** Shared steps of the /admin suggestion approve/reject flow: load, atomically claim, then notify. */
 import { MessageFlags } from "discord.js";
 import type { Client, CommandInteraction, User } from "discord.js";
 import { and, eq } from "drizzle-orm";
@@ -47,6 +48,7 @@ export async function fetchPendingSuggestion(
   return suggestion;
 }
 
+/** Input for notifySuggestionReviewed. `reason` is the reviewer's own text, shown as typed. */
 export interface SuggestionReviewNotice {
   status: "Approved" | "Rejected";
   suggestion: SuggestionQuote;

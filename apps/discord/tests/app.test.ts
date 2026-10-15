@@ -1,3 +1,10 @@
+/**
+ * Tests for runApp() in src/appCore.ts (the shard-manager process).
+ * runApp() takes every dependency as an argument, so the manager process is
+ * exercised without mock.module() or touching the real process (no top-level
+ * await during a dynamic import, which `bun test --isolate` on Bun 1.3.x does
+ * not resume reliably). Fakes record their calls in a shared `order` array to assert startup sequencing.
+ */
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import { EventEmitter } from "node:events";
 import http from "node:http";
@@ -6,12 +13,6 @@ import { mockLogger } from "./helpers.js";
 import { runApp, type AppDeps, type AppHandle } from "../src/appCore.js";
 import { SCHEMA_MISSING_MESSAGE } from "../src/utils/startupChecks.js";
 
-/**
- * runApp() takes every dependency as an argument, so the manager process is
- * exercised without mock.module() or touching the real process (no top-level
- * await during a dynamic import, which `bun test --isolate` on Bun 1.3.x does
- * not resume reliably).
- */
 class FakeRedis extends EventEmitter {
   status = "ready";
   constructor(private readonly order: string[]) {
@@ -57,6 +58,8 @@ function setup(overrides: Partial<AppDeps> = {}) {
     order.push("db");
     return [];
   });
+  // The first probe fails by default so the shared run exercises the dependency retry path;
+  // tests that need a clean start override onFirstCall().
   probeDatabase.onFirstCall().callsFake(async () => {
     order.push("db-fail");
     throw new Error("connection refused");
@@ -85,6 +88,7 @@ function setup(overrides: Partial<AppDeps> = {}) {
       return manager as unknown as ReturnType<AppDeps["createManager"]>;
     },
     proc: proc as unknown as AppDeps["proc"],
+    // Keeps the retry backoff to milliseconds; the "stays unreachable" test runs the full schedule.
     dependencyRetryBaseMs: 1,
     ...overrides,
   };

@@ -1,8 +1,7 @@
 /**
- * Thin re-export shim for ready.ts's dependencies. Tests for the ready event
- * mock THIS module instead of the underlying shared utilities, so that
- * process-global `mock.module` calls from ready.test.ts don't clobber the real
- * implementations used by each utility's own test file.
+ * Thin re-export shim for ready.ts's dependencies. ready.test.ts mocks THIS
+ * module (one `mock.module` call) instead of each underlying utility module,
+ * so it never has to replace those shared modules wholesale.
  */
 export { pruneGuilds, ensureGuildExists } from "../utils/guildDatabase.js";
 export { default as setActivity } from "../worker/jobs/setActivity.js";

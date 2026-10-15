@@ -1,3 +1,4 @@
+/** Quote lookup and the motivation embed, shared by /quote and the send-motivation job. */
 import type { Client, User, EmbedBuilder } from "discord.js";
 import { sql } from "drizzle-orm";
 

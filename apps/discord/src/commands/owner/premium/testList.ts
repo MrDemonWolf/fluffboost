@@ -1,3 +1,4 @@
+/** `/owner premium test-list`: lists the application's entitlements, marking test grants. */
 import { MessageFlags } from "discord.js";
 
 import type { Client, ChatInputCommandInteraction } from "discord.js";
@@ -5,6 +6,10 @@ import type { Client, ChatInputCommandInteraction } from "discord.js";
 import { requireApplication, requireOwner, requireTestEnvironment } from "../../../utils/ownerGuard.js";
 import { withCommandLogging } from "../../../utils/commandErrors.js";
 
+/**
+ * Replies ephemerally, truncating the list to fit one message. Owner-only and
+ * disabled in production.
+ */
 export default async function (client: Client, interaction: ChatInputCommandInteraction): Promise<void> {
   await withCommandLogging(
     "owner premium test-list",

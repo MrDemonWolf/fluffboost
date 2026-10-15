@@ -1,3 +1,4 @@
+/** Unit-tests the E2E Redis guard (e2e/redisSafety.ts): loopback-only, plain redis://, explicit opt-in. */
 import { describe, it, expect } from "bun:test";
 
 import { requireSafeE2ERedisUrl } from "../../e2e/redisSafety.js";

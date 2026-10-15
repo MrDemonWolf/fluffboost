@@ -1,3 +1,9 @@
+/**
+ * Tests /setup schedule (src/commands/setup/schedule.ts): validation, merging with the saved schedule, Premium
+ * gating and autocomplete. timezones.js is mocked with a short allow-list.
+ * loadModule() registers mock.module stubs, then imports the module; Bun patches an already-imported module's
+ * bindings in place, so each call's fresh stubs reach the cached module.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockLogger, mockDb, mockDbChain, mockInteraction, stubBuildPremiumUpsell } from "../../helpers.js";

@@ -1,3 +1,4 @@
+/** Tests the paginated /admin suggestion list export (src/commands/admin/suggestion/list.ts) on a mocked db. */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockPermissions } from "../../permissionsMock.js";
@@ -112,6 +113,7 @@ describe("admin suggestion list command", () => {
   it("should bound each export page and identify the next page", async () => {
     const { handler, db } = await loadModule();
     const interaction = makeInteraction(null, 2);
+    // PAGE_SIZE + 1 rows: the extra row is how the handler detects a next page; it must not be printed.
     const rows = Array.from({ length: 501 }, (_, index) => ({
       id: `s${index + 501}`,
       quote: `Quote ${index + 501}`,

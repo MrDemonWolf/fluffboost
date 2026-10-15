@@ -1,3 +1,7 @@
+/**
+ * Tests shardDisconnectEvent (src/events/shardDisconnect.ts): unrecoverable closes are logged and handed to
+ * the injected onFatal callback; process.exit is stubbed to prove the handler never exits itself.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockLogger } from "../helpers.js";

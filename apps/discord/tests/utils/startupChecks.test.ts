@@ -1,3 +1,7 @@
+/**
+ * Tests the manager's startup probes in src/utils/startupChecks.ts (Redis readiness, shard-count retry
+ * classification, schema presence) with fakes and an instant `sleep`.
+ */
 import { describe, expect, it } from "bun:test";
 import { EventEmitter } from "node:events";
 import sinon from "sinon";

@@ -1,3 +1,4 @@
+/** /terms — the Terms of Service, statically exported. Bump `lastUpdated` on every revision. */
 import Link from "next/link";
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";

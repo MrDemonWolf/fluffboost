@@ -1,8 +1,14 @@
 import { AbsoluteFill, Img, staticFile } from "remotion";
 import type { BrandAsset } from "./assets.js";
 
-/** Cloudless image backplate; moving clouds are independent vector layers. */
+/**
+ * Cloudless image backplate; moving clouds are independent vector layers.
+ * The SVG viewBox matches the 680x240 banner composition.
+ */
 export const LandscapeLoop = ({ asset, phase }: { asset: BrandAsset; phase: number }) => {
+  // Clouds travel exactly one banner width per loop. Each is drawn three times
+  // (offset -680, 0, +680), so whichever copy is on screen at the end lines up
+  // with frame 0 and the wrap is invisible.
   const drift = phase / (Math.PI * 2) * 680;
   return (
     <AbsoluteFill style={{ overflow: "hidden", backgroundColor: "#FFF0D5" }}>
@@ -16,6 +22,7 @@ export const LandscapeLoop = ({ asset, phase }: { asset: BrandAsset; phase: numb
             <path d="M 0 15 C 0 8 6 3 13 3 C 15 -7 27 -10 34 -3 C 41 -10 54 -5 56 4 C 68 2 77 7 77 15 C 77 22 69 24 60 24 L 15 24 C 5 24 0 21 0 15 Z" fill="#FFF8E8" />
           </g>
         )))}
+        {/* Shimmer lines on the lake; per-line phase offsets keep them out of step. */}
         {Array.from({ length: 5 }, (_, index) => (
           <path key={index} d={`M ${410 - index * 11} ${213 + index * 4} h ${38 + index * 12}`}
             stroke="#FFEAC2" strokeWidth="1.2" strokeLinecap="round"

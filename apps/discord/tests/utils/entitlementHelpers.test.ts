@@ -1,3 +1,7 @@
+/**
+ * Tests updateGuildPremiumStatus and logEntitlementEvent (src/utils/entitlementHelpers.ts), including the
+ * per-guild event serialization. db and logger are mocked once before the top-level import.
+ */
 import { describe, it, expect, beforeEach, mock } from "bun:test";
 import sinon from "sinon";
 import { EntitlementType } from "discord.js";
@@ -18,6 +22,8 @@ describe("entitlementHelpers", () => {
   beforeEach(() => {
     reconcile.reset();
     reconcile.resolves();
+    // Registered after the import above: Bun patches the helpers' live bindings, so per-test env
+    // overrides (e.g. NODE_ENV=production) take effect without re-importing.
     mock.module("../../src/utils/premiumReconciliation.js", () => ({ reconcilePremium: reconcile }));
     mock.module("../../src/utils/env.js", () => ({ default: mockEnv({ DISCORD_PREMIUM_SKU_ID: "sku-123" }) }));
     logger.info.resetHistory();

@@ -1,3 +1,7 @@
+/**
+ * Per-shard ClientReady handler: syncs this shard's guild rows and Premium flags, registers global slash
+ * commands (shard 0 only) and sets the initial presence. Every step is best-effort.
+ */
 import type { Client } from "discord.js";
 
 import { backoffDelay } from "../utils/async.js";
@@ -12,6 +16,7 @@ export const COMMAND_RETRY_BASE_MS = 30_000;
 const COMMAND_RETRY_MAX_MS = 10 * 60_000;
 export const COMMAND_RETRY_ATTEMPTS = 6;
 
+/** Pending registration retry timers, tracked so shutdown can cancel them. */
 const retryTimers = new Set<ReturnType<typeof setTimeout>>();
 
 /** Clears pending registration retries (called from shard shutdown). */
@@ -74,24 +79,17 @@ async function registerCommands(client: Client, attempt = 0): Promise<void> {
   }
 }
 
-/** Never rejects; see bestEffort above. */
+/** Runs the startup steps in order. Never rejects; see bestEffort above. */
 export async function readyEvent(client: Client): Promise<void> {
-  /**
-   * Show the bot is ready in the console.
-   */
   const username = client.user?.tag || "Unknown";
   const guildCount = client.guilds.cache.size;
 
   logger.discord.ready(username, guildCount);
 
-  /**
-   * Check if the bot is not in a guild anymore and remove it from the database.
-   */
+  // Drop rows for this shard's guilds the bot left while offline.
   await bestEffort("Guild prune", () => pruneGuilds(client));
 
-  /**
-   * Check if guilds exist in the database and add them if they don't.
-   */
+  // Create rows for guilds joined while offline (guildCreate only covers joins after ready).
   await bestEffort("Guild sync", () => ensureGuildExists(client));
 
   /**
@@ -101,6 +99,7 @@ export async function readyEvent(client: Client): Promise<void> {
    */
   await bestEffort("Premium reconciliation", () => reconcilePremium(client));
 
+  // Unsharded (no client.shard) counts as shard 0. Not wrapped in bestEffort: it never throws, it schedules retries.
   if (client.shard?.ids.includes(0) ?? true) {
     await registerCommands(client);
   }

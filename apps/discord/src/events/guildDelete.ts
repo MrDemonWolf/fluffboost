@@ -6,16 +6,15 @@ import { db } from "../database/index.js";
 import { guilds } from "../database/schema.js";
 import logger from "../utils/logger.js";
 
+/**
+ * GUILD_DELETE handler: the bot was removed (kicked, or the server was deleted). Deletes the guild's row,
+ * which holds all of its settings. Outages do not reach here (discord.js emits guildUnavailable instead);
+ * leaves missed while offline are cleaned up by pruneGuilds on the next ready. Errors are logged, never thrown.
+ */
 export async function guildDeleteEvent(guild: Guild): Promise<void> {
   try {
-    /**
-     * Delete the guild from the database.
-     */
     await db.delete(guilds).where(eq(guilds.guildId, guild.id));
 
-    /**
-     * Show the bot has left a guild in the console.
-     */
     logger.discord.guildLeft(guild.name, guild.id);
     logger.database.operation("Guild removed from database", {
       guildId: guild.id,

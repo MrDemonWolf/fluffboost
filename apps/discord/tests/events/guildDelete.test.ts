@@ -1,3 +1,7 @@
+/**
+ * Tests guildDeleteEvent (src/events/guildDelete.ts); the WHERE clause is rendered with PgDialect to check
+ * the deleted guild id.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import type { SinonStub } from "sinon";

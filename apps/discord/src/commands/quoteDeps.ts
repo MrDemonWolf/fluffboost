@@ -1,8 +1,7 @@
 /**
- * Thin re-export shim so command-level tests can mock these deps without
- * poisoning `tests/utils/quoteHelpers.test.ts` (bun:test's mock.module
- * registry is process-global). See #21 for the same pattern applied to
- * readyDeps.ts.
+ * Thin re-export shim for `/quote`. `tests/commands/quote.test.ts` mocks this
+ * module instead of `utils/quoteHelpers.js`, so the mock stays narrow and does
+ * not replace the real helpers for anything else imported in that file.
  */
 export {
   buildMotivationEmbed,

@@ -1,3 +1,4 @@
+/** `/changelog`: ephemeral embed summarizing what changed in the current release (static text). */
 import { SlashCommandBuilder, MessageFlags } from "discord.js";
 
 import type { Client, CommandInteraction } from "discord.js";
@@ -12,6 +13,10 @@ export const slashCommand = new SlashCommandBuilder()
   .setName("changelog")
   .setDescription("See the latest changes to the bot");
 
+/**
+ * Replies ephemerally. The text is hand-maintained here; update it with each
+ * release. Owner test commands are listed only where /owner is registered.
+ */
 export async function execute(_client: Client, interaction: CommandInteraction): Promise<void> {
   await withCommandLogging("changelog", interaction, async () => {
     const embed = buildBrandedEmbed({

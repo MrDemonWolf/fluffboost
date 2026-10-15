@@ -1,3 +1,4 @@
+/** Static file server for out/ (used by Playwright and `bun run preview`). */
 import { resolve, sep } from "node:path";
 
 // Serve exactly the static export GitHub Pages receives. There is deliberately
@@ -23,10 +24,12 @@ const server = Bun.serve({
       return new Response("Not found", { status: 404 });
     }
 
+    // Mirror GitHub Pages: "/x/" serves x/index.html; "/x" tries x/index.html, then the file x.
     const route = pathname.slice(basePath.length) || "/";
     const path = resolve(output, `.${route.endsWith("/") ? `${route}index.html` : route}`);
     const candidates = route.endsWith("/") ? [path] : [resolve(path, "index.html"), path];
     for (const candidate of candidates) {
+      // Path-traversal guard: never serve anything resolved outside out/.
       if (!candidate.startsWith(`${output}${sep}`)) continue;
       const file = Bun.file(candidate);
       if (await file.exists()) return new Response(file);

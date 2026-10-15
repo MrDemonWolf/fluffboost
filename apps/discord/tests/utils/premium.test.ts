@@ -1,3 +1,7 @@
+/**
+ * Tests the entitlement policy (src/utils/entitlementPolicy.ts, pure, at a fixed `now`) and the env-driven
+ * helpers in src/utils/premium.ts, re-mocking env per case before importing premium.js.
+ */
 import { describe, it, expect, beforeEach, mock } from "bun:test";
 import { ButtonStyle, Collection, EntitlementType } from "discord.js";
 import { mockEnv } from "../helpers.js";
