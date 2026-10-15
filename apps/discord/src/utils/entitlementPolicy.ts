@@ -1,6 +1,15 @@
+/**
+ * Single source of truth for which entitlements unlock Premium. Used by command gating (premium.ts), the
+ * gateway event handlers and the periodic reconciliation, so all three agree.
+ */
 import { EntitlementType } from "discord.js";
 import type { Entitlement } from "discord.js";
 
+/**
+ * The entitlement fields the policy reads. A structural subset so plain objects
+ * (API data, test fakes) qualify; without `isTest`, a null `startsAt` marks an
+ * owner test entitlement.
+ */
 export type PremiumEntitlement = Pick<Entitlement, "skuId" | "guildId"> &
   Partial<Pick<Entitlement, "deleted" | "startsAt" | "endsAt" | "type">> & { isTest?: () => boolean };
 
@@ -18,7 +27,12 @@ export function isTestEntitlement(entitlement: PremiumEntitlement): boolean {
   return isOwnerTest || entitlement.type === EntitlementType.TestModePurchase;
 }
 
-/** A server subscription authorizes only its own guild during its valid term. */
+/**
+ * A server subscription authorizes only its own guild during its valid term.
+ * A missing `startsAt`/`endsAt` is unbounded on that side, so a cancelled
+ * subscription stays active until its populated `endsAt`. Test entitlements
+ * pass unless `options.allowTest` is explicitly false.
+ */
 export function isActivePremiumEntitlement(
   entitlement: PremiumEntitlement,
   skuId: string | undefined,

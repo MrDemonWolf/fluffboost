@@ -1,3 +1,8 @@
+/**
+ * Syncs stored `Guild.isPremium` flags with Discord's entitlements for this shard's guilds: at ready, on join,
+ * after a re-identified session, after a revoking entitlement event, and every 30 minutes. Pure planning
+ * logic lives in premiumReconciliationCore.ts.
+ */
 import type { Client } from "discord.js";
 import { and, eq, inArray } from "drizzle-orm";
 import { db } from "../database/index.js";
@@ -9,7 +14,12 @@ import { activePremiumGuilds, planPremiumWrites } from "./premiumReconciliationC
 
 const PREMIUM_RECONCILE_INTERVAL_MS = 30 * 60_000;
 
-/** Reconcile only this shard's servers, including purchases made while offline. */
+/**
+ * Reconcile only this shard's servers (or just `guildId`), including purchases
+ * made while offline. A no-op unless Premium is enabled with a SKU. Throws when
+ * the application is not ready or the entitlement fetch fails, always before
+ * any write; grants and revokes then commit in one transaction.
+ */
 export async function reconcilePremium(client: Client, guildId?: string): Promise<void> {
   if (!env.PREMIUM_ENABLED || !env.DISCORD_PREMIUM_SKU_ID) {return;}
   const ownedGuilds = guildId ? [guildId] : [...client.guilds.cache.keys()];

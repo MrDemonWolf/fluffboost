@@ -1,3 +1,4 @@
+/** `/admin suggestion reject`: rejects a pending suggestion with an optional reason. */
 import { MessageFlags } from "discord.js";
 
 import type { Client, ChatInputCommandInteraction } from "discord.js";
@@ -11,6 +12,7 @@ import {
   markSuggestionReviewed,
 } from "../../../utils/suggestionHelpers.js";
 
+/** Marks the suggestion Rejected, replies ephemerally, then notifies the main channel and DMs the submitter. */
 export default async function (
   client: Client,
   interaction: ChatInputCommandInteraction,

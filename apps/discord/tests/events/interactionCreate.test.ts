@@ -1,3 +1,7 @@
+/**
+ * Tests interactionCreateEvent (src/events/interactionCreate.ts): chat-input narrowing, routing, autocomplete,
+ * unknown commands and error replies. The command registry is replaced by a stand-in routing to executeStub.
+ */
 import { describe, it, expect, beforeEach, mock } from "bun:test";
 import sinon from "sinon";
 import { MessageFlags } from "discord.js";
@@ -8,9 +12,8 @@ const logger = mockLogger();
 const executeStub = sinon.stub().resolves();
 const setupAutocomplete = sinon.stub().resolves();
 
-// Mock only the registry + logger. Command modules themselves are NOT mocked
-// here, so other test files that import real command modules aren't affected
-// by bun:test's process-global mock.module registry.
+// Mock only the registry + logger: the stand-in registry routes every known name to
+// executeStub, so no real command module (or its db/Redis imports) is loaded.
 mock.module("../../src/utils/logger.js", () => ({ default: logger }));
 mock.module("../../src/events/commandRegistry.js", () => ({
   commandRegistry: {

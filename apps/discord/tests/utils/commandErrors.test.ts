@@ -1,3 +1,4 @@
+/** Tests withCommandLogging (src/utils/commandErrors.ts): success/error logging and the safe error reply. */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockLogger, mockInteraction } from "../helpers.js";

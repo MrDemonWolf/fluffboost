@@ -5,6 +5,11 @@ import type { Client, Interaction } from "discord.js";
 import logger from "../utils/logger.js";
 import { commandRegistry, setupAutocomplete } from "./commandRegistry.js";
 
+/**
+ * Routes every interaction for this shard: /setup autocomplete goes to setupAutocomplete, chat-input commands
+ * to their commandRegistry handler, and anything else is ignored. A handler that throws is logged and the user
+ * gets an ephemeral generic error (reply or follow-up, depending on whether it already acknowledged).
+ */
 export async function interactionCreateEvent(
   client: Client,
   interaction: Interaction

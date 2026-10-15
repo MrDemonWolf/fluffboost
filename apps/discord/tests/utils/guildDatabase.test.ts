@@ -1,3 +1,7 @@
+/**
+ * Tests pruneGuilds / ensureGuildExists / guildExists (src/utils/guildDatabase.ts) against a mocked db.
+ * Bound WHERE/VALUES parameters are rendered with PgDialect to assert exactly which guild ids are touched.
+ */
 import { describe, it, expect, beforeEach, mock } from "bun:test";
 import sinon from "sinon";
 import type { SinonStub } from "sinon";

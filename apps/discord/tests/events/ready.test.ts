@@ -1,3 +1,7 @@
+/**
+ * Tests readyEvent (src/events/ready.ts): best-effort startup steps, their order, shard-0-only command
+ * registration and its retry backoff (driven with sinon fake timers).
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockLogger, mockClient } from "../helpers.js";
@@ -15,9 +19,8 @@ describe("ready event", () => {
     const reconcilePremium = sinon.stub().resolves();
 
     mock.module("../../src/utils/logger.js", () => ({ default: logger }));
-    // Mock the thin dep-shim instead of guildDatabase.js / setActivity.js so
-    // utility test files aren't poisoned by bun:test's process-global
-    // mock.module registry.
+    // Mock the thin readyDeps.js shim instead of guildDatabase.js / setActivity.js /
+    // premiumReconciliation.js, so those shared modules are never replaced wholesale.
     mock.module("../../src/events/readyDeps.js", () => ({
       pruneGuilds,
       ensureGuildExists,
@@ -31,6 +34,7 @@ describe("ready event", () => {
     }));
     const mod = await import("../../src/events/ready.js");
 
+    // Clear any retry timer a previous test left scheduled on the cached module.
     mod.cancelReadyRetries();
 
     return {

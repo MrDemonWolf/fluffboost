@@ -1,3 +1,8 @@
+/**
+ * Tests the delivery schedule rules in src/utils/scheduleEvaluator.ts with sinon fake clocks pinned to
+ * instants that hit the catch-up window, midnight rollover, DST transitions and malformed rows.
+ * Times are UTC in code with the guild's local wall-clock time noted alongside.
+ */
 import { describe, it, expect, afterEach } from "bun:test";
 import sinon from "sinon";
 import {
@@ -223,6 +228,8 @@ describe("scheduleEvaluator", () => {
   });
 
   describe("edge cases", () => {
+    // America/Chicago 2026 DST: 2026-03-08 springs 02:00 CST -> 03:00 CDT (02:30 does not exist that day),
+    // and 2026-11-01 falls back 02:00 CDT -> 01:00 CST (01:00-01:59 happens twice).
     const offsetCases = [
       { name: "spring gap before shifted time", now: "2026-03-08T08:00:00Z", time: "02:30", anchor: "2026-03-07T08:30:00Z", due: false },
       { name: "spring gap at shifted time", now: "2026-03-08T08:30:00Z", time: "02:30", anchor: "2026-03-08T08:30:00Z", due: true },

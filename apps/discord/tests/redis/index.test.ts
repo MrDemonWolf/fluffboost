@@ -1,3 +1,4 @@
+/** Tests the two ioredis clients src/redis/index.ts builds (interactive vs BullMQ) by recording constructor options. */
 import { describe, it, expect, mock } from "bun:test";
 
 const created: { url: string; options: Record<string, unknown> }[] = [];
@@ -8,6 +9,7 @@ class FakeRedis {
   }
 }
 
+// The module constructs its clients at import time, so ioredis must be mocked before the import below.
 mock.module("ioredis", () => ({ Redis: FakeRedis, default: FakeRedis }));
 
 const mod = await import("../../src/redis/index.js");

@@ -1,3 +1,7 @@
+/**
+ * Standalone migration script run by docker-entrypoint.sh before the bot
+ * starts (`bun run src/database/migrate.ts`). The logic lives in migrator.ts.
+ */
 import {
   MIGRATIONS_FOLDER,
   MigrationAbortError,

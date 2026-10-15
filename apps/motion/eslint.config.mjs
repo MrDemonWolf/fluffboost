@@ -1,3 +1,4 @@
+/** ESLint flat config for the Remotion package (type-checked TypeScript). */
 import js from "@eslint/js";
 import plugin from "@typescript-eslint/eslint-plugin";
 import parser from "@typescript-eslint/parser";

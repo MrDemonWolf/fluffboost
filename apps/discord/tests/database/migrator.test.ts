@@ -1,3 +1,7 @@
+/**
+ * Tests the migration guard in src/database/migrator.ts with a fake MigrationSession that logs each call,
+ * plus subprocess checks of the migrate.ts entry point and the committed journal.
+ */
 import { describe, it, expect } from "bun:test";
 import fs from "node:fs";
 import path from "node:path";
@@ -251,6 +255,7 @@ describe("migrate.ts entry point", () => {
     expect(journal.entries[0]).toMatchObject({ tag: "0000_confused_eternity", when: 1785275510784 });
     const sql = fs.readFileSync(path.join(MIGRATIONS_FOLDER, "0000_confused_eternity.sql"));
     const hash = new Bun.CryptoHasher("sha256").update(sql).digest("hex");
+    // Production baseline rows store this SHA-256; a change here means a committed migration was edited.
     expect(hash).toBe("9289c18010701751cde68a6c7bffb56e87090393725f50e8d903467bdce1cb93");
   });
 });

@@ -1,3 +1,7 @@
+/**
+ * Premium helpers for commands: the config toggle, the live entitlement check on an interaction and the shared
+ * upsell message. Background delivery reads the stored `Guild.isPremium` flag instead (see premiumReconciliation).
+ */
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -15,7 +19,8 @@ import { buildBrandedEmbed } from "./embedHelpers.js";
 import { allowsTestEntitlements, isActivePremiumEntitlement } from "./entitlementPolicy.js";
 
 /**
- * Check if premium subscriptions are enabled via environment config.
+ * Whether Premium gating is on (PREMIUM_ENABLED). When false, custom schedules
+ * are open to every server and no entitlement handling runs.
  */
 export function isPremiumEnabled(): boolean {
   return env.PREMIUM_ENABLED;
@@ -29,7 +34,10 @@ export function getPremiumSkuId(): string | undefined {
 }
 
 /**
- * Check if the interaction user has an active entitlement for the configured premium SKU.
+ * Whether the interaction carries an active entitlement for the configured SKU
+ * that belongs to the current server. Only a subscription for this guild
+ * counts (not one held by the user elsewhere), so it is always false in DMs.
+ * Test entitlements are ignored in production.
  */
 export function hasEntitlement(interaction: CommandInteraction | ChatInputCommandInteraction): boolean {
   const skuId = getPremiumSkuId();
@@ -43,6 +51,7 @@ export function hasEntitlement(interaction: CommandInteraction | ChatInputComman
   );
 }
 
+/** Upsell text; an empty or missing `footerText` means no footer. */
 interface UpsellEmbedOptions {
   title: string;
   description: string;
@@ -50,15 +59,16 @@ interface UpsellEmbedOptions {
   footerText?: string;
 }
 
-/**
- * Build a consistent premium-upsell embed + SKU button row. Both are returned
- * so callers can spread them into `interaction.reply({...})`.
- */
+/** Reply payload fragment; spread it into `interaction.reply({...})`. */
 export interface PremiumUpsell {
   embeds: EmbedBuilder[];
   components: ActionRowBuilder<ButtonBuilder>[];
 }
 
+/**
+ * Build a consistent premium-upsell embed plus the SKU purchase button row.
+ * Without a configured SKU the row is omitted and only the embed is sent.
+ */
 export function buildPremiumUpsell(options: UpsellEmbedOptions): PremiumUpsell {
   const skuId = getPremiumSkuId();
 

@@ -1,3 +1,5 @@
+# Main CI gate for pushes and PRs to main/dev: unit tests + typecheck + lint, dependency audit,
+# bot E2E against real PostgreSQL/Redis, docs browser E2E, and a Docker image smoke test.
 name: CI
 
 concurrency:
@@ -16,6 +18,7 @@ permissions:
   contents: read
 
 jobs:
+  # Unit tests (with coverage and a shuffled re-run), schema drift, lint, brand exports and typecheck.
   test:
     name: Test & Typecheck
     runs-on: ubuntu-latest
@@ -98,6 +101,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  # Fails on known-vulnerable dependencies; the outdated report is informational only.
   security:
     name: Security Audit
     runs-on: ubuntu-latest
@@ -132,6 +136,8 @@ jobs:
         run: bun outdated
         continue-on-error: true
 
+  # Real PostgreSQL + Redis service containers. The E2E_* values satisfy the suites' safety guards
+  # (loopback host, fluffboost_e2e database, explicit *_DISPOSABLE=true).
   e2e:
     name: Bot E2E (PostgreSQL + Redis)
     runs-on: ubuntu-latest
@@ -180,6 +186,7 @@ jobs:
           E2E_REDIS_URL: redis://127.0.0.1:6379
           E2E_REDIS_DISPOSABLE: "true"
 
+  # Builds the docs static export and runs Playwright against it under the /fluffboost base path.
   docs:
     name: Docs Build & Browser E2E
     runs-on: ubuntu-latest
@@ -227,6 +234,8 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+  # Builds the production image from the repo root (as Dokploy does) and runs its migrator; gated on
+  # the test job so a broken build does not spend a 30-minute image build.
   docker:
     name: Docker Build Test
     runs-on: ubuntu-latest

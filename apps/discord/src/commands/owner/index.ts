@@ -1,3 +1,7 @@
+/**
+ * `/owner` router: bot-owner tools for Discord Premium test entitlements.
+ * Only registered outside production; restricted to OWNER_ID.
+ */
 import { SlashCommandBuilder, MessageFlags } from "discord.js";
 
 import type { Client, ChatInputCommandInteraction } from "discord.js";
@@ -47,6 +51,7 @@ export const slashCommand = new SlashCommandBuilder()
       });
   });
 
+/** Signature shared by every /owner subcommand handler. */
 type OwnerSubcommand = (client: Client, interaction: ChatInputCommandInteraction) => Promise<void>;
 
 /** Handlers keyed by "<group> <subcommand>", matching the builder above. */
@@ -57,6 +62,7 @@ export const ownerRoutes: ReadonlyMap<string, OwnerSubcommand> = new Map([
 ]);
 
 /**
+ * Checks the owner and non-production guards, then dispatches to `ownerRoutes`.
  * Subcommands carry their own withCommandLogging wrapper and guards; errors
  * thrown by the router itself are answered by the interactionCreate router.
  */

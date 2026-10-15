@@ -1,3 +1,9 @@
+/**
+ * Tests the /premium command (src/commands/premium.ts) with utils/premium.js mocked per state
+ * (disabled, upsell, active) and stubBuildPremiumUpsell standing in for the real upsell builder.
+ * loadModule() registers mock.module stubs, then imports the module; Bun patches an already-imported module's
+ * bindings in place, so each call's fresh stubs reach the cached module.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { InteractionContextType, MessageFlags } from "discord.js";

@@ -1,3 +1,7 @@
+/**
+ * `/suggestion`: lets any member of a set-up server submit a quote for staff review.
+ * Saves a Pending SuggestionQuote and posts it to the main (staff) channel.
+ */
 import { InteractionContextType, MessageFlags, SlashCommandBuilder } from "discord.js";
 
 import type { Client, ChatInputCommandInteraction } from "discord.js";
@@ -41,6 +45,12 @@ export const slashCommand = new SlashCommandBuilder()
       .setRequired(true)
   );
 
+/**
+ * Validates the quote, requires a Guild row for this server, spends one of the
+ * user's rolling 24h quota slots (shared across shards via Redis), then inserts
+ * the suggestion. The slot is released if the insert fails. Replies ephemerally;
+ * the staff announcement is best-effort.
+ */
 export async function execute(client: Client, interaction: ChatInputCommandInteraction): Promise<void> {
   await withCommandLogging("suggestion", interaction, async () => {
     // Both options are required in the command schema.
@@ -61,11 +71,7 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
     // expire the interaction after the quota slot and row are already spent.
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-    /**
-     * Get the guild from the database
-     * Check if the guild is setup
-     * If not, return an error message
-     */
+    // A server with no Guild row has not been set up; point the user at /setup channel.
     const [guild] = await db
       .select()
       .from(guilds)
@@ -101,6 +107,8 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
         })
         .returning();
     } catch (insertError) {
+      // Give the quota slot back so a failed save does not count against the
+      // user; if that also fails, surface both errors.
       try {
         await releaseSuggestionSlot(interaction.user.id, interaction.id);
       } catch (releaseError) {
@@ -126,9 +134,7 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
         "in any server using FluffBoost, credited with your Discord username and avatar.",
     });
 
-    /**
-     * Send the quote suggestion to the main channel for review
-     */
+    // Post the suggestion to the main channel so staff can review it.
     const embed = buildBrandedEmbed({
       title: "New Quote Suggestion",
       fields: [

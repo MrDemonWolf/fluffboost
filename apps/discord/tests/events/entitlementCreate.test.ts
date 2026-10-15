@@ -1,3 +1,7 @@
+/**
+ * Tests entitlementCreateEvent (src/events/entitlementCreate.ts) against a mocked db; the WHERE clause is
+ * rendered with PgDialect to assert which guild was updated.
+ */
 import { describe, it, expect, beforeEach, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { EntitlementType } from "discord.js";

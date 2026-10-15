@@ -1,3 +1,5 @@
+// ESLint flat config for @fluffboost/discord (`bun run lint` / `bun run lint:check` from the repo root).
+// Source and scripts are typed through tsconfig.json via projectService; tests and e2e use tsconfig.test.json.
 import js from "@eslint/js";
 import tseslint from "@typescript-eslint/eslint-plugin";
 import tseslintParser from "@typescript-eslint/parser";
@@ -48,7 +50,7 @@ export default [
       ],
 
       // General rules (not TypeScript prefixed)
-      "no-console": "off", // We use consola for logging
+      "no-console": "off", // Standalone scripts and migrate.ts log via console; src/ uses utils/logger by convention
       "no-unused-vars": "off", // Use TypeScript version instead
       "no-undef": "off", // TypeScript handles this
       "prefer-const": "error",

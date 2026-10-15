@@ -1,3 +1,4 @@
+/** Tests guildCreateEvent (src/events/guildCreate.ts): inserts the guild row, then reconciles its Premium status. */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockLogger, mockDb, mockDbChain, mockGuild, mockClient } from "../helpers.js";

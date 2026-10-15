@@ -1,3 +1,7 @@
+/**
+ * Tests the Zod env schemas in src/utils/envSchema.ts directly (no mocks), including that the shipped
+ * .env.example parses once its required secrets are filled in.
+ */
 import { describe, it, expect } from "bun:test";
 import fs from "node:fs";
 import pkg from "../../package.json" with { type: "json" };

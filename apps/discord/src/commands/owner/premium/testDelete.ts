@@ -1,3 +1,4 @@
+/** `/owner premium test-delete`: removes a Discord test entitlement by ID. */
 import { MessageFlags } from "discord.js";
 
 import type { Client, ChatInputCommandInteraction } from "discord.js";
@@ -5,6 +6,7 @@ import type { Client, ChatInputCommandInteraction } from "discord.js";
 import { requireApplication, requireOwner, requireTestEnvironment } from "../../../utils/ownerGuard.js";
 import { withCommandLogging } from "../../../utils/commandErrors.js";
 
+/** Deletes the test entitlement and replies ephemerally. Owner-only and disabled in production. */
 export default async function (
   client: Client,
   interaction: ChatInputCommandInteraction

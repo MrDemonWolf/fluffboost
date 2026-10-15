@@ -1,3 +1,7 @@
+/**
+ * Dependency-injected core of the set-activity job: chooses the next bot
+ * presence and broadcasts it to every shard.
+ */
 import { ActivityType } from "discord.js";
 
 import type { Client } from "discord.js";
@@ -20,6 +24,7 @@ const ACTIVITY_TYPES: Record<DiscordActivityType, ActivityType> = {
   Playing: ActivityType.Playing,
 };
 
+// Defensive fallback only: the DB enum and the env schema already restrict the values.
 const getActivityType = (activityType: DiscordActivityType): ActivityType =>
   ACTIVITY_TYPES[activityType] ?? ActivityType.Playing;
 
@@ -31,6 +36,7 @@ const getActivityType = (activityType: DiscordActivityType): ActivityType =>
  */
 export const BROADCAST_TIMEOUT_MS = 10_000;
 
+/** Injected dependencies; tests pass stubs instead of mocking modules. */
 export interface SetActivityDeps {
   db: typeof db;
   env: typeof env;
@@ -47,6 +53,7 @@ export interface SetActivityOptions {
   scope?: "all" | "local";
 }
 
+/** Sets the presence on this shard, or on every shard via broadcastEval when `scope` is "all". */
 async function applyActivity(
   client: Client,
   name: string,
@@ -57,6 +64,7 @@ async function applyActivity(
   if (client.shard && scope === "all") {
     await withTimeout(
       client.shard.broadcastEval(
+        // Serialized and run on each shard: it can only use what `context` carries, not closures.
         (c, ctx) => {
           c.user?.setActivity(ctx.name, { type: ctx.type, url: ctx.url ?? undefined });
         },
@@ -70,6 +78,11 @@ async function applyActivity(
   }
 }
 
+/**
+ * Picks a random presence from the DiscordActivity rows plus the env default
+ * (the default alone when the table is empty) and applies it. Resolves false
+ * when nothing was set (client not logged in); rethrows any error.
+ */
 export async function setActivityCore(
   client: Client,
   { db: _db, env: _env, logger: _logger }: SetActivityDeps,

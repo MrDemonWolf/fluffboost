@@ -1,3 +1,7 @@
+/**
+ * Tests the shard lifecycle helpers in src/utils/shardShutdown.ts: graceful stop of a real child process,
+ * the shutdown timing budget, Redis close fallbacks, crash-loop detection and respawn-aware stopAllShards.
+ */
 import { describe, expect, it } from "bun:test";
 import { spawn } from "node:child_process";
 import sinon from "sinon";
@@ -13,6 +17,7 @@ import {
 } from "../../src/utils/shardShutdown.js";
 
 it("waits for a shard's in-flight cleanup to finish after SIGTERM", async () => {
+  // A real child that needs 120ms to exit after SIGTERM; stopShardProcess must wait rather than SIGKILL it.
   const child = spawn(process.execPath, ["-e", "process.on('SIGTERM',()=>setTimeout(()=>process.exit(0),120)); console.log('ready'); setInterval(()=>{},1000)"], { stdio: ["ignore", "pipe", "pipe"] });
   await new Promise<void>((resolve, reject) => {
     child.stdout!.once("data", () => resolve());

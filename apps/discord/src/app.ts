@@ -1,3 +1,8 @@
+/**
+ * Manager-process entry point: wires the real dependencies into runApp()
+ * (src/appCore.ts), which holds the startup sequence and shutdown logic.
+ * Shards run src/bot.ts in their own processes.
+ */
 import { ShardingManager, fetchRecommendedShardCount } from "discord.js";
 import { queryClient } from "./database/index.js";
 import api from "./api/index.js";
@@ -8,10 +13,8 @@ import { runApp } from "./appCore.js";
 import { hasAppSchema } from "./utils/startupChecks.js";
 import { createThrottledErrorLogger } from "./utils/throttledErrorLogger.js";
 
-/**
- * Manager-process entry point: wires the real dependencies into runApp()
- * (src/appCore.ts), which holds the startup sequence and shutdown logic.
- */
+// Connection-state logging for the manager's own Redis client (each shard
+// process imports redis/index.ts afresh and attaches its own error logger).
 redis
   .on("ready", () => {
     logger.database.connected("Redis");

@@ -1,3 +1,7 @@
+/**
+ * Tests the /owner router (src/commands/owner/index.ts): route coverage, owner check and production lockout.
+ * Routes are swapped in the exported ownerRoutes Map (restored after each test) instead of mocking subcommands.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { UNIT_ENV_FIXTURE, mockClient, mockEnv, mockInteraction, mockLogger } from "../../helpers.js";

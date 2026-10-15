@@ -1,3 +1,7 @@
+/**
+ * `/setup` router: per-server configuration (delivery channel and schedule).
+ * Server-only and limited to members with Administrator.
+ */
 import {
   SlashCommandBuilder,
   PermissionFlagsBits,
@@ -73,16 +77,19 @@ export const slashCommand = new SlashCommandBuilder()
   })
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
+/** Signature shared by every /setup subcommand handler. */
 type SetupSubcommand = (client: Client, interaction: ChatInputCommandInteraction) => Promise<void>;
 
+/** Handlers keyed by subcommand name, matching the builder above. */
 export const setupRoutes: ReadonlyMap<string, SetupSubcommand> = new Map([
   ["channel", channel],
   ["schedule", schedule],
 ]);
 
 /**
- * Subcommands carry their own withCommandLogging wrapper and Administrator
- * check; errors thrown here are answered by the interactionCreate router.
+ * Requires Administrator (default member permissions can be overridden per
+ * server), then dispatches to `setupRoutes`. Subcommands carry their own
+ * withCommandLogging wrapper and Administrator check; errors thrown here are answered by the interactionCreate router.
  */
 export async function execute(client: Client, interaction: ChatInputCommandInteraction): Promise<void> {
   if (!(await requireGuildAdministrator(interaction))) {
@@ -101,6 +108,7 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
   await handler(client, interaction);
 }
 
+/** Routes autocomplete requests for /setup; only `schedule` (timezone) has autocomplete options. */
 export async function setupAutocomplete(interaction: AutocompleteInteraction) {
   const subcommand = interaction.options.getSubcommand();
   if (subcommand === "schedule") {

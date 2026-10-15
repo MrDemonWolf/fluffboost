@@ -1,3 +1,7 @@
+/**
+ * Tests the owner-only guards in src/utils/ownerGuard.ts. The env mock is a shared object the guards read
+ * at call time, so the production test flips NODE_ENV in place and restores it.
+ */
 import { describe, it, expect, beforeEach, mock } from "bun:test";
 import { MessageFlags } from "discord.js";
 import sinon from "sinon";

@@ -5,12 +5,14 @@ import { guilds } from "../database/schema.js";
 import logger from "../utils/logger.js";
 import { reconcilePremium } from "../utils/premiumReconciliation.js";
 
+/**
+ * GUILD_CREATE handler. discord.js emits it only for servers joined after the shard is ready (startup guilds
+ * are synced by ready.ts). Creates the guild's row with default settings and syncs Premium from Discord, so a
+ * server that subscribed before (re)inviting the bot is Premium right away. Errors are logged, never thrown.
+ */
 export async function guildCreateEvent(guild: Guild): Promise<void> {
   try {
-    /**
-     * Show the bot has joined a new guild in the console.
-     * This is shared across all shards.
-     */
+    // Only the shard that owns this guild receives the event.
     logger.discord.guildJoined(guild.name, guild.id, guild.memberCount);
 
     /**
@@ -23,6 +25,7 @@ export async function guildCreateEvent(guild: Guild): Promise<void> {
       .onConflictDoNothing({ target: guilds.guildId })
       .returning();
 
+    // No-op unless PREMIUM_ENABLED. Runs before the success log, so a failure lands in the catch below.
     await reconcilePremium(guild.client, guild.id);
 
     if (guildData) {

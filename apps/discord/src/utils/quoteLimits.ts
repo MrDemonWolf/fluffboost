@@ -1,7 +1,13 @@
+/** Input limits for quotes and suggestions, plus the ID shape check shared by the library commands. */
+
 // Discord review embeds use fields, which allow at most 1024 characters.
 export const MAX_QUOTE_LENGTH = 1024;
 export const MAX_QUOTE_AUTHOR_LENGTH = 256;
 
+/**
+ * Validate a quote/author pair (blank or over-long either way). Returns the
+ * user-facing error message, or null when both are acceptable.
+ */
 export function quoteInputError(quote: string, author: string): string | null {
   if (!quote.trim() || quote.length > MAX_QUOTE_LENGTH) {
     return `Use a quote between 1 and ${MAX_QUOTE_LENGTH} characters.`;

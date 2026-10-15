@@ -1,3 +1,4 @@
+/** `/admin quote create`: adds a quote to the motivation library and announces it in the main channel. */
 import { MessageFlags } from "discord.js";
 
 import type { Client, ChatInputCommandInteraction } from "discord.js";
@@ -10,6 +11,10 @@ import { withCommandLogging } from "../../../utils/commandErrors.js";
 import { buildBrandedEmbed } from "../../../utils/embedHelpers.js";
 import { quoteInputError } from "../../../utils/quoteLimits.js";
 
+/**
+ * Validates length limits, inserts the quote credited to the caller, replies
+ * ephemerally with the ID, then announces it best-effort.
+ */
 export default async function (
   client: Client,
   interaction: ChatInputCommandInteraction
