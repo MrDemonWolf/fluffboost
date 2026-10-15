@@ -1,3 +1,7 @@
+/**
+ * Tests the quote input limits and UUID check (src/utils/quoteLimits.ts) and field escaping/truncation
+ * (src/utils/embedHelpers.ts) against Discord's real embed serializer.
+ */
 import { expect, it } from "bun:test";
 import { EmbedBuilder } from "discord.js";
 import { isUuid, quoteInputError } from "../../src/utils/quoteLimits.js";

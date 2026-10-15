@@ -1,3 +1,7 @@
+/**
+ * Tests the /admin activity list subcommand (src/commands/admin/activity/list.ts) against a mocked Drizzle db.
+ * Permissions come from mockPermissions(), whose stub never replies, so a denied run leaves `reply` unused.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockPermissions } from "../../permissionsMock.js";

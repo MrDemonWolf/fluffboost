@@ -3,7 +3,8 @@ import logger from "./logger.js";
 /**
  * Logs BullMQ/Redis errors through the logger instead of BullMQ's console
  * fallback, collapsing a repeating error (every reconnect attempt during an
- * outage) into one line per `intervalMs`.
+ * outage) into one line per `intervalMs`. Only a repeat of the last message is
+ * suppressed; a different error logs at once and resets the count.
  */
 export function createThrottledErrorLogger(component: string, label: string, intervalMs = 60_000) {
   let lastMessage = "";

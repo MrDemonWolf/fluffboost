@@ -1,3 +1,7 @@
+/**
+ * The validated environment, parsed once at import. Every module reads config through this default export,
+ * never process.env; an invalid config exits the process before anything else starts.
+ */
 import { z } from "zod";
 
 import { envSchema } from "./envSchema.js";

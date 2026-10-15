@@ -1,3 +1,7 @@
+/**
+ * Tests reconcilePremium and startPremiumReconciliationLoop (src/utils/premiumReconciliation.ts) against a
+ * mocked db/transaction and a stubbed entitlements.fetch; WHERE params are rendered with PgDialect.
+ */
 import { describe, it, expect, beforeEach, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import type { SinonStub } from "sinon";
@@ -148,6 +152,7 @@ describe("startPremiumReconciliationLoop", () => {
     db.transaction.reset();
     db.transaction.callsFake(async (fn: (t: ReturnType<typeof mockDb>) => Promise<unknown>) => fn(mockDb()));
     logger.error.resetHistory();
+    // Fake only the interval: the reconcile's own promises and timers must still run for tickAsync to settle them.
     clock = sinon.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
   });
   afterEach(() => {

@@ -1,3 +1,4 @@
+/** `/about`: public embed with project links, version and the bot's server count across all shards. */
 import { SlashCommandBuilder } from "discord.js";
 
 import type { Client, CommandInteraction } from "discord.js";
@@ -33,6 +34,10 @@ async function countGuilds(client: Client): Promise<string> {
   }
 }
 
+/**
+ * Defers (the cross-shard count can be slow), then replies with a non-ephemeral
+ * branded embed. Available to everyone.
+ */
 export async function execute(client: Client, interaction: CommandInteraction): Promise<void> {
   await withCommandLogging("about", interaction, async () => {
     await interaction.deferReply();

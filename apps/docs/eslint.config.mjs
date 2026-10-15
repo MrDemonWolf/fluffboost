@@ -1,3 +1,4 @@
+/** ESLint flat config for the docs site: type-checked TS/TSX with React Hooks and jsx-a11y rules. */
 import js from "@eslint/js";
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import reactHooks from "eslint-plugin-react-hooks";

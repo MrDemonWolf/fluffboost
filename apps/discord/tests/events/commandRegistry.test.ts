@@ -1,3 +1,7 @@
+/**
+ * Tests which commands src/events/commandRegistry.ts registers and routes per NODE_ENV, using the real
+ * command modules with their logger, db and Redis imports mocked out.
+ */
 import { describe, it, expect, mock } from "bun:test";
 import sinon from "sinon";
 import { UNIT_ENV_FIXTURE, mockDb, mockEnv, mockLogger } from "../helpers.js";
@@ -13,9 +17,9 @@ mock.module("../../src/redis/index.js", () => ({
 }));
 
 /**
- * The registry reads NODE_ENV at module evaluation. A distinct query string
- * per environment forces a fresh evaluation and also bypasses the registry
- * mock that tests/events/interactionCreate.test.ts registers.
+ * The registry reads NODE_ENV at module evaluation, so patching the env mock alone
+ * does not change an already-loaded copy. A distinct query string per environment
+ * forces a fresh evaluation under that environment's mock.
  */
 async function loadRegistry(nodeEnv: MockEnv["NODE_ENV"]) {
   mock.module("../../src/utils/env.js", () => ({ default: mockEnv({ ...UNIT_ENV_FIXTURE, NODE_ENV: nodeEnv }) }));

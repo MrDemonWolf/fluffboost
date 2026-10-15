@@ -1,3 +1,4 @@
+/** Tests parseHourMinute (src/utils/scheduleEvaluator.ts): strict zero-padded HH:mm parsing. */
 import { describe, it, expect } from "bun:test";
 import { parseHourMinute } from "../../src/utils/scheduleEvaluator.js";
 

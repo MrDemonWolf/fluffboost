@@ -1,3 +1,7 @@
+/**
+ * Keeps the `Guild` table in step with the guilds this shard is actually in. Run at ready (pruneGuilds,
+ * ensureGuildExists) and on demand by /setup (guildExists); per-event joins/leaves live in events/.
+ */
 import type { Client } from "discord.js";
 import { inArray } from "drizzle-orm";
 
@@ -27,6 +31,11 @@ async function ensureGuildRows(guildIds: readonly string[]): Promise<void> {
   }
 }
 
+/**
+ * Delete rows for guilds routed to this shard that are no longer in its cache
+ * (the bot left while offline). Deletes run in chunks; a failed chunk is logged
+ * and the rest continue. Never rejects.
+ */
 export async function pruneGuilds(client: Client) {
   try {
     const guildsInDb = await db.select({ guildId: guilds.guildId }).from(guilds);
@@ -116,6 +125,7 @@ export async function pruneGuilds(client: Client) {
   }
 }
 
+/** Insert default rows for every guild in this shard's cache that has none yet. Never rejects. */
 export async function ensureGuildExists(client: Client) {
   try {
     const guildIds = [...client.guilds.cache.keys()];
@@ -147,7 +157,10 @@ export async function ensureGuildExists(client: Client) {
   }
 }
 
-/** Ensure one guild row exists. Always resolves true; kept for existing callers. */
+/**
+ * Ensure one guild row exists before a /setup write updates it. Always resolves
+ * true (the boolean is kept for existing callers); a DB error rejects.
+ */
 export async function guildExists(guildId: string) {
   await ensureGuildRows([guildId]);
   return true;

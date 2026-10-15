@@ -1,3 +1,4 @@
+/** `/admin suggestion stats`: counts suggestions by review status. */
 import { MessageFlags } from "discord.js";
 
 import type { Client, ChatInputCommandInteraction } from "discord.js";
@@ -11,6 +12,7 @@ import type { SuggestionStatus } from "../../../database/schema.js";
 import { withCommandLogging } from "../../../utils/commandErrors.js";
 import { buildBrandedEmbed } from "../../../utils/embedHelpers.js";
 
+/** Replies ephemerally with per-status counts, the total and the approval rate. */
 export default async function (
   _client: Client,
   interaction: ChatInputCommandInteraction,

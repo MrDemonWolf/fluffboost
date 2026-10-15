@@ -1,3 +1,7 @@
+/**
+ * / — the marketing landing page. Fully static: copy lives in the constants
+ * below and the only client-side pieces are BrandBanner and MobileInviteBar.
+ */
 import Link from "next/link";
 import type { Metadata } from "next";
 import { site } from "@/lib/site";
@@ -7,6 +11,7 @@ import { BrandBanner } from "@/components/brand-banner";
 import { MobileInviteBar } from "@/components/mobile-invite-bar";
 
 export const metadata: Metadata = {
+  // `absolute` skips the root layout's "%s · FluffBoost" title template.
   title: { absolute: `${site.name} — ${site.tagline}` },
   description: site.description,
   alternates: { canonical: site.origin + "/" },
@@ -124,6 +129,11 @@ export default function HomePage() {
 
 /* ------------------------------------------------------------------ */
 
+/**
+ * Above-the-fold intro. Each `.fb-rise` block takes its stagger delay from the
+ * inline `--d` custom property (see global.css). `id="home-hero"` is observed by
+ * MobileInviteBar to decide when to show itself.
+ */
 function Hero() {
   return (
     <section id="home-hero" className="fb-dawn relative overflow-hidden">
@@ -444,6 +454,7 @@ const btnPrimary =
 const btnGhost =
   "inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-line bg-card px-6 py-3 font-display text-base font-semibold text-ink transition-colors hover:border-honey";
 
+/** Shared section shell: eyebrow, h2 heading and optional lede above `children`. */
 function Section({
   eyebrow,
   title,
@@ -479,6 +490,7 @@ function Section({
   );
 }
 
+/** Free/Premium plan column; `highlight` adds the honey border and "Optional" badge. */
 function PlanCard({
   name,
   highlight,
@@ -563,6 +575,7 @@ function SuggestionRow({
 /* Icons — simple line marks, kept in one place                       */
 /* ------------------------------------------------------------------ */
 
+/** Feature icon by name (see `features[].icon`); unknown names render nothing. */
 function Icon({ name }: { name: string }) {
   const common = {
     width: 22,
@@ -620,6 +633,7 @@ function Icon({ name }: { name: string }) {
   }
 }
 
+/** Hand-drawn honey underline; its parent must be `relative inline-block`. */
 function Underline() {
   return (
     <svg

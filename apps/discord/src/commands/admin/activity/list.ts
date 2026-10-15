@@ -1,3 +1,4 @@
+/** `/admin activity list`: lists every bot presence entry, newest first. */
 import type { Client, ChatInputCommandInteraction } from "discord.js";
 
 import { desc } from "drizzle-orm";
@@ -8,6 +9,7 @@ import { db } from "../../../database/index.js";
 import { discordActivities } from "../../../database/schema.js";
 import { replyWithTextFile } from "../../../utils/replyHelpers.js";
 
+/** Replies with the activities as a text-file attachment, or an empty-state message. */
 export default async function (
   _client: Client,
   interaction: ChatInputCommandInteraction
@@ -27,6 +29,7 @@ export default async function (
       formatRow: (a) => `${a.id} - ${a.activity} - ${a.type} - ${a.url || "N/A"}`,
       filename: "activities.txt",
       emptyMessage: "No activities found at the moment. Feel free to add some!",
+      // Unlike the other admin lists, this reply is visible to the channel.
       ephemeral: false,
     });
   });

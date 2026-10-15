@@ -1,3 +1,4 @@
+/** Runs scripts/seedQuotes.ts as a subprocess with a minimal env to check which variables the seed requires. */
 import { describe, it, expect } from "bun:test";
 import { fileURLToPath } from "node:url";
 

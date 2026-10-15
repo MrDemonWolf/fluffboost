@@ -1,3 +1,4 @@
+/** `/admin quote list`: lists every motivation quote, newest first. */
 import type { Client, ChatInputCommandInteraction } from "discord.js";
 
 import { desc } from "drizzle-orm";
@@ -8,6 +9,7 @@ import { db } from "../../../database/index.js";
 import { motivationQuotes } from "../../../database/schema.js";
 import { replyWithTextFile } from "../../../utils/replyHelpers.js";
 
+/** Replies ephemerally with the quotes as a text-file attachment, or an empty-state message. */
 export default async function (
   _client: Client,
   interaction: ChatInputCommandInteraction

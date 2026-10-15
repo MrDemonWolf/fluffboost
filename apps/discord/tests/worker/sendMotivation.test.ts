@@ -1,3 +1,9 @@
+/**
+ * Tests sendMotivationCore (src/worker/jobs/sendMotivationCore.ts): claim-before-send, claim release vs. keep
+ * per error class, nonces, chunking and abort handling. Deps (db, logger, dueOccurrence, quote helpers) are
+ * injected directly instead of mock.module(), mirroring setActivityCore. db.update call 0 is the claim and
+ * call 1 (when present) the release.
+ */
 import { describe, it, expect, afterEach } from "bun:test";
 import sinon from "sinon";
 import { PgDialect } from "drizzle-orm/pg-core";
@@ -8,11 +14,6 @@ import {
 } from "../../src/worker/jobs/sendMotivationCore.js";
 import type { SendMotivationDeps } from "../../src/worker/jobs/sendMotivationCore.js";
 
-/**
- * Tests inject deps directly (mirroring setActivityCore) instead of
- * mock.module(), which is process-global in bun:test and made this file's
- * results depend on cross-file execution order.
- */
 describe("sendMotivation", () => {
   afterEach(() => {
     sinon.restore();

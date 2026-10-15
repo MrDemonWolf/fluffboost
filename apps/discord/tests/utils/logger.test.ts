@@ -1,3 +1,7 @@
+/**
+ * Tests src/utils/logger.ts against real consola: argument rendering via a capturing reporter, and secret
+ * redaction via consola's real reporters with stdout/stderr stubbed.
+ */
 import { describe, it, expect, mock, beforeEach, afterEach } from "bun:test";
 import consola, { type ConsolaReporter, type LogObject } from "consola";
 import sinon from "sinon";
@@ -101,6 +105,7 @@ describe("logger rendering", () => {
     logger.debug("Worker", "Hidden at info level", { a: 1 });
     expect(seen).toHaveLength(0);
 
+    // 4 = debug; the default level hides debug output outside development.
     consola.level = 4;
     logger.debug("Worker", "Visible at debug level", { a: 1 });
     expect(only().args).toEqual(["[Worker] Visible at debug level", { a: 1 }]);

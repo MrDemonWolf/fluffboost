@@ -1,3 +1,4 @@
+# Every 1 January, bumps the copyright year in LICENSE and pushes the commit straight to the default branch.
 name: Update License Year
 
 on:
@@ -15,6 +16,7 @@ jobs:
 
     steps:
       - name: Checkout code
+        # Credentials are left persisted (unlike the other workflows): the final step pushes with them.
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Update copyright year

@@ -1,3 +1,7 @@
+/**
+ * Tests for the health router (src/api/routes/health.ts) mounted on a bare Express app via supertest.
+ * env, logger, database and Redis are replaced with mock.module() before the route is dynamically imported.
+ */
 import { describe, it, expect, afterEach, beforeAll, mock } from "bun:test";
 import express from "express";
 import supertest from "supertest";

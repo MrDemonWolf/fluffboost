@@ -1,3 +1,7 @@
+/**
+ * Keeps scripts/reconcileLegacySchema.sql in sync with migration 0000 (embedded SQL and baseline hash)
+ * and checks the .ts wrapper refuses to run without --confirm.
+ */
 import { describe, expect, it } from "bun:test";
 import crypto from "node:crypto";
 import fs from "node:fs";

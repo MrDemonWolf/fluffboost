@@ -1,3 +1,7 @@
+/**
+ * Tests entitlementDeleteEvent (src/events/entitlementDelete.ts): a revoke triggers reconcilePremium for the
+ * guild rather than a direct isPremium write. Mocks are registered once before the top-level import.
+ */
 import { describe, it, expect, beforeEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockLogger, mockDb, mockEntitlement, mockEnv } from "../helpers.js";

@@ -1,3 +1,7 @@
+/**
+ * Dependency-injected core of the send-motivation job: due-guild selection,
+ * the claim-before-send protocol and per-guild error classification.
+ */
 import type { Client } from "discord.js";
 import { and, eq, isNotNull, or, lt, isNull } from "drizzle-orm";
 import { z } from "zod";
@@ -30,8 +34,8 @@ export type DeliveryGuild = Pick<
 
 /**
  * Injected dependencies, mirroring setActivityCore: tests pass stubs directly
- * instead of relying on mock.module(), which is process-global in bun:test and
- * makes suites order-dependent across files.
+ * instead of mock.module(), which replaces the whole module for every test in
+ * the file.
  */
 export interface SendMotivationDeps {
   db: typeof db;
@@ -124,6 +128,12 @@ async function releaseClaim(_db: SendMotivationDeps["db"], guild: DeliveryGuild,
     .where(and(eq(guilds.id, guild.id), eq(guilds.lastMotivationSentAt, claimedAt)));
 }
 
+/**
+ * One delivery tick: load guilds with a channel, keep those due now, pick one
+ * random quote for the whole tick, then claim and send in chunks of
+ * DELIVERY_CHUNK_SIZE. Per-guild failures are logged, never thrown; only the
+ * initial guild/quote queries can reject (failing the BullMQ job).
+ */
 export async function sendMotivationCore(
   client: Client,
   deps: SendMotivationDeps,

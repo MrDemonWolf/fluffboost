@@ -1,3 +1,4 @@
+/** Docs shell (sidebar, nav, search) for every /docs page. */
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import type { ReactNode } from "react";
 import { DocsDrawerA11y, SkipLink } from "@/app/(home)/_components/layout-a11y";
@@ -8,6 +9,7 @@ import { userSource } from "@/lib/source";
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <>
+      {/* #nd-page is the <main> rendered by DocsMain (components/documentation-page.tsx). */}
       <SkipLink href="#nd-page" />
       <DocsLayout {...baseOptions()} tree={userSource.getPageTree()}>
         <DocsDrawerA11y />

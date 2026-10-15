@@ -1,3 +1,8 @@
+/**
+ * Migration runner used by migrate.ts: advisory-locked Drizzle migrations with
+ * a baseline guard and readable failures. The control flow takes an injectable
+ * MigrationSession so tests/database/migrator.test.ts needs no database.
+ */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,10 +16,12 @@ import postgres from "postgres";
  */
 export const MIGRATIONS_FOLDER = fileURLToPath(new URL("../../drizzle", import.meta.url));
 
-// Stable advisory lock key — any constant int8 works as long as it's stable
-// across replicas. Picked from `select hashtext('fluffboost:migrations')::bigint`.
+// Advisory lock key shared by every migrator replica. Any constant int8 works;
+// it must just never change (an old and a new image would not exclude each
+// other). Kept as a string and cast with ::bigint in SQL.
 const LOCK_KEY_TEXT = "7261972598341205";
 
+/** Abort message for a database that needsBaseline(); points operators at the deployment docs. */
 export const BASELINE_REQUIRED_MESSAGE =
   "Existing schema without migration history: baseline required (see the deployment docs). " +
   'public."Guild" exists but drizzle.__drizzle_migrations is missing or empty, so applying ' +
@@ -110,6 +117,7 @@ export async function needsBaseline(query: MigrationSession["query"]): Promise<b
   return !history?.["hasRows"];
 }
 
+/** acquireMigrationLock tuning; the clock, sleep and log hooks exist for tests. */
 export interface LockWaitOptions {
   waitMs?: number;
   pollMs?: number;

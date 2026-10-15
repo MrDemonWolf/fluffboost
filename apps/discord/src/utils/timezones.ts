@@ -1,5 +1,8 @@
+/** Timezone validation and the /setup schedule timezone autocomplete. */
+
 /**
- * Validates whether a string is a valid IANA timezone identifier.
+ * Validates whether a string is a timezone identifier this runtime's Intl
+ * accepts (IANA names and aliases such as "UTC").
  */
 export function isValidTimezone(tz: string): boolean {
   try {

@@ -1,11 +1,14 @@
+/** Brand colors and embed builders shared by every command and job that posts an embed. */
 import { EmbedBuilder, escapeMarkdown } from "discord.js";
 import type { APIEmbedField } from "discord.js";
 
 const BRAND_COLOR = 0xfadb7f;
+/** Discord's own green/red, used for approved/rejected suggestion notices. */
 export const SUCCESS_COLOR = 0x57f287;
 export const DANGER_COLOR = 0xed4245;
 export const BRAND_FOOTER = "Powered by MrDemonWolf, Inc.";
 
+/** Discord's hard limit for an embed field value. */
 const EMBED_FIELD_VALUE_LIMIT = 1024;
 
 /**
@@ -22,6 +25,7 @@ export function escapeFieldValue(text: string): string {
   }).slice(0, EMBED_FIELD_VALUE_LIMIT);
 }
 
+/** Every option is optional; unset ones are simply not applied. `timestamp: true` stamps the current time. */
 export interface BrandedEmbedOptions {
   title?: string;
   description?: string;
@@ -32,11 +36,12 @@ export interface BrandedEmbedOptions {
 }
 
 /**
- * Build an EmbedBuilder pre-set with the FluffBoost brand color and
- * (optionally) brand footer. Returns a fresh instance — never share.
+ * Build an EmbedBuilder pre-set with the FluffBoost brand color (or `color`).
+ * Returns a fresh instance — never share one across sends.
  *
- * Pass `footer: false`-style omission by simply not providing it; pass a
- * string to use that text with brand color; pass an object for full control.
+ * Omit `footer` for no footer; a string sets the footer text, an object sets
+ * text and icon. Field values are cut to 1024 characters and an empty value
+ * becomes "(empty)", since Discord rejects both.
  */
 export function buildBrandedEmbed(options: BrandedEmbedOptions = {}): EmbedBuilder {
   const embed = new EmbedBuilder().setColor(options.color ?? BRAND_COLOR);

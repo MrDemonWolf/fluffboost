@@ -1,3 +1,7 @@
+/**
+ * Single source of truth for the brand compositions and their render settings,
+ * shared by Root.tsx, scripts/render.ts and scripts/verify.ts.
+ */
 export const fps = 24;
 export const iconSeconds = 8;
 export const bannerSeconds = 32;
@@ -14,12 +18,15 @@ export const gifIconScale = 0.5;
 export const GIF_BYTE_BUDGET = 10_000_000;
 
 type BrandVariant = "production" | "dev" | "staging" | "premium";
+/** One composition. `banner` selects LandscapeLoop and the banner duration. */
 export type BrandAsset = {
   id: string; variant: BrandVariant; file: string; width: number; height: number; accent: string; banner: boolean;
 };
+/** GIF output scale for an asset: only 1024px icons are downscaled. */
 export const gifScale = (asset: Pick<BrandAsset, "width">) => (asset.width === iconSize ? gifIconScale : 1);
 
-// `file` values are relative to the public dir in src/bundle-config.ts.
+// `file` values are relative to the public dir in src/bundle-config.ts. The dev and
+// staging banners are byte-for-byte copies of the production banner (scripts/render.ts).
 export const assets: BrandAsset[] = [
   ...(["production", "dev", "staging"] as const).flatMap((variant) => {
     const accent = variant === "dev" ? "#25CFFF" : "#FFCE69";

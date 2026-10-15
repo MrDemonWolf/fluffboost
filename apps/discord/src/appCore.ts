@@ -1,3 +1,7 @@
+/**
+ * Manager-process startup and shutdown, with every external dependency
+ * injected (see AppDeps) so tests/app.test.ts can drive it without mock.module.
+ */
 import type { Server } from "node:http";
 import type { ShardingManager } from "discord.js";
 import type logger from "./utils/logger.js";
@@ -15,6 +19,7 @@ import type { RedisProbeClient } from "./utils/startupChecks.js";
 
 /** Startup dependency check: 7 attempts, 1+2+4+8+15+15 s ≈ 45 s of capped backoff before giving up. */
 const DEPENDENCY_CHECK_ATTEMPTS = 7;
+/** Per-attempt deadline for each probe, so a hung connect counts as a failed attempt. */
 const DEPENDENCY_PROBE_TIMEOUT_MS = 3_000;
 
 /** Recommended shard count lookup: bounded retries for network errors, 5xx and 429. */
@@ -41,6 +46,7 @@ export interface ProcessLike {
   exit(code: number): void;
 }
 
+/** Everything runApp() touches outside its own logic; app.ts supplies the real implementations. */
 export interface AppDeps {
   env: { HOST?: string | undefined; PORT: number; DISCORD_APPLICATION_BOT_TOKEN: string };
   logger: typeof logger;
@@ -50,7 +56,9 @@ export interface AppDeps {
   hasAppSchema: () => Promise<boolean>;
   closeDatabase: () => Promise<void>;
   redis: ManagerRedis;
+  /** Starts the health-check API; `host` is omitted when HOST is unset (bind all interfaces). */
   listen: (port: number, host?: string) => Server;
+  /** Discord's recommended shard count for the bot token (one bare request; runApp adds retries). */
   fetchShardCount: () => Promise<number>;
   createManager: (file: string, options: { token: string; totalShards: number; respawn: boolean }) => ManagerLike;
   proc: ProcessLike;
@@ -58,9 +66,14 @@ export interface AppDeps {
   dependencyRetryBaseMs?: number;
 }
 
+/** Returned once the manager exists; mainly for tests to inspect state and trigger shutdown. */
 export interface AppHandle {
   server: Server;
   manager: ManagerLike;
+  /**
+   * Idempotent graceful teardown, then `proc.exit(exitCode)`. `minExitDelayMs`
+   * holds the exit back (from shutdown start) so a fatal restart cannot hot-loop.
+   */
   shutdown: (reason: string, exitCode?: number, minExitDelayMs?: number) => Promise<void>;
 }
 
@@ -81,6 +94,7 @@ export async function runApp(deps: AppDeps): Promise<AppHandle | null> {
   });
   proc.on("uncaughtException", (err) => {
     logger.error("App", "Uncaught exception", err);
+    // Before the server and manager exist there is nothing to drain.
     if (!started || !shutdown) {
       proc.exit(1);
       return;

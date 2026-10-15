@@ -1,3 +1,8 @@
+/**
+ * /docs/[[...slug]] — renders every page of the Guide docs tree. The optional
+ * catch-all also covers /docs itself (index.mdx); generateStaticParams lists
+ * each page so the static export can pre-render it.
+ */
 import { userSource } from "@/lib/source";
 import type { Metadata } from "next";
 import { DocumentationPage, getDocumentationMetadata } from "@/components/documentation-page";

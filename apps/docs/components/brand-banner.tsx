@@ -1,11 +1,18 @@
 "use client";
 
+/** Animated sunrise banner shown in the landing page's example quote card. */
+
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { withBasePath } from "@/lib/site";
 // WebP derivative of assets/brand/animated/fluffboost-production-banner.png.
 import poster from "@/assets/brand/fluffboost-banner-poster.webp";
 
+/**
+ * Static WebP poster with the looping MP4 layered on top. The video autoplays
+ * only when the visitor has no reduced-motion preference (and follows changes
+ * to it); the toggle button unmounts/remounts the <video> rather than pausing it.
+ */
 export function BrandBanner() {
   const [playing, setPlaying] = useState(false);
   useEffect(() => {
@@ -24,9 +31,13 @@ export function BrandBanner() {
     });
   }, []);
 
+  // 17:6 is the 680x240 banner composition, so the box is sized before the image loads.
   return (
     <div className="relative mb-5 overflow-hidden rounded-2xl" style={{ aspectRatio: "17 / 6" }}>
       <Image src={poster} alt="A warm sunrise over a woodland mountain lake" priority className="h-auto w-full" />
+      {/* The animated poster, hidden from assistive tech (the poster's alt covers it).
+          The MP4 lives in /public (apps/motion's render script copies it there), so
+          it needs withBasePath(); imported assets get the base path automatically. */}
       {playing && <video
         ref={startVideo}
         aria-hidden="true" autoPlay loop muted playsInline preload="metadata"

@@ -1,3 +1,7 @@
+/**
+ * `/setup schedule`: per-server quote delivery schedule (frequency, time, timezone, day).
+ * Gated behind an active entitlement only when PREMIUM_ENABLED=true.
+ */
 import { MessageFlags } from "discord.js";
 import type { Client, ChatInputCommandInteraction, AutocompleteInteraction } from "discord.js";
 
@@ -18,6 +22,7 @@ import { requireGuildAdministrator, requireGuildId } from "../../utils/permissio
 
 const DAY_OF_WEEK_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
+/** Markdown summary of a saved schedule for the confirmation embed; the day line is omitted for Daily. */
 function formatScheduleDescription(frequency: string, time: string, timezone: string, day: number | null): string {
   const parts = [`**Frequency:** ${frequency}`, `**Time:** ${time}`, `**Timezone:** ${timezone}`];
 
@@ -30,12 +35,18 @@ function formatScheduleDescription(frequency: string, time: string, timezone: st
   return parts.join("\n");
 }
 
+/**
+ * Requires Administrator (and an entitlement when Premium gating is on), merges the
+ * given options over the saved schedule, validates the result and saves it.
+ * Replies ephemerally with the upsell, a validation error or the new schedule.
+ */
 export default async function schedule(_client: Client, interaction: ChatInputCommandInteraction): Promise<void> {
   await withCommandLogging("setup schedule", interaction, async () => {
     const guildId = await requireGuildId(interaction);
     if (!guildId) {return;}
     if (!(await requireGuildAdministrator(interaction))) {return;}
 
+    // With gating off, custom schedules are open to every server.
     const premiumEnabled = isPremiumEnabled();
     if (premiumEnabled && !hasEntitlement(interaction)) {
       const defaultSchedule = describeDefaultSchedule();
@@ -92,6 +103,7 @@ export default async function schedule(_client: Client, interaction: ChatInputCo
       return;
     }
 
+    // Monthly days stop at 28 so every month has the chosen day.
     if (frequency === "Weekly") {
       if (day === null || day < 0 || day > 6) {
         await interaction.reply({
@@ -134,6 +146,10 @@ export default async function schedule(_client: Client, interaction: ChatInputCo
   });
 }
 
+/**
+ * Suggests IANA timezones for the `timezone` option. Never throws: on error it
+ * logs and answers with an empty list so Discord does not show a failure.
+ */
 export async function autocomplete(interaction: AutocompleteInteraction): Promise<void> {
   try {
     const focused = interaction.options.getFocused(true);

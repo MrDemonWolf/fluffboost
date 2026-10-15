@@ -1,3 +1,4 @@
+/** Tests the /quote command (src/commands/quote.ts) by mocking its quoteDeps.js seam. */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockLogger, mockClient, mockInteraction } from "../helpers.js";

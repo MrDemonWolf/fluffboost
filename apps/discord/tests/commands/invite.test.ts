@@ -1,3 +1,4 @@
+/** Tests the /invite command (src/commands/invite.ts) with a stubbed client.generateInvite. */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockLogger, mockClient, mockInteraction } from "../helpers.js";

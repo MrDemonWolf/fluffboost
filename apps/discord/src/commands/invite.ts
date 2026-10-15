@@ -1,3 +1,4 @@
+/** `/invite`: ephemeral OAuth2 link for adding the bot to another server. */
 import { SlashCommandBuilder, OAuth2Scopes, MessageFlags, PermissionFlagsBits } from "discord.js";
 
 import type { Client, CommandInteraction } from "discord.js";
@@ -10,6 +11,10 @@ export const slashCommand = new SlashCommandBuilder()
     "Invite me to your server! Let's keep spreading paw-sitivity 🐾"
   );
 
+/**
+ * Replies with an invite requesting only the permissions quote delivery needs
+ * (View Channel, Send Messages, Embed Links), matching what `/setup channel` checks.
+ */
 export async function execute(client: Client, interaction: CommandInteraction): Promise<void> {
   await withCommandLogging("invite", interaction, async () => {
     const inviteLink = client.generateInvite({

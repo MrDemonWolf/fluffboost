@@ -1,3 +1,7 @@
+/**
+ * Layout for the marketing routes in the (home) group: /, /privacy and /terms.
+ * The route group adds no URL segment; the base path comes from next.config.mjs.
+ */
 import { HomeLayout } from "fumadocs-ui/layouts/home";
 import type { ReactNode } from "react";
 import { baseOptions } from "@/lib/layout.shared";

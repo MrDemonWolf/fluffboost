@@ -1,3 +1,4 @@
+/** /sitemap.xml — the home page, legal pages and every page of both docs trees. */
 import type { MetadataRoute } from "next";
 import { devSource, userSource } from "@/lib/source";
 import { site } from "@/lib/site";

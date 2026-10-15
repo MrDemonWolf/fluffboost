@@ -1,3 +1,7 @@
+/**
+ * Health-check routes mounted at /api/health: `/live` (liveness, used by the
+ * container HEALTHCHECK) and `/` (readiness, probes Postgres and Redis).
+ */
 import express from "express";
 
 import { queryClient } from "../../database/index.js";
@@ -8,6 +12,7 @@ import { withTimeout } from "../../utils/async.js";
 
 const router: express.Router = express.Router();
 
+/** Per-probe deadline, kept short so a monitor gets an answer instead of its own timeout. */
 const PROBE_TIMEOUT_MS = 1500;
 
 type ProbeStatus = "ok" | "error";
@@ -18,6 +23,7 @@ interface ProbeResult {
   error?: string;
 }
 
+/** Readiness response; the *Error fields are omitted in production so driver messages don't leak. */
 interface HealthBody {
   status: "ok" | "degraded";
   db: ProbeStatus;

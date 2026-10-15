@@ -1,3 +1,7 @@
+/**
+ * Tests the generic backoffDelay / retryWithBackoff / withTimeout helpers in src/utils/async.ts.
+ * An injected `sleep` records the backoff waits so no real time passes.
+ */
 import { describe, expect, it } from "bun:test";
 import sinon from "sinon";
 import { backoffDelay, retryWithBackoff, withTimeout } from "../../src/utils/async.js";

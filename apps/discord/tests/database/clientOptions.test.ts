@@ -1,3 +1,4 @@
+/** Tests the postgres pool options and opt-in query logger in src/database/clientOptions.ts (pure functions). */
 import { describe, it, expect } from "bun:test";
 import sinon from "sinon";
 import {

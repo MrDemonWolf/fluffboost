@@ -1,3 +1,4 @@
+/** Production wiring for the send-motivation job: injects real deps into sendMotivationCore. */
 import type { Client } from "discord.js";
 
 import { db } from "../../database/index.js";

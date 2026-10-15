@@ -1,3 +1,7 @@
+/**
+ * Tests /setup channel (src/commands/setup/channel.ts): admin check, channel type/permission validation and
+ * the guild update, with db and guildDatabase.js mocked.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import { ChannelType, MessageFlags } from "discord.js";
 import sinon from "sinon";

@@ -1,3 +1,7 @@
+/**
+ * `/admin` router: bot-staff management of quotes, activities and suggestions.
+ * Restricted to user IDs in ALLOWED_USERS (empty disables every subcommand).
+ */
 import {
   SlashCommandBuilder,
   PermissionFlagsBits,
@@ -179,8 +183,10 @@ export const slashCommand = new SlashCommandBuilder()
           .setDescription("View suggestion statistics");
       });
   })
+  // Only hides the command from non-admins in Discord's UI; ALLOWED_USERS is the real gate.
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
+/** Signature shared by every /admin subcommand handler. */
 type AdminSubcommand = (client: Client, interaction: ChatInputCommandInteraction) => Promise<void>;
 
 /** Handlers keyed by "<group> <subcommand>", matching the builder above. */
@@ -198,6 +204,7 @@ export const adminRoutes: ReadonlyMap<string, AdminSubcommand> = new Map([
 ]);
 
 /**
+ * Checks ALLOWED_USERS, then dispatches to the matching `adminRoutes` handler.
  * Each subcommand wraps itself in withCommandLogging, so the router does not
  * (nesting double-logged and reported router success after a handler failed).
  * Anything thrown here is caught and answered by the interactionCreate router.

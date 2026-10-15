@@ -1,3 +1,7 @@
+/**
+ * Pure option builders for the shared postgres.js pool and Drizzle logger,
+ * split out of index.ts so they can be unit-tested without opening a connection.
+ */
 import type { Logger } from "drizzle-orm";
 import type { Options, PostgresType } from "postgres";
 
@@ -8,7 +12,9 @@ export const IDLE_IN_TRANSACTION_TIMEOUT_MS = 30_000;
 /** postgres.js options for the bot's shared pool (migrate.ts deliberately uses its own client). */
 export function buildClientOptions(poolMax: number): Options<Record<string, PostgresType>> {
   return {
+    // Per process: the manager and every shard each get their own pool (see DATABASE_POOL_MAX docs).
     max: poolMax,
+    // Seconds (postgres.js units), unlike the millisecond server settings below.
     idle_timeout: 30,
     connect_timeout: 10,
     connection: {

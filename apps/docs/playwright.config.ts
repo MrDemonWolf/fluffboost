@@ -1,3 +1,7 @@
+/**
+ * Browser E2E for the docs site. Builds the production-shaped export (base path
+ * /fluffboost) and serves out/ with scripts/serve-export.mjs, like GitHub Pages.
+ */
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
@@ -19,6 +23,7 @@ export default defineConfig({
   webServer: {
     command: "NEXT_PUBLIC_BASE_PATH=/fluffboost bun run build && bun run scripts/serve-export.mjs",
     url: "http://127.0.0.1:4173/fluffboost/",
+    // Always rebuild, so the suite never runs against a stale export.
     reuseExistingServer: false,
     timeout: 180_000,
     env: { NEXT_PUBLIC_BASE_PATH: "/fluffboost", PORT: "4173" },

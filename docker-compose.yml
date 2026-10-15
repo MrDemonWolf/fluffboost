@@ -1,3 +1,5 @@
+# Local development stack: `docker compose up -d` starts PostgreSQL 18 + Redis 8 on loopback-only ports
+# (credentials are dev defaults, never production). The bot service is opt-in via the `bot` profile.
 name: fluffboost
 services:
   postgres:

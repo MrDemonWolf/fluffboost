@@ -6,7 +6,8 @@ type LogError = unknown;
 type Level = "success" | "info" | "warn" | "error" | "debug" | "ready";
 
 /**
- * Centralized logger utility with consistent formatting for FluffBoost.
+ * Centralized logger utility with consistent formatting for FluffBoost. Use it
+ * (and its sub-loggers) instead of console.*; secrets are redacted on output.
  *
  * Every level renders through emit(), which passes the error and metadata to consola as
  * positional args. consola only prints `args`, so extra keys on a single log object
@@ -49,6 +50,7 @@ function collectSecrets(): string[] {
 
 const secrets = collectSecrets();
 
+/** Replace every occurrence of a known secret with [REDACTED]. */
 function redact(text: string): string {
   let result = text;
   for (const secret of secrets) {
@@ -73,6 +75,7 @@ function redactingStream(stream: NodeJS.WriteStream): NodeJS.WriteStream {
 consola.options.stdout = redactingStream(process.stdout);
 consola.options.stderr = redactingStream(process.stderr);
 
+/** Render `[component] message` plus the error and metadata as separate consola args. */
 function emit(level: Level, component: string, message: string, err?: LogError, metadata?: LogMetadata): void {
   const extra: LogError[] = [];
   if (err !== undefined && err !== null) {
@@ -101,6 +104,7 @@ const ready = (component: string, message: string, metadata?: LogMetadata) =>
 // Info in production for monitoring, debug elsewhere.
 const operational = isProduction ? info : debug;
 
+/** Shared metadata shape for command log lines; `guild` is omitted for DMs. */
 const commandMeta = (command: string, username: string, id: string, guildId?: string) => ({
   command,
   user: { username, id },
@@ -108,7 +112,8 @@ const commandMeta = (command: string, username: string, id: string, guildId?: st
 });
 
 /**
- * Application logger with consistent formatting
+ * Application logger. Top-level methods take `(component, message, …)`;
+ * the sub-loggers below fix the component and message format for common events.
  */
 const logger = {
   success,

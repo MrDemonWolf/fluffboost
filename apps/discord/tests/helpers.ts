@@ -8,10 +8,17 @@ import type { envSchema } from "../src/utils/envSchema.js";
 /**
  * Shared test helper factories for FluffBoost tests.
  * Provides lightweight mock objects for Discord.js, Drizzle, and Logger.
+ * Each factory returns fresh Sinon stubs, so build a new one per test rather than sharing instances.
+ * Keep one-off helpers local to the test file that needs them.
  */
 
 // ── Logger mock ──────────────────────────────────────────────────────────────
 
+/**
+ * A stub for every method of `src/utils/logger.ts`, including the `commands`, `database`, `api` and `discord`
+ * sub-loggers. If source code starts calling a logger method not listed here, the test fails with
+ * "is not a function": add the stub here rather than in the test.
+ */
 export function mockLogger() {
   return {
     success: sinon.stub(),
@@ -150,6 +157,14 @@ export function mockDb() {
 
 // ── Discord.js mocks ─────────────────────────────────────────────────────────
 
+/**
+ * A minimal `ChatInputCommandInteraction` stand-in: user `user-123` in guild `guild-123`, no options set
+ * (every `options.get*` returns null) and no entitlements. Cast it at the call site.
+ *
+ * Gotchas: `deferReply` flips `this.deferred`, so it only works when called as a method on the object;
+ * `entitlements` is a plain Map (add `{ skuId }` entries to simulate Premium); overrides replace whole
+ * top-level keys, so overriding `options` drops the other default option stubs.
+ */
 export function mockInteraction(overrides: Record<string, unknown> = {}) {
   const entitlements = new Map<string, { skuId: string }>();
   const replyStub = sinon.stub().resolves();
@@ -189,6 +204,11 @@ export function mockInteraction(overrides: Record<string, unknown> = {}) {
   };
 }
 
+/**
+ * A minimal Discord `Client` stand-in. `channels.fetch` resolves null (channel not found) and
+ * `guilds.cache` is an empty Map until a test configures them; `application.entitlements` stubs the
+ * test-entitlement API used by `/owner premium`. Overrides replace whole top-level keys.
+ */
 export function mockClient(overrides: Record<string, unknown> = {}) {
   return {
     user: {
@@ -220,6 +240,7 @@ export function mockClient(overrides: Record<string, unknown> = {}) {
   };
 }
 
+/** A plain guild object (`guild-123`, "Test Guild", 42 members); not a discord.js `Guild` instance. */
 export function mockGuild(overrides: Record<string, unknown> = {}) {
   return {
     id: "guild-123",
@@ -229,6 +250,11 @@ export function mockGuild(overrides: Record<string, unknown> = {}) {
   };
 }
 
+/**
+ * A plain guild entitlement for `sku-123` in `guild-123` with no end date. Add the fields the entitlement
+ * policy reads (`startsAt`, `deleted`, `type`, `isTest()`) through overrides; note `startsAt: null` with no
+ * `isTest` counts as an owner test entitlement.
+ */
 export function mockEntitlement(overrides: Record<string, unknown> = {}) {
   return {
     id: "ent-123",
@@ -252,7 +278,11 @@ export const UNIT_ENV_FIXTURE: Partial<MockEnv> = {
   DISCORD_APPLICATION_BOT_TOKEN: "unit-test-not-a-discord-token",
 };
 
-/** A fully typed env fixture; overrides must match the real schema's output types. */
+/**
+ * A fully typed env fixture; overrides must match the real schema's output types.
+ * Premium is off and `NODE_ENV` is "test" by default. Pass the result as the `default` export when mocking
+ * `src/utils/env.js` (as tests/preload.ts does).
+ */
 export function mockEnv(overrides: Partial<MockEnv> = {}): MockEnv {
   return {
     DATABASE_URL: "postgres://user:pass@localhost:5432/test",
@@ -289,6 +319,11 @@ export type StubFn = SinonStub;
 
 // ── Premium upsell stub (matches real premium.buildPremiumUpsell shape) ────
 
+/**
+ * Returns a stand-in for `buildPremiumUpsell` producing the same `{ embeds, components }` shape without
+ * reading env: one embed, plus a Premium SKU button only when `skuId` is given. Use it in a mocked
+ * `utils/premium.js` so tests can assert on the button without enabling Premium in the env fixture.
+ */
 export function stubBuildPremiumUpsell(skuId?: string) {
   type UpsellField = { name: string; value: string; inline?: boolean };
   return (opts: { title?: string; description?: string; fields?: UpsellField[] } = {}) => {

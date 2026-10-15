@@ -1,3 +1,7 @@
+/**
+ * Tests startWorker (src/worker/index.ts): job scheduler registration on shard 0, legacy repeatable cleanup,
+ * job dispatch, deadlines and abort signals. bullmq's Worker is stubbed to capture the job processor.
+ */
 import { describe, it, expect, beforeEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockLogger, mockEnv } from "../helpers.js";
@@ -21,9 +25,9 @@ mock.module("../../src/utils/logger.js", () => ({ default: logger }));
 mock.module("../../src/utils/env.js", () => ({ default: env }));
 mock.module("../../src/redis/index.js", () => ({ default: {}, bullRedis: {} }));
 mock.module("bullmq", () => ({ Worker: WorkerStub, Job: class {} }));
-// Job modules must be mocked BEFORE importing worker/index.js — otherwise the
-// real setActivity/sendMotivation modules get evaluated here and cached with
-// this file's mocks, breaking their own test files depending on run order.
+// Job modules must be mocked BEFORE importing worker/index.js, so the real
+// setActivity/sendMotivation modules (and the db/Discord code they import) are
+// never evaluated; the processor dispatches to the stubs instead.
 mock.module("../../src/worker/jobs/setActivity.js", () => ({ default: setActivityStub }));
 mock.module("../../src/worker/jobs/sendMotivation.js", () => ({ default: sendMotivationStub }));
 

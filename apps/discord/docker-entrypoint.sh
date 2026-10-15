@@ -1,4 +1,6 @@
 #!/bin/sh
+# Container entrypoint (run under tini, see Dockerfile): apply pending Drizzle migrations, then replace this
+# shell with the bot so signals reach app.ts directly. SKIP_MIGRATIONS=true skips the migration step.
 set -e
 
 if [ "${SKIP_MIGRATIONS}" = "true" ]; then
