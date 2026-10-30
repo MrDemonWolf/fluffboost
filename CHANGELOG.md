@@ -84,6 +84,11 @@ documentation remediation. No release has been tagged yet.
 
 ### Changed
 
+- The website and documentation moved to the custom domain
+  <https://fluffboost.mrdemonwolf.dev/>, served from the domain root. The
+  static export ships a `CNAME` file and a `robots.txt` that points at the
+  sitemap, and canonical, `og:url` and sitemap URLs use the new origin. The
+  `/about` Guide link and the README point at the new address.
 - `/setup schedule` keeps saved values for options you leave out, so
   `/setup schedule time:10:00` changes only the time. Changing the frequency
   asks for a new `day`.
