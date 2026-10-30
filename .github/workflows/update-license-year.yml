@@ -1,10 +1,26 @@
-# Every 1 January, bumps the copyright year in LICENSE and pushes the commit straight to the default branch.
 name: Update License Year
+
+# Opens a pull request that bumps the year on the first line of LICENSE:
+#   FluffBoost — Copyright (C) <YYYY> MrDemonWolf, Inc
+# It never pushes to main (main requires a PR and status checks).
+#
+# Pull requests opened with the default GITHUB_TOKEN do not trigger other
+# workflows, so CI will not run on them. To get CI on the PR automatically, add a
+# fine-grained token (contents + pull requests: read/write on this repo) as the
+# LICENSE_YEAR_PR_TOKEN secret. Without it, close and reopen the PR (or push to
+# its branch) to start CI. The repository setting "Allow GitHub Actions to create
+# and approve pull requests" must be enabled when using GITHUB_TOKEN.
 
 on:
   schedule:
-    - cron: "0 0 1 1 *"
+    - cron: "0 0 1 1 *" # 00:00 UTC on January 1
   workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: update-license-year
+  cancel-in-progress: false
 
 jobs:
   update-year:
@@ -13,20 +29,66 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ secrets.LICENSE_YEAR_PR_TOKEN || github.token }}
 
     steps:
       - name: Checkout code
-        # Credentials are left persisted (unlike the other workflows): the final step pushes with them.
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          token: ${{ secrets.LICENSE_YEAR_PR_TOKEN || github.token }}
 
       - name: Update copyright year
+        id: update
         run: |
-          YEAR=$(date +%Y)
-          sed -i "s/FluffBoost — Copyright (C) [0-9]\{4\} MrDemonWolf, Inc/FluffBoost — Copyright (C) $YEAR MrDemonWolf, Inc/" LICENSE
+          set -euo pipefail
+          export LC_ALL=C.UTF-8
+          YEAR=$(date -u +%Y)
+          PATTERN='^FluffBoost — Copyright (C) [0-9]\{4\} MrDemonWolf, Inc$'
 
-      - name: Commit if changed
+          # Fail loudly if the header format changed, instead of silently doing nothing.
+          if ! head -n 1 LICENSE | grep -q "$PATTERN"; then
+            echo "::error file=LICENSE,line=1::First line does not match 'FluffBoost — Copyright (C) YYYY MrDemonWolf, Inc'"
+            exit 1
+          fi
+
+          # Only line 1 is touched; the GPL text has its own "Copyright (C)" lines.
+          sed -i "1s/Copyright (C) [0-9]\{4\} MrDemonWolf/Copyright (C) ${YEAR} MrDemonWolf/" LICENSE
+
+          echo "year=${YEAR}" >> "$GITHUB_OUTPUT"
+          if git diff --quiet -- LICENSE; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "LICENSE already says ${YEAR}; nothing to do."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff -- LICENSE
+          fi
+
+      - name: Open pull request
+        if: steps.update.outputs.changed == 'true'
+        env:
+          YEAR: ${{ steps.update.outputs.year }}
+          BASE: ${{ github.event.repository.default_branch }}
         run: |
+          set -euo pipefail
+          BRANCH="chore/license-year-${YEAR}"
+
+          if [ -n "$(gh pr list --head "$BRANCH" --base "$BASE" --state open --json number --jq '.[].number')" ]; then
+            echo "A pull request from ${BRANCH} is already open; skipping."
+            exit 0
+          fi
+
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git diff --quiet LICENSE || (git add LICENSE && git commit -m "chore: update license copyright year to $(date +%Y)")
-          git push
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$BRANCH"
+          git add LICENSE
+          git commit -m "chore: update license copyright year to ${YEAR}"
+          git push --force origin "HEAD:refs/heads/${BRANCH}"
+
+          gh pr create \
+            --base "$BASE" \
+            --head "$BRANCH" \
+            --title "chore: update license copyright year to ${YEAR}" \
+            --body "Automated update of the copyright year on the first line of \`LICENSE\` to ${YEAR}."
