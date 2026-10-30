@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockPermissions } from "../../permissionsMock.js";
+import { ADMIN_DENIED_REPLY, NOT_ALLOWED_USER_ID, mockPermissions, useRealPermissions } from "../../permissionsMock.js";
 import { mockLogger, mockDb, mockDbChain, mockInteraction, mockClient } from "../../../helpers.js";
 
 describe("admin activity create command", () => {
@@ -27,7 +27,8 @@ describe("admin activity create command", () => {
 
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
-    await mockPermissions(false);
+    // The real gate: the test user is not in ALLOWED_USERS.
+    await useRealPermissions();
 
     const mod = await import("../../../../src/commands/admin/activity/create.js");
 
@@ -43,13 +44,18 @@ describe("admin activity create command", () => {
     return interaction;
   }
 
-  it("should return early without touching the database when user is not permitted", async () => {
+  it("denies a user outside ALLOWED_USERS with the gate's reply and writes nothing", async () => {
     const { handler, db } = await loadModuleNotPermitted();
+    // Without the gate this input would insert, so the test fails if the gate is removed.
+    db.insert.returns(mockDbChain([{ id: "a1", activity: "Gaming", type: "Playing", url: null }]));
     const interaction = makeInteraction("Gaming", "Playing");
+    interaction.user.id = NOT_ALLOWED_USER_ID;
 
     await handler(mockClient() as never, interaction as never);
 
-    expect((interaction.reply as sinon.SinonStub).called).toBe(false);
+    const reply = interaction.reply as sinon.SinonStub;
+    expect(reply.calledOnce).toBe(true);
+    expect(reply.firstCall.args[0].content).toBe(ADMIN_DENIED_REPLY);
     expect(db.insert.called).toBe(false);
   });
 
