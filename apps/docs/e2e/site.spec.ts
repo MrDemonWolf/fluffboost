@@ -66,6 +66,38 @@ test("legal pages are reachable from the landing footer and survive a reload", a
   }
 });
 
+test("the privacy policy covers the required GDPR notice items", async ({ page }) => {
+  await page.goto("./privacy/");
+  await expect(page.locator("time")).toHaveAttribute("datetime", "2026-10-30");
+  for (const heading of [
+    "Who is responsible",
+    "What we collect and why",
+    "Who receives your data",
+    "International transfers",
+    "We do not sell your data",
+    "How long we keep it",
+    "Your rights",
+    "Minimum age",
+  ]) {
+    await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
+  }
+
+  // The purpose table scrolls inside a keyboard-focusable region instead of widening the page.
+  const region = page.getByRole("region", { name: /legal basis/ });
+  await expect(region).toHaveAttribute("tabindex", "0");
+  const table = region.getByRole("table");
+  for (const column of ["Purpose", "Data", "Legal basis"]) {
+    await expect(table.getByRole("columnheader", { name: column, exact: true })).toBeVisible();
+  }
+  await expect(table.getByRole("rowheader")).toHaveCount(6);
+
+  const main = page.getByRole("main");
+  await expect(main).toContainText("supervisory authority");
+  await expect(main).toContainText("We do not sell personal data");
+  await expect(main).toContainText("24 hours after your most recent suggestion");
+  await expect(main).toContainText("Discord Terms of Service");
+});
+
 test("every exported page keeps links and assets inside the base path and has its own metadata", async ({
   page,
   request,
