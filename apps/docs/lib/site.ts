@@ -5,13 +5,13 @@ const CLIENT_ID = "1152416549261561856";
 // the permissions apps/discord/src/commands/invite.ts passes to generateInvite.
 const INVITE_PERMISSIONS = 19456;
 
-// GitHub Pages serves the site under /fluffboost (NEXT_PUBLIC_BASE_PATH in
-// .github/workflows/deploy-docs.yml). next.config.mjs applies it to routes and
-// imported assets; use withBasePath() for raw /public URLs. Moving to a custom
-// domain also means updating `origin` below (app/sitemap.ts, canonical URLs and
-// og:url all derive from it), playwright.config.ts, e2e/site.spec.ts and the
-// Guide link in apps/discord/src/commands/about.ts. scripts/serve-export.mjs
-// reads NEXT_PUBLIC_BASE_PATH and needs no change.
+// The site is served at the root of its custom domain (public/CNAME), so the
+// deployed build has no base path. NEXT_PUBLIC_BASE_PATH stays supported for
+// previewing the export under a subpath: next.config.mjs applies it to routes
+// and imported assets; use withBasePath() for raw /public URLs. Changing the
+// domain means updating `origin` below (app/sitemap.ts, app/robots.ts,
+// canonical URLs and og:url all derive from it), public/CNAME, SITE_ORIGIN in
+// e2e/site.spec.ts and the Guide link in apps/discord/src/commands/about.ts.
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 /** Prefixes a /public path with the base path, for URLs Next does not rewrite (e.g. <video src>, fetch). */
@@ -31,6 +31,6 @@ export const site = {
   discordUrl: "https://mrdwolf.net/discord",
   githubUrl: "https://github.com/MrDemonWolf/fluffboost",
   companyUrl: "https://www.mrdemonwolf.com",
-  // Change to your production origin (or a CNAME) for correct OG/canonical URLs.
-  origin: "https://mrdemonwolf.github.io/fluffboost",
+  // Production origin (no trailing slash) for OG, canonical and sitemap URLs.
+  origin: "https://fluffboost.mrdemonwolf.dev",
 } as const;

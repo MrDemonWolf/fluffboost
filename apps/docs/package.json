@@ -8,7 +8,7 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "bun run scripts/serve-export.mjs",
-    "preview": "NEXT_PUBLIC_BASE_PATH=/fluffboost next build --webpack && NEXT_PUBLIC_BASE_PATH=/fluffboost bun run scripts/serve-export.mjs",
+    "preview": "next build --webpack && bun run scripts/serve-export.mjs",
     "typecheck": "fumadocs-mdx && next typegen && tsc --noEmit",
     "lint": "fumadocs-mdx && next typegen && eslint . --fix",
     "lint:check": "fumadocs-mdx && next typegen && eslint . --max-warnings 0",

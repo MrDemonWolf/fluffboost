@@ -108,11 +108,14 @@ and a role scoped to that database; stop the container afterward with
 
 ## Browser end-to-end tests
 
-Playwright builds `apps/docs` with the deployed `/fluffboost` base path and
-serves the static `out/` directory with no route fallback. Desktop Chromium and
-a Pixel 7 viewport sweep every page in the generated sitemap for broken local
-links, missing assets, client errors, horizontal overflow, a single `<main>`, and
-per-page canonical and `og:` metadata. They also cover static search (including
+Playwright builds `apps/docs` exactly as it is deployed (at the domain root, no
+base path) and serves the static `out/` directory with no route fallback.
+Desktop Chromium and a Pixel 7 viewport sweep every page in the generated
+sitemap for broken local links, missing assets, client errors, horizontal
+overflow, a single `<main>`, and per-page canonical and `og:` metadata on
+`https://fluffboost.mrdemonwolf.dev`. They check that the export ships the
+`CNAME` file and a `robots.txt` that points at the sitemap, and also cover
+static search (including
 the retry after a failed index load and focus return), the branded 404 page, a
 keyboard Tab walk (skip link first, focus always visible and never covered),
 the mobile docs drawer, and an axe-core WCAG 2.2 AA scan of every page (with
@@ -126,10 +129,11 @@ bun run --filter=@fluffboost/docs test:e2e
 
 ### Preview the static export
 
-`bun run --filter=@fluffboost/docs preview` builds with the `/fluffboost` base
-path and serves it at `http://127.0.0.1:4173/fluffboost/`.
+`bun run --filter=@fluffboost/docs preview` builds the production export and
+serves it at `http://127.0.0.1:4173/`, the same root layout as
+`https://fluffboost.mrdemonwolf.dev/`.
 `bun run --filter=@fluffboost/docs start` serves an existing `out/` directory;
-set `NEXT_PUBLIC_BASE_PATH` to match the build it serves.
+if you built with a `NEXT_PUBLIC_BASE_PATH` subpath, set the same value here.
 
 To run both suites, set `E2E_DATABASE_URL` as above and run `bun run test:e2e`.
 Browser failure screenshots and traces are written to the ignored

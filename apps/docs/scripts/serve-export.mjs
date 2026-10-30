@@ -5,8 +5,8 @@ import { resolve, sep } from "node:path";
 // no SPA fallback: a broken exported route must produce a 404 in the E2E suite.
 // Like GitHub Pages, a missing path inside the site gets 404.html with status 404.
 const output = resolve(import.meta.dir, "../out");
-// Same default as next.config.mjs, so a plain `bun run build` serves correctly.
-// Set NEXT_PUBLIC_BASE_PATH=/fluffboost for a production-shaped build (`bun run preview`).
+// Same default as next.config.mjs: the production build is served at the root.
+// Set NEXT_PUBLIC_BASE_PATH only to serve a build made with that subpath.
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const notFoundPage = resolve(output, "404.html");
 
