@@ -8,7 +8,9 @@ describe("premium command", () => {
     sinon.restore();
   });
 
-  async function loadModule(overrides: { premiumEnabled?: boolean; skuId?: string; hasEntitlement?: boolean } = {}) {
+  async function loadModule(overrides: {
+    premiumEnabled?: boolean; skuId?: string; hasEntitlement?: boolean; termEnd?: Date | null;
+  } = {}) {
     const logger = mockLogger();
 
     const db = mockDb();
@@ -18,6 +20,7 @@ describe("premium command", () => {
     mock.module("../../src/utils/premium.js", () => ({
       isPremiumEnabled: sinon.stub().returns(overrides.premiumEnabled ?? false),
       hasEntitlement: sinon.stub().returns(overrides.hasEntitlement ?? false),
+      entitlementTermEnd: sinon.stub().returns(overrides.termEnd ?? null),
       getPremiumSkuId: sinon.stub().returns(overrides.skuId),
       buildPremiumUpsell: stubBuildPremiumUpsell(overrides.skuId),
     }));
@@ -72,7 +75,17 @@ describe("premium command", () => {
 
     expect(db.update.calledOnce).toBe(true);
     const chain = db.update.firstCall.returnValue as Record<string, sinon.SinonStub>;
-    expect(chain["set"]!.firstCall.args[0]).toEqual({ isPremium: true });
+    expect(chain["set"]!.firstCall.args[0]).toEqual({ isPremium: true, premiumEndsAt: null });
+  });
+
+  it("stores the live entitlement's term end with the self-heal", async () => {
+    const termEnd = new Date("2026-12-01T00:00:00Z");
+    const { execute, db } = await loadModule({ premiumEnabled: true, skuId: "sku-1", hasEntitlement: true, termEnd });
+
+    await execute(mockClient() as never, mockInteraction() as never);
+
+    const chain = db.update.firstCall.returnValue as Record<string, sinon.SinonStub>;
+    expect(chain["set"]!.firstCall.args[0]).toEqual({ isPremium: true, premiumEndsAt: termEnd });
   });
 
   it("still shows Premium Active when the self-heal write fails", async () => {

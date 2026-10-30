@@ -9,7 +9,7 @@ import { db } from "../../database/index.js";
 import { guilds } from "../../database/schema.js";
 import type { MotivationFrequency } from "../../database/schema.js";
 import { guildExists } from "../../utils/guildDatabase.js";
-import { buildPremiumUpsell, hasEntitlement, isPremiumEnabled } from "../../utils/premium.js";
+import { buildPremiumUpsell, entitlementTermEnd, hasEntitlement, isPremiumEnabled } from "../../utils/premium.js";
 import { parseHourMinute } from "../../utils/scheduleEvaluator.js";
 import { isValidTimezone, filterTimezones } from "../../utils/timezones.js";
 import { buildBrandedEmbed } from "../../utils/embedHelpers.js";
@@ -122,6 +122,7 @@ export default async function schedule(_client: Client, interaction: ChatInputCo
       // The gate above just proved an active entitlement; self-heal a stale
       // flag (e.g. a missed ENTITLEMENT_CREATE) so delivery honors it.
       changes.isPremium = true;
+      changes.premiumEndsAt = entitlementTermEnd(interaction);
     }
     await db.update(guilds).set(changes).where(eq(guilds.guildId, guildId));
 

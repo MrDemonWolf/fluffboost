@@ -16,11 +16,28 @@ interface GuildSchedule {
   lastMotivationSentAt: Date | null;
 }
 
+/** The Premium columns that decide whether a guild's saved schedule applies. */
+export interface PremiumState {
+  isPremium: boolean;
+  /** Absent or null: open-ended (or written by a release before this column existed). */
+  premiumEndsAt?: Date | null;
+}
+
+/**
+ * Whether stored Premium is in effect at `now`: the flag is set and the
+ * recorded term has not ended. The end date is defense in depth for a missed
+ * or early revoke; the reconciliation loop still clears the flag itself.
+ */
+export function isPremiumActive(guild: PremiumState, now: number = dayjs().valueOf()): boolean {
+  const endsAt = guild.premiumEndsAt ?? null;
+  return guild.isPremium && (endsAt === null || endsAt.getTime() > now);
+}
+
 /** Keep saved customization while expired subscriptions use the free schedule. */
 export function effectiveGuildSchedule(
-  guild: GuildSchedule & { isPremium: boolean }, premiumEnabled: boolean
+  guild: GuildSchedule & PremiumState, premiumEnabled: boolean, now: number = dayjs().valueOf()
 ): GuildSchedule {
-  if (!premiumEnabled || guild.isPremium) {
+  if (!premiumEnabled || isPremiumActive(guild, now)) {
     return guild;
   }
   return {
@@ -162,7 +179,7 @@ export function isDueForOccurrence(
  */
 export function createDueOccurrenceResolver(
   premiumEnabled: boolean
-): (guild: GuildSchedule & { isPremium: boolean }) => Date | null {
+): (guild: GuildSchedule & PremiumState) => Date | null {
   const occurrences = new Map<string, Date | null>();
   return (guild) => {
     const schedule = effectiveGuildSchedule(guild, premiumEnabled);

@@ -96,11 +96,14 @@ beforeAll(async () => {
   for (const entry of journal.entries as { tag: string }[]) {
     const migration = await readFile(new URL(`../drizzle/${entry.tag}.sql`, import.meta.url), "utf8");
     // Migrations qualify enum creation as public; remap to this run's schema.
-    for (const statement of migration.replaceAll('"public".', `"${schemaName}".`).split("--> statement-breakpoint")) {
-      if (statement.trim()) {
-        await connection.unsafe(statement);
+    // One transaction per file, like Drizzle's migrator (LOCK TABLE needs one).
+    await connection.begin(async (tx) => {
+      for (const statement of migration.replaceAll('"public".', `"${schemaName}".`).split("--> statement-breakpoint")) {
+        if (statement.trim()) {
+          await tx.unsafe(statement);
+        }
       }
-    }
+    });
   }
 }, 20_000);
 

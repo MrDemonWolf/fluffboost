@@ -1,4 +1,5 @@
-import { pgTable, pgEnum, uuid, text, boolean, timestamp, integer, index } from "drizzle-orm/pg-core";
+import { pgTable, pgEnum, uuid, text, boolean, timestamp, integer, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import type { InferSelectModel } from "drizzle-orm";
 import { DEFAULT_GUILD_SCHEDULE } from "../utils/scheduleConfig.js";
 
@@ -19,19 +20,28 @@ export const guilds = pgTable(
     timezone: text("timezone").notNull().default(DEFAULT_GUILD_SCHEDULE.timezone),
     lastMotivationSentAt: timestamp("lastMotivationSentAt", { mode: "date" }),
     isPremium: boolean("isPremium").notNull().default(false),
+    // End of the current Premium term (null: open-ended or unknown). Delivery
+    // treats a guild as Premium only while isPremium && (null || future).
+    premiumEndsAt: timestamp("premiumEndsAt", { mode: "date", withTimezone: true }),
     joinedAt: timestamp("joinedAt", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updatedAt", { mode: "date" }).notNull().defaultNow().$onUpdate(() => new Date()),
   },
   (table) => [index("guild_motivation_channel_idx").on(table.motivationChannelId)]
 );
 
-export const motivationQuotes = pgTable("MotivationQuote", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  quote: text("quote").notNull(),
-  author: text("author").notNull(),
-  addedBy: text("addedBy").notNull(),
-  createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
-});
+export const motivationQuotes = pgTable(
+  "MotivationQuote",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    quote: text("quote").notNull(),
+    author: text("author").notNull(),
+    addedBy: text("addedBy").notNull(),
+    createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+  },
+  // Exact-text uniqueness, indexed on md5() so a long quote (rows written
+  // before MAX_QUOTE_LENGTH, or multi-byte text) never exceeds the btree row limit.
+  (table) => [uniqueIndex("motivation_quote_text_unique").using("btree", sql`md5(${table.quote})`)]
+);
 
 export const suggestionQuotes = pgTable(
   "SuggestionQuote",
@@ -46,7 +56,14 @@ export const suggestionQuotes = pgTable(
     createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updatedAt", { mode: "date" }).notNull().defaultNow().$onUpdate(() => new Date()),
   },
-  (table) => [index("suggestion_status_idx").on(table.status)]
+  (table) => [
+    index("suggestion_status_idx").on(table.status),
+    // /admin suggestion list pages by createdAt DESC, id DESC, with or without a
+    // status filter. Ascending on purpose: a backward scan yields DESC NULLS FIRST,
+    // which is what that ORDER BY means (a DESC NULLS LAST index would not match).
+    index("suggestion_status_created_idx").on(table.status, table.createdAt, table.id),
+    index("suggestion_created_idx").on(table.createdAt, table.id),
+  ]
 );
 
 export const discordActivities = pgTable("DiscordActivity", {

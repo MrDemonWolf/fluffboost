@@ -1,7 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import { EntitlementType } from "discord.js";
 import type { Entitlement, FetchEntitlementsOptions } from "discord.js";
-import { activePremiumGuilds, planPremiumWrites } from "../../src/utils/premiumReconciliationCore.js";
+import {
+  activePremiumGuilds, activePremiumTerms, groupGrantsByTermEnd, planPremiumWrites,
+} from "../../src/utils/premiumReconciliationCore.js";
 
 const grant = (id: string, guildId: string, changes = {}) => ({
   id, guildId, skuId: "123", deleted: false, startsAt: new Date(0), endsAt: null,
@@ -74,6 +76,35 @@ describe("Premium startup snapshot", () => {
     let calls = 0;
     const fetchPage = async () => (++calls === 1 ? new Map(entries.map((e) => [e.id, e])) : new Map());
     expect(await activePremiumGuilds(fetchPage, "123", false)).toEqual(["valid"]);
+  });
+});
+
+describe("activePremiumTerms", () => {
+  it("keys active guilds by their merged term end", async () => {
+    const soon = new Date("2099-01-01T00:00:00Z");
+    const later = new Date("2099-06-01T00:00:00Z");
+    const entries = [
+      grant("1", "a", { endsAt: soon }), grant("2", "a", { endsAt: later }),
+      grant("3", "b", { endsAt: soon }), grant("4", "b"),
+      grant("5", "c", { endsAt: soon }), grant("6", "c", { endsAt: new Date(0) }),
+    ];
+    let calls = 0;
+    const fetchPage = async () => (++calls === 1 ? new Map(entries.map((e) => [e.id, e])) : new Map());
+    const terms = await activePremiumTerms(fetchPage, "123", false);
+    expect(Object.fromEntries(terms)).toEqual({ a: later, b: null, c: soon });
+  });
+});
+
+describe("groupGrantsByTermEnd", () => {
+  it("groups guilds sharing a term end into one write", () => {
+    const end = new Date("2099-01-01T00:00:00Z");
+    const terms = new Map<string, Date | null>([
+      ["g1", null], ["g2", end], ["g3", null], ["g4", new Date(end.getTime())],
+    ]);
+    expect(groupGrantsByTermEnd(["g1", "g2", "g3", "g4"], terms)).toEqual([
+      { premiumEndsAt: null, guildIds: ["g1", "g3"] },
+      { premiumEndsAt: end, guildIds: ["g2", "g4"] },
+    ]);
   });
 });
 

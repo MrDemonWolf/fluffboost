@@ -98,6 +98,22 @@ describe("admin quote create command", () => {
     expect(replyArgs.content).toContain("Quote created");
   });
 
+  it("tells the admin when the quote is already in the library and announces nothing", async () => {
+    const { handler, db } = await loadModule();
+    // onConflictDoNothing().returning() yields no row for a duplicate text.
+    const chain = mockDbChain([]);
+    db.insert.returns(chain);
+    const client = mockClient();
+
+    const interaction = makeInteraction("Be kind", "Anon");
+    await handler(client as never, interaction as never);
+
+    expect((chain["onConflictDoNothing"] as sinon.SinonStub).calledOnce).toBe(true);
+    const replyArgs = (interaction.reply as sinon.SinonStub).firstCall.args[0];
+    expect(replyArgs.content).toBe("That quote is already in the library.");
+    expect((client.channels.fetch as sinon.SinonStub).called).toBe(false);
+  });
+
   it("should send embed to main channel on success", async () => {
     const { handler, db } = await loadModule();
     db.insert.returns(mockDbChain([{ id: "q1", quote: "Be kind", author: "Anon", addedBy: "user-123" }]));

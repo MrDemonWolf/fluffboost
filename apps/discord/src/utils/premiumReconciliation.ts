@@ -5,7 +5,7 @@ import { guilds } from "../database/schema.js";
 import env from "./env.js";
 import logger from "./logger.js";
 import { allowsTestEntitlements } from "./entitlementPolicy.js";
-import { activePremiumGuilds, planPremiumWrites } from "./premiumReconciliationCore.js";
+import { activePremiumTerms, groupGrantsByTermEnd, planPremiumWrites } from "./premiumReconciliationCore.js";
 
 const PREMIUM_RECONCILE_INTERVAL_MS = 30 * 60_000;
 
@@ -19,18 +19,20 @@ export async function reconcilePremium(client: Client, guildId?: string): Promis
   // Read before fetching: rows granted after this point are never revoked by this pass.
   const premiumBefore = await db.select({ guildId: guilds.guildId }).from(guilds)
     .where(and(inArray(guilds.guildId, ownedGuilds), eq(guilds.isPremium, true)));
-  const active = await activePremiumGuilds(
+  const active = await activePremiumTerms(
     (options) => application.entitlements.fetch(options),
     env.DISCORD_PREMIUM_SKU_ID, allowsTestEntitlements(env.NODE_ENV), guildId
   );
-  const { revoke, grant } = planPremiumWrites(ownedGuilds, premiumBefore.map((row) => row.guildId), active);
+  const { revoke, grant } = planPremiumWrites(ownedGuilds, premiumBefore.map((row) => row.guildId), active.keys());
   if (!revoke.length && !grant.length) {return;}
   await db.transaction(async (tx) => {
     if (revoke.length) {
-      await tx.update(guilds).set({ isPremium: false }).where(inArray(guilds.guildId, revoke));
+      await tx.update(guilds).set({ isPremium: false, premiumEndsAt: null }).where(inArray(guilds.guildId, revoke));
     }
-    if (grant.length) {
-      await tx.update(guilds).set({ isPremium: true }).where(inArray(guilds.guildId, grant));
+    // Every pass rewrites each active guild's term end, so a renewal's new
+    // endsAt (or a cancellation's) is picked up within one interval.
+    for (const { premiumEndsAt, guildIds } of groupGrantsByTermEnd(grant, active)) {
+      await tx.update(guilds).set({ isPremium: true, premiumEndsAt }).where(inArray(guilds.guildId, guildIds));
     }
   });
 }
