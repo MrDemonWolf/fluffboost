@@ -302,6 +302,7 @@ export function mockEnv(overrides: Partial<MockEnv> = {}): MockEnv {
     MAIN_CHANNEL_ID: "100000000000000200",
     HOST: "localhost",
     PORT: 3000,
+    TRUST_PROXY_HOPS: 1,
     VERSION: "1.0.0",
     NODE_ENV: "test",
     PREMIUM_ENABLED: false,

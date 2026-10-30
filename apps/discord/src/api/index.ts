@@ -6,6 +6,7 @@ import express from "express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
+import env from "../utils/env.js";
 import logger from "../utils/logger.js";
 
 import healthRoute from "./routes/health.js";
@@ -13,9 +14,19 @@ import healthRoute from "./routes/health.js";
 const app: express.Application = express();
 
 /**
- * The API only serves GET health checks, so no body parsers. `trust proxy` is
- * deliberately unset: the limiter keys on the socket address, and trusting
- * X-Forwarded-For without a known proxy hop would let clients spoof it.
+ * The rate limiter keys on `req.ip`. Behind Dokploy's Traefik every request
+ * arrives from the proxy's address, so without `trust proxy` all clients would
+ * share one bucket. Trust exactly TRUST_PROXY_HOPS hops (default 1: Traefik),
+ * so `req.ip` is the address that proxy saw. Never `true`: that trusts every
+ * X-Forwarded-For entry, which any client can forge. Set 0 when the port is
+ * reachable without a proxy in front of it.
+ */
+if (env.TRUST_PROXY_HOPS > 0) {
+  app.set("trust proxy", env.TRUST_PROXY_HOPS);
+}
+
+/**
+ * The API only serves GET health checks, so no body parsers.
  */
 app.use(helmet());
 

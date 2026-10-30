@@ -86,6 +86,9 @@ const envObject = z.object({
   // API bind address; unset binds all interfaces.
   HOST: blankAsUnset.pipe(z.string().optional()),
   PORT: blankAsUnset.pipe(z.coerce.number<string>().int().min(1).max(65535).default(3000)),
+  // Reverse-proxy hops in front of the health API (Express "trust proxy"). The
+  // default 1 is Traefik under Dokploy; 0 trusts no X-Forwarded-For header.
+  TRUST_PROXY_HOPS: blankAsUnset.pipe(z.coerce.number<string>().int().min(0).max(10).default(1)),
   // Defaults to the package version so /about and /changelog never show a placeholder.
   VERSION: blankAsUnset.pipe(z.string().min(1).default(pkg.version)),
   NODE_ENV: z
