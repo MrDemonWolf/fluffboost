@@ -50,6 +50,21 @@ These deterministic animations do not require Gemini, an API key or cloud render
 Any future Gemini background should be reviewed for character changes and loop quality
 before integration. Generated artwork provenance remains recorded in the manifest.
 
-Remotion is a separate dependency with its own [license](https://www.remotion.dev/docs/license/pricing).
-Check the company license requirements before commercial use; this repository's GPL
-license does not replace the Remotion license.
+## Remotion license
+
+Remotion is not open source and is not covered by this repository's GPL-3.0 license.
+It ships under the [Remotion License](https://www.remotion.dev/license) (see
+`node_modules/remotion/LICENSE.md`; this note reflects the 4.x terms). Under it,
+the free license covers, including commercial use:
+
+- individuals
+- for-profit organizations with **up to 3 employees**
+- non-profit and not-for-profit organizations
+- anyone evaluating Remotion who is not yet using it commercially
+
+A for-profit organization with **more than 3 employees** needs a paid
+[Company License](https://www.remotion.pro/license) to use Remotion, including
+for rendering these brand assets. Whoever runs `bun run dev:motion` or
+`bun run brand:render` should check their own eligibility; the
+[Remotion FAQ](https://www.remotion.pro/faq) covers edge cases. The terms are
+expected to change in Remotion 5.0, so re-check them when upgrading.
