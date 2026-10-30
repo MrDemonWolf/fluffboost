@@ -133,6 +133,25 @@ describe("admin quote create command", () => {
     expect(sendArgs.embeds).toHaveLength(1);
   });
 
+  it("shows the quote and author literally in the main-channel embed", async () => {
+    const { handler, db } = await loadModule();
+    const quote = "Breathe. [Claim reward](https://evil.example/claim)";
+    db.insert.returns(mockDbChain([{ id: "q1", quote, author: "# Anon", addedBy: "user-123" }]));
+    const channel = {
+      isTextBased: sinon.stub().returns(true),
+      isDMBased: sinon.stub().returns(false),
+      send: sinon.stub().resolves(),
+    };
+    const client = mockClient();
+    (client.channels.fetch as sinon.SinonStub).resolves(channel);
+
+    await handler(client as never, makeInteraction(quote, "# Anon") as never);
+
+    const fields = channel.send.firstCall.args[0].embeds[0].data.fields as { name: string; value: string }[];
+    expect(fields.find((f) => f.name === "Quote")?.value).toBe("Breathe. \\[Claim reward](https://evil.example/claim)");
+    expect(fields.find((f) => f.name === "Author")?.value).toBe("\\# Anon");
+  });
+
   it("should reply with error on database failure", async () => {
     const { handler, db, logger } = await loadModule();
     const chain = mockDbChain();

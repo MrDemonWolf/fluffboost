@@ -1,7 +1,7 @@
 import { expect, it } from "bun:test";
 import { EmbedBuilder } from "discord.js";
 import { isUuid, quoteInputError } from "../../src/utils/quoteLimits.js";
-import { buildBrandedEmbed, escapeFieldValue } from "../../src/utils/embedHelpers.js";
+import { buildBrandedEmbed, escapeFieldValue, escapeUserText } from "../../src/utils/embedHelpers.js";
 
 it("permits boundary-length quote fields that Discord can serialize", () => {
   expect(quoteInputError("x".repeat(1024), "a".repeat(256))).toBeNull();
@@ -28,4 +28,10 @@ it("escapes markdown and masked links for staff-facing fields, truncating after 
   expect(escapeFieldValue("[Claim](https://phish.example)")).toBe("\\[Claim](https://phish.example)");
   expect(escapeFieldValue("# Heading")).toBe("\\# Heading");
   expect(escapeFieldValue("_".repeat(1024)).length).toBe(1024);
+});
+
+it("escapes user text for descriptions without truncating, and caps descriptions at 4096", () => {
+  expect(escapeUserText("[Claim](https://phish.example)")).toBe("\\[Claim](https://phish.example)");
+  expect(escapeUserText("_".repeat(1024)).length).toBeGreaterThan(1024);
+  expect(buildBrandedEmbed({ description: "x".repeat(5000) }).data.description).toHaveLength(4096);
 });

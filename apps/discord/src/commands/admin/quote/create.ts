@@ -7,7 +7,7 @@ import { db } from "../../../database/index.js";
 import { motivationQuotes } from "../../../database/schema.js";
 import { announceToMainChannel } from "../../../utils/mainChannel.js";
 import { withCommandLogging } from "../../../utils/commandErrors.js";
-import { buildBrandedEmbed } from "../../../utils/embedHelpers.js";
+import { buildBrandedEmbed, escapeFieldValue } from "../../../utils/embedHelpers.js";
 import { quoteInputError } from "../../../utils/quoteLimits.js";
 
 export default async function (
@@ -52,8 +52,9 @@ export default async function (
     const embed = buildBrandedEmbed({
       title: "New Quote Created",
       fields: [
-        { name: "Quote", value: newQuote.quote },
-        { name: "Author", value: newQuote.author },
+        // Show the typed text literally (masked links included).
+        { name: "Quote", value: escapeFieldValue(newQuote.quote) },
+        { name: "Author", value: escapeFieldValue(newQuote.author) },
       ],
       footer: `Quote ID: ${newQuote.id}`,
       timestamp: true,

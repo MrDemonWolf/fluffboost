@@ -5,7 +5,13 @@ import { and, eq } from "drizzle-orm";
 import { db } from "../database/index.js";
 import { suggestionQuotes } from "../database/schema.js";
 import type { SuggestionQuote } from "../database/schema.js";
-import { buildBrandedEmbed, escapeFieldValue, SUCCESS_COLOR, DANGER_COLOR } from "./embedHelpers.js";
+import {
+  buildBrandedEmbed,
+  escapeFieldValue,
+  escapeUserText,
+  SUCCESS_COLOR,
+  DANGER_COLOR,
+} from "./embedHelpers.js";
 import { announceToMainChannel } from "./mainChannel.js";
 import logger from "./logger.js";
 import { isUuid } from "./quoteLimits.js";
@@ -67,14 +73,14 @@ export async function notifySuggestionReviewed(
 ): Promise<void> {
   const color = status === "Approved" ? SUCCESS_COLOR : DANGER_COLOR;
 
-  // Staff-facing: show the submitted text literally (masked links included).
+  // Show submitted and reviewer-typed text literally (masked links included).
   const embedFields = [
     { name: "Quote", value: escapeFieldValue(suggestion.quote) },
     { name: "Author", value: escapeFieldValue(suggestion.author) },
     { name: "Submitted By", value: `<@${suggestion.addedBy}>` },
   ];
   if (reason) {
-    embedFields.push({ name: "Reason", value: reason });
+    embedFields.push({ name: "Reason", value: escapeFieldValue(reason) });
   }
 
   const embed = buildBrandedEmbed({
@@ -97,11 +103,13 @@ export async function notifySuggestionReviewed(
 
   try {
     const submitter = await client.users.fetch(suggestion.addedBy);
-    const quoteLines = `**Quote:** ${suggestion.quote}\n**Author:** ${suggestion.author}`;
+    const quoteLines =
+      `**Quote:** ${escapeUserText(suggestion.quote)}\n**Author:** ${escapeUserText(suggestion.author)}`;
+    const reasonLine = reason ? `\n**Reason:** ${escapeUserText(reason)}` : "";
     const description =
       status === "Approved"
         ? `Your quote suggestion has been approved and added to the motivation quotes!\n\n${quoteLines}`
-        : `Your quote suggestion was rejected.\n\n${quoteLines}${reason ? `\n**Reason:** ${reason}` : ""}`;
+        : `Your quote suggestion was rejected.\n\n${quoteLines}${reasonLine}`;
 
     await submitter.send({
       embeds: [
