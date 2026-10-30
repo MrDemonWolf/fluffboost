@@ -1,3 +1,7 @@
+/**
+ * `/premium`: shows this server's Premium status, or the upsell with a purchase
+ * button. Server-only; replies ephemerally.
+ */
 import { InteractionContextType, MessageFlags, SlashCommandBuilder } from "discord.js";
 
 import type { Client, CommandInteraction } from "discord.js";
@@ -17,6 +21,11 @@ export const slashCommand = new SlashCommandBuilder()
   // Premium is a per-server subscription; hides the command from bot DMs.
   .setContexts(InteractionContextType.Guild);
 
+/**
+ * When Premium is disabled, says so and stops. With an active entitlement it
+ * shows "Premium Active" and sets the guild's cached `isPremium` flag; otherwise
+ * it shows the purchase upsell. Any server member may run it.
+ */
 export async function execute(_client: Client, interaction: CommandInteraction): Promise<void> {
   await withCommandLogging("premium", interaction, async () => {
     if (!isPremiumEnabled()) {

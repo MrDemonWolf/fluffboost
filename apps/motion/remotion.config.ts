@@ -1,4 +1,6 @@
 /**
+ * Remotion CLI/Studio config (`bun run dev:motion`).
+ *
  * Note: When using the Node.JS APIs, the config file
  * doesn't apply. Instead, pass options directly to the APIs
  * (scripts/render.ts imports the same shared settings).

@@ -1,3 +1,4 @@
+/** Tests the quote lookup and embed helpers in src/utils/quoteHelpers.ts against a mocked db. */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockDb, mockDbChain, mockClient, mockEnv } from "../helpers.js";

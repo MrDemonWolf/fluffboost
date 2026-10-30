@@ -1,3 +1,7 @@
+/**
+ * Tests the /setup router (src/commands/setup/index.ts): guild-only registration, route coverage and admin check.
+ * Routes are swapped in the exported setupRoutes Map (restored after each test) instead of mocking subcommands.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { InteractionContextType } from "discord.js";

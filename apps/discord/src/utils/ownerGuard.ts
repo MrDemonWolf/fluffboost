@@ -1,3 +1,4 @@
+/** Guards for the owner-only /owner commands. Each replies ephemerally itself when it refuses. */
 import { MessageFlags } from "discord.js";
 
 import type { ClientApplication, Client, CommandInteraction } from "discord.js";
@@ -6,7 +7,11 @@ import { allowsTestEntitlements } from "./entitlementPolicy.js";
 import env from "./env.js";
 import logger from "./logger.js";
 
-/** Defense in depth for stale commands and direct subcommand calls. */
+/**
+ * Refuse Premium test tools in production. /owner is never registered or routed
+ * there, so this is defense in depth for stale command registrations and direct
+ * subcommand calls. Replies and returns false when refused.
+ */
 export async function requireTestEnvironment(interaction: CommandInteraction): Promise<boolean> {
   if (allowsTestEntitlements(env.NODE_ENV)) {
     return true;

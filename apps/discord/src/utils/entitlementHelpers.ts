@@ -1,3 +1,7 @@
+/**
+ * Shared plumbing for the entitlementCreate/Update/Delete gateway handlers: uniform event logging and the
+ * guarded, per-guild-serialized write of `Guild.isPremium`.
+ */
 import type { Entitlement } from "discord.js";
 
 import { eq } from "drizzle-orm";
@@ -49,8 +53,12 @@ async function serializeForGuild(guildId: string, task: () => Promise<void>): Pr
 }
 
 /**
- * Update a guild's premium status in the database based on an entitlement event.
- * Handles the guildId check, DB update, and error logging.
+ * Apply one entitlement event to `Guild.isPremium`. Ignores entitlements with
+ * no guild, for another SKU, or (in production) test entitlements. An active
+ * grant sets the flag directly; anything else (`isPremium` false, or a grant
+ * that is not currently valid) re-reconciles the guild against Discord instead
+ * of clearing the flag. Never rejects: failures are logged, and the periodic
+ * reconciliation loop heals them later.
  */
 export async function updateGuildPremiumStatus(
   entitlement: Entitlement,

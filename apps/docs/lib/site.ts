@@ -1,4 +1,4 @@
-// Single source of truth for outbound links + copy used across the site.
+/** Single source of truth for outbound links, base-path handling and copy used across the site. */
 
 const CLIENT_ID = "1152416549261561856";
 // ViewChannel (1024) | SendMessages (2048) | EmbedLinks (16384). Keep in sync with
@@ -14,6 +14,7 @@ const INVITE_PERMISSIONS = 19456;
 // reads NEXT_PUBLIC_BASE_PATH and needs no change.
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
+/** Prefixes a /public path with the base path, for URLs Next does not rewrite (e.g. <video src>, fetch). */
 export function withBasePath(path: `/${string}`): string {
   return `${basePath}${path}`;
 }

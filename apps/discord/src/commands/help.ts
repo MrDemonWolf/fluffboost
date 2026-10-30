@@ -1,3 +1,4 @@
+/** `/help`: ephemeral list of available slash commands. */
 import type { Client, CommandInteraction } from "discord.js";
 
 import { SlashCommandBuilder, MessageFlags } from "discord.js";
@@ -12,8 +13,10 @@ export const slashCommand = new SlashCommandBuilder()
   .setDescription("Get help with using the bot");
 
 /**
- * Lines mirror what commandRegistry registers for the current NODE_ENV: the
- * /owner group is only registered outside production.
+ * Build the static help text. Lines mirror what commandRegistry registers for
+ * the current NODE_ENV: the /owner group is only registered outside production.
+ * The "(premium)" tag on /setup schedule appears only when Premium gating is on.
+ * Keep in sync with README.md and apps/docs/content/user/commands.mdx.
  */
 export function buildHelpText(): string {
   const lines = [

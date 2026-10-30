@@ -1,3 +1,8 @@
+/**
+ * Tests the /admin suggestion reject subcommand (src/commands/admin/suggestion/reject.ts) on a mocked db.
+ * The conditional UPDATE's returned rows decide whether this review won a concurrent race.
+ * Permissions come from mockPermissions(), whose stub never replies, so a denied run leaves `reply` unused.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockPermissions } from "../../permissionsMock.js";

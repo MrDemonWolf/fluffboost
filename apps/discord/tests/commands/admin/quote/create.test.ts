@@ -1,3 +1,7 @@
+/**
+ * Tests the /admin quote create subcommand (src/commands/admin/quote/create.ts) against a mocked Drizzle db.
+ * Permissions come from mockPermissions(), whose stub never replies, so a denied run leaves `reply` unused.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockPermissions } from "../../permissionsMock.js";

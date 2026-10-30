@@ -1,6 +1,11 @@
+/**
+ * Zod schema for every environment variable the bot reads. Kept apart from env.ts (which parses at import and
+ * exits on failure) so tests and scripts can validate without side effects.
+ */
 import { z } from "zod";
 import pkg from "../../package.json" with { type: "json" };
 
+/** Discord IDs: 17-20 digit snowflakes. */
 const SNOWFLAKE = /^\d{17,20}$/;
 const SNOWFLAKE_LIST = /^\d{17,20}(,\d{17,20})*$/;
 
@@ -66,6 +71,7 @@ const envObject = z.object({
     .min(1)
     .max(1440)
     .default(15),
+  // Comma-separated /admin allow-list (whitespace around commas is tolerated). Empty disables every /admin command.
   ALLOWED_USERS: z
     .string()
     .optional()
@@ -77,21 +83,25 @@ const envObject = z.object({
   // Not read by the bot; validated only when set.
   MAIN_GUILD_ID: optionalSnowflake("MAIN_GUILD_ID"),
   MAIN_CHANNEL_ID: z.string().regex(SNOWFLAKE, "MAIN_CHANNEL_ID must be a Discord snowflake"),
+  // API bind address; unset binds all interfaces.
   HOST: blankAsUnset.pipe(z.string().optional()),
-  PORT: blankAsUnset.pipe(z.coerce.number().int().min(1).max(65535).default(3000)),
+  PORT: blankAsUnset.pipe(z.coerce.number<string>().int().min(1).max(65535).default(3000)),
   // Defaults to the package version so /about and /changelog never show a placeholder.
   VERSION: blankAsUnset.pipe(z.string().min(1).default(pkg.version)),
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
+  // Premium gating toggle. False opens custom schedules to every server; it does not hide them.
   PREMIUM_ENABLED: z
     .string()
     .default("false")
     .transform((val) => val.toLowerCase() === "true"),
   DISCORD_PREMIUM_SKU_ID: optionalSnowflake("DISCORD_PREMIUM_SKU_ID"),
+  // BullMQ worker concurrency, per shard process.
   WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(100).default(4),
 });
 
+/** Full bot schema: the field rules plus the cross-field Premium SKU requirement. */
 export const envSchema = envObject.refine(
   (data) => !data.PREMIUM_ENABLED || data.DISCORD_PREMIUM_SKU_ID,
   {

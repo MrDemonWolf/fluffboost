@@ -1,3 +1,4 @@
+/** `/admin suggestion approve`: accepts a pending suggestion and copies it into the motivation library. */
 import { MessageFlags } from "discord.js";
 
 import type { Client, ChatInputCommandInteraction } from "discord.js";
@@ -13,6 +14,10 @@ import {
   markSuggestionReviewed,
 } from "../../../utils/suggestionHelpers.js";
 
+/**
+ * Marks the suggestion Approved and inserts the quote in one transaction, replies
+ * ephemerally, then notifies the main channel and DMs the submitter (best-effort).
+ */
 export default async function (
   client: Client,
   interaction: ChatInputCommandInteraction,

@@ -1,3 +1,4 @@
+/** Posting to the bot's own MAIN_CHANNEL_ID (staff announcements such as suggestion reviews). */
 import type { Client, EmbedBuilder } from "discord.js";
 
 import env from "./env.js";
@@ -6,7 +7,8 @@ import logger from "./logger.js";
 /**
  * Fetch the configured main channel and send content to it.
  * Handles the channel fetch and text-based type guard. MAIN_CHANNEL_ID is
- * required by the env schema, so no presence check is needed here.
+ * required by the env schema, so no presence check is needed here. A missing
+ * or non-text channel is only logged; fetch/send errors reject.
  *
  * allowUnknownGuild: under sharding only the shard that owns MAIN_GUILD_ID has
  * that guild cached; without it, discord.js discards the fetched channel on

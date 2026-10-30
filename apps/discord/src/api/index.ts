@@ -1,12 +1,13 @@
+/**
+ * Express app for the manager process's HTTP API (health checks only). app.ts
+ * hands it to runApp(), which binds it to HOST/PORT.
+ */
 import express from "express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
 import logger from "../utils/logger.js";
 
-/**
- * Import all routes
- */
 import healthRoute from "./routes/health.js";
 
 const app: express.Application = express();
@@ -35,6 +36,7 @@ app.use((req, res, next) => {
   next();
 });
 
+// In-memory store, so the limit is per manager process (the API only runs there).
 app.use(
   rateLimit({
     windowMs: 60 * 1000,
@@ -44,9 +46,6 @@ app.use(
   })
 );
 
-/**
- * Initialize routes
- */
 app.use("/api/health", healthRoute);
 
 export default app;

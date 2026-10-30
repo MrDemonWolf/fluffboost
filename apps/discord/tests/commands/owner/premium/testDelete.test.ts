@@ -1,3 +1,7 @@
+/**
+ * Tests /owner premium test-delete (src/commands/owner/premium/testDelete.ts) against mockClient()'s
+ * stubbed application.entitlements API.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockLogger, mockEnv, mockInteraction, mockClient } from "../../../helpers.js";

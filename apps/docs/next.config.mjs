@@ -1,3 +1,4 @@
+/** Next.js config: a fully static export (`out/`) for GitHub Pages, with MDX via fumadocs-mdx. */
 import { createMDX } from "fumadocs-mdx/next";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -13,8 +14,10 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const config = {
   output: "export",
   basePath: basePath || undefined,
+  // The image optimizer needs a server; a static export serves the files as-is.
   images: { unoptimized: true },
   reactStrictMode: true,
+  // Emit /route/index.html so GitHub Pages serves each route at its directory URL.
   trailingSlash: true,
   // Pin tracing to the monorepo root so Next doesn't latch onto a parent
   // checkout's lockfile (this repo is often used inside a git worktree).

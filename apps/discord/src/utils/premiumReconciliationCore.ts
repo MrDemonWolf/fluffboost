@@ -1,9 +1,17 @@
+/**
+ * Dependency-free core of Premium reconciliation: page through Discord's entitlements and plan the
+ * isPremium writes. premiumReconciliation.ts supplies the client and database.
+ */
 import type { Entitlement, FetchEntitlementsOptions } from "discord.js";
 import { isActivePremiumEntitlement, mergeTermEnd } from "./entitlementPolicy.js";
 
 type FetchEntitlementPage = (options: FetchEntitlementsOptions) => Promise<ReadonlyMap<string, Entitlement>>;
 
-/** Fetch the complete snapshot before any persistence can clear paid status. */
+/**
+ * Return the guild IDs with an active entitlement for `skuId` (optionally just
+ * `guildId`), walking every page. The complete snapshot is fetched before any
+ * persistence can clear paid status; a failed page or stalled pagination throws.
+ */
 export async function activePremiumGuilds(
   fetchPage: FetchEntitlementPage,
   skuId: string,
@@ -69,6 +77,7 @@ export function groupGrantsByTermEnd(
   return [...groups.values()];
 }
 
+/** Guild IDs to set isPremium false (`revoke`) and true (`grant`). Grants may already be true. */
 export interface PremiumWritePlan {
   revoke: string[];
   grant: string[];

@@ -7,6 +7,9 @@ import sinon from "sinon";
  * `requireGuildAdministrator`. The real exports are copied before the mock is
  * registered. (A `?actual` query-suffix copy would also work, but Bun then
  * reports the real file as uncovered.)
+ *
+ * Unlike the real guard, the stub never replies to the interaction, so a denied
+ * run leaves `interaction.reply` uncalled. Returns the stub for call assertions.
  */
 export async function mockPermissions(permitted: boolean): Promise<sinon.SinonStub> {
   const actual = { ...(await import("../../src/utils/permissions.js")) };

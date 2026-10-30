@@ -1,3 +1,8 @@
+/**
+ * Tests the /help command (src/commands/help.ts) per NODE_ENV and Premium toggle.
+ * loadModule() registers mock.module stubs, then imports the module; Bun patches an already-imported module's
+ * bindings in place, so each call's fresh stubs reach the cached module.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockLogger, mockClient, mockEnv, mockInteraction, stubBuildPremiumUpsell } from "../helpers.js";

@@ -1,3 +1,4 @@
+/** `/owner premium test-create`: grants a server a Discord test entitlement for the Premium SKU. */
 import { MessageFlags } from "discord.js";
 
 import type { Client, ChatInputCommandInteraction } from "discord.js";
@@ -6,6 +7,10 @@ import { getPremiumSkuId } from "../../../utils/premium.js";
 import { requireApplication, requireOwner, requireTestEnvironment } from "../../../utils/ownerGuard.js";
 import { withCommandLogging } from "../../../utils/commandErrors.js";
 
+/**
+ * Targets the `guild` option or the current server, and replies ephemerally with
+ * the new entitlement ID. Owner-only and disabled in production.
+ */
 export default async function (
   client: Client,
   interaction: ChatInputCommandInteraction

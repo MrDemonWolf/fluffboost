@@ -2,7 +2,7 @@ import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 import { site } from "@/lib/site";
 import { Wordmark } from "@/components/brand";
 
-// Shared nav/branding for every layout (home, docs, developers).
+/** Shared nav/branding for every layout (home, docs, developers) and the 404 page. */
 export function baseOptions(): BaseLayoutProps {
   return {
     nav: {
@@ -31,6 +31,7 @@ export function baseOptions(): BaseLayoutProps {
   };
 }
 
+/** GitHub mark; decorative because the surrounding link carries the accessible name. */
 function GitHubIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">

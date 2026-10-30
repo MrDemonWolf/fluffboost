@@ -1,7 +1,9 @@
+/** Site footer used by the landing, legal and 404 pages (docs pages use the Fumadocs layout). */
 import Link from "next/link";
 import { site } from "@/lib/site";
 import { Wordmark } from "@/components/brand";
 
+// Internal hrefs omit the base path; next/link adds it. External links use a plain <a>.
 const columns = [
   {
     heading: "Product",
@@ -81,6 +83,7 @@ export function SiteFooter({ className = "" }: { className?: string }) {
   );
 }
 
+/** next/link (client navigation, base-path aware) for in-site routes; a plain anchor for external URLs. */
 function FooterLink({
   label,
   href,

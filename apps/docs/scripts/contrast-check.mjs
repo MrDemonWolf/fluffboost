@@ -54,6 +54,7 @@ function over(hex, alpha, bg) {
     .join("")}`;
 }
 
+// WCAG 2.x relative luminance (sRGB channels linearized).
 function lum(hex) {
   const v = rgb(hex).map((c) => {
     const s = c / 255;

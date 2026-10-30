@@ -1,11 +1,14 @@
+/**
+ * Tests setActivityCore (src/worker/jobs/setActivityCore.ts): activity selection, local vs. broadcast presence
+ * updates and the broadcast timeout.
+ */
 import { describe, it, expect, afterEach } from "bun:test";
 import { ActivityType } from "discord.js";
 import sinon from "sinon";
 import { mockLogger, mockDb, mockDbChain, mockEnv, mockClient } from "../helpers.js";
 
-// setActivityCore lives in its own module so it cannot be clobbered by test
-// files that mock `setActivity.js` to verify worker job dispatch. Its db/env/
-// logger imports are type-only, so no process-global mock.module is needed.
+// setActivityCore takes db/env/logger as arguments (its imports of them are
+// type-only), so these tests inject fakes and need no mock.module().
 import { BROADCAST_TIMEOUT_MS, setActivityCore } from "../../src/worker/jobs/setActivityCore.js";
 
 /**

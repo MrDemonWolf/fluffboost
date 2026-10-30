@@ -1,8 +1,15 @@
+/**
+ * Per-user /suggestion rate limit, kept in Redis so every shard shares one quota. Each user has a sorted set of
+ * reservations scored by time (a sliding-window log); members are interaction IDs, so a reservation can be
+ * released exactly if saving the suggestion fails.
+ */
 import redis from "../redis/index.js";
 
 export const MAX_SUGGESTIONS_PER_USER_PER_DAY = 3;
 export const SUGGESTION_RATE_LIMIT_WINDOW_MS = 24 * 60 * 60 * 1000;
 
+// Prune expired reservations, then reserve if under the limit, all in one atomic script. Redis TIME (not the
+// caller's clock) keeps shards with skewed clocks consistent. PEXPIRE lets an idle user's key disappear.
 const CONSUME_SUGGESTION_SLOT_SCRIPT = `
 local now = redis.call("TIME")
 local nowMs = tonumber(now[1]) * 1000 + math.floor(tonumber(now[2]) / 1000)
@@ -19,6 +26,7 @@ redis.call("PEXPIRE", KEYS[1], windowMs)
 return 1
 `;
 
+// Remove one reservation; delete the key once empty.
 const RELEASE_SUGGESTION_SLOT_SCRIPT = `
 local removed = redis.call("ZREM", KEYS[1], ARGV[1])
 if redis.call("ZCARD", KEYS[1]) == 0 then
@@ -34,6 +42,7 @@ function suggestionRateLimitKey(userId: string): string {
 /**
  * Atomically allow up to three suggestions from one Discord user in any
  * rolling 24-hour window. Redis keeps the quota shared across bot shards.
+ * Returns true when a slot was reserved under `interactionId`. Redis errors reject.
  */
 export async function consumeSuggestionSlot(
   userId: string,

@@ -1,3 +1,9 @@
+/**
+ * Starter quote library inserted by scripts/seedQuotes.ts (`bun run db:seed`). Data only: add entries here;
+ * the seeder skips quotes whose text already exists, so re-running after an edit inserts just the new ones.
+ */
+
+/** One seed row; `addedBy` is filled with OWNER_ID at insert time. */
 export interface SeedQuote {
   quote: string;
   author: string;

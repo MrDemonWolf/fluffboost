@@ -1,3 +1,7 @@
+/**
+ * Decides when each guild's motivation quote is due. Used by the send-motivation job every minute via
+ * createDueOccurrenceResolver(); all wall-clock math happens in the guild's own IANA timezone.
+ */
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
@@ -8,6 +12,7 @@ import { DEFAULT_GUILD_SCHEDULE } from "./scheduleConfig.js";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+/** The schedule columns of a guild row that the evaluator reads. */
 interface GuildSchedule {
   motivationFrequency: MotivationFrequency;
   motivationTime: string; // HH:mm
@@ -33,7 +38,12 @@ export function isPremiumActive(guild: PremiumState, now: number = dayjs().value
   return guild.isPremium && (endsAt === null || endsAt.getTime() > now);
 }
 
-/** Keep saved customization while expired subscriptions use the free schedule. */
+/**
+ * The schedule actually used for delivery. With Premium gating on, a guild
+ * without active Premium (see isPremiumActive) gets DEFAULT_GUILD_SCHEDULE (its
+ * saved customization stays in the row for when Premium returns);
+ * lastMotivationSentAt is always the guild's own.
+ */
 export function effectiveGuildSchedule(
   guild: GuildSchedule & PremiumState, premiumEnabled: boolean, now: number = dayjs().valueOf()
 ): GuildSchedule {

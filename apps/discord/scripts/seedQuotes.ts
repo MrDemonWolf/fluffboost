@@ -1,3 +1,7 @@
+/**
+ * Loads the starter quote library (scripts/data/quotes.ts) into "MotivationQuote", attributed to OWNER_ID.
+ * Idempotent: quotes whose exact text is already stored are skipped. Run with `bun run db:seed`.
+ */
 import consola from "consola";
 import { inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -20,6 +24,7 @@ const { DATABASE_URL, OWNER_ID } = parsed.data;
 const queryClient = postgres(DATABASE_URL, { max: 1, connect_timeout: 10 });
 const db = drizzle(queryClient);
 
+/** Inserts every seed quote not already present, in a single INSERT, and logs inserted/skipped counts. */
 async function seedQuotes(): Promise<void> {
   const existing = await db
     .select({ quote: motivationQuotes.quote })
@@ -30,6 +35,8 @@ async function seedQuotes(): Promise<void> {
         quotes.map((q) => q.quote)
       )
     );
+  // The lookup above matches exact text; normalizing here also drops duplicates differing only by case/whitespace
+  // among the rows it returned.
   const existingSet = new Set(existing.map((row) => row.quote.trim().toLowerCase()));
 
   const toInsert = quotes.filter((q) => !existingSet.has(q.quote.trim().toLowerCase()));

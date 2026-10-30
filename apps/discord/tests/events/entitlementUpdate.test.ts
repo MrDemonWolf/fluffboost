@@ -1,3 +1,7 @@
+/**
+ * Tests entitlementUpdateEvent (src/events/entitlementUpdate.ts): an active entitlement writes isPremium=true,
+ * an ended one defers to reconcilePremium (other grants may still be active).
+ */
 import { describe, it, expect, beforeEach, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockLogger, mockDb, mockDbChain, mockEntitlement, mockEnv } from "../helpers.js";

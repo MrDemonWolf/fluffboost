@@ -1,3 +1,8 @@
+/**
+ * `bun run brand:verify` (runs in CI; needs ffmpeg + ffprobe): checks every committed
+ * export against manifest.json (size, SHA-256) and src/assets.ts (dimensions,
+ * duration), and that each GIF loops forever, actually moves, and loops seamlessly.
+ */
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -40,20 +45,26 @@ for (const asset of assets) {
     assert.equal(stream.height, asset.height * scale, `${name}: height`);
     if (format === "png") { continue; }
     const duration = asset.banner ? bannerSeconds : iconSeconds;
+    // Only used for GIFs; the MP4 is checked by duration alone.
     const frameCount = duration * gifFps;
     assert.ok(Math.abs(Number(info.format.duration) - duration) < 0.02, `${name}: duration`);
     if (format === "mp4") { continue; }
     assert.ok(bytes.length < GIF_BYTE_BUDGET, `${name}: upload budget`);
+    // NETSCAPE2.0 application extension: the 11-byte identifier, a sub-block size
+    // byte, sub-block id 1, then the uint16 LE loop count (0 = infinite) at +13.
     const loop = bytes.indexOf("NETSCAPE2.0");
     assert.ok(loop >= 0, `${name}: missing loop extension`);
     assert.equal(bytes.readUInt16LE(loop + 13), 0, `${name}: must loop forever`);
+    // Per-frame MD5s of a 64x64 downscale: mostly distinct hashes means real animation.
     const hashes = mediaCommand("ffmpeg", ["-v", "error", "-i", path, "-vf", "scale=64:64", "-f", "framemd5", "-"])
       .toString().split("\n").filter((line) => /^\d+,/.test(line)).map((line) => line.split(",").at(-1)?.trim());
     assert.equal(hashes.length, frameCount, `${name}: frame count`);
     assert.ok(new Set(hashes).size > frameCount * 0.8, `${name}: GIF is effectively static`);
+    // Decode frames 0, N/4 and N-1 as raw 64x64 RGB, back to back in one buffer.
     const pixels = mediaCommand("ffmpeg", ["-v", "error", "-i", path, "-vf", `select='eq(n,0)+eq(n,${frameCount / 4})+eq(n,${frameCount - 1})',scale=64:64`, "-fps_mode", "passthrough", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"]);
     const frameSize = 64 * 64 * 3;
     assert.equal(pixels.length, frameSize * 3);
+    // Mean per-channel difference between frame 0 and the frame `offset` bytes later.
     const delta = (offset: number) => {
       let difference = 0;
       for (let index = 0; index < frameSize; index++) {
@@ -61,6 +72,8 @@ for (const asset of assets) {
       }
       return difference / frameSize;
     };
+    // motion: frame 0 vs a quarter of the way in. seam: frame 0 vs the last frame,
+    // which must be closer than that for the wrap-around to look continuous.
     const motion = delta(frameSize);
     const seam = delta(frameSize * 2);
     assert.ok(motion > 0.25, `${name}: motion is too faint`);
@@ -88,6 +101,7 @@ for (const asset of assets) {
     process.stdout.write(`Verified ${name}: ${frameCount} moving frames, motion ${motion.toFixed(2)}, loop ${seam.toFixed(2)}\n`);
   }
 }
+// Environment banners must be identical to production, and the docs site copy current.
 const siteCopy = await readFile(resolve(import.meta.dirname, "../../docs/public/brand/fluffboost-production-banner.mp4"));
 for (const variant of ["dev", "staging"]) {
   for (const format of ["png", "gif", "mp4"]) {

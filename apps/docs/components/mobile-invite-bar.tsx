@@ -1,9 +1,15 @@
 "use client";
 
+/** Sticky "Add to Discord" bar for phones on the landing page. */
+
 import { useEffect, useState } from "react";
 import { PawMark } from "@/components/brand";
 import { site } from "@/lib/site";
 
+/**
+ * Slides up once the #home-hero section has scrolled past, and stays up while it
+ * holds keyboard focus. Hidden at `sm` and wider, and on very short viewports.
+ */
 export function MobileInviteBar() {
   const [pastHero, setPastHero] = useState(false);
   const [hasFocus, setHasFocus] = useState(false);

@@ -1,3 +1,8 @@
+/**
+ * Tests the /admin suggestion approve subcommand (src/commands/admin/suggestion/approve.ts).
+ * stubTransaction() hands the handler a fresh tx mock whose claim UPDATE returns the given rows.
+ * Permissions come from mockPermissions(), whose stub never replies, so a denied run leaves `reply` unused.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockPermissions } from "../../permissionsMock.js";

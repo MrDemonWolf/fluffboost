@@ -5,8 +5,8 @@ import logger from "../utils/logger.js";
  * (4004 authentication failed, 4010-4014 sharding/intents/version errors) and
  * does not reconnect afterwards; recoverable drops emit ShardReconnecting.
  * Left alone the shard would stay up as a zombie with no gateway session, so
- * the caller treats this as fatal (delayed, non-zero exit; the manager
- * escalates a crash loop to a container restart).
+ * the caller treats this as fatal (bot.ts passes `fatal()`: delayed, non-zero
+ * exit; the manager escalates a crash loop to a container restart).
  */
 export function shardDisconnectEvent(
   event: { code: number; reason?: string },

@@ -1,3 +1,7 @@
+/**
+ * Tests the pure Premium snapshot pagination and write planning in src/utils/premiumReconciliationCore.ts,
+ * with an injected page fetcher in place of Discord's entitlements API.
+ */
 import { describe, expect, it } from "bun:test";
 import { EntitlementType } from "discord.js";
 import type { Entitlement, FetchEntitlementsOptions } from "discord.js";

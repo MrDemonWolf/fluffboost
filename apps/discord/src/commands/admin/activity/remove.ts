@@ -1,3 +1,4 @@
+/** `/admin activity remove`: deletes a bot presence entry by ID. */
 import { MessageFlags } from "discord.js";
 
 import type { Client, ChatInputCommandInteraction } from "discord.js";
@@ -10,6 +11,7 @@ import { db } from "../../../database/index.js";
 import { discordActivities } from "../../../database/schema.js";
 import { isUuid } from "../../../utils/quoteLimits.js";
 
+/** Deletes the activity and replies ephemerally; a non-UUID ID is reported as not found. */
 export default async function (
   _client: Client,
   interaction: ChatInputCommandInteraction
@@ -22,6 +24,7 @@ export default async function (
     const activityId = interaction.options.getString("activity_id", true).trim();
 
     // Single atomic statement: concurrent removes cannot both report success.
+    // A non-UUID skips the query, since Postgres would reject it as invalid input.
     const [deleted] = isUuid(activityId)
       ? await db
         .delete(discordActivities)

@@ -1,3 +1,4 @@
+/** `/admin quote remove`: deletes a quote from the motivation library and announces the removal. */
 import { MessageFlags } from "discord.js";
 
 import type { Client, ChatInputCommandInteraction } from "discord.js";
@@ -11,6 +12,7 @@ import { announceToMainChannel } from "../../../utils/mainChannel.js";
 import { withCommandLogging } from "../../../utils/commandErrors.js";
 import { isUuid } from "../../../utils/quoteLimits.js";
 
+/** Deletes by ID (a non-UUID is reported as not found), replies ephemerally, then announces best-effort. */
 export default async function (
   client: Client,
   interaction: ChatInputCommandInteraction

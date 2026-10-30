@@ -1,3 +1,4 @@
+/** Shared shell for the /privacy and /terms pages. */
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { SiteFooter } from "@/components/site-footer";
@@ -5,6 +6,7 @@ import { SiteFooter } from "@/components/site-footer";
 // Each document carries its own revision date, so revising one never re-dates the other.
 type IsoDate = `${number}-${number}-${number}`;
 
+// Parsed and formatted in UTC so the rendered date never shifts with the build machine's timezone.
 function formatRevision(date: IsoDate) {
   return new Date(`${date}T00:00:00Z`).toLocaleDateString("en-US", {
     timeZone: "UTC",
@@ -14,6 +16,10 @@ function formatRevision(date: IsoDate) {
   });
 }
 
+/**
+ * Renders a legal document inside its own <main> (the (home) layout container is a
+ * plain <div>), followed by the site footer. `children` is the prose body.
+ */
 export function LegalPage({ title, description, lastUpdated, children }: {
   title: string;
   description: string;

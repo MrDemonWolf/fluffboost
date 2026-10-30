@@ -52,6 +52,8 @@ try {
     console.error(`  hint: ${err.hint}`);
   }
   console.error("  The transaction was rolled back; the database is unchanged.");
+  // A failed statement leaves the session in an aborted transaction; end it explicitly. Errors are ignored
+  // because the failure may have happened outside the transaction (e.g. on connect).
   await sql.unsafe("ROLLBACK").simple().catch(() => undefined);
 } finally {
   await sql.end({ timeout: 5 });

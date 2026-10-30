@@ -1,3 +1,4 @@
+/** FluffBoost brand marks shared by the nav, footer and landing page. */
 import type { SVGProps } from "react";
 import Image from "next/image";
 // A 128px web derivative of the approved production portrait
@@ -5,6 +6,7 @@ import Image from "next/image";
 // application). The 1024px master is far too heavy for a 28-40px avatar.
 import icon from "@/assets/brand/fluffboost-icon-128.webp";
 
+/** Round wolf avatar. Decorative (empty alt): it always sits next to the "FluffBoost" name. */
 export function BrandAvatar({ className = "size-7" }: { className?: string }) {
   return (
     <Image
@@ -30,6 +32,7 @@ export function PawMark(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Avatar plus "FluffBoost" text, used as the nav title and footer home link. */
 export function Wordmark() {
   return (
     <span className="inline-flex items-center gap-2 font-display text-lg font-semibold tracking-tight text-ink">

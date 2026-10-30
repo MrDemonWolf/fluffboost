@@ -2,6 +2,7 @@ import { Composition } from "remotion";
 import { BrandLoop } from "./BrandLoop.js";
 import { assets, bannerDurationInFrames, durationInFrames, fps } from "./assets.js";
 
+/** One composition per brand asset; banners run bannerSeconds, icons iconSeconds, at `fps`. */
 export const RemotionRoot: React.FC = () => {
   return (
     <>

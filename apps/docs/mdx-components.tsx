@@ -1,3 +1,4 @@
+/** Component map for MDX docs pages: Fumadocs defaults plus the components content may use. */
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import { Card, Cards } from "fumadocs-ui/components/card";
 import { Step, Steps } from "fumadocs-ui/components/steps";
@@ -24,6 +25,7 @@ function Table(props: ComponentProps<"table">) {
   );
 }
 
+/** Components available inside MDX; `components` overrides or extends the defaults per call. */
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
     ...defaultMdxComponents,

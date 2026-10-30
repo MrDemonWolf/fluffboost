@@ -1,3 +1,4 @@
+/** Reply helpers for list-style admin commands. */
 import { MessageFlags } from "discord.js";
 import type { CommandInteraction } from "discord.js";
 
@@ -13,7 +14,9 @@ interface ReplyWithTextFileOptions<T> {
 
 /**
  * Reply to a slash command with either an empty-state message or
- * the rows formatted as a plain-text file attachment.
+ * the rows formatted as a plain-text file attachment. A file is not bound by
+ * Discord's 2000-character message limit, so long lists are never cut off.
+ * Ephemeral by default.
  */
 export async function replyWithTextFile<T>({
   interaction,

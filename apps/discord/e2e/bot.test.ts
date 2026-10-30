@@ -1,3 +1,9 @@
+/**
+ * Bot E2E: real command routing, handlers, SQL and the send-motivation scheduler against a disposable PostgreSQL,
+ * with Discord and Redis replaced by local stubs. Each run applies the committed migrations into its own
+ * throwaway schema and drops it afterwards. Run with `bun run --filter=@fluffboost/discord test:e2e`
+ * (needs E2E_DATABASE_URL + E2E_DATABASE_DISPOSABLE=true; see e2e/databaseSafety.ts).
+ */
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, mock, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { Client, ChannelType, Collection, MessageFlags, PermissionFlagsBits } from "discord.js";
@@ -15,6 +21,7 @@ const databaseUrl = requireSafeE2EDatabaseUrl(
   process.env["E2E_DATABASE_DISPOSABLE"],
 );
 
+// search_path pins every unqualified query (including the app's Drizzle tables) to this run's schema.
 const schemaName = `fluffboost_e2e_${crypto.randomUUID().replaceAll("-", "")}`;
 const connection = postgres(databaseUrl, {
   max: 4, connect_timeout: 5, connection: { search_path: schemaName }, onnotice: () => {},
@@ -113,6 +120,8 @@ beforeEach(async () => {
   await db.insert(motivationQuotes).values({
     quote: "One small step still moves you forward.", author: "FluffBoost E2E", addedBy: "100000000000000333",
   });
+  // 13:00Z is 08:00 America/Chicago (CDT), so the default schedule is due. Only Date is faked, so
+  // setTimeout/setInterval (used by the postgres driver and discord.js) keep real time.
   clock = sinon.useFakeTimers({ now: new Date("2026-10-03T13:00:00Z"), toFake: ["Date"] });
 });
 

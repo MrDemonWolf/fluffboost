@@ -1,3 +1,7 @@
+/**
+ * Tests sendToMainChannel / announceToMainChannel (src/utils/mainChannel.ts): cross-shard fetch, channel type
+ * guards and best-effort failure handling.
+ */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
 import { mockClient, mockEnv, mockLogger } from "../helpers.js";

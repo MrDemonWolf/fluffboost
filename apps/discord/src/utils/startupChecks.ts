@@ -1,3 +1,4 @@
+/** Startup preflight used by appCore.ts: Redis readiness, schema presence and the recommended shard count. */
 import { retryWithBackoff, withTimeout } from "./async.js";
 import type { RetryOptions } from "./async.js";
 
@@ -45,6 +46,7 @@ export async function probeRedis(client: RedisProbeClient, timeoutMs: number): P
   await withTimeout(client.ping(), timeoutMs, "Redis");
 }
 
+/** Operator-facing explanation logged before exiting when hasAppSchema() is false. */
 export const SCHEMA_MISSING_MESSAGE =
   'Database schema missing: public."Guild" does not exist. The database is reachable but unmigrated ' +
   "(SKIP_MIGRATIONS=true skips the entrypoint's migration step). Unset SKIP_MIGRATIONS and redeploy, " +
