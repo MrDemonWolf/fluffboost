@@ -10,19 +10,29 @@ export const BRAND_FOOTER = "Powered by MrDemonWolf, Inc.";
 
 /** Discord's hard limit for an embed field value. */
 const EMBED_FIELD_VALUE_LIMIT = 1024;
+const EMBED_DESCRIPTION_LIMIT = 4096;
 
 /**
- * Render user-submitted text literally in an embed field, so reviewers see
- * masked links, headings and other markdown exactly as typed. Truncates after
- * escaping because the backslashes count toward the field limit.
+ * Render user-typed text literally, so readers see masked links, headings and
+ * other markdown exactly as typed instead of a clickable disguised link. Use
+ * for any user text placed in an embed description; fields use
+ * `escapeFieldValue`.
  */
-export function escapeFieldValue(text: string): string {
+export function escapeUserText(text: string): string {
   return escapeMarkdown(text, {
     heading: true,
     bulletedList: true,
     numberedList: true,
     maskedLink: true,
-  }).slice(0, EMBED_FIELD_VALUE_LIMIT);
+  });
+}
+
+/**
+ * `escapeUserText` for an embed field. Truncates after escaping because the
+ * backslashes count toward the field limit.
+ */
+export function escapeFieldValue(text: string): string {
+  return escapeUserText(text).slice(0, EMBED_FIELD_VALUE_LIMIT);
 }
 
 /** Every option is optional; unset ones are simply not applied. `timestamp: true` stamps the current time. */
@@ -50,7 +60,8 @@ export function buildBrandedEmbed(options: BrandedEmbedOptions = {}): EmbedBuild
     embed.setTitle(options.title);
   }
   if (options.description) {
-    embed.setDescription(options.description);
+    // Escaped user text can outgrow the limit; discord.js throws past it.
+    embed.setDescription(options.description.slice(0, EMBED_DESCRIPTION_LIMIT));
   }
   if (options.fields && options.fields.length > 0) {
     // Old stored quotes and free-form review reasons can exceed field limits.

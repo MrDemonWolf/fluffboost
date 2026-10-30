@@ -176,6 +176,53 @@ describe("suggestionHelpers.notifySuggestionReviewed", () => {
     expect(fields.find((f) => f.name === "Author")?.value).toBe("\\*\\*Maya\\*\\*");
   });
 
+  it("escapes the reviewer's reason in the staff embed and all user text in the DM", async () => {
+    const { notifySuggestionReviewed } = await loadNotify();
+    const { client, channel, submitter } = makeClient();
+    const linked = {
+      ...suggestion,
+      quote: "Rest is productive too. [Learn more](https://evil.example/verify)",
+      author: "**Maya**",
+    };
+
+    await notifySuggestionReviewed(client as never, {
+      status: "Rejected",
+      suggestion: linked as never,
+      suggestionId: "s1",
+      reviewer: reviewer as never,
+      reason: "# Dupe, see [this](https://evil.example/x)",
+    });
+
+    const fields = channel.send.firstCall.args[0].embeds[0].data.fields as { name: string; value: string }[];
+    expect(fields.find((f) => f.name === "Reason")?.value).toBe("\\# Dupe, see \\[this](https://evil.example/x)");
+
+    const description = submitter.send.firstCall.args[0].embeds[0].data.description as string;
+    expect(description).toContain("**Quote:** Rest is productive too. \\[Learn more](https://evil.example/verify)");
+    expect(description).toContain("**Author:** \\*\\*Maya\\*\\*");
+    expect(description).toContain("**Reason:** \\# Dupe, see \\[this](https://evil.example/x)");
+    // No unescaped masked link survives anywhere in the DM.
+    expect(description).not.toMatch(/(^|[^\\])\[[^\]]*\]\(https?:/);
+  });
+
+  it("keeps the DM within Discord's description limit for maximal escaped input", async () => {
+    const { notifySuggestionReviewed, logger } = await loadNotify();
+    const { client, submitter } = makeClient();
+    const huge = { ...suggestion, quote: "*".repeat(1024), author: "_".repeat(256) };
+
+    await notifySuggestionReviewed(client as never, {
+      status: "Rejected",
+      suggestion: huge as never,
+      suggestionId: "s1",
+      reviewer: reviewer as never,
+      reason: "~".repeat(1024),
+    });
+
+    expect(submitter.send.calledOnce).toBe(true);
+    expect(logger.warn.called).toBe(false);
+    const description = submitter.send.firstCall.args[0].embeds[0].data.description as string;
+    expect(description.length).toBeLessThanOrEqual(4096);
+  });
+
   it("swallows and warns on DM failure", async () => {
     const { notifySuggestionReviewed, logger } = await loadNotify();
     const { client, channel } = makeClient();
