@@ -1,6 +1,6 @@
 /**
- * Browser E2E for the docs site. Builds the production-shaped export (base path
- * /fluffboost) and serves out/ with scripts/serve-export.mjs, like GitHub Pages.
+ * Browser E2E for the docs site. Builds the production-shaped export (served at
+ * the domain root) and serves out/ with scripts/serve-export.mjs, like GitHub Pages.
  */
 import { defineConfig, devices } from "@playwright/test";
 

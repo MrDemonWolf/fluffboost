@@ -48,8 +48,8 @@ export const metadata: Metadata = {
     siteName: site.name,
     type: "website",
     images: [{
-      // banner.src already carries the base path, so resolve it against the bare
-      // origin rather than site.origin (which would double /fluffboost).
+      // banner.src already carries any preview base path, so resolve it against
+      // the bare origin rather than site.origin (which would double a path prefix).
       url: new URL(banner.src, new URL(site.origin).origin).href,
       width: banner.width,
       height: banner.height,
