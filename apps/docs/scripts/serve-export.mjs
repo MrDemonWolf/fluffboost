@@ -5,7 +5,7 @@ import { resolve, sep } from "node:path";
 // Like GitHub Pages, a missing path inside the site gets 404.html with status 404.
 const output = resolve(import.meta.dir, "../out");
 // Same default as next.config.mjs, so a plain `bun run build` serves correctly.
-// Set NEXT_PUBLIC_BASE_PATH=/fluffboost for a production-shaped build (`bun run preview`).
+// Production uses no prefix; set NEXT_PUBLIC_BASE_PATH only when serving a subpath build.
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const notFoundPage = resolve(output, "404.html");
 

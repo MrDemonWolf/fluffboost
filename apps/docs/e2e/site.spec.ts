@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
 // lib/site.ts `origin`: canonical, og:url and sitemap URLs are absolute on it.
-const SITE_ORIGIN = "https://mrdemonwolf.github.io/fluffboost";
+const SITE_ORIGIN = "https://fluffboost.mrdemonwolf.dev";
 
 /** Every exported page, read from the generated sitemap so new pages are swept automatically. */
 async function exportedPages(request: APIRequestContext) {
@@ -44,7 +44,7 @@ test("a server owner can reach setup and activate premium from the landing page"
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Your daily dose of furry motivation.");
   await page.getByRole("link", { name: "Read the guide", exact: true }).click();
   await page.getByRole("link", { name: /set the channel/i }).click();
-  await expect(page).toHaveURL(/\/fluffboost\/docs\/setup\/?$/);
+  await expect(page).toHaveURL(/\/docs\/setup\/?$/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText(/set up/i);
   await expect(page.locator("body")).toContainText("/setup channel");
 
@@ -58,7 +58,7 @@ test("legal pages are reachable from the landing footer and survive a reload", a
   for (const [name, route] of [["Privacy Policy", "privacy"], ["Terms of Service", "terms"]] as const) {
     await page.goto("./");
     await page.getByRole("link", { name, exact: true }).click();
-    await expect(page).toHaveURL(new RegExp(`/fluffboost/${route}/?$`));
+    await expect(page).toHaveURL(new RegExp(`/${route}/?$`));
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(name);
     const response = await page.reload();
     expect(response?.status()).toBe(200);
@@ -66,7 +66,7 @@ test("legal pages are reachable from the landing footer and survive a reload", a
   }
 });
 
-test("every exported page keeps links and assets inside the base path and has its own metadata", async ({
+test("every exported page keeps links and assets inside the site and has its own metadata", async ({
   page,
   request,
 }) => {
@@ -111,7 +111,6 @@ test("every exported page keeps links and assets inside the base path and has it
     for (const href of hrefs) {
       const link = new URL(href);
       if (link.origin !== "http://127.0.0.1:4173" || checked.has(link.pathname)) continue;
-      expect(link.pathname, href).toMatch(/^\/fluffboost(?:\/|$)/);
       checked.add(link.pathname);
       const linkedPage = await request.get(link.pathname);
       expect(linkedPage.status(), `Broken internal link: ${href}`).toBe(200);
@@ -134,9 +133,9 @@ test("a missing page gets the branded 404 with a way back", async ({ page }) => 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Page not found");
   await expect(page.locator("main")).toHaveCount(1);
   const main = page.getByRole("main");
-  await expect(main.getByRole("link", { name: "Guide", exact: true })).toHaveAttribute("href", "/fluffboost/docs/");
+  await expect(main.getByRole("link", { name: "Guide", exact: true })).toHaveAttribute("href", "/docs/");
   await main.getByRole("link", { name: "FluffBoost home" }).click();
-  await expect(page).toHaveURL(/\/fluffboost\/$/);
+  await expect(page).toHaveURL(/127\.0\.0\.1:4173\/$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Your daily dose of furry motivation.");
   expect(failures).toEqual([]);
 });
@@ -161,7 +160,7 @@ test("static search finds a guide page and returns focus to its trigger", async 
   await dialog.getByPlaceholder("Search").fill("schedule");
   await dialog.getByRole("button", { name: /Change when quotes arrive/ }).first().click();
   // The result href carries the base path.
-  await expect(page).toHaveURL(/\/fluffboost\/docs\/scheduling\/?(#.*)?$/);
+  await expect(page).toHaveURL(/\/docs\/scheduling\/?(#.*)?$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Change when quotes arrive");
 });
 

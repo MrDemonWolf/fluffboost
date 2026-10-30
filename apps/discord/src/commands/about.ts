@@ -46,7 +46,7 @@ export async function execute(client: Client, interaction: CommandInteraction): 
       fields: [
         {
           name: "Documentation",
-          value: "[Guide](https://mrdemonwolf.github.io/fluffboost/docs/)",
+          value: "[Guide](https://fluffboost.mrdemonwolf.dev/docs/)",
           inline: true,
         },
         {

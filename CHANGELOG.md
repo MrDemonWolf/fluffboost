@@ -75,8 +75,8 @@ documentation remediation. No release has been tagged yet.
 - Premium entitlements are re-checked on every shard every 30 minutes, so
   delivery falls back to the free schedule within about 30 minutes after a
   subscription ends, even if a Discord event was missed.
-- Marketing site and documentation at
-  <https://mrdemonwolf.github.io/fluffboost/>, with a sitemap, per-page
+- Marketing site and documentation at <https://fluffboost.mrdemonwolf.dev/>
+  (previously <https://mrdemonwolf.github.io/fluffboost/>), with a sitemap, per-page
   canonical and social metadata, a branded 404 page and accessibility fixes.
 - Reproducible Remotion brand animations in `apps/motion`, verified in CI.
 - Bot end-to-end tests against real PostgreSQL, and browser end-to-end tests

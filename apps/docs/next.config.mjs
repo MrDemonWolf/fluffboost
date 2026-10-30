@@ -4,9 +4,9 @@ import { dirname, join } from "node:path";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-// GitHub Pages serves project sites under /<repo>. Set NEXT_PUBLIC_BASE_PATH
-// to "/fluffboost" in the deploy workflow; leave empty for local dev or a
-// custom domain (CNAME).
+// The custom domain (public/CNAME) and local dev serve the site at the root, so
+// NEXT_PUBLIC_BASE_PATH is normally empty. Set it (e.g. "/fluffboost") only to
+// preview the export under a project subpath.
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 /** @type {import('next').NextConfig} */

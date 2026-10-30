@@ -42,8 +42,8 @@ Use `/help` for commands, `/about` for project information, or `/invite` to shar
 
 Open source. Built by MrDemonWolf, Inc. Spread joy, one quote at a time.
 
-Guide: https://mrdemonwolf.github.io/fluffboost/docs/
-Premium activation: https://mrdemonwolf.github.io/fluffboost/docs/premium/
+Guide: https://fluffboost.mrdemonwolf.dev/docs/
+Premium activation: https://fluffboost.mrdemonwolf.dev/docs/premium/
 Support: https://mrdwolf.net/discord
 ```
 
@@ -51,16 +51,16 @@ Support: https://mrdwolf.net/discord
 
 | Label | URL |
 | --- | --- |
-| Website & Guide | https://mrdemonwolf.github.io/fluffboost/ |
-| Activate Premium | https://mrdemonwolf.github.io/fluffboost/docs/premium/ |
+| Website & Guide | https://fluffboost.mrdemonwolf.dev/ |
+| Activate Premium | https://fluffboost.mrdemonwolf.dev/docs/premium/ |
 | Support | https://mrdwolf.net/discord |
 | Source Code | https://github.com/MrDemonWolf/fluffboost |
 | Creator | https://www.mrdemonwolf.com |
 
 General Information privacy URL:
-`https://mrdemonwolf.github.io/fluffboost/privacy/`.
+`https://fluffboost.mrdemonwolf.dev/privacy/`.
 General Information terms URL:
-`https://mrdemonwolf.github.io/fluffboost/terms/`.
+`https://fluffboost.mrdemonwolf.dev/terms/`.
 Publish the Pages build before entering these new legal URLs in Discord.
 
 ## Premium SKU
@@ -104,7 +104,7 @@ FluffBoost sends a daily motivational quote to the channel you choose. Try /quot
 
 Want your own rhythm? Premium adds daily, weekly, or monthly delivery at your chosen time and timezone.
 
-Add FluffBoost and read the guide: https://mrdemonwolf.github.io/fluffboost/
+Add FluffBoost and read the guide: https://fluffboost.mrdemonwolf.dev/
 ```
 
 ## Source checks

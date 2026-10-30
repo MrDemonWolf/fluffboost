@@ -9,7 +9,7 @@ Premium adds custom scheduling for one server through Discord.
 
 Spread joy, one quote at a time.
 
-**[Website and documentation](https://mrdemonwolf.github.io/fluffboost/)**
+**[Website and documentation](https://fluffboost.mrdemonwolf.dev/)**
 
 ## Features
 
@@ -28,7 +28,7 @@ Spread joy, one quote at a time.
 
 ## Getting Started
 
-[Read the server guide](https://mrdemonwolf.github.io/fluffboost/docs/) for
+[Read the server guide](https://fluffboost.mrdemonwolf.dev/docs/) for
 setup and troubleshooting.
 
 1. Invite FluffBoost to your server using
@@ -39,12 +39,12 @@ setup and troubleshooting.
 3. Try `/quote` now and enjoy the default daily 8:00 AM America/Chicago boost.
 
 To upgrade one server, follow the
-[Premium activation guide](https://mrdemonwolf.github.io/fluffboost/docs/premium/):
+[Premium activation guide](https://fluffboost.mrdemonwolf.dev/docs/premium/):
 run `/premium`, subscribe through Discord desktop or browser, confirm
 **Premium Active**, and set your timing with `/setup schedule`.
 
-Read the [Privacy Policy](https://mrdemonwolf.github.io/fluffboost/privacy/)
-and [Terms of Service](https://mrdemonwolf.github.io/fluffboost/terms/).
+Read the [Privacy Policy](https://fluffboost.mrdemonwolf.dev/privacy/)
+and [Terms of Service](https://fluffboost.mrdemonwolf.dev/terms/).
 
 ## Usage
 
@@ -215,9 +215,9 @@ Run these from the repository root; they fan out through Turborepo.
 - `bun run db:seed` - Load the starter quote library (safe to re-run)
 - `bun run db:reconcile --confirm` - Bring a Prisma-era or drifted database to the current schema and record the baseline (back up first)
 
-To build the GitHub Pages site with its production prefix, run
-`NEXT_PUBLIC_BASE_PATH=/fluffboost bun run --filter=@fluffboost/docs build`.
-The [developer guide](https://mrdemonwolf.github.io/fluffboost/developers/)
+The site is served at the root of its custom domain, so
+`bun run --filter=@fluffboost/docs build` produces the production export.
+The [developer guide](https://fluffboost.mrdemonwolf.dev/developers/)
 covers deployment, configuration, testing, Premium, and contributing. The
 [Remotion workspace](apps/motion/README.md) documents the brand animation
 sources and exports.
@@ -275,8 +275,8 @@ fluffboost/
 
 If you have any questions, suggestions, or feedback:
 
-- Website & docs: [mrdemonwolf.github.io/fluffboost](https://mrdemonwolf.github.io/fluffboost/)
-- Developer guide: [mrdemonwolf.github.io/fluffboost/developers](https://mrdemonwolf.github.io/fluffboost/developers/)
+- Website & docs: [fluffboost.mrdemonwolf.dev](https://fluffboost.mrdemonwolf.dev/)
+- Developer guide: [fluffboost.mrdemonwolf.dev/developers](https://fluffboost.mrdemonwolf.dev/developers/)
 - Discord: [Join my server](https://mrdwolf.net/discord)
 
 Made with love by [MrDemonWolf, Inc.](https://www.mrdemonwolf.com)

@@ -49,15 +49,10 @@ jobs:
       - name: Build site
         run: bun run --filter=@fluffboost/docs build
         env:
-          # GitHub Pages serves this project site under /<repo>.
-          # Delete this (or set it empty) if you move to a custom domain, and
-          # also update: apps/docs/lib/site.ts `origin` (which drives
-          # sitemap.xml, canonical and og:url), the baseURL and
-          # NEXT_PUBLIC_BASE_PATH in apps/docs/playwright.config.ts, the
-          # SITE_ORIGIN constant and /fluffboost regexes in
-          # apps/docs/e2e/site.spec.ts, and the Guide link in
-          # apps/discord/src/commands/about.ts.
-          NEXT_PUBLIC_BASE_PATH: /fluffboost
+          # The custom domain (apps/docs/public/CNAME) serves the site at its
+          # root, so no base path. To change the domain see the checklist in
+          # apps/docs/lib/site.ts.
+          NEXT_PUBLIC_BASE_PATH: ""
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3

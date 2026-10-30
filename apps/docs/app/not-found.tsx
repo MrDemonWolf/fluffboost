@@ -7,7 +7,7 @@ import { baseOptions } from "@/lib/layout.shared";
 import { site } from "@/lib/site";
 
 // The static export writes this as out/404.html, which GitHub Pages serves for
-// every missing /fluffboost/* path. It sits outside (home), so it brings its own
+// every missing path. It sits outside (home), so it brings its own
 // site chrome. Next adds the noindex robots tag to not-found pages itself.
 export const metadata: Metadata = {
   title: "Page not found",

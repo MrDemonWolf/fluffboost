@@ -108,7 +108,7 @@ and a role scoped to that database; stop the container afterward with
 
 ## Browser end-to-end tests
 
-Playwright builds `apps/docs` with the deployed `/fluffboost` base path and
+Playwright builds `apps/docs` exactly as deployed (served at the domain root) and
 serves the static `out/` directory with no route fallback. Desktop Chromium and
 a Pixel 7 viewport sweep every page in the generated sitemap for broken local
 links, missing assets, client errors, horizontal overflow, a single `<main>`, and
@@ -126,8 +126,8 @@ bun run --filter=@fluffboost/docs test:e2e
 
 ### Preview the static export
 
-`bun run --filter=@fluffboost/docs preview` builds with the `/fluffboost` base
-path and serves it at `http://127.0.0.1:4173/fluffboost/`.
+`bun run --filter=@fluffboost/docs preview` builds the production export (served
+at the domain root) and serves it at `http://127.0.0.1:4173/`.
 `bun run --filter=@fluffboost/docs start` serves an existing `out/` directory;
 set `NEXT_PUBLIC_BASE_PATH` to match the build it serves.
 

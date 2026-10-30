@@ -8,7 +8,7 @@ export default defineConfig({
   workers: process.env.CI ? 2 : undefined,
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
-    baseURL: "http://127.0.0.1:4173/fluffboost/",
+    baseURL: "http://127.0.0.1:4173/",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
@@ -17,10 +17,10 @@ export default defineConfig({
     { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
   webServer: {
-    command: "NEXT_PUBLIC_BASE_PATH=/fluffboost bun run build && bun run scripts/serve-export.mjs",
-    url: "http://127.0.0.1:4173/fluffboost/",
+    command: "bun run build && bun run scripts/serve-export.mjs",
+    url: "http://127.0.0.1:4173/",
     reuseExistingServer: false,
     timeout: 180_000,
-    env: { NEXT_PUBLIC_BASE_PATH: "/fluffboost", PORT: "4173" },
+    env: { NEXT_PUBLIC_BASE_PATH: "", PORT: "4173" },
   },
 });
