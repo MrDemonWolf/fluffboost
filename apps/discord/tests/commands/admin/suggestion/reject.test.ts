@@ -5,7 +5,7 @@
  */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockPermissions } from "../../permissionsMock.js";
+import { ADMIN_DENIED_REPLY, NOT_ALLOWED_USER_ID, mockPermissions, useRealPermissions } from "../../permissionsMock.js";
 import { mockLogger, mockDb, mockDbChain, mockInteraction, mockClient, mockEnv } from "../../../helpers.js";
 
 const SUGGESTION_ID = "9d8c7b6a-5f4e-4d3c-8b2a-1f0e9d8c7b6a";
@@ -23,7 +23,8 @@ describe("admin suggestion reject command", () => {
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../../../src/utils/env.js", () => ({ default: env }));
-    await mockPermissions(permitted);
+    // Denied paths run the real gate: the test user is not in ALLOWED_USERS.
+    await (permitted ? mockPermissions(true) : useRealPermissions());
 
     const mod = await import("../../../../src/commands/admin/suggestion/reject.js");
     return { handler: mod.default, logger, db };
@@ -58,13 +59,20 @@ describe("admin suggestion reject command", () => {
     status: "Pending",
   };
 
-  it("denies unauthorized users before any database access", async () => {
+  it("denies a user outside ALLOWED_USERS with the gate's reply before any database access", async () => {
     const { handler, db } = await loadModule(false);
     const { client, channel, submitter } = makeClient();
+    // Without the gate this would claim the row and notify, so the test fails if the gate is removed.
+    db.select.returns(mockDbChain([PENDING_ROW]));
+    db.update.returns(mockDbChain([{ id: SUGGESTION_ID }]));
     const interaction = makeInteraction(SUGGESTION_ID, "spam");
+    interaction.user.id = NOT_ALLOWED_USER_ID;
 
     await handler(client as never, interaction as never);
 
+    const reply = interaction.reply as sinon.SinonStub;
+    expect(reply.calledOnce).toBe(true);
+    expect(reply.firstCall.args[0].content).toBe(ADMIN_DENIED_REPLY);
     expect(db.select.called).toBe(false);
     expect(db.update.called).toBe(false);
     expect(channel.send.called).toBe(false);

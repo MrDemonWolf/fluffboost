@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockPermissions } from "../../permissionsMock.js";
+import { ADMIN_DENIED_REPLY, NOT_ALLOWED_USER_ID, mockPermissions, useRealPermissions } from "../../permissionsMock.js";
 import { mockLogger, mockDb, mockDbChain, mockInteraction, mockClient, mockEnv } from "../../../helpers.js";
 
 describe("admin quote create command", () => {
@@ -35,29 +35,43 @@ describe("admin quote create command", () => {
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../../../src/utils/env.js", () => ({ default: env }));
-    await mockPermissions(false);
+    // The real gate: the test user is not in mockEnv()'s ALLOWED_USERS.
+    await useRealPermissions();
 
     const mod = await import("../../../../src/commands/admin/quote/create.js");
 
     return { handler: mod.default, logger, db, env };
   }
 
-  function makeInteraction(quote: string, author: string) {
+  function makeInteraction(quote: string, author: string, userId = "user-123") {
     const interaction = mockInteraction();
+    interaction.user.id = userId;
     const getStringStub = interaction.options.getString as sinon.SinonStub;
     getStringStub.withArgs("quote").returns(quote);
     getStringStub.withArgs("quote_author").returns(author);
     return interaction;
   }
 
-  it("should return early without touching the database when user is not permitted", async () => {
+  it("denies a user outside ALLOWED_USERS with the gate's reply and writes nothing", async () => {
     const { handler, db } = await loadModuleNotPermitted();
-    const interaction = makeInteraction("Be kind", "Anon");
+    // Without the gate this input would insert and announce, so the test fails if the gate is removed.
+    db.insert.returns(mockDbChain([{ id: "q1", quote: "Be kind", author: "Anon", addedBy: NOT_ALLOWED_USER_ID }]));
+    const channel = {
+      isTextBased: sinon.stub().returns(true),
+      isDMBased: sinon.stub().returns(false),
+      send: sinon.stub().resolves(),
+    };
+    const client = mockClient();
+    (client.channels.fetch as sinon.SinonStub).resolves(channel);
+    const interaction = makeInteraction("Be kind", "Anon", NOT_ALLOWED_USER_ID);
 
-    await handler(mockClient() as never, interaction as never);
+    await handler(client as never, interaction as never);
 
-    expect((interaction.reply as sinon.SinonStub).called).toBe(false);
+    const reply = interaction.reply as sinon.SinonStub;
+    expect(reply.calledOnce).toBe(true);
+    expect(reply.firstCall.args[0].content).toBe(ADMIN_DENIED_REPLY);
     expect(db.insert.called).toBe(false);
+    expect(channel.send.called).toBe(false);
   });
 
   it("rejects a whitespace-only quote without inserting", async () => {

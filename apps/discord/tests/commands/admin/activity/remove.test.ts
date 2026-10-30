@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockPermissions } from "../../permissionsMock.js";
+import { ADMIN_DENIED_REPLY, NOT_ALLOWED_USER_ID, mockPermissions, useRealPermissions } from "../../permissionsMock.js";
 import { mockLogger, mockDb, mockDbChain, mockInteraction, mockClient } from "../../../helpers.js";
 
 const ACTIVITY_ID = "0b1c2d3e-4f5a-4b6c-9d7e-8f9a0b1c2d3e";
@@ -20,7 +20,8 @@ describe("admin activity remove command", () => {
 
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
-    await mockPermissions(permitted);
+    // Denied paths run the real gate: the test user is not in ALLOWED_USERS.
+    await (permitted ? mockPermissions(true) : useRealPermissions());
 
     const mod = await import("../../../../src/commands/admin/activity/remove.js");
 
@@ -34,13 +35,16 @@ describe("admin activity remove command", () => {
     return interaction;
   }
 
-  it("should return early without touching the database when user is not permitted", async () => {
+  it("denies a user outside ALLOWED_USERS with the gate's reply and deletes nothing", async () => {
     const { handler, db } = await loadModule(false);
     const interaction = makeInteraction(ACTIVITY_ID);
+    interaction.user.id = NOT_ALLOWED_USER_ID;
 
     await handler(mockClient() as never, interaction as never);
 
-    expect((interaction.reply as sinon.SinonStub).called).toBe(false);
+    const reply = interaction.reply as sinon.SinonStub;
+    expect(reply.calledOnce).toBe(true);
+    expect(reply.firstCall.args[0].content).toBe(ADMIN_DENIED_REPLY);
     expect(db.select.called).toBe(false);
     expect(db.delete.called).toBe(false);
   });

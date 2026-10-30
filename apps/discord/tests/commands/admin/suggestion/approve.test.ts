@@ -5,7 +5,7 @@
  */
 import { describe, it, expect, afterEach, mock } from "bun:test";
 import sinon from "sinon";
-import { mockPermissions } from "../../permissionsMock.js";
+import { ADMIN_DENIED_REPLY, NOT_ALLOWED_USER_ID, mockPermissions, useRealPermissions } from "../../permissionsMock.js";
 import { mockLogger, mockDb, mockDbChain, mockInteraction, mockClient, mockEnv } from "../../../helpers.js";
 
 const SUGGESTION_ID = "1e2d3c4b-5a69-4788-9a0b-c1d2e3f4a5b6";
@@ -23,7 +23,8 @@ describe("admin suggestion approve command", () => {
     mock.module("../../../../src/utils/logger.js", () => ({ default: logger }));
     mock.module("../../../../src/database/index.js", () => ({ db, queryClient: () => Promise.resolve([]) }));
     mock.module("../../../../src/utils/env.js", () => ({ default: env }));
-    await mockPermissions(permitted);
+    // Denied paths run the real gate: the test user is not in ALLOWED_USERS.
+    await (permitted ? mockPermissions(true) : useRealPermissions());
 
     const mod = await import("../../../../src/commands/admin/suggestion/approve.js");
 
@@ -74,13 +75,20 @@ describe("admin suggestion approve command", () => {
     return holder;
   }
 
-  it("denies unauthorized users before any database access", async () => {
+  it("denies a user outside ALLOWED_USERS with the gate's reply before any database access", async () => {
     const { handler, db } = await loadModule(false);
     const { client, channel, submitter } = makeClient();
+    // Without the gate this would claim, insert and notify, so the test fails if the gate is removed.
+    db.select.returns(mockDbChain([pendingRow()]));
+    stubTransaction(db, [{ id: SUGGESTION_ID }]);
     const interaction = makeInteraction(SUGGESTION_ID);
+    interaction.user.id = NOT_ALLOWED_USER_ID;
 
     await handler(client as never, interaction as never);
 
+    const reply = interaction.reply as sinon.SinonStub;
+    expect(reply.calledOnce).toBe(true);
+    expect(reply.firstCall.args[0].content).toBe(ADMIN_DENIED_REPLY);
     expect(db.select.called).toBe(false);
     expect(db.transaction.called).toBe(false);
     expect(channel.send.called).toBe(false);
