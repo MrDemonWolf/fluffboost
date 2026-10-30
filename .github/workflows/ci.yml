@@ -186,7 +186,7 @@ jobs:
           E2E_REDIS_URL: redis://127.0.0.1:6379
           E2E_REDIS_DISPOSABLE: "true"
 
-  # Builds the docs static export and runs Playwright against it under the /fluffboost base path.
+  # Builds the docs static export and runs Playwright against it at the root, like the custom domain.
   docs:
     name: Docs Build & Browser E2E
     runs-on: ubuntu-latest
