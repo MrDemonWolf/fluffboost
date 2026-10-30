@@ -78,7 +78,7 @@ const envObject = z.object({
   MAIN_GUILD_ID: optionalSnowflake("MAIN_GUILD_ID"),
   MAIN_CHANNEL_ID: z.string().regex(SNOWFLAKE, "MAIN_CHANNEL_ID must be a Discord snowflake"),
   HOST: blankAsUnset.pipe(z.string().optional()),
-  PORT: blankAsUnset.pipe(z.coerce.number().int().min(1).max(65535).default(3000)),
+  PORT: blankAsUnset.pipe(z.coerce.number<string>().int().min(1).max(65535).default(3000)),
   // Defaults to the package version so /about and /changelog never show a placeholder.
   VERSION: blankAsUnset.pipe(z.string().min(1).default(pkg.version)),
   NODE_ENV: z

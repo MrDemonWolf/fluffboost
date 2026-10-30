@@ -5,7 +5,10 @@
   "description": "FluffBoost monorepo — Discord bot (apps/discord) plus the marketing site and docs (apps/docs).",
   "type": "module",
   "packageManager": "bun@1.3.14",
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "turbo run dev",
     "dev:discord": "turbo run dev --filter=@fluffboost/discord",
@@ -32,11 +35,11 @@
   "license": "GPL-3.0-only",
   "overrides": {
     "@types/node": "22.20.1",
-    "qs": ">=6.16.0 <7",
-    "undici": ">=6.28.1 <7",
+    "qs": ">=6.17.0 <7",
+    "undici": ">=6.29.1 <7",
     "lodash": ">=4.17.24 <5",
     "diff": ">=8.0.3 <9",
-    "ip-address": ">=10.7.1 <11",
+    "ip-address": ">=10.7.4 <11",
     "uuid": ">=11.1.1 <12",
     "ws": ">=8.21.0 <9",
     "flatted": ">=3.4.2 <4",
@@ -45,13 +48,15 @@
     "picomatch": ">=4.0.5 <5",
     "form-data": ">=4.0.6 <5",
     "postcss": ">=8.5.23 <9",
-    "body-parser": ">=2.3.0 <3",
+    "body-parser": ">=2.4.0 <3",
     "sharp": ">=0.35.5 <0.36",
     "@humanfs/node": ">=0.16.8 <0.17",
     "baseline-browser-mapping": ">=2.11.0 <3",
     "nanoid": ">=3.3.18 <4",
     "proxy-addr": ">=2.0.8 <3",
-    "source-map-js": ">=1.2.2 <2"
+    "source-map-js": ">=1.2.2 <2",
+    "fast-uri": ">=3.1.9 <4",
+    "zod": ">=4.6.6 <5"
   },
   "devDependencies": {
     "turbo": "^2.5.8"
