@@ -23,8 +23,8 @@ Work through these sections top-to-bottom. Each section builds on the previous.
 
 ## Section 3 — Deploy
 
-- [ ] In Dokploy, set the health check path to `/api/health/live`, the Swarm Stop Grace Period to 35 s (`35000000000` ns), and Update/Rollback Config to `{"Parallelism":1,"Order":"stop-first","FailureAction":"rollback"}` (see the [deployment guide](https://mrdemonwolf.github.io/fluffboost/developers/deployment/))
-- [ ] Before the first deploy that runs migrations, check whether the production database needs a migration baseline (`SELECT to_regclass('drizzle.__drizzle_migrations'), to_regclass('public."Guild"');`). If `Guild` exists without history, follow [Baseline an existing database](https://mrdemonwolf.github.io/fluffboost/developers/deployment/#baseline-an-existing-database) or set `SKIP_MIGRATIONS=true` until it is done
+- [ ] In Dokploy, set the health check path to `/api/health/live`, the Swarm Stop Grace Period to 35 s (`35000000000` ns), and Update/Rollback Config to `{"Parallelism":1,"Order":"stop-first","FailureAction":"rollback"}` (see the [deployment guide](https://fluffboost.mrdemonwolf.dev/developers/deployment/))
+- [ ] Before the first deploy that runs migrations, check whether the production database needs a migration baseline (`SELECT to_regclass('drizzle.__drizzle_migrations'), to_regclass('public."Guild"');`). If `Guild` exists without history, follow [Baseline an existing database](https://fluffboost.mrdemonwolf.dev/developers/deployment/#baseline-an-existing-database) or set `SKIP_MIGRATIONS=true` until it is done
 - [ ] Merge PR to `main` on GitHub
 - [ ] Trigger deploy in Dokploy (or let the Dokploy webhook auto-deploy on push to `main`)
 - [ ] Watch logs — confirm bot starts with no `"DISCORD_PREMIUM_SKU_ID is not configured"` error

@@ -11,7 +11,7 @@ FluffBoost is a Discord bot (Discord.js v14) that delivers daily motivational qu
 This is a **Bun-workspace + Turborepo monorepo**. Run all commands from the repository root.
 
 - `apps/discord/` — the Discord bot. **Every `src/…`, `tests/…`, and `drizzle/…` path in this document lives under `apps/discord/`** (e.g. `src/app.ts` → `apps/discord/src/app.ts`). The bot package is `@fluffboost/discord`.
-- `apps/docs/` — the marketing site + docs (Next.js 16 + Fumadocs, static export → GitHub Pages), **live at https://mrdemonwolf.github.io/fluffboost/**. Docs are split into `content/user/` (Guide, for server owners) and `content/developer/`. Package `@fluffboost/docs`.
+- `apps/docs/` — the marketing site + docs (Next.js 16 + Fumadocs, static export → GitHub Pages), **live at https://fluffboost.mrdemonwolf.dev/**. Docs are split into `content/user/` (Guide, for server owners) and `content/developer/`. Package `@fluffboost/docs`.
 - `apps/motion/` — Remotion source for the animated brand banners and icons (`@fluffboost/motion`). Renders into `assets/brand/animated/` (committed, checksummed); backplates live in `assets/brand/motion-sources/`. See `apps/motion/README.md`.
 - `apps/web/` — **reserved** for a future web dashboard (not created yet). Add a `@fluffboost/web` package here when it's built.
 - `docs/` (repo root) — marketing copy and the artwork brief, not published.
@@ -139,7 +139,7 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR to `main` and `dev`,
 - **Test & Typecheck** — `bun run test:coverage`, a schema drift check (`drizzle-kit generate` must produce no new migration), `bun run lint:check`, `bun run brand:verify` (installs ffmpeg), `bun run typecheck`, and a coverage artifact upload.
 - **Security Audit** — `bun audit` (plus a non-blocking `bun outdated`).
 - **Bot E2E (PostgreSQL)** — `test:e2e` for `@fluffboost/discord` against a `postgres:18-alpine` service.
-- **Docs Build & Browser E2E** — contrast check, then Playwright against the `/fluffboost` static export.
+- **Docs Build & Browser E2E** — contrast check, then Playwright against the static export served at the root, as on the custom domain.
 - **Docker Build Test** — builds `apps/discord/Dockerfile` from the repo root and runs the image's `migrate.ts` twice against Postgres (the second run must be a no-op).
 
 The docs site deploys separately from `.github/workflows/deploy-docs.yml` on pushes to `main`.
@@ -148,7 +148,7 @@ The docs site deploys separately from `.github/workflows/deploy-docs.yml` on pus
 
 The bot is deployed via **Dokploy** as a Docker image. Since Bun runs TypeScript directly, there is no build step. Migrations run at container startup via `docker-entrypoint.sh`.
 
-**Dokploy settings:** build context / base directory = the **repository root** (`.`); Dockerfile path = **`apps/discord/Dockerfile`**. The context must be the root because the Bun workspace lockfile is there and `turbo prune` needs the whole graph. See `apps/docs/content/developer/deployment.mdx` (published at https://mrdemonwolf.github.io/fluffboost/developers/deployment/) for both a fresh Dokploy setup and migrating an existing (pre-monorepo) deployment — the latter changes the Dockerfile path plus the health check path, stop grace period and update order below.
+**Dokploy settings:** build context / base directory = the **repository root** (`.`); Dockerfile path = **`apps/discord/Dockerfile`**. The context must be the root because the Bun workspace lockfile is there and `turbo prune` needs the whole graph. See `apps/docs/content/developer/deployment.mdx` (published at https://fluffboost.mrdemonwolf.dev/developers/deployment/) for both a fresh Dokploy setup and migrating an existing (pre-monorepo) deployment — the latter changes the Dockerfile path plus the health check path, stop grace period and update order below.
 
 ### Key files
 
@@ -162,7 +162,7 @@ The bot is deployed via **Dokploy** as a Docker image. Since Bun runs TypeScript
 
 ### The website (apps/docs)
 
-Live at **https://mrdemonwolf.github.io/fluffboost/**. Static Next.js + Fumadocs, deployed to GitHub Pages by `.github/workflows/deploy-docs.yml` (`bun run --filter=@fluffboost/docs build` with `NEXT_PUBLIC_BASE_PATH=/fluffboost`). Independent of the bot deployment. Build with webpack (`next build --webpack`) — fumadocs-mdx's generated `.source` doesn't transform under Turbopack here. The `.source` dir and `next-env.d.ts` are generated (gitignored).
+Live at **https://fluffboost.mrdemonwolf.dev/**. Static Next.js + Fumadocs, deployed to GitHub Pages by `.github/workflows/deploy-docs.yml` (`bun run --filter=@fluffboost/docs build`, no base path; the domain comes from `apps/docs/public/CNAME` and the canonical origin from `apps/docs/lib/site.ts`). Independent of the bot deployment. Build with webpack (`next build --webpack`) — fumadocs-mdx's generated `.source` doesn't transform under Turbopack here. The `.source` dir and `next-env.d.ts` are generated (gitignored).
 
 ## Git Branching
 
