@@ -87,6 +87,14 @@ The container listens on `PORT` (default `3000`). Point Dokploy's health check
 at `GET /api/health/live` (liveness). Keep `GET /api/health` for external
 uptime monitors, since it reports `503` when Postgres or Redis is down.
 
+The health API rate-limits each client IP. Behind Dokploy, every request
+reaches the container through one Traefik hop, so the API trusts exactly one
+`X-Forwarded-For` hop by default (`TRUST_PROXY_HOPS=1`). Raise it only if you
+add another proxy in front of Traefik, such as a CDN that forwards to it. Set
+`TRUST_PROXY_HOPS=0` if you publish the port directly with no proxy:
+otherwise a client can forge the header to dodge the limit. The bot never
+trusts every hop (`trust proxy: true`).
+
 Set Dokploy's Swarm **Stop Grace Period** to **35 seconds**
 (`stopGracePeriodSwarm: 35000000000`, in nanoseconds). Shutdown is budgeted so
 each layer finishes before the next one gives up on it:

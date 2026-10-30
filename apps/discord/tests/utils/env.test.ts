@@ -136,6 +136,23 @@ describe("envSchema", () => {
     }
   });
 
+  it("should default TRUST_PROXY_HOPS to 1 and accept 0 to disable it", () => {
+    const unset = envSchema.safeParse(validEnv());
+    expect(unset.success && unset.data.TRUST_PROXY_HOPS).toBe(1);
+    const empty = envSchema.safeParse(validEnv({ TRUST_PROXY_HOPS: "" }));
+    expect(empty.success && empty.data.TRUST_PROXY_HOPS).toBe(1);
+    const off = envSchema.safeParse(validEnv({ TRUST_PROXY_HOPS: "0" }));
+    expect(off.success && off.data.TRUST_PROXY_HOPS).toBe(0);
+    const two = envSchema.safeParse(validEnv({ TRUST_PROXY_HOPS: "2" }));
+    expect(two.success && two.data.TRUST_PROXY_HOPS).toBe(2);
+  });
+
+  it("should reject TRUST_PROXY_HOPS values that are not a small whole number", () => {
+    for (const hops of ["true", "-1", "1.5", "11", "abc"]) {
+      expect(envSchema.safeParse(validEnv({ TRUST_PROXY_HOPS: hops })).success).toBe(false);
+    }
+  });
+
   it("should keep HOST as an optional string and treat empty as unset", () => {
     const set = envSchema.safeParse(validEnv({ HOST: "127.0.0.1" }));
     expect(set.success && set.data.HOST).toBe("127.0.0.1");

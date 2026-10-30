@@ -35,6 +35,7 @@ your platform (see [Deployment](/developers/deployment)).
 | `ALLOWED_USERS`                     | —                          | Comma-separated snowflakes allowed to run `/admin`. Empty disables every `/admin` command |
 | `HOST`                              | — (all interfaces)         | Health API bind address. Leave unset in Docker/Dokploy; `127.0.0.1` binds loopback only |
 | `PORT`                              | `3000`                     | Health API port, a number from 1 to 65535    |
+| `TRUST_PROXY_HOPS`                  | `1`                        | Reverse-proxy hops in front of the health API (Express `trust proxy`), so the rate limiter sees the real client IP. `1` fits Traefik under Dokploy; `0` ignores `X-Forwarded-For` |
 | `VERSION`                           | `apps/discord/package.json` version | Shown in `/about` and `/changelog`  |
 | `NODE_ENV`                          | `development`              | `development`, `production`, `test`          |
 | `PREMIUM_ENABLED`                   | `false`                    | Premium gating. `false` opens custom schedules to every server (see below) |

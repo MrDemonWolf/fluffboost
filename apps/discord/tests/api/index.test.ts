@@ -61,6 +61,49 @@ describe("API app", () => {
     expect(res.status).toBe(404);
   });
 
+  /** A fresh app instance (own limiter store) evaluated under `env`. */
+  async function freshApp(suffix: string, env = mockEnv()) {
+    mock.module("../../src/utils/env.js", () => ({ default: env }));
+    try {
+      return (await (import(`../../src/api/index.js?${suffix}` as string) as Promise<
+        typeof import("../../src/api/index.js")
+      >)).default;
+    } finally {
+      mock.module("../../src/utils/env.js", () => ({ default: mockEnv() }));
+    }
+  }
+
+  async function exhaust(agent: supertest.Agent, forwardedFor: string): Promise<void> {
+    for (let i = 0; i < 60; i++) {
+      await agent.get("/api/health/live").set("X-Forwarded-For", forwardedFor).expect(200);
+    }
+  }
+
+  it("trusts one proxy hop by default, so the limiter keys on the forwarded client address", async () => {
+    const app = await freshApp("trust-default");
+    expect(app.get("trust proxy")).toBe(1);
+    const agent = supertest(app);
+
+    await exhaust(agent, "203.0.113.1");
+
+    await agent.get("/api/health/live").set("X-Forwarded-For", "203.0.113.1").expect(429);
+    // A different client behind the same proxy keeps its own budget.
+    await agent.get("/api/health/live").set("X-Forwarded-For", "203.0.113.2").expect(200);
+    // Only the last hop is trusted: a forged leftmost entry does not buy a new bucket.
+    await agent.get("/api/health/live").set("X-Forwarded-For", "198.51.100.9, 203.0.113.1").expect(429);
+  });
+
+  it("ignores X-Forwarded-For when TRUST_PROXY_HOPS is 0", async () => {
+    const app = await freshApp("trust-off", mockEnv({ TRUST_PROXY_HOPS: 0 }));
+    expect(app.get("trust proxy")).toBe(false);
+    const agent = supertest(app);
+
+    await exhaust(agent, "203.0.113.1");
+
+    // Every request is keyed on the socket address, so a new header does not help.
+    await agent.get("/api/health/live").set("X-Forwarded-For", "203.0.113.2").expect(429);
+  });
+
   it("logs rate-limited requests", async () => {
     // A fresh app instance (query suffix) has its own limiter store, so
     // exhausting it cannot 429 the other tests whatever order they run in.
