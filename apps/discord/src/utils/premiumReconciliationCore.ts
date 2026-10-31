@@ -3,7 +3,9 @@
  * isPremium writes. premiumReconciliation.ts supplies the client and database.
  */
 import type { Entitlement, FetchEntitlementsOptions } from "discord.js";
-import { isActivePremiumEntitlement } from "./entitlementPolicy.js";
+import { isActivePremiumEntitlement, mergeTermEnd } from "./entitlementPolicy.js";
+
+type FetchEntitlementPage = (options: FetchEntitlementsOptions) => Promise<ReadonlyMap<string, Entitlement>>;
 
 /**
  * Return the guild IDs with an active entitlement for `skuId` (optionally just
@@ -11,12 +13,26 @@ import { isActivePremiumEntitlement } from "./entitlementPolicy.js";
  * persistence can clear paid status; a failed page or stalled pagination throws.
  */
 export async function activePremiumGuilds(
-  fetchPage: (options: FetchEntitlementsOptions) => Promise<ReadonlyMap<string, Entitlement>>,
+  fetchPage: FetchEntitlementPage,
   skuId: string,
   allowTest: boolean,
   guildId?: string
 ): Promise<string[]> {
-  const active = new Set<string>();
+  return [...(await activePremiumTerms(fetchPage, skuId, allowTest, guildId)).keys()];
+}
+
+/**
+ * The same complete snapshot, keyed by guild with the term end to store in
+ * Guild.premiumEndsAt: null when any active grant is open-ended, otherwise the
+ * latest endsAt across that guild's active grants.
+ */
+export async function activePremiumTerms(
+  fetchPage: FetchEntitlementPage,
+  skuId: string,
+  allowTest: boolean,
+  guildId?: string
+): Promise<Map<string, Date | null>> {
+  const active = new Map<string, Date | null>();
   // Discord documents no default order, so anchor an ascending walk at "0" and
   // only stop on an empty page (server-side filters can shorten a page early).
   let after = "0";
@@ -32,14 +48,33 @@ export async function activePremiumGuilds(
     for (const entitlement of page.values()) {
       if (entitlement.guildId &&
         isActivePremiumEntitlement(entitlement, skuId, entitlement.guildId, Date.now(), { allowTest })) {
-        active.add(entitlement.guildId);
+        active.set(entitlement.guildId, mergeTermEnd(active.get(entitlement.guildId), entitlement.endsAt ?? null));
       }
     }
     const next = [...page.keys()].reduce((max, id) => BigInt(id) > BigInt(max) ? id : max);
     if (BigInt(next) <= BigInt(after)) {throw new Error("Entitlement pagination did not advance");}
     after = next;
   }
-  return [...active];
+  return active;
+}
+
+/**
+ * Group granted guilds by the term end to write, so one UPDATE covers every
+ * guild sharing a value (typically all open-ended subscriptions).
+ */
+export function groupGrantsByTermEnd(
+  grant: readonly string[],
+  terms: ReadonlyMap<string, Date | null>
+): { premiumEndsAt: Date | null; guildIds: string[] }[] {
+  const groups = new Map<number | null, { premiumEndsAt: Date | null; guildIds: string[] }>();
+  for (const id of grant) {
+    const premiumEndsAt = terms.get(id) ?? null;
+    const key = premiumEndsAt?.getTime() ?? null;
+    const group = groups.get(key) ?? { premiumEndsAt, guildIds: [] };
+    group.guildIds.push(id);
+    groups.set(key, group);
+  }
+  return [...groups.values()];
 }
 
 /** Guild IDs to set isPremium false (`revoke`) and true (`grant`). Grants may already be true. */
@@ -56,10 +91,10 @@ export interface PremiumWritePlan {
 export function planPremiumWrites(
   ownedGuilds: readonly string[],
   premiumBefore: readonly string[],
-  activeGuilds: readonly string[]
+  activeGuilds: Iterable<string>
 ): PremiumWritePlan {
   const owned = new Set(ownedGuilds);
-  const active = new Set(activeGuilds.filter((id) => owned.has(id)));
+  const active = new Set([...activeGuilds].filter((id) => owned.has(id)));
   return {
     revoke: premiumBefore.filter((id) => owned.has(id) && !active.has(id)),
     grant: [...active],

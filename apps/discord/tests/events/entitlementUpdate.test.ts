@@ -47,7 +47,7 @@ describe("entitlementUpdateEvent", () => {
     await entitlementUpdateEvent(null, renewed as never);
 
     expect(db.update.calledOnce).toBe(true);
-    expect((chain.set as sinon.SinonStub).firstCall.args[0]).toEqual({ isPremium: true });
+    expect((chain.set as sinon.SinonStub).firstCall.args[0]).toEqual({ isPremium: true, premiumEndsAt: null });
   });
 
   it("keeps isPremium=true through the remaining paid period", async () => {
@@ -59,11 +59,13 @@ describe("entitlementUpdateEvent", () => {
     mock.module("../../src/utils/logger.js", () => ({ default: mockLogger() }));
     const { entitlementUpdateEvent } = await import("../../src/events/entitlementUpdate.js");
 
-    const renewed = mockEntitlement({ guildId: "g1", endsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) });
+    const endsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const renewed = mockEntitlement({ guildId: "g1", endsAt });
     await entitlementUpdateEvent(null, renewed as never);
 
     expect(db.update.calledOnce).toBe(true);
-    expect((chain.set as sinon.SinonStub).firstCall.args[0]).toEqual({ isPremium: true });
+    // The term end is stored so delivery stops honoring the custom schedule when it passes.
+    expect((chain.set as sinon.SinonStub).firstCall.args[0]).toEqual({ isPremium: true, premiumEndsAt: endsAt });
   });
 
   it("should not update DB for user-level entitlement (no guildId)", async () => {

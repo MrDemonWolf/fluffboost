@@ -49,3 +49,37 @@ export function isActivePremiumEntitlement(
   return (!entitlement.startsAt || entitlement.startsAt.getTime() <= now) &&
     (!entitlement.endsAt || entitlement.endsAt.getTime() > now);
 }
+
+/**
+ * The end of the Premium term that the given entitlements grant this guild,
+ * as stored in Guild.premiumEndsAt. Null when any active grant is open-ended
+ * (a renewing subscription or a test grant), otherwise the latest endsAt.
+ * Undefined when none of them is active.
+ */
+export function premiumTermEnd(
+  entitlements: Iterable<PremiumEntitlement>,
+  skuId: string | undefined,
+  guildId: string | null | undefined,
+  now = Date.now(),
+  options: { allowTest?: boolean } = {}
+): Date | null | undefined {
+  let end: Date | null | undefined;
+  for (const entitlement of entitlements) {
+    if (!isActivePremiumEntitlement(entitlement, skuId, guildId, now, options)) {
+      continue;
+    }
+    end = mergeTermEnd(end, entitlement.endsAt ?? null);
+  }
+  return end;
+}
+
+/** Combine two term ends for one guild: open-ended (null) wins, otherwise the later date. */
+export function mergeTermEnd(current: Date | null | undefined, next: Date | null): Date | null {
+  if (current === undefined) {
+    return next;
+  }
+  if (current === null || next === null) {
+    return null;
+  }
+  return next.getTime() > current.getTime() ? next : current;
+}

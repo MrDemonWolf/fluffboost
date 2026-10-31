@@ -30,6 +30,7 @@ export type DeliveryGuild = Pick<
   | "timezone"
   | "lastMotivationSentAt"
   | "isPremium"
+  | "premiumEndsAt"
 >;
 
 /**
@@ -152,6 +153,7 @@ export async function sendMotivationCore(
       timezone: guilds.timezone,
       lastMotivationSentAt: guilds.lastMotivationSentAt,
       isPremium: guilds.isPremium,
+      premiumEndsAt: guilds.premiumEndsAt,
     })
     .from(guilds)
     .where(isNotNull(guilds.motivationChannelId));

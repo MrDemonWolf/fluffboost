@@ -41,9 +41,15 @@ export default async function (
         author: quoteAuthor,
         addedBy: interaction.user.id,
       })
+      // motivation_quote_text_unique: an identical quote is already in the library.
+      .onConflictDoNothing()
       .returning();
 
     if (!newQuote) {
+      await interaction.reply({
+        content: "That quote is already in the library.",
+        flags: MessageFlags.Ephemeral,
+      });
       return;
     }
 

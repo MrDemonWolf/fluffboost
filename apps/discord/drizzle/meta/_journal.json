@@ -8,6 +8,20 @@
       "when": 1785275510784,
       "tag": "0000_confused_eternity",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793353473078,
+      "tag": "0001_premium_expiry_and_suggestion_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793353473231,
+      "tag": "0002_unique_motivation_quote_text",
+      "breakpoints": true
     }
   ]
 }

@@ -31,7 +31,7 @@ describe("entitlementCreateEvent", () => {
     await entitlementCreateEvent(mockEntitlement({ guildId: "g1" }) as never);
 
     expect(db.update.calledOnce).toBe(true);
-    expect((chain["set"] as SinonStub).firstCall.args[0]).toEqual({ isPremium: true });
+    expect((chain["set"] as SinonStub).firstCall.args[0]).toMatchObject({ isPremium: true });
     const where = (chain["where"] as SinonStub).firstCall.args[0] as SQL;
     expect(new PgDialect().sqlToQuery(where).params).toEqual(["g1"]);
   });

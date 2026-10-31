@@ -152,6 +152,9 @@ describe("admin suggestion approve command", () => {
     expect(db.transaction.calledOnce).toBe(true);
     // Inside transaction: update (claim Pending suggestion) and insert (motivation quote)
     expect(holder.tx!.insert.calledOnce).toBe(true);
+    // A quote already in the library must not roll back the review.
+    const insertChain = holder.tx!.insert.firstCall.returnValue as Record<string, sinon.SinonStub>;
+    expect(insertChain["onConflictDoNothing"]!.calledOnce).toBe(true);
     expect(holder.tx!.update.calledOnce).toBe(true);
     expect(channel.send.calledOnce).toBe(true);
     expect(submitter.send.calledOnce).toBe(true);

@@ -14,10 +14,21 @@ PascalCase) is what you use in `psql` or raw SQL.
 
 | Drizzle             | SQL table           | Purpose                                                             |
 | ------------------- | ------------------- | ------------------------------------------------------------------- |
-| `guilds`            | `"Guild"`           | Per-server config: channel, schedule (frequency/time/timezone/day), `isPremium`, `lastMotivationSentAt` |
-| `motivationQuotes`  | `"MotivationQuote"` | The approved quote library                                          |
+| `guilds`            | `"Guild"`           | Per-server config: channel, schedule (frequency/time/timezone/day), `isPremium`, `premiumEndsAt`, `lastMotivationSentAt` |
+| `motivationQuotes`  | `"MotivationQuote"` | The approved quote library (quote text is unique)                   |
 | `suggestionQuotes`  | `"SuggestionQuote"` | Every user submission, with its review `status`, `reviewedBy` and `reviewedAt` |
 | `discordActivities` | `"DiscordActivity"` | Bot status entries, with a type enum                                |
+
+A guild's saved schedule applies under Premium gating only while
+`isPremium` is true **and** `premiumEndsAt` is null or still in the future.
+`premiumEndsAt` mirrors the entitlement's `endsAt` (null for an open-ended
+subscription) and is rewritten by entitlement events, `/premium`,
+`/setup schedule` and every reconciliation pass.
+
+Quote text is unique: `motivation_quote_text_unique` is a unique index on
+`md5("quote")` (exact text, and no btree size limit for long quotes). Inserts
+use `onConflictDoNothing()`, so `/admin quote create` replies that the quote
+already exists and approving a duplicate suggestion still records the review.
 
 Three enums back these: `motivationFrequencyEnum` (Daily / Weekly / Monthly),
 `discordActivityTypeEnum` (Custom / Listening / Streaming / Playing) and

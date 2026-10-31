@@ -49,6 +49,7 @@ async function seedQuotes(): Promise<void> {
   const inserted = await db
     .insert(motivationQuotes)
     .values(toInsert.map((q) => ({ quote: q.quote, author: q.author, addedBy: OWNER_ID })))
+    .onConflictDoNothing()
     .returning();
 
   consola.success("Quote seed complete", {

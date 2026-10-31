@@ -84,7 +84,9 @@ export async function updateGuildPremiumStatus(
         await reconcilePremium(entitlement.client, guildId);
         return;
       }
-      await db.update(guilds).set({ isPremium: true }).where(eq(guilds.guildId, guildId));
+      // This event's own term; the reconciliation pass merges every active grant.
+      await db.update(guilds).set({ isPremium: true, premiumEndsAt: entitlement.endsAt ?? null })
+        .where(eq(guilds.guildId, guildId));
     } catch (err) {
       logger.error(`Discord - Event (${eventName})`, "Failed to update guild premium status", err, {
         guildId,

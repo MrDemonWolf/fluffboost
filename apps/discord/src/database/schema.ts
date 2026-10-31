@@ -3,7 +3,8 @@
  * After editing, generate and commit a migration (see AGENTS.md); never edit a
  * committed one.
  */
-import { pgTable, pgEnum, uuid, text, boolean, timestamp, integer, index } from "drizzle-orm/pg-core";
+import { pgTable, pgEnum, uuid, text, boolean, timestamp, integer, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import type { InferSelectModel } from "drizzle-orm";
 import { DEFAULT_GUILD_SCHEDULE } from "../utils/scheduleConfig.js";
 
@@ -31,6 +32,9 @@ export const guilds = pgTable(
     lastMotivationSentAt: timestamp("lastMotivationSentAt", { mode: "date" }),
     /** Cached entitlement state, kept current by entitlement events and Premium reconciliation. */
     isPremium: boolean("isPremium").notNull().default(false),
+    // End of the current Premium term (null: open-ended or unknown). Delivery
+    // treats a guild as Premium only while isPremium && (null || future).
+    premiumEndsAt: timestamp("premiumEndsAt", { mode: "date", withTimezone: true }),
     joinedAt: timestamp("joinedAt", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updatedAt", { mode: "date" }).notNull().defaultNow().$onUpdate(() => new Date()),
   },
@@ -38,14 +42,20 @@ export const guilds = pgTable(
 );
 
 /** The quote library that scheduled deliveries and /quote draw from at random. */
-export const motivationQuotes = pgTable("MotivationQuote", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  quote: text("quote").notNull(),
-  author: text("author").notNull(),
-  /** Discord user ID of the admin who added it, or the original submitter of an approved suggestion. */
-  addedBy: text("addedBy").notNull(),
-  createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
-});
+export const motivationQuotes = pgTable(
+  "MotivationQuote",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    quote: text("quote").notNull(),
+    author: text("author").notNull(),
+    /** Discord user ID of the admin who added it, or the original submitter of an approved suggestion. */
+    addedBy: text("addedBy").notNull(),
+    createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+  },
+  // Exact-text uniqueness, indexed on md5() so a long quote (rows written
+  // before MAX_QUOTE_LENGTH, or multi-byte text) never exceeds the btree row limit.
+  (table) => [uniqueIndex("motivation_quote_text_unique").using("btree", sql`md5(${table.quote})`)]
+);
 
 /** User-submitted quotes and their review state; approval also inserts a motivationQuotes row. */
 export const suggestionQuotes = pgTable(
@@ -62,7 +72,14 @@ export const suggestionQuotes = pgTable(
     createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updatedAt", { mode: "date" }).notNull().defaultNow().$onUpdate(() => new Date()),
   },
-  (table) => [index("suggestion_status_idx").on(table.status)]
+  (table) => [
+    index("suggestion_status_idx").on(table.status),
+    // /admin suggestion list pages by createdAt DESC, id DESC, with or without a
+    // status filter. Ascending on purpose: a backward scan yields DESC NULLS FIRST,
+    // which is what that ORDER BY means (a DESC NULLS LAST index would not match).
+    index("suggestion_status_created_idx").on(table.status, table.createdAt, table.id),
+    index("suggestion_created_idx").on(table.createdAt, table.id),
+  ]
 );
 
 /** Bot presence entries rotated by the set-activity job, alongside the env default. */

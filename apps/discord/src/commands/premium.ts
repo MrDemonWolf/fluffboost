@@ -12,7 +12,7 @@ import { guilds } from "../database/schema.js";
 import logger from "../utils/logger.js";
 import { withCommandLogging } from "../utils/commandErrors.js";
 import { requireGuildId } from "../utils/permissions.js";
-import { buildPremiumUpsell, hasEntitlement, isPremiumEnabled } from "../utils/premium.js";
+import { buildPremiumUpsell, entitlementTermEnd, hasEntitlement, isPremiumEnabled } from "../utils/premium.js";
 import { buildBrandedEmbed, SUCCESS_COLOR } from "../utils/embedHelpers.js";
 
 export const slashCommand = new SlashCommandBuilder()
@@ -58,7 +58,8 @@ export async function execute(_client: Client, interaction: CommandInteraction):
       // cached isPremium flag, which a missed or failed entitlement event can
       // leave stale. Best-effort; the reconciliation loop is the backstop.
       try {
-        await db.update(guilds).set({ isPremium: true }).where(eq(guilds.guildId, guildId));
+        await db.update(guilds).set({ isPremium: true, premiumEndsAt: entitlementTermEnd(interaction) })
+          .where(eq(guilds.guildId, guildId));
       } catch (err) {
         logger.commands.error("premium", interaction.user.username, interaction.user.id, err, guildId);
       }

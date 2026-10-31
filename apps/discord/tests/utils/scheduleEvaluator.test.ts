@@ -6,7 +6,8 @@
 import { describe, it, expect, afterEach } from "bun:test";
 import sinon from "sinon";
 import {
-  createDueOccurrenceResolver, effectiveGuildSchedule, isDueForOccurrence, mostRecentScheduledOccurrence,
+  createDueOccurrenceResolver, effectiveGuildSchedule, isDueForOccurrence, isPremiumActive,
+  mostRecentScheduledOccurrence,
 } from "../../src/utils/scheduleEvaluator.js";
 import { DEFAULT_GUILD_SCHEDULE, describeDefaultSchedule } from "../../src/utils/scheduleConfig.js";
 
@@ -433,6 +434,41 @@ describe("scheduleEvaluator", () => {
         isPremium: false,
       };
       expect(resolve(sentInFirstPass)).toBeNull();
+    });
+  });
+
+  describe("premium term end (premiumEndsAt)", () => {
+    const now = new Date("2026-10-03T13:00:00Z").getTime();
+
+    it("treats premium as active only while the flag is set and the term has not ended", () => {
+      expect(isPremiumActive({ isPremium: true, premiumEndsAt: null }, now)).toBe(true);
+      expect(isPremiumActive({ isPremium: true }, now)).toBe(true);
+      expect(isPremiumActive({ isPremium: true, premiumEndsAt: new Date(now + 1) }, now)).toBe(true);
+      expect(isPremiumActive({ isPremium: true, premiumEndsAt: new Date(now) }, now)).toBe(false);
+      expect(isPremiumActive({ isPremium: true, premiumEndsAt: new Date(now - 1) }, now)).toBe(false);
+      expect(isPremiumActive({ isPremium: false, premiumEndsAt: null }, now)).toBe(false);
+      expect(isPremiumActive({ isPremium: false, premiumEndsAt: new Date(now + 60_000) }, now)).toBe(false);
+    });
+
+    it("falls back to the free schedule once a stale isPremium row's term has ended", () => {
+      const custom = makeGuild({ motivationTime: "22:00", timezone: "Europe/London" });
+      const ended = { ...custom, isPremium: true, premiumEndsAt: new Date(now - 60_000) };
+      expect(effectiveGuildSchedule(ended, true, now).motivationTime).toBe("08:00");
+      const current = { ...custom, isPremium: true, premiumEndsAt: new Date(now + 60_000) };
+      expect(effectiveGuildSchedule(current, true, now).motivationTime).toBe("22:00");
+      // Premium gating off: saved schedules always apply, whatever the term says.
+      expect(effectiveGuildSchedule(ended, false, now).motivationTime).toBe("22:00");
+    });
+
+    it("reads the clock when no time is passed, so the resolver honors expiry", () => {
+      // 08:00 Chicago (14:00 UTC) is the default slot; the custom 13:30 London slot was 10 minutes ago.
+      clock = sinon.useFakeTimers(new Date("2024-01-15T13:40:00Z").getTime());
+      const guild = { ...makeGuild({ motivationTime: "13:30", timezone: "Europe/London" }), isPremium: true };
+      const active = { ...guild, premiumEndsAt: new Date("2024-01-15T13:41:00Z") };
+      const ended = { ...guild, premiumEndsAt: new Date("2024-01-15T13:39:00Z") };
+      expect(createDueOccurrenceResolver(true)(active)?.toISOString()).toBe("2024-01-15T13:30:00.000Z");
+      // Free schedule: today's 08:00 Chicago is still ahead, yesterday's is outside the window.
+      expect(createDueOccurrenceResolver(true)(ended)).toBeNull();
     });
   });
 

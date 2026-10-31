@@ -73,10 +73,36 @@ describe("reconcilePremium", () => {
     expect(tx.update.callCount).toBe(2);
     const revoke = tx.update.getCall(0).returnValue as Record<string, SinonStub>;
     const grantChain = tx.update.getCall(1).returnValue as Record<string, SinonStub>;
-    expect(revoke["set"]!.firstCall.args[0]).toEqual({ isPremium: false });
+    expect(revoke["set"]!.firstCall.args[0]).toEqual({ isPremium: false, premiumEndsAt: null });
     expect(params(revoke["where"]!)).toEqual(["g1", "g3"]);
-    expect(grantChain["set"]!.firstCall.args[0]).toEqual({ isPremium: true });
+    expect(grantChain["set"]!.firstCall.args[0]).toEqual({ isPremium: true, premiumEndsAt: null });
     expect(params(grantChain["where"]!)).toEqual(["g2"]);
+  });
+
+  it("stores each granted guild's term end, one write per distinct end", async () => {
+    premiumBefore([]);
+    const endsAt = new Date("2027-01-01T00:00:00Z");
+    const later = new Date("2027-02-01T00:00:00Z");
+    const page = new Map<string, unknown>([
+      ["10", { ...grant("g1", "10"), endsAt }],
+      ["11", { ...grant("g1", "11"), endsAt: later }],
+      ["12", { ...grant("g2", "12"), endsAt }],
+      ["13", grant("g3", "13")],
+    ]);
+    const { client } = makeClient(["g1", "g2", "g3"], [page]);
+
+    await reconcilePremium(client as never);
+
+    const writes = tx.update.getCalls().map((call) => {
+      const chain = call.returnValue as Record<string, SinonStub>;
+      return { set: chain["set"]!.firstCall.args[0], guilds: params(chain["where"]!) };
+    });
+    // g1 has two active grants: the later end wins; g3 is open-ended.
+    expect(writes).toEqual([
+      { set: { isPremium: true, premiumEndsAt: later }, guilds: ["g1"] },
+      { set: { isPremium: true, premiumEndsAt: endsAt }, guilds: ["g2"] },
+      { set: { isPremium: true, premiumEndsAt: null }, guilds: ["g3"] },
+    ]);
   });
 
   it("does not revoke a guild that was granted while the snapshot was being fetched", async () => {

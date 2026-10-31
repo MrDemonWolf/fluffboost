@@ -54,7 +54,10 @@ export default async function (
         quote: suggestion.quote,
         author: suggestion.author,
         addedBy: suggestion.addedBy,
-      });
+      })
+        // The text is already in the library (motivation_quote_text_unique):
+        // approving still records the review instead of failing the command.
+        .onConflictDoNothing();
     });
 
     if (!approved) {

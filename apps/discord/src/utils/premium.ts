@@ -16,7 +16,7 @@ import type {
 
 import env from "./env.js";
 import { buildBrandedEmbed } from "./embedHelpers.js";
-import { allowsTestEntitlements, isActivePremiumEntitlement } from "./entitlementPolicy.js";
+import { allowsTestEntitlements, isActivePremiumEntitlement, premiumTermEnd } from "./entitlementPolicy.js";
 
 /**
  * Whether Premium gating is on (PREMIUM_ENABLED). When false, custom schedules
@@ -49,6 +49,17 @@ export function hasEntitlement(interaction: CommandInteraction | ChatInputComman
       allowTest: allowsTestEntitlements(env.NODE_ENV),
     })
   );
+}
+
+/**
+ * The Guild.premiumEndsAt value for this interaction's active entitlements:
+ * null for an open-ended grant, the latest end date otherwise. Only call it
+ * after hasEntitlement() returned true; with no active grant it returns null.
+ */
+export function entitlementTermEnd(interaction: CommandInteraction | ChatInputCommandInteraction): Date | null {
+  return premiumTermEnd(interaction.entitlements.values(), getPremiumSkuId(), interaction.guildId, Date.now(), {
+    allowTest: allowsTestEntitlements(env.NODE_ENV),
+  }) ?? null;
 }
 
 /** Upsell text; an empty or missing `footerText` means no footer. */

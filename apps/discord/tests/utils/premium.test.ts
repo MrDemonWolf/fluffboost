@@ -10,6 +10,8 @@ import {
   allowsTestEntitlements,
   isActivePremiumEntitlement,
   isTestEntitlement,
+  mergeTermEnd,
+  premiumTermEnd,
 } from "../../src/utils/entitlementPolicy.js";
 import type { PremiumEntitlement } from "../../src/utils/entitlementPolicy.js";
 
@@ -75,6 +77,40 @@ describe("premium entitlement policy", () => {
   });
 });
 
+describe("premiumTermEnd", () => {
+  const later = new Date(now + 120_000);
+
+  it("is undefined when no entitlement is active", () => {
+    expect(premiumTermEnd([], "premium-sku", "server-1", now)).toBeUndefined();
+    expect(premiumTermEnd([entitlement({ endsAt: new Date(now - 1) })], "premium-sku", "server-1", now))
+      .toBeUndefined();
+    expect(premiumTermEnd([entitlement({ guildId: "other" })], "premium-sku", "server-1", now)).toBeUndefined();
+  });
+  it("returns the latest end across active grants, ignoring inactive ones", () => {
+    const grants = [entitlement(), entitlement({ endsAt: later }), entitlement({ skuId: "x", endsAt: null })];
+    expect(premiumTermEnd(grants, "premium-sku", "server-1", now)).toEqual(later);
+  });
+  it("is null when any active grant is open-ended", () => {
+    expect(premiumTermEnd([entitlement({ endsAt: null }), entitlement({ endsAt: later })], "premium-sku", "server-1", now))
+      .toBeNull();
+  });
+  it("ignores test grants where the policy forbids them", () => {
+    const test = entitlement({ startsAt: null, endsAt: null });
+    expect(premiumTermEnd([test, entitlement()], "premium-sku", "server-1", now, { allowTest: false }))
+      .toEqual(new Date(now + 60_000));
+  });
+  it("merges term ends: open-ended wins, otherwise the later date", () => {
+    const a = new Date(1_000);
+    const b = new Date(2_000);
+    expect(mergeTermEnd(undefined, a)).toBe(a);
+    expect(mergeTermEnd(undefined, null)).toBeNull();
+    expect(mergeTermEnd(a, b)).toBe(b);
+    expect(mergeTermEnd(b, a)).toBe(b);
+    expect(mergeTermEnd(null, a)).toBeNull();
+    expect(mergeTermEnd(a, null)).toBeNull();
+  });
+});
+
 describe("hasEntitlement", () => {
   const sku = "premium-sku";
   const testGrant = { ...entitlement({ skuId: sku, guildId: "guild-123", startsAt: null, endsAt: null }),
@@ -103,6 +139,16 @@ describe("hasEntitlement", () => {
   it("accepts owner test entitlements outside production", async () => {
     const { hasEntitlement } = await load("development");
     expect(hasEntitlement(interaction(testGrant))).toBe(true);
+  });
+  it("derives the stored term end from the interaction's active grants", async () => {
+    const { entitlementTermEnd } = await load("production");
+    const endsAt = new Date(Date.now() + 86_400_000);
+    const ending = { ...paidGrant, endsAt };
+    expect(entitlementTermEnd(interaction(ending))).toEqual(endsAt);
+    expect(entitlementTermEnd(interaction(ending, paidGrant))).toBeNull();
+    // The production policy ignores the open-ended test grant.
+    expect(entitlementTermEnd(interaction(ending, testGrant))).toEqual(endsAt);
+    expect(entitlementTermEnd(interaction())).toBeNull();
   });
 });
 

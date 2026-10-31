@@ -13,7 +13,9 @@ describe("setup schedule command", () => {
     sinon.restore();
   });
 
-  async function loadModule(overrides: { premiumEnabled?: boolean; hasEntitlement?: boolean } = {}) {
+  async function loadModule(
+    overrides: { premiumEnabled?: boolean; hasEntitlement?: boolean; termEnd?: Date | null } = {}
+  ) {
     const logger = mockLogger();
     const db = mockDb();
 
@@ -22,6 +24,7 @@ describe("setup schedule command", () => {
     mock.module("../../../src/utils/premium.js", () => ({
       isPremiumEnabled: sinon.stub().returns(overrides.premiumEnabled ?? false),
       hasEntitlement: sinon.stub().returns(overrides.hasEntitlement ?? false),
+      entitlementTermEnd: sinon.stub().returns(overrides.termEnd ?? null),
       getPremiumSkuId: sinon.stub().returns("sku-1"),
       buildPremiumUpsell: stubBuildPremiumUpsell("sku-1"),
     }));
@@ -246,7 +249,8 @@ describe("setup schedule command", () => {
   });
 
   it("marks the guild premium after the live entitlement check passes", async () => {
-    const { schedule, db } = await loadModule({ premiumEnabled: true, hasEntitlement: true });
+    const termEnd = new Date("2026-12-01T00:00:00Z");
+    const { schedule, db } = await loadModule({ premiumEnabled: true, hasEntitlement: true, termEnd });
     const chain = mockDbChain([]);
     db.update.returns(chain);
     const interaction = makeScheduleInteraction({ time: "09:00" });
@@ -255,6 +259,7 @@ describe("setup schedule command", () => {
 
     const setArgs = (chain.set as sinon.SinonStub).firstCall.args[0];
     expect(setArgs.isPremium).toBe(true);
+    expect(setArgs.premiumEndsAt).toEqual(termEnd);
   });
 
   it("never writes the premium flag while Premium is disabled", async () => {
@@ -267,6 +272,7 @@ describe("setup schedule command", () => {
 
     const setArgs = (chain.set as sinon.SinonStub).firstCall.args[0];
     expect("isPremium" in setArgs).toBe(false);
+    expect("premiumEndsAt" in setArgs).toBe(false);
   });
 
   it("should catch autocomplete errors and respond with empty array", async () => {
@@ -278,6 +284,7 @@ describe("setup schedule command", () => {
     mock.module("../../../src/utils/premium.js", () => ({
       isPremiumEnabled: sinon.stub().returns(false),
       hasEntitlement: sinon.stub().returns(false),
+      entitlementTermEnd: sinon.stub().returns(null),
       getPremiumSkuId: sinon.stub().returns("sku-1"),
       buildPremiumUpsell: stubBuildPremiumUpsell("sku-1"),
     }));
